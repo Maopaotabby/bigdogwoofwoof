@@ -1071,9 +1071,10 @@ function render(room = {}) {
   const side = room.viewerSide || uiState.side || getPlayerSide(room, uiState.playerId) || "";
   if (handleRemovedFromRoom(room)) return;
   const opponent = side ? otherSide(side) : "right";
+  const onlinePageActive = isOnlinePageActive();
   syncBattlePageLockState(room, side);
   syncDuelRuntimeRoomState(room, side);
-  maybeEnterBattleView(room, side);
+  if (onlinePageActive) maybeEnterBattleView(room, side);
   setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
   setText("#onlineRoomCode", room.roomId || "未创建");
   setText("#onlineCurrentRoomCode", room.roomId || "未创建");
@@ -1151,12 +1152,17 @@ function syncBattlePageLockState(room, side) {
     return;
   }
   if (typeof globalThis.JJKBattlePage.setBattleMode !== "function") return;
+  const currentPage = globalThis.JJKBattlePage.getBattlePageState?.().activePage || "online";
   globalThis.JJKBattlePage.setBattleMode("online", {
     activeRoomId: room.roomId,
     playerSide: side,
-    activePage: "online",
+    activePage: currentPage,
     localLocked: room.phase === "turn_selecting" && Boolean(room.turnState?.locks?.[side])
   });
+}
+
+function isOnlinePageActive() {
+  return (globalThis.JJKBattlePage?.getBattlePageState?.().activePage || "") === "online";
 }
 
 function resourceLabel(room, side) {

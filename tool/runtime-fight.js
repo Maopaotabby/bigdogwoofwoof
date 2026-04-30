@@ -1028,6 +1028,7 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
   const serverRound = Math.max(1, Number(room.round) || 1);
   const targetBattleRound = Math.max(0, serverRound - 1);
   const previousRound = battle.round;
+  const activePage = getBattlePageModule()?.getBattlePageState?.().activePage || state.duelModeState.activePage || "online";
   battle.onlineRoomId = roomId;
   battle.onlinePlayerSide = side;
   setDuelBattleMode("online", {
@@ -1035,7 +1036,7 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
     activeRoomId: roomId,
     playerSide: side,
     localLocked,
-    activePage: "online"
+    activePage
   });
   if (targetBattleRound > battle.round) {
     const appliedResolvedTurn = applyOnlineResolvedTurnToBattle(battle, room);
