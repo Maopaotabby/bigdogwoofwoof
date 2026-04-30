@@ -1004,7 +1004,7 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
   if (turn.result?.summary) {
     recordDuelResourceChange(battle, {
       side: turn.result?.winnerHint === "right" ? "right" : turn.result?.winnerHint === "left" ? "left" : "neutral",
-      title: `AI 裁判摘要 R${turn.turn}`,
+      title: `服务器结算摘要 R${turn.turn}`,
       detail: turn.result.summary,
       type: "system",
       delta: { aiSource: turn.source || turn.result?.source || "", leftEffect: turn.result?.leftEffect || "", rightEffect: turn.result?.rightEffect || "" }
@@ -1050,14 +1050,9 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
     battle.actionChoices = [];
     battle.handCandidates = [];
     updateDuelActionAvailability(battle);
-    const aiSource = room.reviewState?.lastAiDebug?.source || "";
-    battle.actionUiMessage = aiSource === "local_fallback_timeout"
-      ? (room.reviewState?.summary || `AI 结算超时，已使用本地处理并进入第 ${serverRound} 回合。`)
-      : aiSource === "local_fallback_error"
-        ? (room.reviewState?.summary || `AI 结算失败，已使用本地处理并进入第 ${serverRound} 回合。`)
-        : `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
+    battle.actionUiMessage = `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
   } else if (room.phase === "turn_resolving") {
-    battle.actionUiMessage = "双方已锁定，正在等待服务器 AI 结算。";
+    battle.actionUiMessage = "双方已锁定，服务器正在同步结算。";
   } else if (localLocked) {
     battle.actionUiMessage = "行动已锁定，等待对方锁定或服务器结算。";
   } else if (battle.actionUiMessage === "正在提交联机行动..." || battle.actionUiMessage === "正在发送联机行动...") {
@@ -3374,7 +3369,7 @@ function renderDuelBattleResult(battle) {
     : `第 ${formatNumber(battle.endingRound || battle.round)} 回合：${loser.name} 体势被压到无法继续战斗。胜者：${winner.name}。结束原因：${endReasonLabel}。当前结算倾向 ${formatPercent(battle.finalRate)} 仅作局势参考。`;
   const aiMarkup = isDuelAiAssistEnabled() ? `
     <div class="duel-ai-battle">
-      <button class="secondary" id="duelAiBattleTextBtn" type="button" ${battle.aiNarrativeLoading ? "disabled" : ""}>${battle.aiNarrativeLoading ? "生成中..." : "AI生成战斗短文"}</button>
+      <button class="secondary" id="duelAiBattleTextBtn" type="button" ${battle.aiNarrativeLoading ? "disabled" : ""}>${battle.aiNarrativeLoading ? "生成中..." : "AI生成对战过程"}</button>
       ${battle.aiNarrativeError ? `<p class="error-text">${escapeHtml(battle.aiNarrativeError)}</p>` : ""}
       ${battle.aiNarrative ? `<p>${escapeHtml(battle.aiNarrative)}</p>` : ""}
     </div>

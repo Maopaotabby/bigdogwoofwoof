@@ -1,6 +1,6 @@
 param(
   [string]$Endpoint = "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev",
-  [string]$ExpectedBuild = "20260430-online-rule-engine-v1",
+  [string]$ExpectedBuild = "20260430-no-ai-judge-lock-delay-v1",
   [int]$ExpectedAiTimeoutMs = 30000,
   [int]$Count = 1,
   [int]$IntervalSeconds = 10

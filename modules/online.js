@@ -1,4 +1,4 @@
-const APP_BUILD_VERSION = "20260430-lighthouse-same-origin-v1";
+const APP_BUILD_VERSION = "20260430-no-ai-judge-lock-delay-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
@@ -52,6 +52,10 @@ function storage(kind = "local") {
 
 function nowMs() {
   return Date.now();
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, Math.max(0, Number(ms) || 0)));
 }
 
 function makeRequestId(operation = "op") {
@@ -230,7 +234,7 @@ function getOnlineHelpText() {
     "2. 对手输入房间码或打开邀请链接，选择角色后加入房间。",
     "3. 双方都点击“锁定角色”后进入对战阶段。",
     "4. 在联机手札区选择至少一张手札，然后点击“锁定行动”。",
-    "5. 双方都锁定后，服务器会请求 AI 裁判说明，本地规则引擎会同步结算 HP、CE、AP 和战斗记录。",
+    "5. 双方都锁定后，服务器会短暂停留显示锁定状态，然后由本地规则引擎同步结算 HP、CE、AP 和战斗记录。",
     "6. 如果行动选错，可以在双方结算前点击“取消锁定”重新选择。",
     "7. 对局结束或需要重开时，可以使用“再来一把”或“回到准备阶段”。"
   ].join("\n");
@@ -604,21 +608,21 @@ function unlockTurn(roomId, side, options = {}) {
   return Promise.resolve(snapshot(writeLocalRoom(room), actorSide));
 }
 
-function resolveTurn(roomId, options = {}) {
+async function resolveTurn(roomId, options = {}) {
   const settings = getBackendSettings(options);
   if (shouldUseRemote(settings)) return remoteOperation("resolveTurnIfReady", { roomId, side: options.side }, settings);
   const room = requireLocalRoom(roomId);
   if (!hasBothLockedActions(room)) throw new Error("双方尚未都锁定行动。");
   room.phase = "turn_resolving";
-  room.turnState.aiStatus = "local_fallback";
+  room.turnState.aiStatus = "rules_engine";
   const resolvedTurn = room.round;
   const lockedActions = {
     left: normalizeActions(room.turnState.actions.left),
     right: normalizeActions(room.turnState.actions.right)
   };
   room.turnState.result = {
-    source: "server-ai-placeholder",
-    summary: `第 ${room.round} 回合已接收双方锁定行动。服务器 AI broker 接入后将在此写入结构化结算。`,
+    source: "rules_engine",
+    summary: `第 ${room.round} 回合双方行动已锁定，按本地规则引擎结算。`,
     actions: cloneJson(lockedActions)
   };
   room.reviewState.lastResolvedTurn = {
@@ -628,12 +632,13 @@ function resolveTurn(roomId, options = {}) {
     result: cloneJson(room.turnState.result)
   };
   appendLog(room, "turn_resolved", room.turnState.result.summary, { turn: room.round });
+  await sleep(1000);
   room.round += 1;
   room.turnState = { turnId: `turn_${room.round}`, phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
   room.players.left.actionLocked = false;
   room.players.right.actionLocked = false;
   room.phase = "turn_selecting";
-  return Promise.resolve(snapshot(writeLocalRoom(room), options.side || uiState.side || "left"));
+  return snapshot(writeLocalRoom(room), options.side || uiState.side || "left");
 }
 
 function rematch(roomId, options = {}) {
@@ -760,6 +765,7 @@ function lockSelectedTurnFromBattle() {
     return Promise.reject(error);
   }
   pushDebugEvent({ level: "info", operation: "lockTurn", message: "已读取手札，准备提交锁定行动", detail: { roomId: uiState.roomId, side: uiState.side, actionsCount: actions.length } });
+  setLocalLockPending(true);
   return lockTurn(uiState.roomId, uiState.side, actions, { playerId: uiState.playerId })
     .then((room) => {
       const localLocked = room.phase === "turn_selecting" && Boolean(room.turnState?.locks?.[room.viewerSide || uiState.side]);
@@ -774,9 +780,27 @@ function lockSelectedTurnFromBattle() {
       return room;
     })
     .catch((error) => {
+      setLocalLockPending(false);
       showError(error);
       throw error;
     });
+}
+
+function setLocalLockPending(locked) {
+  if (!uiState.roomId || !uiState.side) return;
+  setDisabled("#onlineLockTurnBtn", Boolean(locked));
+  setDisabled("#onlineUnlockTurnBtn", Boolean(locked));
+  globalThis.JJKBattlePage?.setBattleMode?.("online", {
+    activeRoomId: uiState.roomId,
+    playerSide: uiState.side,
+    activePage: "online",
+    localLocked: Boolean(locked)
+  });
+  const battle = globalThis.JJKDuelRuntime?.getDuelBattle?.();
+  if (battle && battle.mode === "online" && battle.onlineRoomId === uiState.roomId) {
+    battle.actionUiMessage = locked ? "行动已锁定，等待服务器同步。" : "";
+    globalThis.JJKDuelRuntime?.renderDuelMode?.();
+  }
 }
 
 function snapshot(room, viewerSide = "") {
@@ -1288,7 +1312,7 @@ function bindUi() {
   });
   $("#onlineLockCharacterBtn")?.addEventListener("click", () => lockCharacter(uiState.roomId, uiState.side, { playerId: uiState.playerId }).then(render).catch(showError));
   $("#onlineUnlockCharacterBtn")?.addEventListener("click", () => unlockCharacter(uiState.roomId, uiState.side, { playerId: uiState.playerId }).then(render).catch(showError));
-  $("#onlineLockTurnBtn")?.addEventListener("click", () => lockTurn(uiState.roomId, uiState.side, readSelectedActionsFromDom(), { playerId: uiState.playerId }).then(render).catch(showError));
+  $("#onlineLockTurnBtn")?.addEventListener("click", () => lockSelectedTurnFromBattle().catch(() => {}));
   $("#onlineUnlockTurnBtn")?.addEventListener("click", () => unlockTurn(uiState.roomId, uiState.side, { playerId: uiState.playerId }).then(render).catch(showError));
   $("#onlineRematchBtn")?.addEventListener("click", () => rematch(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
   $("#onlineResetPrepareBtn")?.addEventListener("click", () => resetToPreparing(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));

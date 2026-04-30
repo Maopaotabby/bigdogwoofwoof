@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const PROTOCOL = "jjk_online_battle_v1";
-const WORKER_BUILD_VERSION = "20260430-online-rule-engine-v1";
+const WORKER_BUILD_VERSION = "20260430-no-ai-judge-lock-delay-v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
@@ -53,6 +53,10 @@ function withTimeout(promise, timeoutMs, message) {
     timer = setTimeout(() => reject(Object.assign(new Error(message), { code: "AI_TIMEOUT", timeoutMs })), timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
 }
 
 function isTimeoutError(error) {
@@ -439,63 +443,36 @@ async function resolveTurnWithAi(env, room) {
 async function resolveTurnIfReady(env, room, viewerSide = "left") {
   if (!hasBothLockedActions(room)) return room;
   room.phase = "turn_resolving";
-  room.turnState.aiStatus = "resolving";
+  room.turnState.aiStatus = "rules_engine_delay";
   const beforeRound = room.round;
   const lockedActions = redactSecrets({
     left: normalizeActions(room.turnState.actions.left),
     right: normalizeActions(room.turnState.actions.right)
   });
-  try {
-    const result = await resolveTurnWithAi(env, room);
-    room.turnState.result = result;
-    room.turnState.aiStatus = result.source;
-    room.reviewState.summary = result.summary || room.reviewState.summary || "";
-    room.reviewState.lastAiDebug = {
-      source: result.source,
-      model: result.model || "",
-      durationMs: result.durationMs || 0,
-      timeoutMs: result.timeoutMs || 0,
-      aiRequestPreview: result.aiRequestPreview || null,
-      responseTextPreview: result.responseTextPreview || ""
-    };
-    room.reviewState.lastResolvedTurn = {
-      turn: beforeRound,
-      source: result.source,
-      actions: lockedActions,
-      result: redactSecrets(result)
-    };
-    appendLog(room, "turn_resolved", result.summary || `第 ${beforeRound} 回合已结算。`, { turn: beforeRound, aiSource: result.source });
-  } catch (error) {
-    const errorMessage = String(error?.message || error).slice(0, 200);
-    const timeout = isTimeoutError(error);
-    const result = buildLocalTurnFallback(room, errorMessage);
-    const aiMessages = buildAiPrompt(room);
-    result.source = timeout ? "local_fallback_timeout" : "local_fallback_error";
-    result.timeout = timeout;
-    result.error = errorMessage;
-    room.turnState.result = result;
-    room.turnState.aiStatus = result.source;
-    room.reviewState.summary = result.summary;
-    room.reviewState.lastAiDebug = {
-      source: result.source,
-      error: errorMessage,
-      timedOut: timeout,
-      timeoutMs: error?.timeoutMs || 0,
-      aiRequestPreview: {
-        model: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
-        timeoutMs: error?.timeoutMs || clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000),
-        messages: compactAiMessages(redactSecrets(aiMessages))
-      },
-      fallback: "local_turn_placeholder"
-    };
-    room.reviewState.lastResolvedTurn = {
-      turn: beforeRound,
-      source: result.source,
-      actions: lockedActions,
-      result: redactSecrets(result)
-    };
-    appendLog(room, "turn_resolved", result.summary, { turn: beforeRound, aiSource: result.source, timedOut: timeout });
-  }
+  const result = {
+    source: "rules_engine",
+    summary: `第 ${beforeRound} 回合双方行动已锁定，按本地规则引擎结算。`,
+    leftEffect: "左方行动已进入本地规则结算。",
+    rightEffect: "右方行动已进入本地规则结算。",
+    winnerHint: "undecided",
+    actions: lockedActions
+  };
+  room.turnState.result = result;
+  room.turnState.aiStatus = result.source;
+  room.reviewState.summary = result.summary;
+  room.reviewState.lastAiDebug = {
+    source: "disabled",
+    reason: "online_turn_ai_judge_disabled",
+    delayMs: 1000
+  };
+  room.reviewState.lastResolvedTurn = {
+    turn: beforeRound,
+    source: result.source,
+    actions: lockedActions,
+    result: redactSecrets(result)
+  };
+  appendLog(room, "turn_resolved", result.summary, { turn: beforeRound, source: result.source });
+  await sleep(1000);
   room.round += 1;
   room.turnState = { turnId: `turn_${room.round}`, phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
   room.players.left.actionLocked = false;
