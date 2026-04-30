@@ -17,6 +17,12 @@ Health check:
 http://119.91.224.223/health
 ```
 
+Static site:
+
+```text
+http://119.91.224.223/
+```
+
 ## Server layout
 
 ```text
@@ -62,6 +68,7 @@ sudo systemctl restart bigdogwoofwoof-online.service
 ## HTTPS note
 
 GitHub Pages runs over HTTPS. Browsers may block calls from the HTTPS page to
-`http://119.91.224.223/online-room`. For public use, bind a domain to the
-Lighthouse instance and enable HTTPS, then set the online endpoint to the HTTPS
-URL.
+`http://119.91.224.223/online-room`. The Lighthouse Nginx config also serves the
+static site from `http://119.91.224.223/`, so the page can call `/online-room`
+as same-origin HTTP. For public HTTPS use, bind a domain to the Lighthouse
+instance and enable HTTPS, then set the online endpoint to the HTTPS URL.

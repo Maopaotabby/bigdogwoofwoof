@@ -1,4 +1,4 @@
-const APP_BUILD_VERSION = "20260430-online-help-official-default-v1";
+const APP_BUILD_VERSION = "20260430-lighthouse-same-origin-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
@@ -823,8 +823,24 @@ async function getRules(options = {}) {
 }
 
 async function getOfficialEndpoint() {
+  const sameOriginEndpoint = getSameOriginOfficialEndpoint();
+  if (sameOriginEndpoint) return sameOriginEndpoint;
   const rules = await getRules();
   return normalizeEndpoint(rules?.backend?.officialEndpoint?.url || "");
+}
+
+function getSameOriginOfficialEndpoint() {
+  const location = globalThis.location;
+  const hostname = String(location?.hostname || "");
+  if (!hostname) return "";
+  if (["localhost", "127.0.0.1", "::1"].includes(hostname)) return "";
+  if (hostname.endsWith("github.io")) return "";
+  if (!/^https?:$/.test(String(location?.protocol || ""))) return "";
+  try {
+    return new URL("/online-room", location.href).href;
+  } catch {
+    return "";
+  }
 }
 
 async function remoteOperation(operation, request = {}, options = {}) {
