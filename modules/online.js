@@ -23,6 +23,7 @@ const DEFAULT_RULES = Object.freeze({
 const memoryRooms = new Map();
 let cachedRules = null;
 let pollStop = null;
+let removalNoticeShown = false;
 let uiState = {
   roomId: "",
   playerId: "",
@@ -692,8 +693,9 @@ async function remoteOperation(operation, request = {}, options = {}) {
   if (!response.ok || data?.ok === false) throw new Error(data?.error || `联机服务器请求失败：${response.status}`);
   if (operation === "ping") return data || { ok: true };
   const room = normalizeRoom(data.room || data.snapshot);
-  const side = data.side || getPlayerSide(room, body.playerId) || body.side;
-  remember(room?.roomId || body.roomId, body.playerId, side, settings);
+  const actualSide = getPlayerSide(room, body.playerId);
+  const side = data.side || actualSide || body.side;
+  if (room?.roomId && actualSide) remember(room.roomId, body.playerId, actualSide, settings);
   return snapshot(room, side);
 }
 
@@ -787,8 +789,10 @@ function nextHint(room, side) {
 function render(room = {}) {
   syncCharacterSelects();
   const side = room.viewerSide || uiState.side || getPlayerSide(room, uiState.playerId) || "";
+  if (handleRemovedFromRoom(room)) return;
   const opponent = side ? otherSide(side) : "right";
   syncBattlePageLockState(room, side);
+  maybeEnterBattleView(room, side);
   setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
   setText("#onlineRoomCode", room.roomId || "未创建");
   setText("#onlineCurrentRoomCode", room.roomId || "未创建");
@@ -808,6 +812,33 @@ function render(room = {}) {
   setValue("#onlineInviteLink", room.roomId ? buildInviteLink(room.roomId) : "");
   updateButtons(room, side);
   renderBackendControls();
+}
+
+function handleRemovedFromRoom(room = {}) {
+  if (!room?.roomId || !uiState.roomId || !uiState.playerId) return false;
+  if (normalizeRoomId(room.roomId) !== normalizeRoomId(uiState.roomId)) return false;
+  if (getPlayerSide(room, uiState.playerId)) return false;
+  if (room.phase === "ended") return false;
+  if (removalNoticeShown) return true;
+  removalNoticeShown = true;
+  clearRemembered();
+  stopPolling();
+  globalThis.alert?.("你已被移出房间。页面将刷新并回到未加入状态。");
+  globalThis.setTimeout?.(() => {
+    try {
+      globalThis.location?.reload?.();
+    } catch {
+      render({});
+    }
+  }, 80);
+  return true;
+}
+
+function maybeEnterBattleView(room = {}, side = "") {
+  if (!room?.roomId || !side) return;
+  if (!["turn_selecting", "turn_resolving", "reviewing"].includes(room.phase)) return;
+  if (!room.players?.left?.characterId || !room.players?.right?.characterId) return;
+  enterBattleView(room, side);
 }
 
 function syncBattlePageLockState(room, side) {
@@ -872,9 +903,14 @@ function enterBattleView(room, side) {
   if (leftSelect && [...leftSelect.options].some((option) => option.value === left)) leftSelect.value = left;
   if (rightSelect && [...rightSelect.options].some((option) => option.value === right)) rightSelect.value = right;
   globalThis.JJKBattlePage?.setBattleMode?.("online", { activeRoomId: room.roomId, playerSide: side, activePage: "online", localLocked: false });
-  if (typeof globalThis.startDuelBattle === "function" && !globalThis.state?.duelBattle?.onlineRoomId) {
+  const starter = globalThis.JJKDuelRuntime?.startDuelBattle || globalThis.startDuelBattle;
+  const currentBattle = globalThis.JJKDuelRuntime?.getDuelBattle?.();
+  const currentLeft = currentBattle?.left?.id || currentBattle?.left?.characterId || "";
+  const currentRight = currentBattle?.right?.id || currentBattle?.right?.characterId || "";
+  if (typeof starter === "function" && currentBattle?.onlineRoomId === room.roomId && currentLeft === left && currentRight === right) return;
+  if (typeof starter === "function") {
     try {
-      globalThis.startDuelBattle({ mode: "online", allowOnline: true, snapshot: { roomId: room.roomId, battleSeed: room.battleState?.battleSeed, players: room.players } });
+      starter({ mode: "online", allowOnline: true, snapshot: { roomId: room.roomId, battleSeed: room.battleState?.battleSeed, players: room.players } });
     } catch {
       // The runtime may not be ready yet; the room state remains authoritative.
     }

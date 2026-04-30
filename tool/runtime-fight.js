@@ -1102,6 +1102,15 @@ function startDuelBattle(options = {}) {
   renderDuelMode();
 }
 
+globalThis.startDuelBattle = startDuelBattle;
+globalThis.JJKDuelRuntime = {
+  ...(globalThis.JJKDuelRuntime || {}),
+  startDuelBattle,
+  renderDuelMode,
+  getDuelBattle: () => state.duelBattle,
+  getDuelModeState: () => ({ ...state.duelModeState })
+};
+
 function getDuelMaxRoundsByGrade(left, right) {
   const leftRank = visibleGradeCategoryRank(left?.visibleGrade);
   const rightRank = visibleGradeCategoryRank(right?.visibleGrade);
@@ -2930,6 +2939,19 @@ function renderDuelBattlePanel(left, right, baseRate) {
   if (!els.duelBattle) return;
   const battle = state.duelBattle;
   if (!battle || battle.left.id !== left.id || battle.right.id !== right.id) {
+    if (isOnlineDuelModeActive()) {
+      els.duelBattle.innerHTML = `
+        <div class="duel-battle-empty">
+          <div>
+            <strong>联机战斗初始化中</strong>
+            <p class="muted">双方锁定角色后会自动进入联机手札界面；不需要点击单人开战按钮。</p>
+          </div>
+        </div>
+      `;
+      els.duelStartBtn.textContent = "联机进行中";
+      els.duelStartBtn.disabled = true;
+      return;
+    }
     els.duelBattle.innerHTML = `
       <div class="duel-battle-empty">
         <div>
