@@ -271,14 +271,15 @@
                 <p class="muted">单人、联机、自定义、情报和设置页已分离，避免模式状态混在一起。</p>
               </div>
               <div class="panel-actions">
-                <button id="duelSwapBtn" class="secondary" data-solo-disabled-when-online type="button">交换双方</button>
-                <button id="duelStartBtn" class="primary" data-solo-disabled-when-online type="button">开始单人对战</button>
+                <button id="duelSwapBtn" class="secondary" data-solo-disabled-when-online="true" type="button">交换双方</button>
+                <button id="duelStartBtn" class="primary" data-solo-disabled-when-online="true" type="button">开始单人对战</button>
               </div>
             </div>
 
             <nav class="jjk-battle-tabs" aria-label="咒术回战模块导航">
               <button class="jjk-battle-tab active" data-jjk-battle-tab="home" type="button">对战首页</button>
               <button class="jjk-battle-tab" data-jjk-battle-tab="solo" type="button">单人对战</button>
+              <button class="jjk-battle-tab" data-jjk-battle-tab="online" type="button">联机模式</button>
               <button class="jjk-battle-tab" data-jjk-battle-tab="custom" type="button">自定义角色</button>
               <button class="jjk-battle-tab" data-jjk-battle-tab="archive" type="button">情报档案</button>
               <button class="jjk-battle-tab" data-jjk-battle-tab="settings" type="button">对战设置</button>
@@ -289,6 +290,10 @@
                 <button class="jjk-battle-home-card" data-jjk-battle-open="solo" data-jjk-battle-mode="solo" type="button">
                   <strong>单人对战</strong>
                   <span>选择我方 / 对方角色，进入手札、AP、领域、trial / jackpot 和日志界面。</span>
+                </button>
+                <button class="jjk-battle-home-card" data-jjk-battle-open="online" data-jjk-battle-mode="online" type="button">
+                  <strong>联机模式</strong>
+                  <span>创建或加入房间，双方选角锁定后进入联机对战并由服务器自动结算。</span>
                 </button>
                 <button class="jjk-battle-home-card" data-jjk-battle-open="custom" type="button">
                   <strong>自定义角色</strong>
