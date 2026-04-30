@@ -19,10 +19,34 @@
     "efficiency": "S",
     "body": "SSS",
     "martial": "SSS",
-    "talent": "SSS"
+    "talent": "SSS",
+    "cursedTechnique": 7.54,
+    "physical": 8,
+    "perception": 8,
+    "construction": 3.04
   },
   "techniquePower": "SSS",
   "officialGrade": "不适用",
   "powerTier": "postCanonCeiling",
-  "notes": "基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。"
+  "notes": "基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

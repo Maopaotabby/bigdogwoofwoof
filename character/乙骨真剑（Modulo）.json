@@ -23,7 +23,11 @@
     "efficiency": "S",
     "body": "S",
     "martial": "SS",
-    "talent": "SS"
+    "talent": "SS",
+    "cursedTechnique": 6.77,
+    "physical": 6.46,
+    "perception": 7,
+    "construction": 0.14
   },
   "loadout": [
     "焰柳",
@@ -33,5 +37,22 @@
   "externalResource": "乙骨戒指/里香资源",
   "officialGrade": "不适用",
   "powerTier": "newGenerationTop",
-  "notes": "这里的真剑是乙骨真剑，不是克罗斯。"
+  "notes": "这里的真剑是乙骨真剑，不是克罗斯。",
+  "techniquePower": "无",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "advancedTechniques": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

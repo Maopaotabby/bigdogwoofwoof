@@ -19,7 +19,11 @@
     "efficiency": "B",
     "body": "SS",
     "martial": "SS",
-    "talent": "S"
+    "talent": "S",
+    "cursedTechnique": 4.77,
+    "physical": 7,
+    "perception": 5.96,
+    "construction": 1.92
   },
   "innateTraits": [
     "不义游戏"
@@ -27,5 +31,22 @@
   "techniquePower": "A",
   "officialGrade": "一级",
   "powerTier": "grade1Plus",
-  "notes": "单体面板是一级强者，配合战中不义游戏价值远高于裸数值。"
+  "notes": "单体面板是一级强者，配合战中不义游戏价值远高于裸数值。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

@@ -23,7 +23,11 @@
     "efficiency": "E-",
     "body": "SSS",
     "martial": "SSS",
-    "talent": "SS"
+    "talent": "SS",
+    "cursedTechnique": 0,
+    "physical": 8,
+    "perception": 6,
+    "construction": 0.06
   },
   "innateTraits": [
     "零咒力天与暴君型天与咒缚"
@@ -33,5 +37,20 @@
   ],
   "officialGrade": "无",
   "powerTier": "topTierPhysical",
-  "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。"
+  "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。",
+  "techniquePower": "无",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

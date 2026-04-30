@@ -23,12 +23,34 @@
     "efficiency": "SS",
     "body": "SS",
     "martial": "SS",
-    "talent": "S"
+    "talent": "S",
+    "cursedTechnique": 6.73,
+    "physical": 7,
+    "perception": 6.12,
+    "construction": 2.88
   },
   "externalResource": "坐杀搏徒中奖",
   "techniquePower": "SS",
   "domainProfile": "坐杀搏徒领域",
   "officialGrade": "停学/未正式评级",
   "powerTier": "topTierSustain",
-  "notes": "中奖状态以续航和不死性建立强者地位。"
+  "notes": "中奖状态以续航和不死性建立强者地位。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

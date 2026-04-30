@@ -23,7 +23,11 @@
     "efficiency": "SSS",
     "body": "SSS",
     "martial": "SSS",
-    "talent": "EX-"
+    "talent": "EX-",
+    "cursedTechnique": 8.54,
+    "physical": 8,
+    "perception": 9.76,
+    "construction": 2.95
   },
   "innateTraits": [
     "半人半咒",
@@ -35,5 +39,21 @@
   "domainProfile": "高阶反领域/领域对策",
   "officialGrade": "不适用",
   "powerTier": "postCanonException",
-  "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。"
+  "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

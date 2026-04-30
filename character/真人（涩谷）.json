@@ -25,7 +25,11 @@
     "efficiency": "S",
     "body": "A",
     "martial": "A",
-    "talent": "SS"
+    "talent": "SS",
+    "cursedTechnique": 6.5,
+    "physical": 5,
+    "perception": 6.6,
+    "construction": 3.33
   },
   "innateTraits": [
     "咒灵之躯",
@@ -37,5 +41,21 @@
   "domainProfile": "领域展开：自闭圆顿裹",
   "officialGrade": "特级咒灵",
   "powerTier": "disasterCurse",
-  "notes": "灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。"
+  "notes": "灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

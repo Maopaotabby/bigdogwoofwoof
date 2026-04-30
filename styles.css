@@ -1108,6 +1108,26 @@ main {
   font-size: 12px;
 }
 
+.duel-custom-interface,
+.duel-special-card-editor {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(47, 111, 104, 0.34);
+  border-radius: 8px;
+  background: rgba(240, 253, 250, 0.42);
+}
+
+.duel-custom-hand-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.duel-custom-hand-summary {
+  grid-column: span 3;
+}
+
 .duel-library-assist {
   display: grid;
   gap: 10px;
@@ -3946,6 +3966,7 @@ body.debug-mode .debug-toggle {
   .duel-action-choices,
   .duel-custom-grid,
   .duel-custom-grid-wide,
+  .duel-custom-hand-grid,
   .duel-library-grid,
   .duel-debug-grid,
   .duel-special-grid {
@@ -4154,6 +4175,10 @@ body.debug-mode .debug-toggle {
 
   .duel-custom-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .duel-custom-hand-summary {
+    grid-column: span 2;
   }
 
   .duel-custom-actions {

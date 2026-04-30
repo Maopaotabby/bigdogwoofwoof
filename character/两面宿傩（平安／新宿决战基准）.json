@@ -23,7 +23,11 @@
     "efficiency": "S",
     "body": "SSS",
     "martial": "SSS",
-    "talent": "SSS"
+    "talent": "SSS",
+    "cursedTechnique": 7.54,
+    "physical": 8,
+    "perception": 8,
+    "construction": 2.92
   },
   "innateTraits": [
     "双面四臂",
@@ -34,5 +38,20 @@
   "domainProfile": "开放领域：伏魔御厨子",
   "officialGrade": "特级咒物/诅咒之王",
   "powerTier": "canonCeiling",
-  "notes": "御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。"
+  "notes": "御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

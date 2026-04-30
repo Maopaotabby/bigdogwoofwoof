@@ -23,7 +23,11 @@
     "efficiency": "E-",
     "body": "SSS",
     "martial": "SSS",
-    "talent": "S"
+    "talent": "S",
+    "cursedTechnique": 0,
+    "physical": 8,
+    "perception": 5.28,
+    "construction": 0.06
   },
   "innateTraits": [
     "零咒力天与暴君型天与咒缚"
@@ -33,5 +37,20 @@
   ],
   "officialGrade": "无",
   "powerTier": "topTierPhysical",
-  "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。"
+  "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。",
+  "techniquePower": "无",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

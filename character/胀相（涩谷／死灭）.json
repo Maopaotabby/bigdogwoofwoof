@@ -19,7 +19,11 @@
     "efficiency": "A",
     "body": "S",
     "martial": "SS",
-    "talent": "S"
+    "talent": "S",
+    "cursedTechnique": 6.27,
+    "physical": 6.46,
+    "perception": 6.12,
+    "construction": 2.32
   },
   "innateTraits": [
     "咒胎九相图",
@@ -29,5 +33,21 @@
   "officialGrade": "特级咒物受肉体",
   "visibleGrade": "grade1",
   "powerTier": "grade1Plus",
-  "notes": "按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。"
+  "notes": "按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

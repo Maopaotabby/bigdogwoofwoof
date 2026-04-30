@@ -25,7 +25,11 @@
     "efficiency": "A",
     "body": "SS",
     "martial": "B",
-    "talent": "A"
+    "talent": "A",
+    "cursedTechnique": 7.23,
+    "physical": 5.62,
+    "perception": 4.72,
+    "construction": 2.7
   },
   "innateTraits": [
     "咒灵之躯",
@@ -34,5 +38,22 @@
   "techniquePower": "SS",
   "officialGrade": "特级过咒怨灵",
   "powerTier": "specialGradeCurse",
-  "notes": "0卷完全显现的真里香锚点；作为独立咒灵卡时不叠加乙骨的术师操作。"
+  "notes": "0卷完全显现的真里香锚点；作为独立咒灵卡时不叠加乙骨的术师操作。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

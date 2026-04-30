@@ -19,7 +19,11 @@
     "efficiency": "A",
     "body": "SS",
     "martial": "SS",
-    "talent": "A"
+    "talent": "A",
+    "cursedTechnique": 6.77,
+    "physical": 7,
+    "perception": 5.4,
+    "construction": 2.92
   },
   "innateTraits": [
     "咒力大炮",
@@ -30,5 +34,20 @@
   "officialGrade": "古代术师",
   "visibleGrade": "specialGrade",
   "powerTier": "sendaiTop",
-  "notes": "咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。"
+  "notes": "咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

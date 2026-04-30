@@ -294,6 +294,10 @@
                   <strong>自定义角色</strong>
                   <span>角色编辑、AI 辅助解析、术式库、领域库、咒具库和外部资源库。</span>
                 </button>
+                <button class="jjk-battle-home-card" data-jjk-battle-open="custom" data-custom-character-entry type="button">
+                  <strong>自定义角色接入</strong>
+                  <span>从转盘导出数据接入角色，并制作只属于该角色的特殊手札。</span>
+                </button>
                 <button class="jjk-battle-home-card" data-jjk-battle-open="archive" type="button">
                   <strong>情报档案</strong>
                   <span>查看角色、卡牌、领域、机制、trial / jackpot、AI Provider 和联机 Alpha 说明。</span>
@@ -465,6 +469,89 @@
                   <span id="duelImportStatus" class="muted">只读取本站战力编码；不会请求 AI。</span>
                 </div>
               </div>
+              <section id="customCharacterInterface" class="duel-custom-interface" aria-label="自定义角色接入界面">
+                <div class="debug-entry-head">
+                  <strong>自定义角色接入界面</strong>
+                  <span id="duelCustomAccessStatus" class="muted">可从转盘导出 JSON / JJKCP1 编码导入基础数据；特殊手札会自动绑定当前角色。</span>
+                </div>
+                <div class="duel-import-code-panel">
+                  <label class="field">
+                    <span>转盘导出数据导入</span>
+                    <textarea id="duelWheelImportData" rows="5" placeholder="粘贴结果页导出的 JSON，或包含 JJKCP1 编码的文本"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>上传导出文件</span>
+                    <input id="duelWheelImportFile" type="file" accept=".json,.txt,.md,application/json,text/plain">
+                  </label>
+                  <div class="action-row compact">
+                    <button id="duelWheelImportBtn" class="secondary" type="button">导入到自定义角色</button>
+                    <button id="duelWheelImportCurrentBtn" class="secondary" type="button">读取当前转盘结果</button>
+                    <span id="duelWheelImportStatus" class="muted">导入后请检查字段，再加入角色池。</span>
+                  </div>
+                </div>
+                <div class="duel-special-card-editor">
+                  <div class="debug-entry-head">
+                    <strong>自定义特殊手札</strong>
+                    <span id="duelCustomHandStatus" class="muted">数值必须为整数；保存时自动挂上角色特殊手札标签。</span>
+                  </div>
+                  <div class="duel-custom-hand-grid">
+                    <label class="field">
+                      <span>手札名称</span>
+                      <input id="duelCustomHandName" type="text" maxlength="40" placeholder="例：自定义术式爆发">
+                    </label>
+                    <label class="field">
+                      <span>手札类型</span>
+                      <select id="duelCustomHandType"></select>
+                    </label>
+                    <label class="field">
+                      <span>风险</span>
+                      <select id="duelCustomHandRisk">
+                        <option value="low">低风险</option>
+                        <option value="medium" selected>中风险</option>
+                        <option value="high">高风险</option>
+                        <option value="critical">极高风险</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>AP 消耗</span>
+                      <input id="duelCustomHandApCost" type="number" step="1" value="1">
+                    </label>
+                    <label class="field">
+                      <span>咒力消耗</span>
+                      <input id="duelCustomHandCeCost" type="number" step="1" value="10">
+                    </label>
+                    <label class="field">
+                      <span>伤害</span>
+                      <input id="duelCustomHandDamage" type="number" step="1" value="10">
+                    </label>
+                    <label class="field">
+                      <span>防御</span>
+                      <input id="duelCustomHandBlock" type="number" step="1" value="0">
+                    </label>
+                    <label class="field">
+                      <span>稳定修正</span>
+                      <input id="duelCustomHandStability" type="number" step="1" value="0">
+                    </label>
+                    <label class="field">
+                      <span>领域负荷</span>
+                      <input id="duelCustomHandDomainLoad" type="number" step="1" value="0">
+                    </label>
+                    <label class="field duel-custom-hand-summary">
+                      <span>效果说明</span>
+                      <input id="duelCustomHandSummary" type="text" maxlength="120" placeholder="战斗中显示的短效果">
+                    </label>
+                    <label class="field duel-custom-hand-summary">
+                      <span>额外标签</span>
+                      <input id="duelCustomHandTags" type="text" maxlength="120" placeholder="用逗号或顿号分隔">
+                    </label>
+                  </div>
+                  <div class="action-row compact">
+                    <button id="duelCustomHandAddBtn" class="secondary" type="button">加入特殊手札</button>
+                    <button id="duelCustomHandClearBtn" class="secondary" type="button">清空手札</button>
+                  </div>
+                  <div id="duelCustomHandList" class="duel-custom-list"></div>
+                </div>
+              </section>
               <fieldset class="duel-custom-mode">
                 <legend>自定义方式</legend>
                 <label>

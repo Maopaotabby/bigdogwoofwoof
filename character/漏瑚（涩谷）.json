@@ -23,7 +23,11 @@
     "efficiency": "S",
     "body": "S",
     "martial": "A",
-    "talent": "S"
+    "talent": "S",
+    "cursedTechnique": 7.27,
+    "physical": 5.54,
+    "perception": 6.04,
+    "construction": 3.3
   },
   "innateTraits": [
     "咒灵之躯",
@@ -33,5 +37,21 @@
   "domainProfile": "领域展开：盖棺铁围山",
   "officialGrade": "特级咒灵",
   "powerTier": "disasterCurse",
-  "notes": "高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。"
+  "notes": "高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

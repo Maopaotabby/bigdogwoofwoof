@@ -1050,9 +1050,126 @@ function importCombatPowerCodeToDuel() {
   }
 }
 
-function applyCombatPowerImportToDuelForm(payload) {
+function importWheelExportToCustomDuel() {
+  const raw = els.duelWheelImportData?.value || "";
+  if (!raw.trim()) {
+    updateWheelImportStatus("请先粘贴转盘导出数据或 JJKCP1 编码。", true);
+    return;
+  }
+  try {
+    const payload = parseWheelExportForCustomDuel(raw);
+    applyCombatPowerImportToDuelForm(payload, { requireCombatProfile: false, sourceLabel: "转盘导出数据" });
+    updateWheelImportStatus(`已导入：${payload.character?.displayName || "未命名"}；请检查字段后加入角色池。`);
+  } catch (error) {
+    updateWheelImportStatus(error?.message || "导入失败。", true);
+    window.alert(error?.message || "导入失败。");
+  }
+}
+
+function importCurrentWheelResultToCustomDuel() {
+  const strength = buildStrengthSnapshot();
+  if (!strength?.instantCombatProfile) {
+    updateWheelImportStatus("当前转盘结果还不足以生成战力数据，请先完成基础属性抽取。", true);
+    return;
+  }
+  try {
+    const character = buildCombatPowerExportCharacter(strength, strength.instantCombatProfile);
+    applyCombatPowerImportToDuelForm({ character }, { sourceLabel: "当前转盘结果" });
+    updateWheelImportStatus(`已读取当前转盘结果：${character.displayName || "未命名"}。`);
+  } catch (error) {
+    updateWheelImportStatus(error?.message || "读取当前转盘结果失败。", true);
+  }
+}
+
+function updateWheelImportStatus(message, isError = false) {
+  if (!els.duelWheelImportStatus) return;
+  els.duelWheelImportStatus.textContent = message;
+  els.duelWheelImportStatus.classList.toggle("error-text", Boolean(isError));
+}
+
+function readWheelImportFileToTextarea() {
+  const file = els.duelWheelImportFile?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    if (els.duelWheelImportData) els.duelWheelImportData.value = String(reader.result || "");
+    updateWheelImportStatus(`已读取文件：${file.name}。点击“导入到自定义角色”继续。`);
+  });
+  reader.addEventListener("error", () => {
+    updateWheelImportStatus("读取导出文件失败。", true);
+  });
+  reader.readAsText(file, "utf-8");
+}
+
+function parseWheelExportForCustomDuel(raw) {
+  const code = extractCombatPowerCode(raw);
+  if (code) return decodeCombatPowerImportCode(code);
+  const parsed = JSON.parse(raw);
+  if (parsed?.character?.encodedCombatProfile || parsed?.character?.baseStats) return { character: normalizeWheelImportCharacter(parsed.character) };
+  if (parsed?.schema === "jjk-combat-power-export" && parsed?.character) return { character: normalizeWheelImportCharacter(parsed.character) };
+  if (parsed?.strength || parsed?.rawRanks || parsed?.instantCombatProfile) {
+    return { character: buildCharacterFromWheelExportObject(parsed) };
+  }
+  throw new Error("未识别的转盘导出格式。请粘贴 JJKCP1 编码、战力导出 JSON，或包含 rawRanks/strength 的调试 JSON。");
+}
+
+function buildCharacterFromWheelExportObject(source) {
+  const strength = source.strength || source;
+  const rawRanks = strength.rawRanks || source.rawRanks || {};
+  const character = {
+    displayName: normalizeCustomDuelText(source.displayName || source.name || "转盘导入角色"),
+    visibleGrade: source.visibleGrade || "support",
+    stage: getValidDuelStage(source.stage || "custom"),
+    baseStats: {
+      cursedEnergy: normalizeDuelRankForImport(rawRanks.cursedEnergyScore || source.cursedEnergy || source["咒力总量"]),
+      control: normalizeDuelRankForImport(rawRanks.controlScore || source.control || source["咒力操纵"]),
+      efficiency: normalizeDuelRankForImport(rawRanks.efficiencyScore || source.efficiency || source["咒力效率"]),
+      body: normalizeDuelRankForImport(rawRanks.bodyScore || source.body || source["体质"]),
+      martial: normalizeDuelRankForImport(rawRanks.martialScore || source.martial || source["体术"]),
+      talent: normalizeDuelRankForImport(rawRanks.talentScore || source.talent || source["悟性"])
+    },
+    techniquePower: normalizeDuelRankForImport(source.techniquePower || "B"),
+    techniqueName: normalizeCustomDuelText(source.techniqueName || source.technique || ""),
+    domainProfile: normalizeCustomDuelText(source.domainProfile || source.domain || ""),
+    innateTraits: mergeDuelLocalList(source.innateTraits || source.traits || []),
+    loadout: mergeDuelLocalList(source.loadout || source.tools || []),
+    externalResource: normalizeCustomDuelText(source.externalResource || ""),
+    notes: normalizeCustomDuelText(source.notes || "由转盘导出数据导入"),
+    debugManualCombatScore: parseOptionalDuelNumber(source.debugManualCombatScore ?? strength.instantPowerScore, 0, 12),
+    debugManualCombatUnit: parseOptionalDuelNumber(source.debugManualCombatUnit ?? strength.combatPowerUnit?.value, 1, 99999999),
+    encodedCombatProfile: {
+      combatPowerUnit: strength.combatPowerUnit || { value: parseOptionalDuelNumber(source.debugManualCombatUnit, 1, 99999999) || 1 },
+      axisScores: strength.instantCombatProfile?.axisScores || source.instantCombatProfile?.axisScores || source.axisScores || {}
+    }
+  };
+  return normalizeWheelImportCharacter(character);
+}
+
+function normalizeWheelImportCharacter(character = {}) {
+  return {
+    ...character,
+    displayName: normalizeCustomDuelText(character.displayName || character.name || "转盘导入角色"),
+    visibleGrade: DUEL_GRADE_OPTIONS.some((item) => item.value === character.visibleGrade) ? character.visibleGrade : "support",
+    stage: getValidDuelStage(character.stage || "custom"),
+    baseStats: {
+      cursedEnergy: normalizeDuelRankForImport(character.baseStats?.cursedEnergy),
+      control: normalizeDuelRankForImport(character.baseStats?.control),
+      efficiency: normalizeDuelRankForImport(character.baseStats?.efficiency),
+      body: normalizeDuelRankForImport(character.baseStats?.body),
+      martial: normalizeDuelRankForImport(character.baseStats?.martial),
+      talent: normalizeDuelRankForImport(character.baseStats?.talent)
+    },
+    techniquePower: normalizeDuelRankForImport(character.techniquePower),
+    innateTraits: mergeDuelLocalList(character.innateTraits || []),
+    loadout: mergeDuelLocalList(character.loadout || []),
+    externalResource: normalizeCustomDuelText(character.externalResource || ""),
+    notes: normalizeCustomDuelText(character.notes || "由转盘导出数据导入")
+  };
+}
+
+function applyCombatPowerImportToDuelForm(payload, options = {}) {
   const character = payload?.character || {};
-  if (!character.displayName || !character.encodedCombatProfile?.combatPowerUnit) {
+  if (!character.displayName || (options.requireCombatProfile !== false && !character.encodedCombatProfile?.combatPowerUnit)) {
     throw new Error("战力编码缺少角色战力表。");
   }
   setDuelCustomMode("library");
@@ -1080,6 +1197,8 @@ function applyCombatPowerImportToDuelForm(payload) {
   setSelectedDuelDefinitionValues(els.duelCustomResourceTags, []);
   setSelectedDuelDefinitionValues(els.duelCustomMechanisms, []);
   setSelectedDuelDefinitionValues(els.duelCustomToolTags, []);
+  state.pendingCustomDuelHandCards = [];
+  if (typeof renderPendingCustomDuelHandList === "function") renderPendingCustomDuelHandList();
   syncCustomDuelEditMode();
   state.duelBattle = null;
   renderDuelMode();

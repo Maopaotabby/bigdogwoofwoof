@@ -706,6 +706,7 @@
     var battle = getBattle(duelState);
     var templates = [
       ...getDuelActionTemplateIndex().templates,
+      ...buildCustomDuelSpecialActions(actor),
       ...buildDuelDomainSpecificActions(actor, opponent, battle)
     ];
     return templates.map(function mapTemplate(template) {
@@ -717,6 +718,23 @@
         available: availability.available,
         unavailableReason: availability.reason,
         riskLabel: getDuelActionRiskLabel(template, actor, opponent)
+      };
+    });
+  }
+
+  function buildCustomDuelSpecialActions(actor) {
+    var appState = getOptionalDependency("state");
+    var actorId = actor?.profileId || actor?.characterId || actor?.id || "";
+    if (!actorId || !Array.isArray(appState?.customDuelCards)) return [];
+    var card = appState.customDuelCards.find(function findCustomCard(item) {
+      return item?.characterId === actorId || item?.id === actorId;
+    });
+    if (!card || !Array.isArray(card.customHandCards)) return [];
+    return card.customHandCards.map(function mapCustomHand(action) {
+      return {
+        ...action,
+        customDuelCard: true,
+        available: true
       };
     });
   }

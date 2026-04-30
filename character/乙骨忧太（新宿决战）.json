@@ -23,7 +23,11 @@
     "efficiency": "S",
     "body": "S",
     "martial": "SS",
-    "talent": "SSS"
+    "talent": "SSS",
+    "cursedTechnique": 7.27,
+    "physical": 6.46,
+    "perception": 7.72,
+    "construction": 3.26
   },
   "externalResource": "里香资源",
   "advancedTechniques": [
@@ -33,5 +37,20 @@
   "domainProfile": "领域展开：真赝相爱",
   "officialGrade": "特级",
   "powerTier": "specialGrade",
-  "notes": "正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。"
+  "notes": "正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

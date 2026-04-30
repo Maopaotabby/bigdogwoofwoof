@@ -19,7 +19,11 @@
     "efficiency": "S",
     "body": "A",
     "martial": "A",
-    "talent": "SS"
+    "talent": "SS",
+    "cursedTechnique": 6.77,
+    "physical": 5,
+    "perception": 6.76,
+    "construction": 2.92
   },
   "innateTraits": [
     "天空术式",
@@ -30,5 +34,20 @@
   "officialGrade": "古代术师",
   "visibleGrade": "specialGrade",
   "powerTier": "sendaiTop",
-  "notes": "空间扭曲和防御反击强；仙台三方领域参与者之一。"
+  "notes": "空间扭曲和防御反击强；仙台三方领域参与者之一。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

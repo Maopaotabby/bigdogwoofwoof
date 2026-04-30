@@ -19,7 +19,11 @@
     "efficiency": "S",
     "body": "SS",
     "martial": "SS",
-    "talent": "SS"
+    "talent": "SS",
+    "cursedTechnique": 7.27,
+    "physical": 7,
+    "perception": 7,
+    "construction": 3.3
   },
   "innateTraits": [
     "构筑术式",
@@ -30,5 +34,20 @@
   "officialGrade": "特级古代术师",
   "visibleGrade": "specialGrade",
   "powerTier": "topTier",
-  "notes": "构筑术式高上限，完全球体与领域展开构成主要胜路。"
+  "notes": "构筑术式高上限，完全球体与领域展开构成主要胜路。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

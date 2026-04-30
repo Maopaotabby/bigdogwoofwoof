@@ -370,7 +370,9 @@ function initializeDuelCustomPanel() {
       .join("");
   }
   populateDuelDefinitionSelects();
+  if (typeof populateDuelCustomHandTypeSelect === "function") populateDuelCustomHandTypeSelect();
   renderDuelCustomList();
+  if (typeof renderPendingCustomDuelHandList === "function") renderPendingCustomDuelHandList();
   renderDuelSpecialTermList();
   syncDuelAiAssistPanel();
   syncDuelCustomMode();

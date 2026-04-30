@@ -19,7 +19,11 @@
     "efficiency": "A",
     "body": "A",
     "martial": "S",
-    "talent": "A"
+    "talent": "A",
+    "cursedTechnique": 5,
+    "physical": 5.46,
+    "perception": 5.12,
+    "construction": 1.92
   },
   "innateTraits": [
     "黑鸟操术"
@@ -27,5 +31,22 @@
   "techniquePower": "A",
   "officialGrade": "一级",
   "powerTier": "grade1",
-  "notes": "黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。"
+  "notes": "黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
 }

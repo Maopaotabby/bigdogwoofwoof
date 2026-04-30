@@ -1,0 +1,1011 @@
+# 角色数据说明
+
+本文件记录 character 目录中每个角色 JSON 的主要数据结构。角色缺少对应能力或词条时，字段保留，内容记为“无”。
+
+## 五条悟（新宿决战）
+- JSON: 五条悟（新宿决战）.json
+- name: 五条悟（新宿决战）
+- hp: 6
+- mp: 6
+- 四轴: 咒术 7 / 肉体 6.92 / 悟性 7.28 / 构筑 3.3
+- stage: shinjuku
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 顶级领域：无量空处
+- externalResource: 无
+- officialGrade: 特级
+- powerTier: canonCeiling
+- visibleGrade: 无
+- notes: 六眼锁定咒力操纵与效率 SSS；强度核心不是咒力总量 EX。
+- innateTraits: 六眼、无下限
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: gojo_limitless
+- 特殊手札: gojo_limitless
+
+## 两面宿傩（平安/新宿决战基准）
+- JSON: 两面宿傩（平安／新宿决战基准）.json
+- name: 两面宿傩（平安/新宿决战基准）
+- hp: 8
+- mp: 8
+- 四轴: 咒术 7.54 / 肉体 8 / 悟性 8 / 构筑 2.92
+- stage: heianToShinjuku
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 开放领域：伏魔御厨子
+- externalResource: 新宿决战十影资源：魔虚罗、嵌合兽顎吐；魔虚罗适应无下限后提供世界斩参照。
+- officialGrade: 特级咒物/诅咒之王
+- powerTier: canonCeiling
+- visibleGrade: 无
+- notes: 御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。
+- innateTraits: 双面四臂、善用束缚
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: sukuna_slash
+- 特殊手札: sukuna_slash
+
+## 虎天帝 / 虎杖悠仁（68年后）
+- JSON: 虎天帝 ／ 虎杖悠仁（68年后）.json
+- name: 虎天帝 / 虎杖悠仁（68年后）
+- hp: 8
+- mp: 8
+- 四轴: 咒术 8.54 / 肉体 8 / 悟性 9.76 / 构筑 2.95
+- stage: after68
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 高阶反领域/领域对策
+- externalResource: 无
+- officialGrade: 不适用
+- powerTier: postCanonException
+- visibleGrade: 无
+- notes: 68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。
+- innateTraits: 半人半咒、不老/咒物沉淀、随意黑闪、EX锚点
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: yuji_soul_melee
+- 特殊手札: yuji_soul_melee
+
+## 高羽史彦（死灭回游）
+- JSON: 高羽史彦（死灭回游）.json
+- name: 高羽史彦（死灭回游）
+- hp: 4
+- mp: 4
+- 四轴: 咒术 4 / 肉体 3.54 / 悟性 4.6 / 构筑 3.8
+- stage: cullingGame
+- techniquePower: EX-
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 未评级
+- powerTier: haxException
+- visibleGrade: 无
+- notes: 超人术式极强，但杀意、理解和稳定性限制其即时胜率。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 伏黑甚尔（怀玉，完整咒具）
+- JSON: 伏黑甚尔（怀玉，完整咒具）.json
+- name: 伏黑甚尔（怀玉，完整咒具）
+- hp: 8
+- mp: 0
+- 四轴: 咒术 0 / 肉体 8 / 悟性 6 / 构筑 0.2
+- stage: hiddenInventory
+- techniquePower: 无
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 无
+- powerTier: topTierPhysical
+- visibleGrade: 无
+- notes: 完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。
+- innateTraits: 零咒力天与暴君型天与咒缚
+- advancedTechniques: 无
+- loadout: 天逆鉾、万里锁、释魂刀、武器库咒灵
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: zero_ce_heavenly_restriction
+- 特殊手札: zero_ce_heavenly_restriction
+
+## 伏黑甚尔（涩谷通灵）
+- JSON: 伏黑甚尔（涩谷通灵）.json
+- name: 伏黑甚尔（涩谷通灵）
+- hp: 8
+- mp: 0
+- 四轴: 咒术 0 / 肉体 8 / 悟性 5.28 / 构筑 0.06
+- stage: shibuya
+- techniquePower: 无
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 无
+- powerTier: topTierPhysical
+- visibleGrade: 无
+- notes: 意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。
+- innateTraits: 零咒力天与暴君型天与咒缚
+- advancedTechniques: 无
+- loadout: 游云
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: zero_ce_heavenly_restriction
+- 特殊手札: zero_ce_heavenly_restriction
+
+## 禅院真希（死灭回游完成后）
+- JSON: 禅院真希（死灭回游完成后）.json
+- name: 禅院真希（死灭回游完成后）
+- hp: 8
+- mp: 0
+- 四轴: 咒术 0 / 肉体 8 / 悟性 6 / 构筑 0.06
+- stage: cullingGame
+- techniquePower: 无
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 无
+- powerTier: topTierPhysical
+- visibleGrade: 无
+- notes: 领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。
+- innateTraits: 零咒力天与暴君型天与咒缚
+- advancedTechniques: 无
+- loadout: 释魂刀
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: zero_ce_heavenly_restriction
+- 特殊手札: zero_ce_heavenly_restriction
+
+## 乙骨忧太（0卷，真里香）
+- JSON: 乙骨忧太（0卷，真里香）.json
+- name: 乙骨忧太（0卷，真里香）
+- hp: 4
+- mp: 10
+- 四轴: 咒术 7.5 / 肉体 4 / 悟性 7.04 / 构筑 0
+- stage: volume0
+- techniquePower: 无
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 真里香
+- officialGrade: 特级
+- powerTier: specialGrade
+- visibleGrade: 无
+- notes: 通过相互诅咒形成近乎无限咒力来源；0卷后真里香成佛，资源形态下降。
+- innateTraits: 无
+- advancedTechniques: 反转术式外放
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: okkotsu_rika_copy
+- 特殊手札: okkotsu_rika_copy
+
+## 夏油杰（0卷）
+- JSON: 夏油杰（0卷）.json
+- name: 夏油杰（0卷）
+- hp: 6
+- mp: 7
+- 四轴: 咒术 7 / 肉体 6.92 / 悟性 7.12 / 构筑 3.04
+- stage: volume0
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 特级
+- powerTier: specialGrade
+- visibleGrade: 无
+- notes: 咒灵操术库存不直接消耗自身咒力；若百鬼夜行不兵分两路，可能正面击败0卷乙骨与真里香组合。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 鹿紫云一（400年前）
+- JSON: 鹿紫云一（400年前）.json
+- name: 鹿紫云一（400年前）
+- hp: 7
+- mp: 7
+- 四轴: 咒术 6.77 / 肉体 7 / 悟性 7 / 构筑 3.28
+- stage: ancient400
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无领域
+- externalResource: 无
+- officialGrade: 特级古代术师
+- powerTier: topTier
+- visibleGrade: specialGrade
+- notes: 400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。
+- innateTraits: 电荷咒力
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 秤金次（中奖状态）
+- JSON: 秤金次（中奖状态）.json
+- name: 秤金次（中奖状态）
+- hp: 7
+- mp: 7
+- 四轴: 咒术 6.73 / 肉体 7 / 悟性 6.12 / 构筑 2.88
+- stage: cullingGame
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 坐杀搏徒领域
+- externalResource: 坐杀搏徒中奖
+- officialGrade: 停学/未正式评级
+- powerTier: topTierSustain
+- visibleGrade: 无
+- notes: 中奖状态以续航和不死性建立强者地位。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: hakari_jackpot_owner
+- 特殊手札: hakari_jackpot_owner
+
+## 里梅（新宿）
+- JSON: 里梅（新宿）.json
+- name: 里梅（新宿）
+- hp: 6
+- mp: 7
+- 四轴: 咒术 6.77 / 肉体 6 / 悟性 6.88 / 构筑 3.04
+- stage: shinjuku
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 无
+- powerTier: topTierMinus
+- visibleGrade: 无
+- notes: 与秤金次长期相持，不能按低一级强者处理。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 达布拉（Modulo）
+- JSON: 达布拉（Modulo）.json
+- name: 达布拉（Modulo）
+- hp: 8
+- mp: 8
+- 四轴: 咒术 7.54 / 肉体 8 / 悟性 8 / 构筑 3.04
+- stage: modulo
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 不适用
+- powerTier: postCanonCeiling
+- visibleGrade: 无
+- notes: 基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 马鲁（Modulo）
+- JSON: 马鲁（Modulo）.json
+- name: 马鲁（Modulo）
+- hp: 4
+- mp: 5
+- 四轴: 咒术 5.27 / 肉体 4 / 悟性 6.48 / 构筑 3.04
+- stage: modulo
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 不适用
+- powerTier: supportHax
+- visibleGrade: 无
+- notes: 单体战斗力不应过高；强点在混沌与调和的规则干涉和辅助价值。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 乙骨真剑（Modulo）
+- JSON: 乙骨真剑（Modulo）.json
+- name: 乙骨真剑（Modulo）
+- hp: 6
+- mp: 7
+- 四轴: 咒术 6.77 / 肉体 6.46 / 悟性 7 / 构筑 0.14
+- stage: modulo
+- techniquePower: 无
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 乙骨戒指/里香资源
+- officialGrade: 不适用
+- powerTier: newGenerationTop
+- visibleGrade: 无
+- notes: 这里的真剑是乙骨真剑，不是克罗斯。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 焰柳、乙骨戒指/里香资源、释魂刀（阶段性）
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: okkotsu_rika_copy
+- 特殊手札: okkotsu_rika_copy
+
+## 克罗斯（Modulo）
+- JSON: 克罗斯（Modulo）.json
+- name: 克罗斯（Modulo）
+- hp: 4
+- mp: 5
+- 四轴: 咒术 5 / 肉体 4 / 悟性 4.88 / 构筑 0
+- stage: modulo
+- techniquePower: 无
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 不适用
+- powerTier: civilianOrSupport
+- visibleGrade: 无
+- notes: 克罗斯是马鲁的双胞胎兄弟，不是乙骨真剑。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 祈本里香（0卷，完全显现）
+- JSON: 祈本里香（0卷，完全显现）.json
+- name: 祈本里香（0卷，完全显现）
+- hp: 7
+- mp: 10
+- 四轴: 咒术 7.23 / 肉体 5.62 / 悟性 4.72 / 构筑 2.7
+- stage: volume0
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 特级过咒怨灵
+- powerTier: specialGradeCurse
+- visibleGrade: 无
+- notes: 0卷完全显现的真里香锚点；作为独立咒灵卡时不叠加乙骨的术师操作。
+- innateTraits: 咒灵之躯、特级过咒怨灵
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: okkotsu_rika_copy、curse_spirit_general
+- 特殊手札: okkotsu_rika_copy、curse_spirit_general
+
+## 漏瑚（涩谷）
+- JSON: 漏瑚（涩谷）.json
+- name: 漏瑚（涩谷）
+- hp: 6
+- mp: 8
+- 四轴: 咒术 7.27 / 肉体 5.54 / 悟性 6.04 / 构筑 3.3
+- stage: shibuya
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：盖棺铁围山
+- externalResource: 无
+- officialGrade: 特级咒灵
+- powerTier: disasterCurse
+- visibleGrade: 无
+- notes: 高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。
+- innateTraits: 咒灵之躯、灾害咒灵
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: curse_spirit_general
+- 特殊手札: curse_spirit_general
+
+## 真人（涩谷）
+- JSON: 真人（涩谷）.json
+- name: 真人（涩谷）
+- hp: 5
+- mp: 7
+- 四轴: 咒术 6.5 / 肉体 5 / 悟性 6.6 / 构筑 3.33
+- stage: shibuya
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：自闭圆顿裹
+- externalResource: 无
+- officialGrade: 特级咒灵
+- powerTier: disasterCurse
+- visibleGrade: 无
+- notes: 灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。
+- innateTraits: 咒灵之躯、灾害咒灵、无为转变、灵魂干涉
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: mahito_soul_transfiguration、curse_spirit_general
+- 特殊手札: mahito_soul_transfiguration、curse_spirit_general
+
+## 花御（京都交流会）
+- JSON: 花御（京都交流会）.json
+- name: 花御（京都交流会）
+- hp: 7
+- mp: 7
+- 四轴: 咒术 6.5 / 肉体 6.08 / 悟性 5.16 / 构筑 2.7
+- stage: mainStart
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 特级咒灵
+- powerTier: disasterCurse
+- visibleGrade: 无
+- notes: 耐久和范围压制较强；领域未完整展示，按灾害咒灵但非顶级领域锚点处理。
+- innateTraits: 咒灵之躯、灾害咒灵
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: curse_spirit_general
+- 特殊手札: curse_spirit_general
+
+## 陀艮（涩谷，领域展开）
+- JSON: 陀艮（涩谷，领域展开）.json
+- name: 陀艮（涩谷，领域展开）
+- hp: 7
+- mp: 7
+- 四轴: 咒术 6.27 / 肉体 6.08 / 悟性 5.16 / 构筑 2.92
+- stage: shibuya
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：荡蕴平线
+- externalResource: 无
+- officialGrade: 特级咒灵
+- powerTier: disasterCurse
+- visibleGrade: 无
+- notes: 领域展开和式神海量压制是主要胜路；领域被破或遇到零咒力肉体系会明显降档。
+- innateTraits: 咒灵之躯、灾害咒灵
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: curse_spirit_general
+- 特殊手札: curse_spirit_general
+
+## 禅院直哉（咒灵，樱岛）
+- JSON: 禅院直哉（咒灵，樱岛）.json
+- name: 禅院直哉（咒灵，樱岛）
+- hp: 8
+- mp: 7
+- 四轴: 咒术 6.5 / 肉体 7.54 / 悟性 6.12 / 构筑 2.92
+- stage: cullingGame
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：时胞月宫殿
+- externalResource: 无
+- officialGrade: 特级咒灵
+- powerTier: topTierMinus
+- visibleGrade: 无
+- notes: 速度和领域展开是核心；作为咒灵之躯存在正能量与零咒力对策风险。
+- innateTraits: 咒灵之躯、投射咒法
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: curse_spirit_general
+- 特殊手札: curse_spirit_general
+
+## 疱疮神（涩谷）
+- JSON: 疱疮神（涩谷）.json
+- name: 疱疮神（涩谷）
+- hp: 5
+- mp: 6
+- 四轴: 咒术 5.5 / 肉体 4.08 / 悟性 4.04 / 构筑 2.54
+- stage: shibuya
+- techniquePower: S
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：墓
+- externalResource: 无
+- officialGrade: 特级疾病咒灵
+- powerTier: cursedSpiritSpecial
+- visibleGrade: 无
+- notes: 规则明确但正面综合战力不按灾害咒灵处理；领域展开对无对策者威胁较高。
+- innateTraits: 咒灵之躯、疾病咒灵
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: curse_spirit_general
+- 特殊手札: curse_spirit_general
+
+## 胀相（涩谷/死灭）
+- JSON: 胀相（涩谷／死灭）.json
+- name: 胀相（涩谷/死灭）
+- hp: 6
+- mp: 7
+- 四轴: 咒术 6.27 / 肉体 6.46 / 悟性 6.12 / 构筑 2.32
+- stage: shibuyaToCulling
+- techniquePower: S
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 特级咒物受肉体
+- powerTier: grade1Plus
+- visibleGrade: grade1
+- notes: 按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。
+- innateTraits: 咒胎九相图、赤血操术
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 羂索（夏油身体）
+- JSON: 羂索（夏油身体）.json
+- name: 羂索（夏油身体）
+- hp: 6
+- mp: 7
+- 四轴: 咒术 7.27 / 肉体 6.92 / 悟性 8 / 构筑 3.33
+- stage: shibuyaToCulling
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 开放领域：胎藏遍野
+- externalResource: 夏油杰身体与咒灵操术库存
+- officialGrade: 不适用
+- powerTier: specialGrade
+- visibleGrade: 无
+- notes: 经验、术式库存、反重力机构和领域展开构成综合强者；不是单纯输出天花板。
+- innateTraits: 夺舍、咒灵操术、反重力机构、领域展开
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: curse_spirit_general
+- 特殊手札: curse_spirit_general
+
+## 九十九由基（死灭前后）
+- JSON: 九十九由基（死灭前后）.json
+- name: 九十九由基（死灭前后）
+- hp: 8
+- mp: 7
+- 四轴: 咒术 6.77 / 肉体 8 / 悟性 7.12 / 构筑 3.31
+- stage: cullingGame
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：未公开
+- externalResource: 无
+- officialGrade: 特级
+- powerTier: specialGrade
+- visibleGrade: 无
+- notes: 高质量近战与质量增幅术式；领域存在但细节未公开，按特级强者锚点处理。
+- innateTraits: 星之怒、凰轮、领域展开
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 乙骨忧太（新宿决战）
+- JSON: 乙骨忧太（新宿决战）.json
+- name: 乙骨忧太（新宿决战）
+- hp: 6
+- mp: 8
+- 四轴: 咒术 7.27 / 肉体 6.46 / 悟性 7.72 / 构筑 3.26
+- stage: shinjuku
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：真赝相爱
+- externalResource: 里香资源
+- officialGrade: 特级
+- powerTier: specialGrade
+- visibleGrade: 无
+- notes: 正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。
+- innateTraits: 无
+- advancedTechniques: 反转术式外放
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: okkotsu_rika_copy
+- 特殊手札: okkotsu_rika_copy
+
+## 虎杖悠仁（新宿决战）
+- JSON: 虎杖悠仁（新宿决战）.json
+- name: 虎杖悠仁（新宿决战）
+- hp: 8
+- mp: 7
+- 四轴: 咒术 6.73 / 肉体 8 / 悟性 6.96 / 构筑 2.93
+- stage: shinjuku
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 简易领域/反领域对策
+- externalResource: 无
+- officialGrade: 不适用
+- powerTier: topTier
+- visibleGrade: 无
+- notes: 新宿后段的灵魂打击和黑闪连锁锚点；不是68年后EX状态。
+- innateTraits: 半人半咒、黑闪连锁、灵魂打击
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: yuji_soul_melee
+- 特殊手札: yuji_soul_melee
+
+## 伏黑惠（死灭回游）
+- JSON: 伏黑惠（死灭回游）.json
+- name: 伏黑惠（死灭回游）
+- hp: 4
+- mp: 5
+- 四轴: 咒术 4.77 / 肉体 4 / 悟性 6.32 / 构筑 2.9
+- stage: cullingGame
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 未完成领域：嵌合暗翳庭
+- externalResource: 无
+- officialGrade: 二级
+- powerTier: grade1Plus
+- visibleGrade: 无
+- notes: 未完成领域与十影潜力很高；按潜力型强者，不默认兑现完整适应资源。
+- innateTraits: 十种影法术
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: ten_shadows
+- 特殊手札: ten_shadows
+
+## 日车宽见（死灭回游/新宿）
+- JSON: 日车宽见（死灭回游／新宿）.json
+- name: 日车宽见（死灭回游/新宿）
+- hp: 4
+- mp: 5
+- 四轴: 咒术 5 / 肉体 4 / 悟性 7.04 / 构筑 3.31
+- stage: cullingGameToShinjuku
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：诛伏赐死
+- externalResource: 无
+- officialGrade: 特级相当
+- powerTier: haxException
+- visibleGrade: specialGrade
+- notes: 规则审判和没收带来特级级别的高扰动；基础肉搏不是传统特级天花板。
+- innateTraits: 规则类（日车）、日车领域、领域展开
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: higuruma_trial_owner
+- 特殊手札: higuruma_trial_owner
+
+## 万（平安/受肉）
+- JSON: 万（平安／受肉）.json
+- name: 万（平安/受肉）
+- hp: 7
+- mp: 8
+- 四轴: 咒术 7.27 / 肉体 7 / 悟性 7 / 构筑 3.3
+- stage: cullingGame
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：三重疾苦
+- externalResource: 无
+- officialGrade: 特级古代术师
+- powerTier: topTier
+- visibleGrade: specialGrade
+- notes: 构筑术式高上限，完全球体与领域展开构成主要胜路。
+- innateTraits: 构筑术式、领域展开
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 乌鹭亨子（仙台结界）
+- JSON: 乌鹭亨子（仙台结界）.json
+- name: 乌鹭亨子（仙台结界）
+- hp: 5
+- mp: 7
+- 四轴: 咒术 6.77 / 肉体 5 / 悟性 6.76 / 构筑 2.92
+- stage: cullingGame
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：仙台三方领域
+- externalResource: 无
+- officialGrade: 古代术师
+- powerTier: sendaiTop
+- visibleGrade: specialGrade
+- notes: 空间扭曲和防御反击强；仙台三方领域参与者之一。
+- innateTraits: 天空术式、领域展开
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 石流龙（仙台结界）
+- JSON: 石流龙（仙台结界）.json
+- name: 石流龙（仙台结界）
+- hp: 7
+- mp: 8
+- 四轴: 咒术 6.77 / 肉体 7 / 悟性 5.4 / 构筑 2.92
+- stage: cullingGame
+- techniquePower: SS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 领域展开：仙台三方领域
+- externalResource: 无
+- officialGrade: 古代术师
+- powerTier: sendaiTop
+- visibleGrade: specialGrade
+- notes: 咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。
+- innateTraits: 咒力大炮、领域展开
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 天使 / 来栖华（死灭回游）
+- JSON: 天使 ／ 来栖华（死灭回游）.json
+- name: 天使 / 来栖华（死灭回游）
+- hp: 4
+- mp: 6
+- 四轴: 咒术 6 / 肉体 3.54 / 悟性 6.36 / 构筑 3.09
+- stage: cullingGame
+- techniquePower: SSS
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 古代术师受肉
+- powerTier: supportHax
+- visibleGrade: 无
+- notes: 术式消灭和雅各布天梯对受肉/结界/术式体系有高扰动；正面单挑基础不按顶级肉搏处理。
+- innateTraits: 天使、术式消灭、雅各布天梯
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 东堂葵（涩谷）
+- JSON: 东堂葵（涩谷）.json
+- name: 东堂葵（涩谷）
+- hp: 7
+- mp: 5
+- 四轴: 咒术 4.77 / 肉体 7 / 悟性 5.96 / 构筑 1.92
+- stage: shibuya
+- techniquePower: A
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 一级
+- powerTier: grade1Plus
+- visibleGrade: 无
+- notes: 单体面板是一级强者，配合战中不义游戏价值远高于裸数值。
+- innateTraits: 不义游戏
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 七海建人（涩谷）
+- JSON: 七海建人（涩谷）.json
+- name: 七海建人（涩谷）
+- hp: 5
+- mp: 5
+- 四轴: 咒术 5 / 肉体 5.92 / 悟性 5.24 / 构筑 1.92
+- stage: shibuya
+- techniquePower: A
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 一级
+- powerTier: grade1
+- visibleGrade: 无
+- notes: 标准一级术师锚点；稳定、效率高，但不按特级候选处理。
+- innateTraits: 十划咒法
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 日下部笃也（新宿）
+- JSON: 日下部笃也（新宿）.json
+- name: 日下部笃也（新宿）
+- hp: 5
+- mp: 4
+- 四轴: 咒术 5.04 / 肉体 5.92 / 悟性 6.28 / 构筑 1.56
+- stage: shinjuku
+- techniquePower: B
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 一级
+- powerTier: grade1Plus
+- visibleGrade: 无
+- notes: 无生得术式但新阴流和简易领域极稳；适合作为非术式型一级上位锚点。
+- innateTraits: 简易领域、新阴流
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 冥冥（涩谷）
+- JSON: 冥冥（涩谷）.json
+- name: 冥冥（涩谷）
+- hp: 5
+- mp: 5
+- 四轴: 咒术 5 / 肉体 5.46 / 悟性 5.12 / 构筑 1.92
+- stage: shibuya
+- techniquePower: A
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 一级
+- powerTier: grade1
+- visibleGrade: 无
+- notes: 黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。
+- innateTraits: 黑鸟操术
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 钉崎野蔷薇（剧情开始）
+- JSON: 钉崎野蔷薇（剧情开始）.json
+- name: 钉崎野蔷薇（剧情开始）
+- hp: 3
+- mp: 4
+- 四轴: 咒术 4 / 肉体 3.46 / 悟性 4.72 / 构筑 1.94
+- stage: mainStart
+- techniquePower: A
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 三级
+- powerTier: grade2Plus
+- visibleGrade: 无
+- notes: 正面基础较低，但共鸣对特定条件目标有高价值。
+- innateTraits: 刍灵咒法、灵魂共鸣
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: mahito_soul_transfiguration
+- 特殊手札: mahito_soul_transfiguration
+
+## 狗卷棘（0卷）
+- JSON: 狗卷棘（0卷）.json
+- name: 狗卷棘（0卷）
+- hp: 3
+- mp: 5
+- 四轴: 咒术 4.5 / 肉体 3 / 悟性 4.6 / 构筑 1.92
+- stage: volume0
+- techniquePower: A
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 二级
+- powerTier: grade2Plus
+- visibleGrade: 无
+- notes: 咒言是强控制术式，但副作用和身体基础限制持续战。
+- innateTraits: 咒言
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 熊猫（0卷）
+- JSON: 熊猫（0卷）.json
+- name: 熊猫（0卷）
+- hp: 7
+- mp: 3
+- 四轴: 咒术 3 / 肉体 6.54 / 悟性 4.08 / 构筑 0.8
+- stage: volume0
+- techniquePower: D
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 二级
+- powerTier: grade2Plus
+- visibleGrade: 无
+- notes: 咒骸肉体强于普通学生，术式侧不作为主要胜路。
+- innateTraits: 咒骸、三核心
+- advancedTechniques: 无
+- loadout: 无
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无
+
+## 米格尔（0卷，黑绳）
+- JSON: 米格尔（0卷，黑绳）.json
+- name: 米格尔（0卷，黑绳）
+- hp: 7
+- mp: 6
+- 四轴: 咒术 6 / 肉体 7.46 / 悟性 6.24 / 构筑 1.56
+- stage: volume0
+- techniquePower: B
+- techniqueName: 无
+- techniqueDescription: 无
+- domainProfile: 无
+- externalResource: 无
+- officialGrade: 诅咒师
+- powerTier: specialGrade
+- visibleGrade: 无
+- notes: 按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。
+- innateTraits: 无
+- advancedTechniques: 无
+- loadout: 黑绳
+- selectedMechanisms: 无
+- selectedToolTags: 无
+- specialHandTags: 无
+- 特殊手札: 无

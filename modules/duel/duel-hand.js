@@ -394,6 +394,10 @@
   function buildDuelCharacterCardProfile(characterOrActor, options) {
     var rules = options?.rules || getDuelCharacterCardRules();
     var source = characterOrActor?.profile || characterOrActor || {};
+    var sourceId = source?.characterId || source?.profileId || source?.id || "";
+    var customCard = (dependencies.state?.customDuelCards || []).find(function findCustomCard(card) {
+      return card?.characterId === sourceId || card?.id === sourceId;
+    }) || null;
     var entry = getCharacterRuleEntry(source, rules);
     var archetypes = getDuelCharacterArchetypes(source, { rules: rules });
     var traits = uniqueList([]
@@ -408,6 +412,8 @@
     var specialHandTags = uniqueList([]
       .concat(asList(source?.specialHandTags))
       .concat(asList(source?.["特殊手札"]))
+      .concat(asList(customCard?.specialHandTags))
+      .concat(asList(customCard?.["特殊手札"]))
       .concat(archetypes));
     traits = uniqueList(traits.concat(specialHandTags));
     var text = traits.concat([
@@ -420,7 +426,7 @@
       source?.notes
     ]).join(" ");
     var profile = {
-      characterId: source?.characterId || source?.id || entry?.id || "",
+      characterId: source?.characterId || source?.profileId || source?.id || entry?.id || "",
       displayName: source?.displayName || source?.name || "",
       traits: traits,
       archetypes: archetypes,

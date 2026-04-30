@@ -69,6 +69,8 @@ const state = {
   customDuelCards: [],
   customDuelSeq: 0,
   customDuelEditId: "",
+  pendingCustomDuelHandCards: [],
+  customDuelHandSeq: 0,
   duelSpecialTerms: [],
   duelSpecialTermSeq: 0,
   restoredLifeWheelDraft: null,
@@ -201,6 +203,29 @@ const els = {
   duelImportCode: document.querySelector("#duelImportCode"),
   duelImportCodeBtn: document.querySelector("#duelImportCodeBtn"),
   duelImportStatus: document.querySelector("#duelImportStatus"),
+  customCharacterInterface: document.querySelector("#customCharacterInterface"),
+  customCharacterEntryButtons: document.querySelectorAll("[data-custom-character-entry]"),
+  duelCustomAccessStatus: document.querySelector("#duelCustomAccessStatus"),
+  duelWheelImportData: document.querySelector("#duelWheelImportData"),
+  duelWheelImportFile: document.querySelector("#duelWheelImportFile"),
+  duelWheelImportBtn: document.querySelector("#duelWheelImportBtn"),
+  duelWheelImportCurrentBtn: document.querySelector("#duelWheelImportCurrentBtn"),
+  duelWheelImportStatus: document.querySelector("#duelWheelImportStatus"),
+  duelCustomHandName: document.querySelector("#duelCustomHandName"),
+  duelCustomHandType: document.querySelector("#duelCustomHandType"),
+  duelCustomHandRisk: document.querySelector("#duelCustomHandRisk"),
+  duelCustomHandApCost: document.querySelector("#duelCustomHandApCost"),
+  duelCustomHandCeCost: document.querySelector("#duelCustomHandCeCost"),
+  duelCustomHandDamage: document.querySelector("#duelCustomHandDamage"),
+  duelCustomHandBlock: document.querySelector("#duelCustomHandBlock"),
+  duelCustomHandStability: document.querySelector("#duelCustomHandStability"),
+  duelCustomHandDomainLoad: document.querySelector("#duelCustomHandDomainLoad"),
+  duelCustomHandSummary: document.querySelector("#duelCustomHandSummary"),
+  duelCustomHandTags: document.querySelector("#duelCustomHandTags"),
+  duelCustomHandAddBtn: document.querySelector("#duelCustomHandAddBtn"),
+  duelCustomHandClearBtn: document.querySelector("#duelCustomHandClearBtn"),
+  duelCustomHandStatus: document.querySelector("#duelCustomHandStatus"),
+  duelCustomHandList: document.querySelector("#duelCustomHandList"),
   duelCustomAddBtn: document.querySelector("#duelCustomAddBtn"),
   duelCustomClearBtn: document.querySelector("#duelCustomClearBtn"),
   duelCustomList: document.querySelector("#duelCustomList"),
@@ -861,15 +886,23 @@ function registerDuelModuleBoundaries() {
 
 function normalizeCharacterRecord(raw) {
   const name = raw?.name || raw?.displayName || raw?.characterId || "";
+  const cleanRuntimeList = (value) => (Array.isArray(value) ? value : [])
+    .map((item) => String(item || "").trim())
+    .filter((item) => item && item !== "无");
   const specialHandTags = Array.from(new Set([]
     .concat(Array.isArray(raw?.specialHandTags) ? raw.specialHandTags : [])
     .concat(Array.isArray(raw?.["特殊手札"]) ? raw["特殊手札"] : [])
     .map((tag) => String(tag || "").trim())
-    .filter(Boolean)));
+    .filter((tag) => tag && tag !== "无")));
   return {
     ...raw,
     name,
     displayName: raw?.displayName || name,
+    innateTraits: cleanRuntimeList(raw?.innateTraits),
+    advancedTechniques: cleanRuntimeList(raw?.advancedTechniques),
+    loadout: cleanRuntimeList(raw?.loadout),
+    selectedMechanisms: cleanRuntimeList(raw?.selectedMechanisms),
+    selectedToolTags: cleanRuntimeList(raw?.selectedToolTags),
     specialHandTags,
     "特殊手札": specialHandTags
   };
@@ -1104,6 +1137,16 @@ function bindEvents() {
   document.addEventListener("jjk-online-room-state", handleOnlineRoomStateEvent);
   els.duelCustomAddBtn?.addEventListener("click", addCustomDuelCharacter);
   els.duelImportCodeBtn?.addEventListener("click", importCombatPowerCodeToDuel);
+  els.duelWheelImportBtn?.addEventListener("click", importWheelExportToCustomDuel);
+  els.duelWheelImportCurrentBtn?.addEventListener("click", importCurrentWheelResultToCustomDuel);
+  els.duelWheelImportFile?.addEventListener("change", readWheelImportFileToTextarea);
+  els.duelCustomHandAddBtn?.addEventListener("click", addCustomDuelHandCard);
+  els.duelCustomHandClearBtn?.addEventListener("click", clearPendingCustomDuelHandCards);
+  els.customCharacterEntryButtons?.forEach((button) => {
+    button.addEventListener("click", () => {
+      window.setTimeout(() => els.customCharacterInterface?.scrollIntoView({ block: "start", behavior: "smooth" }), 80);
+    });
+  });
   els.duelCustomClearBtn?.addEventListener("click", clearCustomDuelCharacters);
   els.duelCustomList?.addEventListener("click", handleCustomDuelListClick);
   els.duelSpecialTermAddBtn?.addEventListener("click", addDuelSpecialTerm);
