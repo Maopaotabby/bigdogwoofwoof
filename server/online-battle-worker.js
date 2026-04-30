@@ -49,9 +49,13 @@ function clampNumber(value, fallback, min, max) {
 function withTimeout(promise, timeoutMs, message) {
   let timer;
   const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    timer = setTimeout(() => reject(Object.assign(new Error(message), { code: "AI_TIMEOUT", timeoutMs })), timeoutMs);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function isTimeoutError(error) {
+  return error?.code === "AI_TIMEOUT" || /超时|timeout/i.test(String(error?.message || error || ""));
 }
 
 function requestIdFrom(body = {}) {
@@ -139,6 +143,30 @@ function normalizeActions(actions = []) {
 
 function appendLog(room, type, message, patch = {}) {
   room.logs = (Array.isArray(room.logs) ? room.logs : []).concat({ at: nowMs(), type, message, ...patch }).slice(-MAX_LOGS);
+}
+
+function actionNames(actions = []) {
+  return (Array.isArray(actions) ? actions : [])
+    .map((action) => String(action?.displayName || action?.actionId || "").trim())
+    .filter(Boolean)
+    .slice(0, 4)
+    .join("、") || "未记录行动";
+}
+
+function buildLocalTurnFallback(room, reason = "") {
+  const leftActions = room.turnState?.actions?.left || [];
+  const rightActions = room.turnState?.actions?.right || [];
+  const leftText = actionNames(leftActions);
+  const rightText = actionNames(rightActions);
+  const reasonText = reason ? `原因：${String(reason).slice(0, 120)}。` : "";
+  return {
+    source: "local_fallback",
+    summary: `第 ${room.round} 回合 AI 未能完成结算，已按本地模式保留双方锁定行动并生成占位结算。左方：${leftText}；右方：${rightText}。${reasonText}`,
+    leftEffect: `本地记录左方行动：${leftText}`,
+    rightEffect: `本地记录右方行动：${rightText}`,
+    winnerHint: "undecided",
+    actions: redactSecrets(room.turnState.actions)
+  };
 }
 
 function createBattleSeedState(room) {
@@ -377,6 +405,7 @@ async function resolveTurnWithAi(env, room) {
     leftEffect: parsed.leftEffect,
     rightEffect: parsed.rightEffect,
     winnerHint: parsed.winnerHint,
+    responseTextPreview: String(text || "").slice(0, 1200),
     durationMs: nowMs() - startedAt,
     timeoutMs,
     usage: completion.usage || null,
@@ -394,14 +423,32 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
     room.turnState.result = result;
     room.turnState.aiStatus = result.source;
     room.reviewState.summary = result.summary || room.reviewState.summary || "";
-    room.reviewState.lastAiDebug = { source: result.source, model: result.model || "", durationMs: result.durationMs || 0, timeoutMs: result.timeoutMs || 0 };
+    room.reviewState.lastAiDebug = {
+      source: result.source,
+      model: result.model || "",
+      durationMs: result.durationMs || 0,
+      timeoutMs: result.timeoutMs || 0,
+      responseTextPreview: result.responseTextPreview || ""
+    };
     appendLog(room, "turn_resolved", result.summary || `第 ${beforeRound} 回合已结算。`, { turn: beforeRound, aiSource: result.source });
   } catch (error) {
-    const summary = `第 ${beforeRound} 回合 AI 结算失败，已保留双方行动并进入下一回合。原因：${String(error?.message || error).slice(0, 160)}`;
-    room.turnState.result = { source: "ai_error_fallback", summary, actions: redactSecrets(room.turnState.actions) };
-    room.turnState.aiStatus = "ai_error_fallback";
-    room.reviewState.lastAiDebug = { source: "ai_error_fallback", error: String(error?.message || error).slice(0, 200) };
-    appendLog(room, "turn_resolved", summary, { turn: beforeRound });
+    const errorMessage = String(error?.message || error).slice(0, 200);
+    const timeout = isTimeoutError(error);
+    const result = buildLocalTurnFallback(room, errorMessage);
+    result.source = timeout ? "local_fallback_timeout" : "local_fallback_error";
+    result.timeout = timeout;
+    result.error = errorMessage;
+    room.turnState.result = result;
+    room.turnState.aiStatus = result.source;
+    room.reviewState.summary = result.summary;
+    room.reviewState.lastAiDebug = {
+      source: result.source,
+      error: errorMessage,
+      timedOut: timeout,
+      timeoutMs: error?.timeoutMs || 0,
+      fallback: "local_turn_placeholder"
+    };
+    appendLog(room, "turn_resolved", result.summary, { turn: beforeRound, aiSource: result.source, timedOut: timeout });
   }
   room.round += 1;
   room.turnState = { turnId: `turn_${room.round}`, phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };

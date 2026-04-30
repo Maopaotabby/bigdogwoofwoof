@@ -843,6 +843,27 @@ async function remoteOperation(operation, request = {}, options = {}) {
     throw enrichError(new Error(message), responseDebug);
   }
   pushDebugEvent({ level: "ok", operation, message: `请求完成 ${response.status}`, detail: responseDebug });
+  const aiDebug = data?.debug?.lastAiDebug || null;
+  if (aiDebug?.responseTextPreview) {
+    pushDebugEvent({
+      level: "ai",
+      operation,
+      message: "AI 返回内容",
+      detail: {
+        source: aiDebug.source || "",
+        model: aiDebug.model || "",
+        durationMs: aiDebug.durationMs || 0,
+        responseTextPreview: aiDebug.responseTextPreview
+      }
+    });
+  } else if (aiDebug?.fallback || aiDebug?.timedOut) {
+    pushDebugEvent({
+      level: "warn",
+      operation,
+      message: aiDebug.timedOut ? "AI 超时，已使用本地处理" : "AI 失败，已使用本地处理",
+      detail: aiDebug
+    });
+  }
   if (operation === "ping") return data || { ok: true };
   const room = normalizeRoom(data.room || data.snapshot);
   const actualSide = getPlayerSide(room, body.playerId);

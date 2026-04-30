@@ -934,9 +934,12 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
     battle.actionChoices = [];
     battle.handCandidates = [];
     updateDuelActionAvailability(battle);
-    battle.actionUiMessage = room.reviewState?.lastAiDebug?.source === "ai_error_fallback"
-      ? `AI 结算超时，服务器已进入第 ${serverRound} 回合。`
-      : `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
+    const aiSource = room.reviewState?.lastAiDebug?.source || "";
+    battle.actionUiMessage = aiSource === "local_fallback_timeout"
+      ? (room.reviewState?.summary || `AI 结算超时，已使用本地处理并进入第 ${serverRound} 回合。`)
+      : aiSource === "local_fallback_error"
+        ? (room.reviewState?.summary || `AI 结算失败，已使用本地处理并进入第 ${serverRound} 回合。`)
+        : `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
   } else if (room.phase === "turn_resolving") {
     battle.actionUiMessage = "双方已锁定，正在等待服务器 AI 结算。";
   } else if (localLocked) {
