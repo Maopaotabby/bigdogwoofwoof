@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const PROTOCOL = "jjk_online_battle_v1";
-const WORKER_BUILD_VERSION = "20260430-ai-debug-payload-timeout-v1";
+const WORKER_BUILD_VERSION = "20260430-online-rule-engine-v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
@@ -139,6 +139,7 @@ function normalizeActions(actions = []) {
     cardType: String(action?.cardType || action?.type || "").slice(0, 40),
     apCost: Number(action?.apCost || 0),
     ceCost: Number(action?.ceCost || action?.baseCeCost || 0),
+    action: redactSecrets(action?.action || action?.actionSnapshot || null),
     source: "player_locked_action"
   }));
 }
@@ -224,7 +225,8 @@ function normalizeRoom(room) {
       summary: String(room.reviewState?.summary || ""),
       rematchVotes: room.reviewState?.rematchVotes || {},
       resetVotes: room.reviewState?.resetVotes || {},
-      lastAiDebug: redactSecrets(room.reviewState?.lastAiDebug || null)
+      lastAiDebug: redactSecrets(room.reviewState?.lastAiDebug || null),
+      lastResolvedTurn: redactSecrets(room.reviewState?.lastResolvedTurn || null)
     },
     logs: Array.isArray(room.logs) ? room.logs.slice(-MAX_LOGS) : []
   };
@@ -439,6 +441,10 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
   room.phase = "turn_resolving";
   room.turnState.aiStatus = "resolving";
   const beforeRound = room.round;
+  const lockedActions = redactSecrets({
+    left: normalizeActions(room.turnState.actions.left),
+    right: normalizeActions(room.turnState.actions.right)
+  });
   try {
     const result = await resolveTurnWithAi(env, room);
     room.turnState.result = result;
@@ -451,6 +457,12 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
       timeoutMs: result.timeoutMs || 0,
       aiRequestPreview: result.aiRequestPreview || null,
       responseTextPreview: result.responseTextPreview || ""
+    };
+    room.reviewState.lastResolvedTurn = {
+      turn: beforeRound,
+      source: result.source,
+      actions: lockedActions,
+      result: redactSecrets(result)
     };
     appendLog(room, "turn_resolved", result.summary || `第 ${beforeRound} 回合已结算。`, { turn: beforeRound, aiSource: result.source });
   } catch (error) {
@@ -475,6 +487,12 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
         messages: compactAiMessages(redactSecrets(aiMessages))
       },
       fallback: "local_turn_placeholder"
+    };
+    room.reviewState.lastResolvedTurn = {
+      turn: beforeRound,
+      source: result.source,
+      actions: lockedActions,
+      result: redactSecrets(result)
     };
     appendLog(room, "turn_resolved", result.summary, { turn: beforeRound, aiSource: result.source, timedOut: timeout });
   }

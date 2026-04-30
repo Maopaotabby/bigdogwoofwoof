@@ -1,4 +1,4 @@
-const APP_BUILD_VERSION = "20260430-ai-debug-payload-timeout-v1";
+const APP_BUILD_VERSION = "20260430-online-rule-engine-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
@@ -333,6 +333,7 @@ function normalizeRoom(room) {
   room.players.right.actionLocked = room.turnState.locks.right;
   room.reviewState ||= { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
   room.reviewState.lastAiDebug ||= null;
+  room.reviewState.lastResolvedTurn ||= null;
   room.logs = Array.isArray(room.logs) ? room.logs.slice(-100) : [];
   room.round = Math.max(1, Number(room.round) || 1);
   room.revision = Math.max(1, Number(room.revision) || 1);
@@ -577,10 +578,21 @@ function resolveTurn(roomId, options = {}) {
   if (!hasBothLockedActions(room)) throw new Error("双方尚未都锁定行动。");
   room.phase = "turn_resolving";
   room.turnState.aiStatus = "local_fallback";
+  const resolvedTurn = room.round;
+  const lockedActions = {
+    left: normalizeActions(room.turnState.actions.left),
+    right: normalizeActions(room.turnState.actions.right)
+  };
   room.turnState.result = {
     source: "server-ai-placeholder",
     summary: `第 ${room.round} 回合已接收双方锁定行动。服务器 AI broker 接入后将在此写入结构化结算。`,
-    actions: cloneJson(room.turnState.actions)
+    actions: cloneJson(lockedActions)
+  };
+  room.reviewState.lastResolvedTurn = {
+    turn: resolvedTurn,
+    source: room.turnState.result.source,
+    actions: cloneJson(lockedActions),
+    result: cloneJson(room.turnState.result)
   };
   appendLog(room, "turn_resolved", room.turnState.result.summary, { turn: room.round });
   room.round += 1;
@@ -682,11 +694,14 @@ function normalizeActions(actions = []) {
     cardType: String(action?.cardType || action?.type || "").slice(0, 40),
     apCost: Number(action?.apCost || 0),
     ceCost: Number(action?.ceCost || action?.baseCeCost || 0),
+    action: redactSecrets(action?.action || action?.actionSnapshot || null),
     source: "player_locked_action"
   }));
 }
 
 function readSelectedActionsFromDom() {
+  const runtimeActions = globalThis.JJKDuelRuntime?.getSelectedOnlineActionSnapshots?.(uiState.side || "left");
+  if (Array.isArray(runtimeActions) && runtimeActions.length) return runtimeActions;
   const active = [...document.querySelectorAll(".duel-action-choice.active[data-duel-action]")];
   return active.map((button, index) => ({
     actionId: button.dataset.duelAction || `action_${index + 1}`,
@@ -1072,9 +1087,17 @@ function syncBattlePageLockState(room, side) {
 }
 
 function resourceLabel(room, side) {
-  const resource = side === "left" ? room?.battleState?.resourceState?.p1 : room?.battleState?.resourceState?.p2;
+  const resource = getOnlineResourceForDisplay(room, side);
   if (!resource) return "HP / CE / AP：等待战斗";
   return `HP ${Math.round(Number(resource.hp || 0))} / CE ${Math.round(Number(resource.ce || 0))} / AP ${resource.ap?.current ?? resource.ap ?? "-"}`;
+}
+
+function getOnlineResourceForDisplay(room, side) {
+  const serverResource = side === "left" ? room?.battleState?.resourceState?.p1 : room?.battleState?.resourceState?.p2;
+  if (serverResource) return serverResource;
+  const battle = globalThis.JJKDuelRuntime?.getDuelBattle?.();
+  if (!battle || battle.mode !== "online" || battle.onlineRoomId !== room?.roomId) return null;
+  return side === "left" ? battle.resourceState?.p1 : battle.resourceState?.p2;
 }
 
 function updateButtons(room, side) {
