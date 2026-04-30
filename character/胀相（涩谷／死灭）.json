@@ -1,0 +1,33 @@
+{
+  "name": "胀相（涩谷/死灭）",
+  "hp": 6,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.27,
+    "肉体": 6.46,
+    "悟性": 6.12,
+    "构筑": 2.32
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "choso_shibuya_culling",
+  "displayName": "胀相（涩谷/死灭）",
+  "stage": "shibuyaToCulling",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "A",
+    "body": "S",
+    "martial": "SS",
+    "talent": "S"
+  },
+  "innateTraits": [
+    "咒胎九相图",
+    "赤血操术"
+  ],
+  "techniquePower": "S",
+  "officialGrade": "特级咒物受肉体",
+  "visibleGrade": "grade1",
+  "powerTier": "grade1Plus",
+  "notes": "按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。"
+}

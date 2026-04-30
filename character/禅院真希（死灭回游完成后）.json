@@ -1,0 +1,37 @@
+{
+  "name": "禅院真希（死灭回游完成后）",
+  "hp": 8,
+  "mp": 0,
+  "四轴": {
+    "咒术": 0,
+    "肉体": 8,
+    "悟性": 6,
+    "构筑": 0.06
+  },
+  "特殊手札": [
+    "zero_ce_heavenly_restriction"
+  ],
+  "specialHandTags": [
+    "zero_ce_heavenly_restriction"
+  ],
+  "characterId": "maki_zenin_culling",
+  "displayName": "禅院真希（死灭回游完成后）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "E-",
+    "control": "E-",
+    "efficiency": "E-",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "SS"
+  },
+  "innateTraits": [
+    "零咒力天与暴君型天与咒缚"
+  ],
+  "loadout": [
+    "释魂刀"
+  ],
+  "officialGrade": "无",
+  "powerTier": "topTierPhysical",
+  "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "陀艮（涩谷，领域展开）",
+  "hp": 7,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.27,
+    "肉体": 6.08,
+    "悟性": 5.16,
+    "构筑": 2.92
+  },
+  "特殊手札": [
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "curse_spirit_general"
+  ],
+  "characterId": "dagon_shibuya_domain",
+  "displayName": "陀艮（涩谷，领域展开）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "A",
+    "body": "SS",
+    "martial": "A",
+    "talent": "A"
+  },
+  "innateTraits": [
+    "咒灵之躯",
+    "灾害咒灵"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "领域展开：荡蕴平线",
+  "officialGrade": "特级咒灵",
+  "powerTier": "disasterCurse",
+  "notes": "领域展开和式神海量压制是主要胜路；领域被破或遇到零咒力肉体系会明显降档。"
+}

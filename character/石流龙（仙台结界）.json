@@ -1,0 +1,34 @@
+{
+  "name": "石流龙（仙台结界）",
+  "hp": 7,
+  "mp": 8,
+  "四轴": {
+    "咒术": 6.77,
+    "肉体": 7,
+    "悟性": 5.4,
+    "构筑": 2.92
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "ryu_ishigori_sendai",
+  "displayName": "石流龙（仙台结界）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "SSS",
+    "control": "S",
+    "efficiency": "A",
+    "body": "SS",
+    "martial": "SS",
+    "talent": "A"
+  },
+  "innateTraits": [
+    "咒力大炮",
+    "领域展开"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "领域展开：仙台三方领域",
+  "officialGrade": "古代术师",
+  "visibleGrade": "specialGrade",
+  "powerTier": "sendaiTop",
+  "notes": "咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。"
+}

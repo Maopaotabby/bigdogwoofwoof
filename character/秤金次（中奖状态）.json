@@ -1,0 +1,34 @@
+{
+  "name": "秤金次（中奖状态）",
+  "hp": 7,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.73,
+    "肉体": 7,
+    "悟性": 6.12,
+    "构筑": 2.88
+  },
+  "特殊手札": [
+    "hakari_jackpot_owner"
+  ],
+  "specialHandTags": [
+    "hakari_jackpot_owner"
+  ],
+  "characterId": "hakari_kinji_jackpot",
+  "displayName": "秤金次（中奖状态）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "SS",
+    "body": "SS",
+    "martial": "SS",
+    "talent": "S"
+  },
+  "externalResource": "坐杀搏徒中奖",
+  "techniquePower": "SS",
+  "domainProfile": "坐杀搏徒领域",
+  "officialGrade": "停学/未正式评级",
+  "powerTier": "topTierSustain",
+  "notes": "中奖状态以续航和不死性建立强者地位。"
+}

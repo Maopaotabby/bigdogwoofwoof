@@ -1,0 +1,316 @@
+{
+  "schema": "jjk-character-folder-manifest",
+  "version": "0.1.3-candidate",
+  "status": "APPROVED_FOR_PROTOTYPE",
+  "approvedByUserAt": "2026-04-27",
+  "scope": "named-character calibration anchors for instant combat profile",
+  "notes": [
+    "Cards use user-approved balance anchors from the current conversation.",
+    "officialGrade and powerTier are separated; specialGrade1 is administrative/off-system grade-1-equivalent, not a strength tier above grade1.",
+    "The field talent is displayed and interpreted as 悟性.",
+    "2026-04-27 user correction: Miguel (Volume 0, Black Rope) is treated as special-grade combat tier while remaining identified as a curse user.",
+    "Character data is split into character/*.json.",
+    "The name field preserves the original displayName; invalid path characters in filenames use fullwidth equivalents.",
+    "specialHandTags mirrors the Chinese special-hand key and is consumed by duel hand eligibility."
+  ],
+  "characters": [
+    {
+      "name": "五条悟（新宿决战）",
+      "file": "五条悟（新宿决战）.json",
+      "characterId": "gojo_satoru_shinjuku",
+      "specialHandTags": [
+        "gojo_limitless"
+      ]
+    },
+    {
+      "name": "两面宿傩（平安/新宿决战基准）",
+      "file": "两面宿傩（平安／新宿决战基准）.json",
+      "characterId": "sukuna_heian_or_shinjuku",
+      "specialHandTags": [
+        "sukuna_slash"
+      ]
+    },
+    {
+      "name": "虎天帝 / 虎杖悠仁（68年后）",
+      "file": "虎天帝 ／ 虎杖悠仁（68年后）.json",
+      "characterId": "yuji_itadori_after68",
+      "specialHandTags": [
+        "yuji_soul_melee"
+      ]
+    },
+    {
+      "name": "高羽史彦（死灭回游）",
+      "file": "高羽史彦（死灭回游）.json",
+      "characterId": "takaba_fumihiko_culling",
+      "specialHandTags": []
+    },
+    {
+      "name": "伏黑甚尔（怀玉，完整咒具）",
+      "file": "伏黑甚尔（怀玉，完整咒具）.json",
+      "characterId": "toji_fushiguro_hidden_inventory",
+      "specialHandTags": [
+        "zero_ce_heavenly_restriction"
+      ]
+    },
+    {
+      "name": "伏黑甚尔（涩谷通灵）",
+      "file": "伏黑甚尔（涩谷通灵）.json",
+      "characterId": "toji_fushiguro_shibuya_revenant",
+      "specialHandTags": [
+        "zero_ce_heavenly_restriction"
+      ]
+    },
+    {
+      "name": "禅院真希（死灭回游完成后）",
+      "file": "禅院真希（死灭回游完成后）.json",
+      "characterId": "maki_zenin_culling",
+      "specialHandTags": [
+        "zero_ce_heavenly_restriction"
+      ]
+    },
+    {
+      "name": "乙骨忧太（0卷，真里香）",
+      "file": "乙骨忧太（0卷，真里香）.json",
+      "characterId": "yuta_okkotsu_volume0_true_rika",
+      "specialHandTags": [
+        "okkotsu_rika_copy"
+      ]
+    },
+    {
+      "name": "夏油杰（0卷）",
+      "file": "夏油杰（0卷）.json",
+      "characterId": "geto_suguru_volume0",
+      "specialHandTags": []
+    },
+    {
+      "name": "鹿紫云一（400年前）",
+      "file": "鹿紫云一（400年前）.json",
+      "characterId": "kashimo_hajime_ancient",
+      "specialHandTags": []
+    },
+    {
+      "name": "秤金次（中奖状态）",
+      "file": "秤金次（中奖状态）.json",
+      "characterId": "hakari_kinji_jackpot",
+      "specialHandTags": [
+        "hakari_jackpot_owner"
+      ]
+    },
+    {
+      "name": "里梅（新宿）",
+      "file": "里梅（新宿）.json",
+      "characterId": "uraume_shinjuku",
+      "specialHandTags": []
+    },
+    {
+      "name": "达布拉（Modulo）",
+      "file": "达布拉（Modulo）.json",
+      "characterId": "dabra_modulo",
+      "specialHandTags": []
+    },
+    {
+      "name": "马鲁（Modulo）",
+      "file": "马鲁（Modulo）.json",
+      "characterId": "maru_modulo",
+      "specialHandTags": []
+    },
+    {
+      "name": "乙骨真剑（Modulo）",
+      "file": "乙骨真剑（Modulo）.json",
+      "characterId": "okkotsu_tsurugi_modulo",
+      "specialHandTags": [
+        "okkotsu_rika_copy"
+      ]
+    },
+    {
+      "name": "克罗斯（Modulo）",
+      "file": "克罗斯（Modulo）.json",
+      "characterId": "cross_modulo",
+      "specialHandTags": []
+    },
+    {
+      "name": "祈本里香（0卷，完全显现）",
+      "file": "祈本里香（0卷，完全显现）.json",
+      "characterId": "rika_orimoto_volume0_full",
+      "specialHandTags": [
+        "okkotsu_rika_copy",
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "漏瑚（涩谷）",
+      "file": "漏瑚（涩谷）.json",
+      "characterId": "jogo_shibuya",
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "真人（涩谷）",
+      "file": "真人（涩谷）.json",
+      "characterId": "mahito_shibuya",
+      "specialHandTags": [
+        "mahito_soul_transfiguration",
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "花御（京都交流会）",
+      "file": "花御（京都交流会）.json",
+      "characterId": "hanami_exchange_event",
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "陀艮（涩谷，领域展开）",
+      "file": "陀艮（涩谷，领域展开）.json",
+      "characterId": "dagon_shibuya_domain",
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "禅院直哉（咒灵，樱岛）",
+      "file": "禅院直哉（咒灵，樱岛）.json",
+      "characterId": "naoya_cursed_spirit_sakurajima",
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "疱疮神（涩谷）",
+      "file": "疱疮神（涩谷）.json",
+      "characterId": "smallpox_deity_shibuya",
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "胀相（涩谷/死灭）",
+      "file": "胀相（涩谷／死灭）.json",
+      "characterId": "choso_shibuya_culling",
+      "specialHandTags": []
+    },
+    {
+      "name": "羂索（夏油身体）",
+      "file": "羂索（夏油身体）.json",
+      "characterId": "kenjaku_geto_body",
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
+    },
+    {
+      "name": "九十九由基（死灭前后）",
+      "file": "九十九由基（死灭前后）.json",
+      "characterId": "yuki_tsukumo_culling",
+      "specialHandTags": []
+    },
+    {
+      "name": "乙骨忧太（新宿决战）",
+      "file": "乙骨忧太（新宿决战）.json",
+      "characterId": "yuta_okkotsu_shinjuku",
+      "specialHandTags": [
+        "okkotsu_rika_copy"
+      ]
+    },
+    {
+      "name": "虎杖悠仁（新宿决战）",
+      "file": "虎杖悠仁（新宿决战）.json",
+      "characterId": "yuji_itadori_shinjuku",
+      "specialHandTags": [
+        "yuji_soul_melee"
+      ]
+    },
+    {
+      "name": "伏黑惠（死灭回游）",
+      "file": "伏黑惠（死灭回游）.json",
+      "characterId": "megumi_fushiguro_culling",
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "name": "日车宽见（死灭回游/新宿）",
+      "file": "日车宽见（死灭回游／新宿）.json",
+      "characterId": "higuruma_hiromi_culling",
+      "specialHandTags": [
+        "higuruma_trial_owner"
+      ]
+    },
+    {
+      "name": "万（平安/受肉）",
+      "file": "万（平安／受肉）.json",
+      "characterId": "yorozu_heian_vessel",
+      "specialHandTags": []
+    },
+    {
+      "name": "乌鹭亨子（仙台结界）",
+      "file": "乌鹭亨子（仙台结界）.json",
+      "characterId": "uro_takako_sendai",
+      "specialHandTags": []
+    },
+    {
+      "name": "石流龙（仙台结界）",
+      "file": "石流龙（仙台结界）.json",
+      "characterId": "ryu_ishigori_sendai",
+      "specialHandTags": []
+    },
+    {
+      "name": "天使 / 来栖华（死灭回游）",
+      "file": "天使 ／ 来栖华（死灭回游）.json",
+      "characterId": "angel_hana_culling",
+      "specialHandTags": []
+    },
+    {
+      "name": "东堂葵（涩谷）",
+      "file": "东堂葵（涩谷）.json",
+      "characterId": "todo_aoi_shibuya",
+      "specialHandTags": []
+    },
+    {
+      "name": "七海建人（涩谷）",
+      "file": "七海建人（涩谷）.json",
+      "characterId": "nanami_kento_shibuya",
+      "specialHandTags": []
+    },
+    {
+      "name": "日下部笃也（新宿）",
+      "file": "日下部笃也（新宿）.json",
+      "characterId": "kusakabe_atsuya_shinjuku",
+      "specialHandTags": []
+    },
+    {
+      "name": "冥冥（涩谷）",
+      "file": "冥冥（涩谷）.json",
+      "characterId": "mei_mei_shibuya",
+      "specialHandTags": []
+    },
+    {
+      "name": "钉崎野蔷薇（剧情开始）",
+      "file": "钉崎野蔷薇（剧情开始）.json",
+      "characterId": "nobara_kugisaki_main_start",
+      "specialHandTags": [
+        "mahito_soul_transfiguration"
+      ]
+    },
+    {
+      "name": "狗卷棘（0卷）",
+      "file": "狗卷棘（0卷）.json",
+      "characterId": "inumaki_toge_volume0",
+      "specialHandTags": []
+    },
+    {
+      "name": "熊猫（0卷）",
+      "file": "熊猫（0卷）.json",
+      "characterId": "panda_volume0",
+      "specialHandTags": []
+    },
+    {
+      "name": "米格尔（0卷，黑绳）",
+      "file": "米格尔（0卷，黑绳）.json",
+      "characterId": "miguel_volume0",
+      "specialHandTags": []
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "漏瑚（涩谷）",
+  "hp": 6,
+  "mp": 8,
+  "四轴": {
+    "咒术": 7.27,
+    "肉体": 5.54,
+    "悟性": 6.04,
+    "构筑": 3.3
+  },
+  "特殊手札": [
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "curse_spirit_general"
+  ],
+  "characterId": "jogo_shibuya",
+  "displayName": "漏瑚（涩谷）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "SSS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "S",
+    "martial": "A",
+    "talent": "S"
+  },
+  "innateTraits": [
+    "咒灵之躯",
+    "灾害咒灵"
+  ],
+  "techniquePower": "SSS",
+  "domainProfile": "领域展开：盖棺铁围山",
+  "officialGrade": "特级咒灵",
+  "powerTier": "disasterCurse",
+  "notes": "高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "日下部笃也（新宿）",
+  "hp": 5,
+  "mp": 4,
+  "四轴": {
+    "咒术": 5.04,
+    "肉体": 5.92,
+    "悟性": 6.28,
+    "构筑": 1.56
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "kusakabe_atsuya_shinjuku",
+  "displayName": "日下部笃也（新宿）",
+  "stage": "shinjuku",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "SS",
+    "efficiency": "A",
+    "body": "A",
+    "martial": "SS",
+    "talent": "S"
+  },
+  "innateTraits": [
+    "简易领域",
+    "新阴流"
+  ],
+  "techniquePower": "B",
+  "officialGrade": "一级",
+  "powerTier": "grade1Plus",
+  "notes": "无生得术式但新阴流和简易领域极稳；适合作为非术式型一级上位锚点。"
+}

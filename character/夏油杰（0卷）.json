@@ -1,0 +1,28 @@
+{
+  "name": "夏油杰（0卷）",
+  "hp": 6,
+  "mp": 7,
+  "四轴": {
+    "咒术": 7,
+    "肉体": 6.92,
+    "悟性": 7.12,
+    "构筑": 3.04
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "geto_suguru_volume0",
+  "displayName": "夏油杰（0卷）",
+  "stage": "volume0",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SS",
+    "efficiency": "SS",
+    "body": "S",
+    "martial": "SSS",
+    "talent": "SS"
+  },
+  "techniquePower": "SSS",
+  "officialGrade": "特级",
+  "powerTier": "specialGrade",
+  "notes": "咒灵操术库存不直接消耗自身咒力；若百鬼夜行不兵分两路，可能正面击败0卷乙骨与真里香组合。"
+}

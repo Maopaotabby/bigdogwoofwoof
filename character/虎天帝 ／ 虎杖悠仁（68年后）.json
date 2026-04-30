@@ -1,0 +1,39 @@
+{
+  "name": "虎天帝 / 虎杖悠仁（68年后）",
+  "hp": 8,
+  "mp": 8,
+  "四轴": {
+    "咒术": 8.54,
+    "肉体": 8,
+    "悟性": 9.76,
+    "构筑": 2.95
+  },
+  "特殊手札": [
+    "yuji_soul_melee"
+  ],
+  "specialHandTags": [
+    "yuji_soul_melee"
+  ],
+  "characterId": "yuji_itadori_after68",
+  "displayName": "虎天帝 / 虎杖悠仁（68年后）",
+  "stage": "after68",
+  "baseStats": {
+    "cursedEnergy": "SSS",
+    "control": "EX-",
+    "efficiency": "SSS",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "EX-"
+  },
+  "innateTraits": [
+    "半人半咒",
+    "不老/咒物沉淀",
+    "随意黑闪",
+    "EX锚点"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "高阶反领域/领域对策",
+  "officialGrade": "不适用",
+  "powerTier": "postCanonException",
+  "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。"
+}

@@ -1,0 +1,31 @@
+{
+  "name": "冥冥（涩谷）",
+  "hp": 5,
+  "mp": 5,
+  "四轴": {
+    "咒术": 5,
+    "肉体": 5.46,
+    "悟性": 5.12,
+    "构筑": 1.92
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "mei_mei_shibuya",
+  "displayName": "冥冥（涩谷）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "A",
+    "body": "A",
+    "martial": "S",
+    "talent": "A"
+  },
+  "innateTraits": [
+    "黑鸟操术"
+  ],
+  "techniquePower": "A",
+  "officialGrade": "一级",
+  "powerTier": "grade1",
+  "notes": "黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。"
+}

@@ -1,0 +1,38 @@
+{
+  "name": "两面宿傩（平安/新宿决战基准）",
+  "hp": 8,
+  "mp": 8,
+  "四轴": {
+    "咒术": 7.54,
+    "肉体": 8,
+    "悟性": 8,
+    "构筑": 2.92
+  },
+  "特殊手札": [
+    "sukuna_slash"
+  ],
+  "specialHandTags": [
+    "sukuna_slash"
+  ],
+  "characterId": "sukuna_heian_or_shinjuku",
+  "displayName": "两面宿傩（平安/新宿决战基准）",
+  "stage": "heianToShinjuku",
+  "baseStats": {
+    "cursedEnergy": "SSS",
+    "control": "SSS",
+    "efficiency": "S",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "SSS"
+  },
+  "innateTraits": [
+    "双面四臂",
+    "善用束缚"
+  ],
+  "externalResource": "新宿决战十影资源：魔虚罗、嵌合兽顎吐；魔虚罗适应无下限后提供世界斩参照。",
+  "techniquePower": "SS",
+  "domainProfile": "开放领域：伏魔御厨子",
+  "officialGrade": "特级咒物/诅咒之王",
+  "powerTier": "canonCeiling",
+  "notes": "御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。"
+}

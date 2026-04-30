@@ -859,13 +859,59 @@ function registerDuelModuleBoundaries() {
   }
 }
 
+function normalizeCharacterRecord(raw) {
+  const name = raw?.name || raw?.displayName || raw?.characterId || "";
+  const specialHandTags = Array.from(new Set([]
+    .concat(Array.isArray(raw?.specialHandTags) ? raw.specialHandTags : [])
+    .concat(Array.isArray(raw?.["特殊手札"]) ? raw["特殊手札"] : [])
+    .map((tag) => String(tag || "").trim())
+    .filter(Boolean)));
+  return {
+    ...raw,
+    name,
+    displayName: raw?.displayName || name,
+    specialHandTags,
+    "特殊手札": specialHandTags
+  };
+}
+
+async function loadCharacterCards() {
+  try {
+    const manifest = await fetch(`./character/manifest.json?v=${APP_BUILD_VERSION}`).then((r) => {
+      if (!r.ok) throw new Error(`character manifest ${r.status}`);
+      return r.json();
+    });
+    const entries = Array.isArray(manifest?.characters) ? manifest.characters : [];
+    const cards = await Promise.all(entries.map((entry) => {
+      const file = typeof entry === "string" ? entry : entry?.file;
+      if (!file) return null;
+      return fetch(`./character/${encodeURIComponent(file)}?v=${APP_BUILD_VERSION}`).then((r) => {
+        if (!r.ok) throw new Error(`character file ${file} ${r.status}`);
+        return r.json();
+      }).then(normalizeCharacterRecord);
+    }));
+    return {
+      schema: manifest.schema || "jjk-character-cards",
+      version: manifest.version || "character-folder",
+      status: manifest.status || "APPROVED_FOR_PROTOTYPE",
+      approvedByUserAt: manifest.approvedByUserAt || "",
+      scope: manifest.scope || "named-character calibration anchors for instant combat profile",
+      notes: manifest.notes || [],
+      cards: cards.filter(Boolean)
+    };
+  } catch (error) {
+    console.warn("Character folder load failed; falling back to legacy character bundle.", error);
+    return fetch(`./data/character-cards-v0.1.json?v=${APP_BUILD_VERSION}`).then((r) => r.json());
+  }
+}
+
 //--启动与事件绑定--//
 async function init() {
   const [wheels, flow, strength, characterCards, mechanisms, calibrationBattles, optionEffects, duelResourceRules, duelActionRules, handRulesCandidate, duelCharacterCardRules, duelCardTemplateRules, duelCardCopyRules, duelMechanicRules, duelEndRules, duelBetaCopy, duelDomainProfiles, duelTrialTargetRules, aiProviderRules, aiPromptTemplates] = await Promise.all([
     fetch(`./data/wheels.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/flow-v1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/strength-v0.2-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
-    fetch(`./data/character-cards-v0.1.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
+    loadCharacterCards(),
     fetch(`./data/mechanism-cards-v0.1.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/calibration-battles-v0.1.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/option-effects-v0.1.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),

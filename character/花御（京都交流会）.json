@@ -1,0 +1,36 @@
+{
+  "name": "花御（京都交流会）",
+  "hp": 7,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.5,
+    "肉体": 6.08,
+    "悟性": 5.16,
+    "构筑": 2.7
+  },
+  "特殊手札": [
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "curse_spirit_general"
+  ],
+  "characterId": "hanami_exchange_event",
+  "displayName": "花御（京都交流会）",
+  "stage": "mainStart",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "S",
+    "body": "SS",
+    "martial": "A",
+    "talent": "A"
+  },
+  "innateTraits": [
+    "咒灵之躯",
+    "灾害咒灵"
+  ],
+  "techniquePower": "SS",
+  "officialGrade": "特级咒灵",
+  "powerTier": "disasterCurse",
+  "notes": "耐久和范围压制较强；领域未完整展示，按灾害咒灵但非顶级领域锚点处理。"
+}

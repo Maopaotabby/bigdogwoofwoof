@@ -1,0 +1,37 @@
+{
+  "name": "乙骨真剑（Modulo）",
+  "hp": 6,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.77,
+    "肉体": 6.46,
+    "悟性": 7,
+    "构筑": 0.14
+  },
+  "特殊手札": [
+    "okkotsu_rika_copy"
+  ],
+  "specialHandTags": [
+    "okkotsu_rika_copy"
+  ],
+  "characterId": "okkotsu_tsurugi_modulo",
+  "displayName": "乙骨真剑（Modulo）",
+  "stage": "modulo",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "S",
+    "martial": "SS",
+    "talent": "SS"
+  },
+  "loadout": [
+    "焰柳",
+    "乙骨戒指/里香资源",
+    "释魂刀（阶段性）"
+  ],
+  "externalResource": "乙骨戒指/里香资源",
+  "officialGrade": "不适用",
+  "powerTier": "newGenerationTop",
+  "notes": "这里的真剑是乙骨真剑，不是克罗斯。"
+}

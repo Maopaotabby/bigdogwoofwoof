@@ -1,0 +1,27 @@
+{
+  "name": "克罗斯（Modulo）",
+  "hp": 4,
+  "mp": 5,
+  "四轴": {
+    "咒术": 5,
+    "肉体": 4,
+    "悟性": 4.88,
+    "构筑": 0
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "cross_modulo",
+  "displayName": "克罗斯（Modulo）",
+  "stage": "modulo",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "A",
+    "body": "B",
+    "martial": "B",
+    "talent": "A"
+  },
+  "officialGrade": "不适用",
+  "powerTier": "civilianOrSupport",
+  "notes": "克罗斯是马鲁的双胞胎兄弟，不是乙骨真剑。"
+}

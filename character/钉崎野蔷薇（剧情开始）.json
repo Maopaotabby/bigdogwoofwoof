@@ -1,0 +1,36 @@
+{
+  "name": "钉崎野蔷薇（剧情开始）",
+  "hp": 3,
+  "mp": 4,
+  "四轴": {
+    "咒术": 4,
+    "肉体": 3.46,
+    "悟性": 4.72,
+    "构筑": 1.94
+  },
+  "特殊手札": [
+    "mahito_soul_transfiguration"
+  ],
+  "specialHandTags": [
+    "mahito_soul_transfiguration"
+  ],
+  "characterId": "nobara_kugisaki_main_start",
+  "displayName": "钉崎野蔷薇（剧情开始）",
+  "stage": "mainStart",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "B",
+    "talent": "A"
+  },
+  "innateTraits": [
+    "刍灵咒法",
+    "灵魂共鸣"
+  ],
+  "techniquePower": "A",
+  "officialGrade": "三级",
+  "powerTier": "grade2Plus",
+  "notes": "正面基础较低，但共鸣对特定条件目标有高价值。"
+}

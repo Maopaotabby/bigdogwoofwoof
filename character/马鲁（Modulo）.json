@@ -1,0 +1,28 @@
+{
+  "name": "马鲁（Modulo）",
+  "hp": 4,
+  "mp": 5,
+  "四轴": {
+    "咒术": 5.27,
+    "肉体": 4,
+    "悟性": 6.48,
+    "构筑": 3.04
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "maru_modulo",
+  "displayName": "马鲁（Modulo）",
+  "stage": "modulo",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "S",
+    "efficiency": "A",
+    "body": "B",
+    "martial": "B",
+    "talent": "SS"
+  },
+  "techniquePower": "SSS",
+  "officialGrade": "不适用",
+  "powerTier": "supportHax",
+  "notes": "单体战斗力不应过高；强点在混沌与调和的规则干涉和辅助价值。"
+}

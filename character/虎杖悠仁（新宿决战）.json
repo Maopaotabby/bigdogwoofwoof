@@ -1,0 +1,38 @@
+{
+  "name": "虎杖悠仁（新宿决战）",
+  "hp": 8,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.73,
+    "肉体": 8,
+    "悟性": 6.96,
+    "构筑": 2.93
+  },
+  "特殊手札": [
+    "yuji_soul_melee"
+  ],
+  "specialHandTags": [
+    "yuji_soul_melee"
+  ],
+  "characterId": "yuji_itadori_shinjuku",
+  "displayName": "虎杖悠仁（新宿决战）",
+  "stage": "shinjuku",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "SS",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "SS"
+  },
+  "innateTraits": [
+    "半人半咒",
+    "黑闪连锁",
+    "灵魂打击"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "简易领域/反领域对策",
+  "officialGrade": "不适用",
+  "powerTier": "topTier",
+  "notes": "新宿后段的灵魂打击和黑闪连锁锚点；不是68年后EX状态。"
+}

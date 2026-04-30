@@ -1,0 +1,37 @@
+{
+  "name": "疱疮神（涩谷）",
+  "hp": 5,
+  "mp": 6,
+  "四轴": {
+    "咒术": 5.5,
+    "肉体": 4.08,
+    "悟性": 4.04,
+    "构筑": 2.54
+  },
+  "特殊手札": [
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "curse_spirit_general"
+  ],
+  "characterId": "smallpox_deity_shibuya",
+  "displayName": "疱疮神（涩谷）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "S",
+    "control": "A",
+    "efficiency": "A",
+    "body": "A",
+    "martial": "C",
+    "talent": "B"
+  },
+  "innateTraits": [
+    "咒灵之躯",
+    "疾病咒灵"
+  ],
+  "techniquePower": "S",
+  "domainProfile": "领域展开：墓",
+  "officialGrade": "特级疾病咒灵",
+  "powerTier": "cursedSpiritSpecial",
+  "notes": "规则明确但正面综合战力不按灾害咒灵处理；领域展开对无对策者威胁较高。"
+}

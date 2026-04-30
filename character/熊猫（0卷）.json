@@ -1,0 +1,32 @@
+{
+  "name": "熊猫（0卷）",
+  "hp": 7,
+  "mp": 3,
+  "四轴": {
+    "咒术": 3,
+    "肉体": 6.54,
+    "悟性": 4.08,
+    "构筑": 0.8
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "panda_volume0",
+  "displayName": "熊猫（0卷）",
+  "stage": "volume0",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "SS",
+    "martial": "S",
+    "talent": "B"
+  },
+  "innateTraits": [
+    "咒骸",
+    "三核心"
+  ],
+  "techniquePower": "D",
+  "officialGrade": "二级",
+  "powerTier": "grade2Plus",
+  "notes": "咒骸肉体强于普通学生，术式侧不作为主要胜路。"
+}

@@ -1,0 +1,34 @@
+{
+  "name": "乌鹭亨子（仙台结界）",
+  "hp": 5,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.77,
+    "肉体": 5,
+    "悟性": 6.76,
+    "构筑": 2.92
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "uro_takako_sendai",
+  "displayName": "乌鹭亨子（仙台结界）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "A",
+    "martial": "A",
+    "talent": "SS"
+  },
+  "innateTraits": [
+    "天空术式",
+    "领域展开"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "领域展开：仙台三方领域",
+  "officialGrade": "古代术师",
+  "visibleGrade": "specialGrade",
+  "powerTier": "sendaiTop",
+  "notes": "空间扭曲和防御反击强；仙台三方领域参与者之一。"
+}

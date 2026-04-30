@@ -1,0 +1,28 @@
+{
+  "name": "达布拉（Modulo）",
+  "hp": 8,
+  "mp": 8,
+  "四轴": {
+    "咒术": 7.54,
+    "肉体": 8,
+    "悟性": 8,
+    "构筑": 3.04
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "dabra_modulo",
+  "displayName": "达布拉（Modulo）",
+  "stage": "modulo",
+  "baseStats": {
+    "cursedEnergy": "SSS",
+    "control": "SSS",
+    "efficiency": "S",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "SSS"
+  },
+  "techniquePower": "SSS",
+  "officialGrade": "不适用",
+  "powerTier": "postCanonCeiling",
+  "notes": "基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。"
+}

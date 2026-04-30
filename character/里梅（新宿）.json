@@ -1,0 +1,28 @@
+{
+  "name": "里梅（新宿）",
+  "hp": 6,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.77,
+    "肉体": 6,
+    "悟性": 6.88,
+    "构筑": 3.04
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "uraume_shinjuku",
+  "displayName": "里梅（新宿）",
+  "stage": "shinjuku",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "S",
+    "martial": "S",
+    "talent": "SS"
+  },
+  "techniquePower": "SSS",
+  "officialGrade": "无",
+  "powerTier": "topTierMinus",
+  "notes": "与秤金次长期相持，不能按低一级强者处理。"
+}

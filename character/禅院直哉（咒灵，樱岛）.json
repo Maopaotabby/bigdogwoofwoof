@@ -1,0 +1,37 @@
+{
+  "name": "禅院直哉（咒灵，樱岛）",
+  "hp": 8,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.5,
+    "肉体": 7.54,
+    "悟性": 6.12,
+    "构筑": 2.92
+  },
+  "特殊手札": [
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "curse_spirit_general"
+  ],
+  "characterId": "naoya_cursed_spirit_sakurajima",
+  "displayName": "禅院直哉（咒灵，樱岛）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "S",
+    "body": "SSS",
+    "martial": "SS",
+    "talent": "S"
+  },
+  "innateTraits": [
+    "咒灵之躯",
+    "投射咒法"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "领域展开：时胞月宫殿",
+  "officialGrade": "特级咒灵",
+  "powerTier": "topTierMinus",
+  "notes": "速度和领域展开是核心；作为咒灵之躯存在正能量与零咒力对策风险。"
+}

@@ -1,0 +1,41 @@
+{
+  "name": "真人（涩谷）",
+  "hp": 5,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.5,
+    "肉体": 5,
+    "悟性": 6.6,
+    "构筑": 3.33
+  },
+  "特殊手札": [
+    "mahito_soul_transfiguration",
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "mahito_soul_transfiguration",
+    "curse_spirit_general"
+  ],
+  "characterId": "mahito_shibuya",
+  "displayName": "真人（涩谷）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "S",
+    "efficiency": "S",
+    "body": "A",
+    "martial": "A",
+    "talent": "SS"
+  },
+  "innateTraits": [
+    "咒灵之躯",
+    "灾害咒灵",
+    "无为转变",
+    "灵魂干涉"
+  ],
+  "techniquePower": "SSS",
+  "domainProfile": "领域展开：自闭圆顿裹",
+  "officialGrade": "特级咒灵",
+  "powerTier": "disasterCurse",
+  "notes": "灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。"
+}

@@ -1,0 +1,33 @@
+{
+  "name": "天使 / 来栖华（死灭回游）",
+  "hp": 4,
+  "mp": 6,
+  "四轴": {
+    "咒术": 6,
+    "肉体": 3.54,
+    "悟性": 6.36,
+    "构筑": 3.09
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "angel_hana_culling",
+  "displayName": "天使 / 来栖华（死灭回游）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "S",
+    "control": "S",
+    "efficiency": "S",
+    "body": "B",
+    "martial": "C",
+    "talent": "SS"
+  },
+  "innateTraits": [
+    "天使",
+    "术式消灭",
+    "雅各布天梯"
+  ],
+  "techniquePower": "SSS",
+  "officialGrade": "古代术师受肉",
+  "powerTier": "supportHax",
+  "notes": "术式消灭和雅各布天梯对受肉/结界/术式体系有高扰动；正面单挑基础不按顶级肉搏处理。"
+}

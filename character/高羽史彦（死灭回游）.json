@@ -1,0 +1,29 @@
+{
+  "name": "高羽史彦（死灭回游）",
+  "hp": 4,
+  "mp": 4,
+  "四轴": {
+    "咒术": 4,
+    "肉体": 3.54,
+    "悟性": 4.6,
+    "构筑": 3.8
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "takaba_fumihiko_culling",
+  "displayName": "高羽史彦（死灭回游）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "C",
+    "talent": "A"
+  },
+  "innateTraits": [],
+  "techniquePower": "EX-",
+  "officialGrade": "未评级",
+  "powerTier": "haxException",
+  "notes": "超人术式极强，但杀意、理解和稳定性限制其即时胜率。"
+}

@@ -405,6 +405,11 @@
       .concat(asList(source?.traits))
       .concat(asList(entry?.rules?.forceAllowTags))
       .concat(archetypes));
+    var specialHandTags = uniqueList([]
+      .concat(asList(source?.specialHandTags))
+      .concat(asList(source?.["特殊手札"]))
+      .concat(archetypes));
+    traits = uniqueList(traits.concat(specialHandTags));
     var text = traits.concat([
       source?.id,
       source?.characterId,
@@ -419,6 +424,7 @@
       displayName: source?.displayName || source?.name || "",
       traits: traits,
       archetypes: archetypes,
+      specialHandTags: specialHandTags,
       hasCe: !/零咒力|zero_ce/i.test(text),
       ceLimited: /零咒力|zero_ce|咒力受限|ce_limited/i.test(text),
       hasInnateTechnique: !/零咒力|无术式|no_innate_technique/i.test(text),
@@ -486,6 +492,10 @@
       forbiddenTraits: uniqueList([].concat(asList(action.forbiddenTraits), asList(template.forbiddenTraits), asList(sourceRule.forbiddenTraits))),
       exclusiveToCharacters: uniqueList([].concat(asList(action.exclusiveToCharacters), asList(template.exclusiveToCharacters), asList(sourceRule.exclusiveToCharacters))),
       exclusiveToArchetypes: uniqueList([].concat(asList(action.exclusiveToArchetypes), asList(template.exclusiveToArchetypes), asList(sourceRule.exclusiveToArchetypes))),
+      specialHandTags: uniqueList([]
+        .concat(asList(action.specialHandTags), asList(action["特殊手札"]))
+        .concat(asList(template.specialHandTags), asList(template["特殊手札"]))
+        .concat(asList(sourceRule.specialHandTags), asList(sourceRule["特殊手札"]))),
       forbiddenArchetypes: uniqueList([].concat(asList(action.forbiddenArchetypes), asList(template.forbiddenArchetypes), asList(sourceRule.forbiddenArchetypes))),
       requiresCe: Boolean(action.requiresCe || template.requiresCe || sourceRule.requiresCe),
       requiresInnateTechnique: Boolean(action.requiresInnateTechnique || template.requiresInnateTechnique || sourceRule.requiresInnateTechnique),
@@ -552,6 +562,9 @@
     }
     if (!forceAllowed && snapshot.exclusiveToArchetypes.length && !includesAny(profile.archetypes, snapshot.exclusiveToArchetypes)) {
       return { ok: false, reason: "需要对应角色原型", profile: profile, snapshot: snapshot };
+    }
+    if (!forceAllowed && snapshot.specialHandTags.length && !includesAny(profile.specialHandTags, snapshot.specialHandTags)) {
+      return { ok: false, reason: "需要角色特殊手札标签", profile: profile, snapshot: snapshot };
     }
     if (!forceAllowed && snapshot.forbiddenArchetypes.length && includesAny(profile.archetypes, snapshot.forbiddenArchetypes)) {
       return { ok: false, reason: "当前角色原型禁止此卡", profile: profile, snapshot: snapshot };

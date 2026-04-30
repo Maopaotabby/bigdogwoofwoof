@@ -1,0 +1,31 @@
+{
+  "name": "东堂葵（涩谷）",
+  "hp": 7,
+  "mp": 5,
+  "四轴": {
+    "咒术": 4.77,
+    "肉体": 7,
+    "悟性": 5.96,
+    "构筑": 1.92
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "todo_aoi_shibuya",
+  "displayName": "东堂葵（涩谷）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "B",
+    "body": "SS",
+    "martial": "SS",
+    "talent": "S"
+  },
+  "innateTraits": [
+    "不义游戏"
+  ],
+  "techniquePower": "A",
+  "officialGrade": "一级",
+  "powerTier": "grade1Plus",
+  "notes": "单体面板是一级强者，配合战中不义游戏价值远高于裸数值。"
+}

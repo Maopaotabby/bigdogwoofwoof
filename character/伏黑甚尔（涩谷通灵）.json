@@ -1,0 +1,37 @@
+{
+  "name": "伏黑甚尔（涩谷通灵）",
+  "hp": 8,
+  "mp": 0,
+  "四轴": {
+    "咒术": 0,
+    "肉体": 8,
+    "悟性": 5.28,
+    "构筑": 0.06
+  },
+  "特殊手札": [
+    "zero_ce_heavenly_restriction"
+  ],
+  "specialHandTags": [
+    "zero_ce_heavenly_restriction"
+  ],
+  "characterId": "toji_fushiguro_shibuya_revenant",
+  "displayName": "伏黑甚尔（涩谷通灵）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "E-",
+    "control": "E-",
+    "efficiency": "E-",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "S"
+  },
+  "innateTraits": [
+    "零咒力天与暴君型天与咒缚"
+  ],
+  "loadout": [
+    "游云"
+  ],
+  "officialGrade": "无",
+  "powerTier": "topTierPhysical",
+  "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。"
+}

@@ -1,0 +1,40 @@
+{
+  "name": "羂索（夏油身体）",
+  "hp": 6,
+  "mp": 7,
+  "四轴": {
+    "咒术": 7.27,
+    "肉体": 6.92,
+    "悟性": 8,
+    "构筑": 3.33
+  },
+  "特殊手札": [
+    "curse_spirit_general"
+  ],
+  "specialHandTags": [
+    "curse_spirit_general"
+  ],
+  "characterId": "kenjaku_geto_body",
+  "displayName": "羂索（夏油身体）",
+  "stage": "shibuyaToCulling",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SSS",
+    "efficiency": "SS",
+    "body": "S",
+    "martial": "SSS",
+    "talent": "SSS"
+  },
+  "innateTraits": [
+    "夺舍",
+    "咒灵操术",
+    "反重力机构",
+    "领域展开"
+  ],
+  "externalResource": "夏油杰身体与咒灵操术库存",
+  "techniquePower": "SSS",
+  "domainProfile": "开放领域：胎藏遍野",
+  "officialGrade": "不适用",
+  "powerTier": "specialGrade",
+  "notes": "经验、术式库存、反重力机构和领域展开构成综合强者；不是单纯输出天花板。"
+}

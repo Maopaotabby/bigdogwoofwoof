@@ -1,0 +1,33 @@
+{
+  "name": "鹿紫云一（400年前）",
+  "hp": 7,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.77,
+    "肉体": 7,
+    "悟性": 7,
+    "构筑": 3.28
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "kashimo_hajime_ancient",
+  "displayName": "鹿紫云一（400年前）",
+  "stage": "ancient400",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "SS",
+    "martial": "SS",
+    "talent": "SS"
+  },
+  "domainProfile": "无领域",
+  "innateTraits": [
+    "电荷咒力"
+  ],
+  "techniquePower": "SSS",
+  "officialGrade": "特级古代术师",
+  "visibleGrade": "specialGrade",
+  "powerTier": "topTier",
+  "notes": "400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。"
+}
