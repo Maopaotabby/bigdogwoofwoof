@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 
 const PROTOCOL = "jjk_online_battle_v1";
+const WORKER_BUILD_VERSION = "20260430-ai-debug-payload-timeout-v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
@@ -64,6 +65,7 @@ function requestIdFrom(body = {}) {
 
 function roomDebug(room, extra = {}) {
   return redactSecrets({
+    workerBuildVersion: WORKER_BUILD_VERSION,
     roomId: room?.roomId || "",
     phase: room?.phase || "",
     round: room?.round || 0,
@@ -496,13 +498,16 @@ async function handleOperation(env, body) {
   if (operation === "ping") return json({
     ok: true,
     protocol: PROTOCOL,
+    workerBuildVersion: WORKER_BUILD_VERSION,
     requestId,
     message: "online battle endpoint ready",
     aiConfigured: Boolean(String(env.AI_API_KEY || "").trim()),
     aiProvider: env.AI_PROVIDER || "openai_compatible",
     aiBaseURL: env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
     aiModel: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
-    aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000)
+    aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000),
+    hasRoomKv: Boolean(env.JJK_ONLINE_ROOMS),
+    serverTime: new Date().toISOString()
   });
 
   if (operation === "createRoom") {
