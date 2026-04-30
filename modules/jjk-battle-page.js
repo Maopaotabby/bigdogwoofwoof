@@ -8,7 +8,8 @@ const battlePageState = {
   mode: "none",
   activeBattleId: "",
   activeRoomId: "",
-  playerSide: null
+  playerSide: null,
+  localLocked: false
 };
 
 function normalizeBattlePageId(pageId) {
@@ -52,6 +53,7 @@ function syncBattlePageDom() {
     root.dataset.battleMode = battlePageState.mode;
     root.dataset.activeRoomId = battlePageState.activeRoomId || "";
     root.dataset.playerSide = battlePageState.playerSide || "";
+    root.dataset.localLocked = battlePageState.localLocked ? "true" : "false";
   }
   document.documentElement.dataset.jjkBattleMode = battlePageState.mode;
   document.documentElement.dataset.jjkBattlePage = battlePageState.activePage;
@@ -98,6 +100,9 @@ function setBattleMode(mode, patch = {}) {
   if (Object.prototype.hasOwnProperty.call(patch, "playerSide")) {
     battlePageState.playerSide = patch.playerSide === "right" ? "right" : (patch.playerSide === "left" ? "left" : null);
   }
+  if (Object.prototype.hasOwnProperty.call(patch, "localLocked")) {
+    battlePageState.localLocked = Boolean(patch.localLocked);
+  }
   if (patch.activePage) battlePageState.activePage = normalizeBattlePageId(patch.activePage);
   syncBattlePageDom();
   emitBattlePageState();
@@ -109,6 +114,7 @@ function clearBattleMode(mode = "none") {
   battlePageState.activeBattleId = "";
   battlePageState.activeRoomId = "";
   battlePageState.playerSide = null;
+  battlePageState.localLocked = false;
   syncBattlePageDom();
   emitBattlePageState();
   return getBattlePageState();

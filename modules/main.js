@@ -4,6 +4,7 @@ import { CharacterModule } from "./character.js?v=20260428-v1.390A-combat-core-r
 import { LifeWheelModule } from "./life-wheel.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { FightModule } from "./fight.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { BattlePageModule } from "./jjk-battle-page.js?v=20260428-v1.390A-combat-core-rationalization-pass";
+import { OnlineModule } from "./online.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { UiModule } from "./ui.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { DebugModule } from "./debug.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import "./main/main.js?v=20260428-v1.390A-combat-core-rationalization-pass";
@@ -15,6 +16,7 @@ import "./main/main.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 // import { LifeWheelModule } from "./life-wheel.js"
 // import { FightModule } from "./fight.js"
 // import { BattlePageModule } from "./jjk-battle-page.js"
+// import { OnlineModule } from "./online.js"
 // import { UiModule } from "./ui.js"
 // import { DebugModule } from "./debug.js"
 // import "./main/main.js"
@@ -95,6 +97,9 @@ function buildModuleRegistry() {
       ]),
       battlePage: createModuleRecord("battlePage", "BattlePageModule", BattlePageModule, [
         "JJKBattlePage"
+      ]),
+      online: createModuleRecord("online", "OnlineModule", OnlineModule, [
+        "JJKOnline"
       ]),
       ui: createModuleRecord("ui", "UiModule", UiModule, [
         "JJKUI",
@@ -247,6 +252,7 @@ export const JJKSite = {
     api: ApiModule,
     fight: FightModule,
     battlePage: BattlePageModule,
+    online: OnlineModule,
     ui: UiModule,
     tools: ToolsModule,
     debug: DebugModule

@@ -62,7 +62,6 @@ const state = {
     activeBattleId: "",
     activeRoomId: "",
     playerSide: null,
-    onlineSnapshot: null,
     localLocked: false
   },
   duelSpinToken: 0,
@@ -1134,7 +1133,6 @@ function bindEvents() {
     };
     syncDuelModeIsolation();
   });
-  document.addEventListener("jjk-online-room-state", handleOnlineRoomStateEvent);
   els.duelCustomAddBtn?.addEventListener("click", addCustomDuelCharacter);
   els.duelImportCodeBtn?.addEventListener("click", importCombatPowerCodeToDuel);
   els.duelWheelImportBtn?.addEventListener("click", importWheelExportToCustomDuel);

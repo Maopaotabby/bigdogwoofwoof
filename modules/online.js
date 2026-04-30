@@ -1,69 +1,28 @@
-﻿const APP_BUILD_VERSION = "20260428-v1.390A-combat-core-rationalization-pass";
+const APP_BUILD_VERSION = "20260430-online-rewrite-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
-const ROOM_STORAGE_PREFIX = "jjk-online-room-alpha:";
-const PLAYER_ID_STORAGE_KEY = "jjk-online-player-id-alpha";
-const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-active-room-alpha";
-const ONLINE_BACKEND_MODE_STORAGE_KEY = "jjk-online-backend-mode-alpha";
-const ONLINE_CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-custom-endpoint-alpha";
-const OFFICIAL_ENDPOINT_PLACEHOLDER = "https://YOUR_OFFICIAL_WORKER_URL/online-room";
-const OFFICIAL_ENDPOINT_MAINLAND_HINT = "官方联机服务器当前网络不可达。国内网络可能无法访问 workers.dev 线路；请稍后重试，或在高级后端设置中切换到国内可访问的自定义 Endpoint。站长也可以在 online-room-rules 的 mainlandMirrorUrls 中配置国内镜像。";
+const ONLINE_PROTOCOL = "jjk_online_battle_v1";
+const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
+const PLAYER_ID_STORAGE_KEY = "jjk-online-battle-player-id-v1";
+const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-battle-active-room-v1";
+const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
+const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const ONLINE_PROTOCOL = "jjk_online_room_alpha";
-const ONLINE_ROOM_STATUS_FLOW = ["waiting", "ready", "battle", "ended"];
-const ONLINE_ROOM_STATUS_SET = new Set(ONLINE_ROOM_STATUS_FLOW);
+const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
+const LOCAL_DEFAULT_ENDPOINT = "";
 
-const DEFAULT_RULES = {
-  version: "0.1.0",
-  status: "CANDIDATE",
-  mode: "turn_sync_alpha",
+const DEFAULT_RULES = Object.freeze({
   backend: {
-    defaultMode: "official_endpoint",
-    supportedModes: ["official_endpoint", "local_mock_backend", "custom_endpoint"],
-    officialEndpoint: {
-      enabled: true,
-      label: "官方联机服务器",
-      url: OFFICIAL_ENDPOINT_PLACEHOLDER,
-      fallbackUrls: [],
-      mainlandMirrorUrls: [],
-      requiresUserConfig: false
-    },
-    localMock: {
-      enabled: true,
-      label: "本地 mock（开发/双标签测试）"
-    },
-    customEndpoint: {
-      enabled: true,
-      label: "自定义 Endpoint（高级）"
-    },
-    customEndpointProtocol: {
-      method: "POST",
-      body: "{ protocol, operation, roomId, playerId, side, payload, siteVersion }",
-      response: "{ ok, room, side, error }"
-    }
+    defaultMode: "local_mock_backend",
+    officialEndpoint: { url: LOCAL_DEFAULT_ENDPOINT },
+    supportedModes: ["local_mock_backend", "official_endpoint", "custom_endpoint"]
   },
-  room: {
-    roomIdLength: 6,
-    maxPlayers: 2,
-    allowSpectator: false,
-    expireMinutes: 120
-  },
-  sync: {
-    pollIntervalMs: 2000,
-    requireBothLocked: true,
-    hideOpponentActionsUntilBothLocked: true
-  },
-  security: {
-    uploadApiKeys: false,
-    uploadAiSettings: false,
-    uploadLocalStorage: false,
-    redactSecrets: true
-  }
-};
+  room: { roomIdLength: 6 },
+  sync: { pollIntervalMs: 1600 }
+});
 
-const localMemoryRooms = new Map();
+const memoryRooms = new Map();
 let cachedRules = null;
-let activePollingStop = null;
-const autoResolveInFlight = new Set();
+let pollStop = null;
 let uiState = {
   roomId: "",
   playerId: "",
@@ -77,84 +36,114 @@ function cloneJson(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function getBrowserStorage() {
+function storage(kind = "local") {
   try {
-    if (typeof localStorage !== "undefined") return localStorage;
-  } catch (error) {
+    return kind === "session" ? globalThis.sessionStorage : globalThis.localStorage;
+  } catch {
     return null;
   }
-  return null;
-}
-
-function getSessionStorage() {
-  try {
-    if (typeof sessionStorage !== "undefined") return sessionStorage;
-  } catch (error) {
-    return null;
-  }
-  return null;
 }
 
 function nowMs() {
   return Date.now();
 }
 
-function normalizeOnlineRoomId(roomId) {
-  return String(roomId || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 12);
+function normalizeRoomId(value) {
+  return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
 }
 
-function generateOnlineRoomId(length = DEFAULT_RULES.room.roomIdLength) {
-  let roomId = "";
-  const cryptoApi = globalThis.crypto;
+function normalizeSide(value) {
+  return value === "right" ? "right" : "left";
+}
+
+function otherSide(side) {
+  return normalizeSide(side) === "left" ? "right" : "left";
+}
+
+function normalizePhase(value) {
+  const text = String(value || "").trim();
+  return PHASES.includes(text) ? text : "preparing";
+}
+
+function normalizeEndpoint(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    if (!/^https?:$/.test(url.protocol)) return "";
+    url.hash = "";
+    return url.href;
+  } catch {
+    return "";
+  }
+}
+
+function normalizeBackendMode(value) {
+  if (value === "official_endpoint") return "official_endpoint";
+  if (value === "custom_endpoint") return "custom_endpoint";
+  return "local_mock_backend";
+}
+
+function roomKey(roomId) {
+  return `${ROOM_STORAGE_PREFIX}${normalizeRoomId(roomId)}`;
+}
+
+function generateRoomId(length = DEFAULT_RULES.room.roomIdLength) {
+  let id = "";
   for (let index = 0; index < length; index += 1) {
-    let randomIndex = Math.floor(Math.random() * ROOM_ID_ALPHABET.length);
-    if (cryptoApi?.getRandomValues) {
+    let pick = Math.floor(Math.random() * ROOM_ID_ALPHABET.length);
+    if (globalThis.crypto?.getRandomValues) {
       const values = new Uint32Array(1);
-      cryptoApi.getRandomValues(values);
-      randomIndex = values[0] % ROOM_ID_ALPHABET.length;
+      globalThis.crypto.getRandomValues(values);
+      pick = values[0] % ROOM_ID_ALPHABET.length;
     }
-    roomId += ROOM_ID_ALPHABET[randomIndex];
+    id += ROOM_ID_ALPHABET[pick];
   }
-  return roomId;
+  return id;
 }
 
-function getRoomStorageKey(roomId) {
-  return `${ROOM_STORAGE_PREFIX}${normalizeOnlineRoomId(roomId)}`;
-}
-
-function readStoredRoom(roomId) {
-  const normalized = normalizeOnlineRoomId(roomId);
-  const storage = getBrowserStorage();
-  let room = null;
-  if (storage) {
-    const raw = storage.getItem(getRoomStorageKey(normalized));
-    room = raw ? JSON.parse(raw) : null;
-  } else {
-    room = localMemoryRooms.get(normalized) || null;
+function getOrCreatePlayerId() {
+  if (uiState.playerId) return uiState.playerId;
+  const store = storage("session") || storage("local");
+  const existing = store?.getItem?.(PLAYER_ID_STORAGE_KEY);
+  if (existing) {
+    uiState.playerId = existing;
+    return existing;
   }
-  return room ? normalizeOnlineRoomLifecycle(room) : null;
+  const id = `p_${generateRoomId(10).toLowerCase()}_${nowMs().toString(36)}`;
+  store?.setItem?.(PLAYER_ID_STORAGE_KEY, id);
+  uiState.playerId = id;
+  return id;
 }
 
-function writeStoredRoom(room) {
-  normalizeOnlineRoomLifecycle(room);
-  const normalized = normalizeOnlineRoomId(room?.roomId);
-  if (!normalized) throw new Error("房间码无效。");
-  const payload = JSON.stringify(redactOnlineSecrets(room));
-  const storage = getBrowserStorage();
-  if (storage) storage.setItem(getRoomStorageKey(normalized), payload);
-  localMemoryRooms.set(normalized, JSON.parse(payload));
-  return readStoredRoom(normalized);
+function getBackendSettings(options = {}) {
+  const store = storage("local");
+  const backendMode = normalizeBackendMode(options.backendMode || store?.getItem?.(BACKEND_MODE_STORAGE_KEY) || uiState.backendMode || DEFAULT_RULES.backend.defaultMode);
+  const endpoint = normalizeEndpoint(options.endpoint || options.customEndpoint || store?.getItem?.(CUSTOM_ENDPOINT_STORAGE_KEY) || uiState.endpoint || "");
+  return { backendMode, endpoint };
 }
 
-function removeStoredRoom(roomId) {
-  const normalized = normalizeOnlineRoomId(roomId);
-  const storage = getBrowserStorage();
-  if (storage) storage.removeItem(getRoomStorageKey(normalized));
-  localMemoryRooms.delete(normalized);
+function saveBackendSettings(settings = {}) {
+  const backendMode = normalizeBackendMode(settings.backendMode);
+  const endpoint = normalizeEndpoint(settings.endpoint || settings.customEndpoint || "");
+  const store = storage("local");
+  store?.setItem?.(BACKEND_MODE_STORAGE_KEY, backendMode);
+  if (endpoint) store?.setItem?.(CUSTOM_ENDPOINT_STORAGE_KEY, endpoint);
+  else store?.removeItem?.(CUSTOM_ENDPOINT_STORAGE_KEY);
+  uiState = { ...uiState, backendMode, endpoint };
+  return { backendMode, endpoint };
+}
+
+function clearBackendSettings() {
+  const store = storage("local");
+  store?.removeItem?.(BACKEND_MODE_STORAGE_KEY);
+  store?.removeItem?.(CUSTOM_ENDPOINT_STORAGE_KEY);
+  uiState = { ...uiState, backendMode: DEFAULT_RULES.backend.defaultMode, endpoint: "" };
+  return getBackendSettings();
+}
+
+function shouldUseRemote(options = {}) {
+  return getBackendSettings(options).backendMode !== "local_mock_backend";
 }
 
 function createEmptyPlayer(side) {
@@ -162,1574 +151,860 @@ function createEmptyPlayer(side) {
     side,
     playerId: "",
     displayName: "",
-    characterId: "",
     connected: false,
-    locked: false,
-    lastSeenAt: 0
+    lastSeenAt: 0,
+    role: side === "left" ? "owner" : "guest",
+    characterId: "",
+    characterSnapshot: null,
+    characterLocked: false,
+    actionLocked: false
   };
 }
 
-function createOnlinePlayer(side, options = {}) {
+function getCharacterCards() {
+  try {
+    return globalThis.JJKCharacter?.getDuelCharacterCards?.() || globalThis.getDuelCharacterCards?.() || [];
+  } catch {
+    return [];
+  }
+}
+
+function getCharacterById(characterId) {
+  const id = String(characterId || "");
+  return getCharacterCards().find((card) => card?.characterId === id || card?.id === id) || null;
+}
+
+function sanitizeCharacterSnapshot(card) {
+  if (!card) return null;
+  const copy = cloneJson(card);
+  return redactSecrets({
+    ...copy,
+    characterId: String(copy.characterId || copy.id || ""),
+    displayName: String(copy.displayName || copy.name || copy.characterId || "未命名角色")
+  });
+}
+
+function characterOptionLabel(card) {
+  return [
+    card?.displayName || card?.name || card?.characterId || "未命名角色",
+    card?.officialGrade || card?.visibleGrade || "",
+    card?.customDuel ? "自定义" : "官方"
+  ].filter(Boolean).join(" · ");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+function syncCharacterSelects() {
+  if (typeof document === "undefined") return;
+  const cards = getCharacterCards();
+  const options = cards.length
+    ? cards.map((card) => `<option value="${escapeHtml(card.characterId || card.id)}">${escapeHtml(characterOptionLabel(card))}</option>`).join("")
+    : `<option value="">暂无可用角色</option>`;
+  [$("#onlineCreateCharacterSelect"), $("#onlineJoinCharacterSelect")].forEach((select, index) => {
+    if (!select) return;
+    const current = select.value || cards[index]?.characterId || cards[index]?.id || cards[0]?.characterId || cards[0]?.id || "";
+    if (select.dataset.optionSignature !== options) {
+      select.innerHTML = options;
+      select.dataset.optionSignature = options;
+    }
+    if ([...select.options].some((option) => option.value === current)) select.value = current;
+  });
+}
+
+function makePlayer(side, options = {}) {
+  const card = getCharacterById(options.characterId);
   return {
-    side,
-    playerId: options.playerId || getOrCreateOnlinePlayerId(),
+    ...createEmptyPlayer(side),
+    playerId: options.playerId || getOrCreatePlayerId(),
     displayName: String(options.displayName || (side === "left" ? "玩家 A" : "玩家 B")).slice(0, 40),
-    characterId: String(options.characterId || "").slice(0, 80),
     connected: true,
-    locked: false,
-    lastSeenAt: nowMs()
+    lastSeenAt: nowMs(),
+    characterId: String(options.characterId || card?.characterId || card?.id || "").slice(0, 120),
+    characterSnapshot: sanitizeCharacterSnapshot(card)
   };
 }
 
-function normalizeOnlineRoomStatus(status) {
-  const value = String(status || "").trim();
-  if (ONLINE_ROOM_STATUS_SET.has(value)) return value;
-  if (["selecting", "locked", "resolving"].includes(value)) return "battle";
-  if (value === "abandoned") return "ended";
-  return "waiting";
-}
-
-function hasOnlinePlayer(room, side) {
-  return Boolean(room?.players?.[normalizeOnlineSide(side)]?.playerId);
-}
-
-function hasBothOnlinePlayers(room) {
-  return hasOnlinePlayer(room, "left") && hasOnlinePlayer(room, "right");
-}
-
-function hasOnlineCharacter(room, side) {
-  return Boolean(String(room?.players?.[normalizeOnlineSide(side)]?.characterId || "").trim());
-}
-
-function hasBothOnlineCharacters(room) {
-  return hasBothOnlinePlayers(room) && hasOnlineCharacter(room, "left") && hasOnlineCharacter(room, "right");
-}
-
-function ensureOnlineRoomShape(room) {
-  if (!room || typeof room !== "object") return room;
+function normalizeRoom(room) {
+  if (!room || typeof room !== "object") return null;
+  room.protocol = ONLINE_PROTOCOL;
+  room.phase = normalizePhase(room.phase);
   room.players = {
     left: { ...createEmptyPlayer("left"), ...(room.players?.left || {}) },
     right: { ...createEmptyPlayer("right"), ...(room.players?.right || {}) }
   };
-  room.pendingActions = {
-    left: normalizeOnlineActionList(room.pendingActions?.left),
-    right: normalizeOnlineActionList(room.pendingActions?.right)
+  room.readyState = {
+    leftCharacterLocked: Boolean(room.readyState?.leftCharacterLocked || room.players.left.characterLocked),
+    rightCharacterLocked: Boolean(room.readyState?.rightCharacterLocked || room.players.right.characterLocked)
   };
-  room.publicLocks = {
-    left: Boolean(room.publicLocks?.left || room.players.left.locked),
-    right: Boolean(room.publicLocks?.right || room.players.right.locked)
+  room.players.left.characterLocked = room.readyState.leftCharacterLocked;
+  room.players.right.characterLocked = room.readyState.rightCharacterLocked;
+  room.turnState = {
+    turnId: String(room.turnState?.turnId || `turn_${room.round || 1}`),
+    phase: String(room.turnState?.phase || "selecting"),
+    actions: {
+      left: Array.isArray(room.turnState?.actions?.left) ? room.turnState.actions.left : [],
+      right: Array.isArray(room.turnState?.actions?.right) ? room.turnState.actions.right : []
+    },
+    locks: {
+      left: Boolean(room.turnState?.locks?.left || room.players.left.actionLocked),
+      right: Boolean(room.turnState?.locks?.right || room.players.right.actionLocked)
+    },
+    result: room.turnState?.result || null,
+    aiStatus: room.turnState?.aiStatus || ""
   };
-  room.players.left.locked = Boolean(room.publicLocks.left);
-  room.players.right.locked = Boolean(room.publicLocks.right);
-  room.turn = Math.max(1, Number(room.turn) || 1);
-  room.lastResolvedTurn = Math.max(0, Number(room.lastResolvedTurn) || 0);
-  room.logs = Array.isArray(room.logs) ? room.logs : [];
-  room.status = normalizeOnlineRoomStatus(room.status);
+  room.players.left.actionLocked = room.turnState.locks.left;
+  room.players.right.actionLocked = room.turnState.locks.right;
+  room.reviewState ||= { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
+  room.logs = Array.isArray(room.logs) ? room.logs.slice(-100) : [];
+  room.round = Math.max(1, Number(room.round) || 1);
+  room.revision = Math.max(1, Number(room.revision) || 1);
+  room.updatedAt = Number(room.updatedAt) || nowMs();
+  applyPhaseTransition(room);
   return room;
 }
 
-function createInitialOnlineBattleState(room) {
-  const timestamp = nowMs();
-  const existing = cloneJson(room?.battleState || {});
-  return redactOnlineSecrets({
-    ...existing,
-    protocol: existing.protocol || ONLINE_PROTOCOL,
-    schema: existing.schema || "jjk-online-battle-state",
-    version: existing.version || 1,
-    roomId: room.roomId,
-    battleSeed: room.battleSeed || existing.battleSeed || `online-${room.roomId}-${timestamp.toString(36)}`,
-    status: "battle",
-    turn: Math.max(1, Number(room.turn) || Number(existing.turn) || Number(existing.round) || 1),
-    initializedAt: existing.initializedAt || timestamp,
-    lastResolvedTurn: Math.max(0, Number(room.lastResolvedTurn) || 0),
+function hasBothPlayers(room) {
+  return Boolean(room?.players?.left?.playerId && room?.players?.right?.playerId);
+}
+
+function hasBothLockedCharacters(room) {
+  return Boolean(hasBothPlayers(room) && room.readyState?.leftCharacterLocked && room.readyState?.rightCharacterLocked);
+}
+
+function hasBothLockedActions(room) {
+  return Boolean(room?.turnState?.locks?.left && room?.turnState?.locks?.right);
+}
+
+function applyPhaseTransition(room) {
+  if (!room || room.phase === "ended" || room.phase === "reviewing" || room.phase === "turn_resolving") return room;
+  if (!hasBothLockedCharacters(room)) {
+    room.phase = "preparing";
+    return room;
+  }
+  if (room.phase === "preparing" || room.phase === "battle_starting") {
+    room.phase = "turn_selecting";
+    room.battleState ||= createBattleSeedState(room);
+    appendLog(room, "battle_started", "双方角色已锁定，进入对战阶段。");
+  }
+  if (hasBothLockedActions(room)) room.phase = "turn_resolving";
+  return room;
+}
+
+function createBattleSeedState(room) {
+  return {
+    schema: "jjk-online-battle-state-v1",
+    battleId: `online_${room.roomId}_${nowMs().toString(36)}`,
+    battleSeed: `online-${room.roomId}-${nowMs().toString(36)}`,
+    round: room.round,
     players: {
       left: {
-        side: "left",
-        playerId: room.players.left.playerId || "",
-        characterId: room.players.left.characterId || "",
-        displayName: room.players.left.displayName || ""
+        characterId: room.players.left.characterId,
+        characterSnapshot: room.players.left.characterSnapshot
       },
       right: {
-        side: "right",
-        playerId: room.players.right.playerId || "",
-        characterId: room.players.right.characterId || "",
-        displayName: room.players.right.displayName || ""
+        characterId: room.players.right.characterId,
+        characterSnapshot: room.players.right.characterSnapshot
       }
-    },
-    publicLocks: {
-      left: Boolean(room.publicLocks?.left),
-      right: Boolean(room.publicLocks?.right)
-    },
-    pendingActionCounts: {
-      left: room.pendingActions?.left?.length || 0,
-      right: room.pendingActions?.right?.length || 0
     }
+  };
+}
+
+function appendLog(room, type, message, patch = {}) {
+  if (!room.logs?.some((entry) => entry.type === type && entry.message === message && entry.turn === patch.turn)) {
+    room.logs = (room.logs || []).concat({ at: nowMs(), type, message, ...patch }).slice(-100);
+  }
+}
+
+function touch(room) {
+  room.revision = Math.max(1, Number(room.revision) || 1) + 1;
+  room.updatedAt = nowMs();
+  return room;
+}
+
+function readLocalRoom(roomId) {
+  const id = normalizeRoomId(roomId);
+  const raw = storage("local")?.getItem?.(roomKey(id));
+  const room = raw ? JSON.parse(raw) : memoryRooms.get(id);
+  return normalizeRoom(room);
+}
+
+function writeLocalRoom(room) {
+  const normalized = normalizeRoom(touch(room));
+  const id = normalizeRoomId(normalized.roomId);
+  const payload = JSON.stringify(redactSecrets(normalized));
+  storage("local")?.setItem?.(roomKey(id), payload);
+  memoryRooms.set(id, JSON.parse(payload));
+  return readLocalRoom(id);
+}
+
+function remember(roomId, playerId, side, settings = getBackendSettings()) {
+  uiState = { ...uiState, roomId: normalizeRoomId(roomId), playerId, side: side || "", ...settings };
+  storage("session")?.setItem?.(ACTIVE_ROOM_STORAGE_KEY, JSON.stringify(uiState));
+}
+
+function restoreRemembered() {
+  try {
+    const remembered = JSON.parse(storage("session")?.getItem?.(ACTIVE_ROOM_STORAGE_KEY) || "null");
+    if (remembered?.roomId) uiState = { ...uiState, ...remembered };
+  } catch {
+    uiState = { ...uiState };
+  }
+  return { ...uiState };
+}
+
+function clearRemembered() {
+  uiState = { roomId: "", playerId: uiState.playerId || "", side: "", backendMode: uiState.backendMode, endpoint: uiState.endpoint };
+  storage("session")?.removeItem?.(ACTIVE_ROOM_STORAGE_KEY);
+}
+
+function getPlayerSide(room, playerId) {
+  if (!room || !playerId) return "";
+  if (room.players.left.playerId === playerId) return "left";
+  if (room.players.right.playerId === playerId) return "right";
+  return "";
+}
+
+function createRoom(options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("createRoom", { payload: { room: createRoomObject(options) } }, settings);
+  let room = createRoomObject(options);
+  while (readLocalRoom(room.roomId)) room = createRoomObject({ ...options, roomId: generateRoomId() });
+  const saved = writeLocalRoom(room);
+  remember(saved.roomId, saved.players.left.playerId, "left", settings);
+  return Promise.resolve(snapshot(saved, "left"));
+}
+
+function createRoomObject(options = {}) {
+  const roomId = normalizeRoomId(options.roomId) || generateRoomId();
+  const left = makePlayer("left", { ...options, playerId: options.playerId || getOrCreatePlayerId() });
+  const now = nowMs();
+  return normalizeRoom({
+    protocol: ONLINE_PROTOCOL,
+    roomId,
+    roomCode: roomId,
+    phase: "preparing",
+    createdAt: now,
+    updatedAt: now,
+    revision: 1,
+    ownerPlayerId: left.playerId,
+    players: { left, right: createEmptyPlayer("right") },
+    readyState: { leftCharacterLocked: false, rightCharacterLocked: false },
+    round: 1,
+    turnState: { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false } },
+    reviewState: { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} },
+    logs: [{ at: now, type: "room_created", message: `房间 ${roomId} 已创建。` }]
   });
 }
 
-function startOnlineBattle(room) {
-  ensureOnlineRoomShape(room);
-  if (!room) return room;
-  if (room.status === "ended") return room;
-  if (!hasBothOnlineCharacters(room)) {
-    room.status = hasBothOnlinePlayers(room) ? "ready" : "waiting";
-    return room;
+function joinRoom(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("joinRoom", { roomId, payload: { player: makePlayer("right", options) } }, settings);
+  const room = readLocalRoom(roomId);
+  if (!room) return Promise.reject(new Error("房间不存在。"));
+  const playerId = options.playerId || getOrCreatePlayerId();
+  const existingSide = getPlayerSide(room, playerId);
+  if (existingSide) {
+    room.players[existingSide].connected = true;
+    room.players[existingSide].lastSeenAt = nowMs();
+    const saved = writeLocalRoom(room);
+    remember(saved.roomId, playerId, existingSide, settings);
+    return Promise.resolve(snapshot(saved, existingSide));
   }
-  const wasBattle = room.status === "battle" &&
-    room.battleState?.status === "battle" &&
-    room.battleState?.roomId === room.roomId;
-  room.status = "battle";
-  room.battleState = createInitialOnlineBattleState(room);
-  room.updatedAt = nowMs();
-  const hasStartLog = room.logs?.some?.((entry) => entry?.type === "battle_started");
-  if (!wasBattle && !hasStartLog) {
-    room.logs = (room.logs || []).concat({
-      at: room.updatedAt,
-      type: "battle_started",
-      message: "双方角色已确定，联机战斗已开始。"
-    }).slice(-80);
+  if (room.players.right.playerId) return Promise.reject(new Error("房间已满。"));
+  room.players.right = makePlayer("right", { ...options, playerId });
+  appendLog(room, "player_joined", "加入者已进入房间。");
+  const saved = writeLocalRoom(room);
+  remember(saved.roomId, playerId, "right", settings);
+  return Promise.resolve(snapshot(saved, "right"));
+}
+
+function selectCharacter(roomId, side, characterId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("selectCharacter", { roomId, side, payload: { characterId, characterSnapshot: sanitizeCharacterSnapshot(getCharacterById(characterId)) } }, settings);
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, side, options);
+  if (room.phase !== "preparing") throw new Error("只有准备阶段可以更换角色。");
+  const card = getCharacterById(characterId);
+  if (!card) throw new Error("角色不存在。");
+  room.players[actorSide].characterId = card.characterId || card.id;
+  room.players[actorSide].characterSnapshot = sanitizeCharacterSnapshot(card);
+  room.players[actorSide].characterLocked = false;
+  room.readyState[`${actorSide}CharacterLocked`] = false;
+  appendLog(room, "character_selected", `${actorSide === "left" ? "左方" : "右方"}选择了角色。`, { side: actorSide });
+  return Promise.resolve(snapshot(writeLocalRoom(room), actorSide));
+}
+
+function lockCharacter(roomId, side, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("lockCharacter", { roomId, side }, settings);
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, side, options);
+  if (room.phase !== "preparing") throw new Error("当前不是准备阶段。");
+  if (!room.players[actorSide].characterId) throw new Error("请先选择角色。");
+  room.readyState[`${actorSide}CharacterLocked`] = true;
+  room.players[actorSide].characterLocked = true;
+  appendLog(room, "character_locked", `${actorSide === "left" ? "左方" : "右方"}已锁定角色。`, { side: actorSide });
+  applyPhaseTransition(room);
+  const saved = writeLocalRoom(room);
+  if (saved.phase === "turn_selecting") enterBattleView(saved, actorSide);
+  return Promise.resolve(snapshot(saved, actorSide));
+}
+
+function unlockCharacter(roomId, side, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("unlockCharacter", { roomId, side }, settings);
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, side, options);
+  if (room.phase !== "preparing") throw new Error("进入对战后不能取消角色锁定。");
+  room.readyState[`${actorSide}CharacterLocked`] = false;
+  room.players[actorSide].characterLocked = false;
+  appendLog(room, "character_unlocked", `${actorSide === "left" ? "左方" : "右方"}取消了角色锁定。`, { side: actorSide });
+  return Promise.resolve(snapshot(writeLocalRoom(room), actorSide));
+}
+
+function lockTurn(roomId, side, actions = [], options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("lockTurn", { roomId, side, payload: { actions: normalizeActions(actions) } }, settings);
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, side, options);
+  if (room.phase !== "turn_selecting") throw new Error("当前不能锁定行动。");
+  const normalized = normalizeActions(actions);
+  if (!normalized.length) throw new Error("请先选择至少一张手札。");
+  room.turnState.actions[actorSide] = normalized;
+  room.turnState.locks[actorSide] = true;
+  room.players[actorSide].actionLocked = true;
+  appendLog(room, "turn_locked", `${actorSide === "left" ? "左方" : "右方"}已锁定第 ${room.round} 回合行动。`, { side: actorSide, turn: room.round });
+  applyPhaseTransition(room);
+  const saved = writeLocalRoom(room);
+  if (saved.phase === "turn_resolving") return resolveTurn(saved.roomId, { ...settings, side: actorSide, playerId: options.playerId });
+  return Promise.resolve(snapshot(saved, actorSide));
+}
+
+function unlockTurn(roomId, side, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("unlockTurn", { roomId, side }, settings);
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, side, options);
+  if (room.phase !== "turn_selecting") throw new Error("当前不能取消行动锁定。");
+  room.turnState.locks[actorSide] = false;
+  room.players[actorSide].actionLocked = false;
+  return Promise.resolve(snapshot(writeLocalRoom(room), actorSide));
+}
+
+function resolveTurn(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("resolveTurnIfReady", { roomId, side: options.side }, settings);
+  const room = requireLocalRoom(roomId);
+  if (!hasBothLockedActions(room)) throw new Error("双方尚未都锁定行动。");
+  room.phase = "turn_resolving";
+  room.turnState.aiStatus = "local_fallback";
+  room.turnState.result = {
+    source: "server-ai-placeholder",
+    summary: `第 ${room.round} 回合已接收双方锁定行动。服务器 AI broker 接入后将在此写入结构化结算。`,
+    actions: cloneJson(room.turnState.actions)
+  };
+  appendLog(room, "turn_resolved", room.turnState.result.summary, { turn: room.round });
+  room.round += 1;
+  room.turnState = { turnId: `turn_${room.round}`, phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
+  room.players.left.actionLocked = false;
+  room.players.right.actionLocked = false;
+  room.phase = "turn_selecting";
+  return Promise.resolve(snapshot(writeLocalRoom(room), options.side || uiState.side || "left"));
+}
+
+function rematch(roomId, options = {}) {
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, options.side || uiState.side, options);
+  room.round = 1;
+  room.phase = "turn_selecting";
+  room.battleState = createBattleSeedState(room);
+  room.turnState = { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
+  room.reviewState = { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
+  appendLog(room, "rematch", "双方保留角色，再来一把。");
+  const saved = writeLocalRoom(room);
+  enterBattleView(saved, actorSide);
+  return Promise.resolve(snapshot(saved, actorSide));
+}
+
+function resetToPreparing(roomId, options = {}) {
+  const room = requireLocalRoom(roomId);
+  const actorSide = authorizeSide(room, options.side || uiState.side, options);
+  if (actorSide !== "left" && room.ownerPlayerId !== (options.playerId || uiState.playerId)) throw new Error("只有房主可以重回准备阶段。");
+  room.phase = "preparing";
+  room.readyState = { leftCharacterLocked: false, rightCharacterLocked: false };
+  room.players.left.characterLocked = false;
+  room.players.right.characterLocked = false;
+  room.players.left.actionLocked = false;
+  room.players.right.actionLocked = false;
+  room.turnState = { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
+  room.round = 1;
+  room.battleState = null;
+  appendLog(room, "reset_prepare", "房主将房间重置到准备阶段。");
+  return Promise.resolve(snapshot(writeLocalRoom(room), actorSide));
+}
+
+function kickPlayer(roomId, targetSide = "right", options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("kickPlayer", { roomId, side: options.side || uiState.side, payload: { targetSide } }, settings);
+  const room = requireLocalRoom(roomId);
+  const requester = authorizeSide(room, options.side || uiState.side, options);
+  if (requester !== "left" && room.ownerPlayerId !== (options.playerId || uiState.playerId)) throw new Error("只有房主可以踢出玩家。");
+  if (!["preparing", "reviewing"].includes(room.phase)) throw new Error("只有准备阶段或复盘阶段可以踢出玩家。");
+  const side = normalizeSide(targetSide);
+  if (side === "left") throw new Error("不能踢出房主。");
+  room.players[side] = createEmptyPlayer(side);
+  room.readyState.rightCharacterLocked = false;
+  room.turnState.actions.right = [];
+  room.turnState.locks.right = false;
+  room.phase = "preparing";
+  appendLog(room, "player_kicked", "右方玩家已被房主移出房间。");
+  return Promise.resolve(snapshot(writeLocalRoom(room), requester));
+}
+
+function leaveRoom(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("leaveRoom", { roomId, side: options.side || uiState.side }, settings).finally(clearRemembered);
+  const room = readLocalRoom(roomId);
+  if (room) {
+    const side = getPlayerSide(room, options.playerId || uiState.playerId) || normalizeSide(options.side || uiState.side);
+    room.players[side].connected = false;
+    room.phase = "ended";
+    appendLog(room, "room_ended", `${side === "left" ? "房主" : "加入者"}离开，房间结束。`);
+    writeLocalRoom(room);
   }
-  return room;
+  clearRemembered();
+  stopPolling();
+  return Promise.resolve({});
 }
 
-function normalizeOnlineRoomLifecycle(room) {
-  ensureOnlineRoomShape(room);
-  if (!room) return room;
-  if (room.status === "ended") return room;
-  if (hasBothOnlineCharacters(room)) return startOnlineBattle(room);
-  room.status = hasBothOnlinePlayers(room) ? "ready" : "waiting";
-  return room;
-}
-
-function getOrCreateOnlinePlayerId() {
-  if (uiState.playerId) return uiState.playerId;
-  const storage = getSessionStorage() || getBrowserStorage();
-  const existing = storage?.getItem?.(PLAYER_ID_STORAGE_KEY);
-  if (existing) {
-    uiState.playerId = existing;
-    return existing;
-  }
-  const playerId = `p_${generateOnlineRoomId(10).toLowerCase()}_${nowMs().toString(36)}`;
-  storage?.setItem?.(PLAYER_ID_STORAGE_KEY, playerId);
-  uiState.playerId = playerId;
-  return playerId;
-}
-
-function normalizeOnlineSide(side) {
-  return side === "right" ? "right" : "left";
-}
-
-function normalizeOnlineBackendMode(mode) {
-  if (mode === "local_mock_backend") return "local_mock_backend";
-  if (mode === "custom_endpoint") return "custom_endpoint";
-  return "official_endpoint";
-}
-
-function normalizeOnlineEndpoint(endpoint) {
-  const raw = String(endpoint || "").trim();
-  if (!raw) return "";
-  try {
-    const url = new URL(raw);
-    if (!/^https?:$/.test(url.protocol)) return "";
-    url.hash = "";
-    return url.href;
-  } catch (error) {
-    return "";
-  }
-}
-
-function getOnlineBackendSettings(options = {}) {
-  const storage = getBrowserStorage();
-  const mode = normalizeOnlineBackendMode(
-    options.backendMode ||
-    storage?.getItem?.(ONLINE_BACKEND_MODE_STORAGE_KEY) ||
-    uiState.backendMode ||
-    DEFAULT_RULES.backend.defaultMode
-  );
-  const endpoint = normalizeOnlineEndpoint(
-    options.customEndpoint ||
-    options.endpoint ||
-    storage?.getItem?.(ONLINE_CUSTOM_ENDPOINT_STORAGE_KEY) ||
-    uiState.endpoint ||
-    ""
-  );
-  return { backendMode: mode, endpoint };
-}
-
-function saveOnlineBackendSettings(settings = {}) {
-  const storage = getBrowserStorage();
-  const backendMode = normalizeOnlineBackendMode(settings.backendMode);
-  const endpoint = normalizeOnlineEndpoint(settings.customEndpoint || settings.endpoint || "");
-  storage?.setItem?.(ONLINE_BACKEND_MODE_STORAGE_KEY, backendMode);
-  if (endpoint) storage?.setItem?.(ONLINE_CUSTOM_ENDPOINT_STORAGE_KEY, endpoint);
-  else storage?.removeItem?.(ONLINE_CUSTOM_ENDPOINT_STORAGE_KEY);
-  uiState = { ...uiState, backendMode, endpoint };
-  return { backendMode, endpoint };
-}
-
-function clearOnlineBackendSettings() {
-  const storage = getBrowserStorage();
-  storage?.removeItem?.(ONLINE_BACKEND_MODE_STORAGE_KEY);
-  storage?.removeItem?.(ONLINE_CUSTOM_ENDPOINT_STORAGE_KEY);
-  uiState = { ...uiState, backendMode: "official_endpoint", endpoint: "" };
-  return { backendMode: "official_endpoint", endpoint: "" };
-}
-
-function getActiveOnlineBackendMode(options = {}) {
-  return getOnlineBackendSettings(options).backendMode;
-}
-
-function shouldUseCustomEndpoint(options = {}) {
-  return getOnlineBackendSettings(options).backendMode === "custom_endpoint";
-}
-
-function shouldUseRemoteEndpoint(options = {}) {
-  return getOnlineBackendSettings(options).backendMode !== "local_mock_backend";
-}
-
-function isOfficialEndpointConfigured(endpoint) {
-  const normalized = normalizeOnlineEndpoint(endpoint);
-  return Boolean(normalized && normalized !== normalizeOnlineEndpoint(OFFICIAL_ENDPOINT_PLACEHOLDER) && !/your[_-]?official[_-]?worker[_-]?url/i.test(normalized));
-}
-
-function uniqueOnlineEndpoints(urls) {
-  const seen = new Set();
-  const output = [];
-  for (const url of urls || []) {
-    const normalized = normalizeOnlineEndpoint(url);
-    if (!normalized || seen.has(normalized)) continue;
-    seen.add(normalized);
-    output.push(normalized);
-  }
-  return output;
-}
-
-async function getOfficialOnlineEndpoints(options = {}) {
-  const rules = await getOnlineRules(options);
-  const official = rules?.backend?.officialEndpoint || {};
-  const configured = [
-    options.officialEndpoint,
-    options.officialEndpointUrl,
-    ...(Array.isArray(options.officialEndpoints) ? options.officialEndpoints : []),
-    official.url,
-    ...(Array.isArray(official.mainlandMirrorUrls) ? official.mainlandMirrorUrls : []),
-    ...(Array.isArray(official.fallbackUrls) ? official.fallbackUrls : []),
-    DEFAULT_RULES.backend.officialEndpoint.url
-  ];
-  return uniqueOnlineEndpoints(configured).filter(isOfficialEndpointConfigured);
-}
-
-async function getOfficialOnlineEndpoint(options = {}) {
-  return (await getOfficialOnlineEndpoints(options))[0] || "";
-}
-
-function getOnlineOpponentSide(side) {
-  return normalizeOnlineSide(side) === "left" ? "right" : "left";
-}
-
-function ensureRoomExists(roomId) {
-  const room = normalizeOnlineRoomLifecycle(readStoredRoom(roomId));
+function requireLocalRoom(roomId) {
+  const room = readLocalRoom(roomId);
   if (!room) throw new Error("房间不存在。");
   return room;
 }
 
-function getOnlinePlayerSide(room, playerId) {
-  if (!room || !playerId) return "";
-  if (room.players?.left?.playerId === playerId) return "left";
-  if (room.players?.right?.playerId === playerId) return "right";
-  return "";
+function authorizeSide(room, side, options = {}) {
+  const playerId = options.playerId || uiState.playerId || getOrCreatePlayerId();
+  const actual = getPlayerSide(room, playerId) || normalizeSide(side);
+  if (!room.players[actual]?.playerId || room.players[actual].playerId !== playerId) throw new Error("当前玩家不在房间内。");
+  return actual;
 }
 
-function normalizeOnlineActionSummary(action, index = 0) {
-  const source = action || {};
-  const actionId = source.actionId || source.id || source.sourceActionId || source.cardId || `action_${index + 1}`;
-  return {
-    actionId: String(actionId).slice(0, 120),
-    sourceActionId: String(source.sourceActionId || source.actionId || source.id || actionId).slice(0, 120),
-    cardId: source.cardId ? String(source.cardId).slice(0, 120) : "",
-    displayName: String(source.displayName || source.name || source.label || source.title || actionId).slice(0, 80),
-    apCost: Number.isFinite(Number(source.apCost)) ? Number(source.apCost) : 0,
-    ceCost: Number.isFinite(Number(source.ceCost)) ? Number(source.ceCost) : 0,
-    cardType: String(source.cardType || source.type || "").slice(0, 40),
-    tags: Array.isArray(source.tags) ? source.tags.slice(0, 8).map((tag) => String(tag).slice(0, 30)) : []
-  };
+function normalizeActions(actions = []) {
+  return (Array.isArray(actions) ? actions : []).slice(0, 8).map((action, index) => ({
+    actionId: String(action?.actionId || action?.id || action?.sourceActionId || `action_${index + 1}`).slice(0, 120),
+    displayName: String(action?.displayName || action?.label || action?.name || action?.actionId || `手札 ${index + 1}`).slice(0, 80),
+    cardType: String(action?.cardType || action?.type || "").slice(0, 40),
+    apCost: Number(action?.apCost || 0),
+    ceCost: Number(action?.ceCost || action?.baseCeCost || 0),
+    source: "player_locked_action"
+  }));
 }
 
-function normalizeOnlineActionList(actions) {
-  if (!Array.isArray(actions)) return [];
-  return actions.slice(0, 8).map(normalizeOnlineActionSummary);
+function readSelectedActionsFromDom() {
+  const active = [...document.querySelectorAll(".duel-action-choice.active[data-duel-action]")];
+  return active.map((button, index) => ({
+    actionId: button.dataset.duelAction || `action_${index + 1}`,
+    displayName: button.querySelector(".duel-action-title")?.textContent?.trim() || button.textContent.trim()
+  }));
+}
+
+function snapshot(room, viewerSide = "") {
+  const copy = redactSecrets(cloneJson(normalizeRoom(room)));
+  copy.viewerSide = viewerSide || getPlayerSide(copy, uiState.playerId) || "";
+  if (copy.phase === "turn_selecting" && copy.viewerSide && !hasBothLockedActions(copy)) {
+    copy.turnState.actions[otherSide(copy.viewerSide)] = [];
+  }
+  return copy;
 }
 
 function isSecretKey(key) {
-  return /api.?key|authorization|secret|token|proxy.?endpoint|ai.*settings|byok|localstorage|raw.?ai|rawproviderresponse/i.test(String(key));
+  return /api.?key|authorization|secret|token|proxy.?endpoint|byok|localstorage|raw.?ai|provider/i.test(String(key));
 }
 
-function redactOnlineSecrets(value, seen = new WeakSet()) {
+function redactSecrets(value, seen = new WeakSet()) {
   if (value == null || typeof value !== "object") return value;
   if (seen.has(value)) return undefined;
   seen.add(value);
-  if (Array.isArray(value)) {
-    return value.map((item) => redactOnlineSecrets(item, seen)).filter((item) => item !== undefined);
-  }
-  const output = {};
+  if (Array.isArray(value)) return value.map((item) => redactSecrets(item, seen)).filter((item) => item !== undefined);
+  const out = {};
   for (const [key, item] of Object.entries(value)) {
     if (isSecretKey(key)) continue;
-    const redacted = redactOnlineSecrets(item, seen);
-    if (redacted !== undefined) output[key] = redacted;
+    const redacted = redactSecrets(item, seen);
+    if (redacted !== undefined) out[key] = redacted;
   }
-  return output;
+  return out;
 }
 
-async function getOnlineRules(options = {}) {
+async function getRules(options = {}) {
   if (cachedRules && !options.forceReload) return cachedRules;
-  const fetchImpl = options.fetchImpl || globalThis.fetch;
-  if (typeof fetchImpl === "function") {
-    try {
-      const response = await fetchImpl(ONLINE_RULES_PATH);
-      if (response?.ok) {
-        cachedRules = { ...DEFAULT_RULES, ...(await response.json()) };
-        return cachedRules;
-      }
-    } catch (error) {
-      // Static file loading can fail in Node tests; fallback rules keep module deterministic.
+  try {
+    const response = await (options.fetchImpl || fetch)(ONLINE_RULES_PATH);
+    if (response?.ok) {
+      const data = await response.json();
+      cachedRules = { ...DEFAULT_RULES, ...data };
+      return cachedRules;
     }
+  } catch {
+    // Keep local fallback available when static JSON is unavailable.
   }
   cachedRules = cloneJson(DEFAULT_RULES);
   return cachedRules;
 }
 
-async function sendOnlineEndpointRequest(operation, request = {}, options = {}) {
-  const settings = getOnlineBackendSettings(options);
-  const endpoints = settings.backendMode === "official_endpoint"
-    ? await getOfficialOnlineEndpoints(options)
-    : uniqueOnlineEndpoints([options.customEndpoint || options.endpoint || settings.endpoint]);
-  if (settings.backendMode === "official_endpoint" && !endpoints.length) {
-    throw new Error("官方服务器未配置。请站长部署 Worker 后填写官方 Endpoint，或切换到本地 mock / 自定义 Endpoint。");
-  }
-  if (!endpoints.length) {
-    throw new Error(settings.backendMode === "custom_endpoint"
-      ? "请先填写自定义 Endpoint。双方必须使用同一个 Endpoint。"
-      : "联机后端 Endpoint 未配置。");
-  }
-  const fetchImpl = options.fetchImpl || globalThis.fetch;
-  if (typeof fetchImpl !== "function") throw new Error("当前环境不支持网络请求。");
-  const roomId = normalizeOnlineRoomId(request.roomId || options.roomId);
-  const side = request.side ? normalizeOnlineSide(request.side) : "";
-  const playerId = String(request.playerId || options.playerId || uiState.playerId || "").slice(0, 120);
-  const body = redactOnlineSecrets({
+async function getOfficialEndpoint() {
+  const rules = await getRules();
+  return normalizeEndpoint(rules?.backend?.officialEndpoint?.url || "");
+}
+
+async function remoteOperation(operation, request = {}, options = {}) {
+  const settings = getBackendSettings(options);
+  const endpoint = settings.backendMode === "official_endpoint" ? await getOfficialEndpoint() : settings.endpoint;
+  if (!endpoint) throw new Error("新版联机服务器尚未配置；请使用本地 mock 或填写新版自定义 Endpoint。");
+  const body = redactSecrets({
     protocol: ONLINE_PROTOCOL,
     operation,
-    roomId,
-    playerId,
-    side,
+    roomId: normalizeRoomId(request.roomId || options.roomId),
+    playerId: options.playerId || uiState.playerId || getOrCreatePlayerId(),
+    side: request.side || options.side || uiState.side || "",
     payload: request.payload || {},
     siteVersion: APP_BUILD_VERSION,
     sentAt: nowMs()
   });
-  let lastNetworkError = null;
-  for (let index = 0; index < endpoints.length; index += 1) {
-    const endpoint = endpoints[index];
-    let response = null;
-    try {
-      response = await fetchImpl(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-    } catch (error) {
-      lastNetworkError = error;
-      if (settings.backendMode === "official_endpoint" && index < endpoints.length - 1) continue;
-      throw new Error(settings.backendMode === "official_endpoint"
-        ? OFFICIAL_ENDPOINT_MAINLAND_HINT
-        : "自定义 Endpoint 连接失败。请确认双方使用同一个 HTTPS Endpoint，并且后端已开启 CORS。");
-    }
-    let result = null;
-    try {
-      result = await response.json();
-    } catch (error) {
-      result = null;
-    }
-    if (!response.ok || result?.ok === false) {
-      throw new Error(result?.error || `${settings.backendMode === "official_endpoint" ? "官方服务器" : "自定义 Endpoint"}请求失败：${response.status || "unknown"}`);
-    }
-    return result || {};
-  }
-  throw new Error(lastNetworkError ? OFFICIAL_ENDPOINT_MAINLAND_HINT : "联机后端请求失败。");
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok || data?.ok === false) throw new Error(data?.error || `联机服务器请求失败：${response.status}`);
+  if (operation === "ping") return data || { ok: true };
+  const room = normalizeRoom(data.room || data.snapshot);
+  const side = data.side || getPlayerSide(room, body.playerId) || body.side;
+  remember(room?.roomId || body.roomId, body.playerId, side, settings);
+  return snapshot(room, side);
 }
 
-function snapshotFromEndpointResult(result, viewerSide = "") {
-  const room = result?.room || result?.snapshot || null;
-  if (!room) return null;
-  return buildOnlineRoomSnapshot(normalizeOnlineRoomLifecycle(room), result.side || viewerSide || uiState.side || "");
-}
-
-async function testOnlineBackendConnection(options = {}) {
-  const settings = getOnlineBackendSettings(options);
-  if (settings.backendMode === "local_mock_backend") {
-    return { ok: true, backendMode: "local_mock_backend", message: "本地 mock 后端可用；跨设备不会共享房间。" };
-  }
-  const result = await sendOnlineEndpointRequest("ping", { payload: { client: "jjk-wheel" } }, options);
-  return {
-    ok: result.ok !== false,
-    backendMode: settings.backendMode,
-    message: result.message || (settings.backendMode === "official_endpoint" ? "官方联机服务器连接正常。" : "自定义 Endpoint 连接正常。")
-  };
-}
-
-function createInitialOnlineRoom(roomId, options = {}) {
-  const timestamp = nowMs();
-  const leftPlayer = createOnlinePlayer("left", options);
-  return {
-    roomId,
-    version: APP_BUILD_VERSION,
-    status: "waiting",
-    backendMode: options.backendMode || "local_mock_backend",
-    battleSeed: options.battleSeed || `online-${roomId}-${timestamp.toString(36)}`,
-    ownerPlayerId: options.ownerPlayerId || leftPlayer.playerId,
-    turn: 1,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    players: {
-      left: leftPlayer,
-      right: createEmptyPlayer("right")
-    },
-    battleState: cloneJson(options.battleState || {}),
-    pendingActions: {
-      left: [],
-      right: []
-    },
-    publicLocks: {
-      left: false,
-      right: false
-    },
-    lastResolvedTurn: 0,
-    logs: [
-      {
-        at: timestamp,
-        type: "room_created",
-        message: `房间 ${roomId} 已创建，等待第二名玩家加入。`
-      }
-    ]
-  };
-}
-
-async function createOnlineRoom(options = {}) {
-  const rules = await getOnlineRules(options);
-  const settings = getOnlineBackendSettings(options);
-  let roomId = normalizeOnlineRoomId(options.roomId);
-  let attempts = 0;
-  while (!roomId || (!shouldUseRemoteEndpoint(options) && readStoredRoom(roomId))) {
-    roomId = generateOnlineRoomId(rules.room?.roomIdLength || DEFAULT_RULES.room.roomIdLength);
-    attempts += 1;
-    if (attempts > 20) throw new Error("无法生成可用房间码。");
-  }
-  const room = createInitialOnlineRoom(roomId, { ...options, backendMode: settings.backendMode });
-  if (shouldUseRemoteEndpoint(options)) {
-    const result = await sendOnlineEndpointRequest("createRoom", {
-      roomId,
-      playerId: room.players.left.playerId,
-      side: "left",
-      payload: { room }
-    }, { ...options, ...settings });
-    const snapshot = snapshotFromEndpointResult(result, "left") || buildOnlineRoomSnapshot(room, "left");
-    rememberActiveRoom(snapshot.roomId, snapshot.players?.left?.playerId || room.players.left.playerId, "left", settings);
-    return snapshot;
-  }
-  const saved = writeStoredRoom(room);
-  rememberActiveRoom(saved.roomId, saved.players.left.playerId, "left", settings);
-  return buildOnlineRoomSnapshot(saved, "left");
-}
-
-async function joinOnlineRoom(roomId, options = {}) {
-  const settings = getOnlineBackendSettings(options);
-  if (shouldUseRemoteEndpoint(options)) {
-    const normalizedRoomId = normalizeOnlineRoomId(roomId);
-    const playerId = options.playerId || getOrCreateOnlinePlayerId();
-    const player = createOnlinePlayer("right", { ...options, playerId });
-    const result = await sendOnlineEndpointRequest("joinRoom", {
-      roomId: normalizedRoomId,
-      playerId,
-      payload: { player }
-    }, { ...options, ...settings });
-    const snapshot = snapshotFromEndpointResult(result, result.side || "right");
-    if (!snapshot) throw new Error("共享后端没有返回房间状态。");
-    const side = result.side || getOnlinePlayerSide(snapshot, playerId) || "right";
-    rememberActiveRoom(snapshot.roomId, playerId, side, settings);
-    return buildOnlineRoomSnapshot(snapshot, side);
-  }
-  const room = ensureRoomExists(roomId);
-  const playerId = options.playerId || getOrCreateOnlinePlayerId();
-  const existingSide = getOnlinePlayerSide(room, playerId);
-  if (existingSide) {
-    room.players[existingSide] = {
-      ...room.players[existingSide],
-      connected: true,
-      lastSeenAt: nowMs()
-    };
-    room.updatedAt = nowMs();
-    writeStoredRoom(room);
-    rememberActiveRoom(room.roomId, playerId, existingSide, settings);
-    return buildOnlineRoomSnapshot(room, existingSide);
-  }
-  if (room.players?.right?.playerId) {
-    throw new Error("房间已满。");
-  }
-  room.players.right = createOnlinePlayer("right", { ...options, playerId });
-  startOnlineBattle(room);
-  room.updatedAt = nowMs();
-  room.logs = (room.logs || []).concat({
-    at: room.updatedAt,
-    type: "player_joined",
-    message: "第二名玩家已加入房间。"
-  }).slice(-80);
-  writeStoredRoom(room);
-  rememberActiveRoom(room.roomId, playerId, "right", settings);
-  return buildOnlineRoomSnapshot(room, "right");
-}
-
-function leaveOnlineRoom(roomId, sideOrOptions = {}) {
-  const options = typeof sideOrOptions === "string" ? { side: sideOrOptions } : sideOrOptions;
-  if (shouldUseRemoteEndpoint(options)) {
-    const side = options.side || uiState.side || "";
-    const playerId = options.playerId || uiState.playerId || "";
-    return sendOnlineEndpointRequest("leaveRoom", {
-      roomId,
-      playerId,
-      side,
-      payload: { side }
-    }, { ...getOnlineBackendSettings(options), ...options }).then((result) => {
-      clearActiveRoom();
-      stopOnlinePolling();
-      return {};
-    });
-  }
-  const room = ensureRoomExists(roomId);
-  const side = getOnlinePlayerSide(room, options.playerId || uiState.playerId) || normalizeOnlineSide(options.side);
-  if (room.players?.[side]) {
-    room.players[side].connected = false;
-    room.players[side].locked = false;
-    room.players[side].lastSeenAt = nowMs();
-  }
-  room.publicLocks[side] = false;
-  room.status = "ended";
-  room.updatedAt = nowMs();
-  room.logs = (room.logs || []).concat({
-    at: room.updatedAt,
-    type: "player_left",
-    message: `${side === "left" ? "左方" : "右方"}已离开房间。`
-  }).slice(-80);
-  writeStoredRoom(room);
-  clearActiveRoom();
-  stopOnlinePolling();
-  return {};
-}
-
-function kickOnlinePlayer(roomId, targetSide = "right", options = {}) {
-  const normalizedTarget = normalizeOnlineSide(targetSide);
-  if (normalizedTarget === "left") throw new Error("不能踢出房主座位。");
-  if (shouldUseRemoteEndpoint(options)) {
-    return sendOnlineEndpointRequest("kickPlayer", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side: options.side || uiState.side || "left",
-      payload: { targetSide: normalizedTarget }
-    }, { ...options, ...getOnlineBackendSettings(options) }).then((result) => snapshotFromEndpointResult(result, options.side || uiState.side || "left"));
-  }
-  const room = ensureRoomExists(roomId);
-  const requesterId = options.playerId || uiState.playerId;
-  const requesterSide = getOnlinePlayerSide(room, requesterId) || normalizeOnlineSide(options.side);
-  if (requesterSide !== "left" && room.ownerPlayerId !== requesterId) throw new Error("只有房主可以踢出玩家。");
-  if (!room.players?.[normalizedTarget]?.playerId) throw new Error("该座位没有可踢出的玩家。");
-  room.players[normalizedTarget] = createEmptyPlayer(normalizedTarget);
-  room.pendingActions[normalizedTarget] = [];
-  room.publicLocks[normalizedTarget] = false;
-  room.battleState = {};
-  room.status = "waiting";
-  room.updatedAt = nowMs();
-  room.logs = (room.logs || []).concat({
-    at: room.updatedAt,
-    type: "player_kicked",
-    side: normalizedTarget,
-    message: `${normalizedTarget === "right" ? "右方" : "左方"}玩家已被房主移出房间。`
-  }).slice(-80);
-  writeStoredRoom(room);
-  return buildOnlineRoomSnapshot(room, requesterSide || "left");
-}
-
-function getOnlineRoomState(roomId, options = {}) {
-  if (shouldUseRemoteEndpoint(options)) {
-    const settings = getOnlineBackendSettings(options);
-    return sendOnlineEndpointRequest("getRoom", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side: options.viewerSide || options.side || uiState.side
-    }, { ...options, ...settings }).then((result) => {
-      const viewerSide = result.side || options.viewerSide || options.side || uiState.side || "";
-      const snapshot = snapshotFromEndpointResult(result, viewerSide);
-      if (!snapshot) throw new Error("房间不存在。");
-      return snapshot;
-    });
-  }
-  const room = ensureRoomExists(roomId);
-  const viewerSide = options.viewerSide || getOnlinePlayerSide(room, options.playerId || uiState.playerId) || options.side || "";
-  return buildOnlineRoomSnapshot(room, viewerSide);
-}
-
-function submitOnlineHandActions(roomId, side, actions, options = {}) {
-  if (shouldUseRemoteEndpoint(options)) {
-    const normalizedSide = normalizeOnlineSide(side);
-    return sendOnlineEndpointRequest("submitActions", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side: normalizedSide,
-      payload: { actions: normalizeOnlineActionList(actions) }
-    }, { ...options, ...getOnlineBackendSettings(options) }).then((result) => {
-      return snapshotFromEndpointResult(result, normalizedSide);
-    });
-  }
-  const room = ensureRoomExists(roomId);
-  const normalizedSide = normalizeOnlineSide(side);
-  if (room.status === "ended") throw new Error("房间已结束。");
-  if (room.status !== "battle") throw new Error("双方角色尚未确定，不能选择手札。");
-  if (!room.players?.[normalizedSide]?.playerId) throw new Error("当前座位没有玩家。");
-  if (room.publicLocks?.[normalizedSide] && !options.allowLockedReplace) throw new Error("你已经锁定行动。");
-  room.pendingActions[normalizedSide] = normalizeOnlineActionList(actions);
-  room.updatedAt = nowMs();
-  writeStoredRoom(room);
-  return buildOnlineRoomSnapshot(room, normalizedSide);
-}
-
-function lockOnlineTurn(roomId, side, actions = null, options = {}) {
-  if (shouldUseRemoteEndpoint(options)) {
-    const normalizedSide = normalizeOnlineSide(side);
-    return sendOnlineEndpointRequest("lockTurn", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side: normalizedSide,
-      payload: { actions: actions ? normalizeOnlineActionList(actions) : null }
-    }, { ...options, ...getOnlineBackendSettings(options) }).then((result) => {
-      return snapshotFromEndpointResult(result, normalizedSide);
-    });
-  }
-  const room = ensureRoomExists(roomId);
-  const normalizedSide = normalizeOnlineSide(side);
-  if (room.status === "ended") throw new Error("房间已结束。");
-  if (room.status !== "battle") throw new Error("双方角色尚未确定，不能锁定行动。");
-  if (!room.players?.[normalizedSide]?.playerId) throw new Error("当前座位没有玩家。");
-  if (room.publicLocks?.[normalizedSide]) throw new Error("你已经锁定行动。");
-  if (actions) room.pendingActions[normalizedSide] = normalizeOnlineActionList(actions);
-  room.players[normalizedSide].locked = true;
-  room.players[normalizedSide].lastSeenAt = nowMs();
-  room.publicLocks[normalizedSide] = true;
-  room.status = "battle";
-  room.updatedAt = nowMs();
-  room.logs = (room.logs || []).concat({
-    at: room.updatedAt,
-    type: "turn_locked",
-    side: normalizedSide,
-    message: `${normalizedSide === "left" ? "左方" : "右方"}已锁定第 ${room.turn} 回合行动。`
-  }).slice(-80);
-  writeStoredRoom(room);
-  return buildOnlineRoomSnapshot(room, normalizedSide);
-}
-
-function unlockOnlineTurn(roomId, side, options = {}) {
-  if (shouldUseRemoteEndpoint(options)) {
-    const normalizedSide = normalizeOnlineSide(side);
-    return sendOnlineEndpointRequest("unlockTurn", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side: normalizedSide
-    }, { ...options, ...getOnlineBackendSettings(options) }).then((result) => snapshotFromEndpointResult(result, normalizedSide));
-  }
-  const room = ensureRoomExists(roomId);
-  const normalizedSide = normalizeOnlineSide(side);
-  if (room.status === "ended") throw new Error("房间已结束。");
-  if (room.status !== "battle") throw new Error("双方角色尚未确定，不能取消锁定。");
-  if (canResolveOnlineTurn(room)) throw new Error("双方已锁定，正在等待结算。");
-  room.players[normalizedSide].locked = false;
-  room.publicLocks[normalizedSide] = false;
-  room.updatedAt = nowMs();
-  room.status = "battle";
-  writeStoredRoom(room);
-  return buildOnlineRoomSnapshot(room, normalizedSide);
-}
-
-function canResolveOnlineTurn(roomOrId) {
-  const room = typeof roomOrId === "string" ? readStoredRoom(roomOrId) : roomOrId;
-  return Boolean(room?.status === "battle" && room?.publicLocks?.left && room?.publicLocks?.right && room?.players?.left?.playerId && room?.players?.right?.playerId);
-}
-
-function applyOnlineTurnActionsToBattleState(battleState, roomState, options = {}) {
-  const adapter = options.fightAdapter ||
-    options.adapter ||
-    globalThis.JJKOnlineFightAdapter ||
-    globalThis.JJKDuelOnlineAdapter;
-  if (adapter && typeof adapter.applyOnlineTurnActionsToBattleState === "function") {
-    return adapter.applyOnlineTurnActionsToBattleState(battleState, buildOnlineRoomSnapshot(roomState), options);
-  }
-  if (adapter && typeof adapter.resolveTurn === "function") {
-    return adapter.resolveTurn(battleState, {
-      left: normalizeOnlineActionList(roomState?.pendingActions?.left),
-      right: normalizeOnlineActionList(roomState?.pendingActions?.right),
-      turn: roomState?.turn
-    });
-  }
-  return cloneJson(battleState || {});
-}
-
-function resolveOnlineTurnWithExistingFightEngine(roomState, options = {}) {
-  const battleState = applyOnlineTurnActionsToBattleState(roomState?.battleState || {}, roomState, options);
-  return {
-    battleState: redactOnlineSecrets(battleState || {}),
-    endReason: battleState?.endReason || battleState?.result?.endReason || "",
-    battleEnded: Boolean(battleState?.ended || battleState?.battleEnded || battleState?.resolved)
-  };
-}
-
-function resolveOnlineTurn(roomId, options = {}) {
-  if (shouldUseRemoteEndpoint(options)) {
-    const settings = getOnlineBackendSettings(options);
-    return sendOnlineEndpointRequest("getRoom", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side: options.viewerSide || options.side || uiState.side
-    }, { ...options, ...settings }).then((result) => {
-      const room = result.room || result.snapshot;
-      if (!room) throw new Error("房间不存在。");
-      normalizeOnlineRoomLifecycle(room);
-      if (!canResolveOnlineTurn(room)) throw new Error("双方尚未都锁定行动，不能结算。");
-      const working = cloneJson(room);
-      const resolved = resolveOnlineTurnWithExistingFightEngine(working, options);
-      working.battleState = redactOnlineSecrets(resolved.battleState || working.battleState || {});
-      working.lastResolvedTurn = working.turn;
-      working.turn += 1;
-      working.pendingActions = { left: [], right: [] };
-      working.publicLocks = { left: false, right: false };
-      if (working.players?.left) working.players.left.locked = false;
-      if (working.players?.right) working.players.right.locked = false;
-      working.status = resolved.battleEnded || options.endReason ? "ended" : "battle";
-      working.updatedAt = nowMs();
-      if (working.status === "battle") startOnlineBattle(working);
-      working.logs = (working.logs || []).concat({
-        at: working.updatedAt,
-        type: "turn_resolved",
-        turn: working.lastResolvedTurn,
-        message: `第 ${working.lastResolvedTurn} 回合同步结算完成。`
-      }).slice(-80);
-      return sendOnlineEndpointRequest("resolveTurn", {
-        roomId,
-        playerId: options.playerId || uiState.playerId,
-        side: options.viewerSide || options.side || uiState.side,
-        payload: { room: working }
-      }, { ...options, ...settings });
-    }).then((result) => snapshotFromEndpointResult(result, options.viewerSide || uiState.side || "left"));
-  }
-  const room = ensureRoomExists(roomId);
-  if (!canResolveOnlineTurn(room)) throw new Error("双方尚未都锁定行动，不能结算。");
-  const resolved = resolveOnlineTurnWithExistingFightEngine(room, options);
-  room.battleState = redactOnlineSecrets(resolved.battleState || room.battleState || {});
-  room.lastResolvedTurn = room.turn;
-  room.turn += 1;
-  room.pendingActions = { left: [], right: [] };
-  room.publicLocks = { left: false, right: false };
-  room.players.left.locked = false;
-  room.players.right.locked = false;
-  room.status = resolved.battleEnded || options.endReason ? "ended" : "battle";
-  room.updatedAt = nowMs();
-  if (room.status === "battle") startOnlineBattle(room);
-  room.logs = (room.logs || []).concat({
-    at: room.updatedAt,
-    type: "turn_resolved",
-    turn: room.lastResolvedTurn,
-    message: `第 ${room.lastResolvedTurn} 回合同步结算完成。`
-  }).slice(-80);
-  writeStoredRoom(room);
-  return buildOnlineRoomSnapshot(room, options.viewerSide || uiState.side || "left");
-}
-
-function syncOnlineBattleState(roomId, battleState, options = {}) {
-  if (shouldUseRemoteEndpoint(options)) {
-    const side = options.viewerSide || options.side || uiState.side || "";
-    return sendOnlineEndpointRequest("syncBattleState", {
-      roomId,
-      playerId: options.playerId || uiState.playerId,
-      side,
-      payload: { battleState: redactOnlineSecrets(battleState || {}) }
-    }, { ...options, ...getOnlineBackendSettings(options) }).then((result) => snapshotFromEndpointResult(result, side));
-  }
-  const room = ensureRoomExists(roomId);
-  room.battleState = redactOnlineSecrets(battleState || {});
-  if (room.status !== "ended" && hasBothOnlineCharacters(room)) room.status = "battle";
-  room.updatedAt = nowMs();
-  writeStoredRoom(room);
-  return buildOnlineRoomSnapshot(room, options.viewerSide || uiState.side || "left");
-}
-
-function buildOnlineRoomSnapshot(room, viewerSide = "") {
-  const snapshot = redactOnlineSecrets(cloneJson(normalizeOnlineRoomLifecycle(room) || {}));
-  const side = viewerSide ? normalizeOnlineSide(viewerSide) : "";
-  const bothLocked = Boolean(snapshot?.publicLocks?.left && snapshot?.publicLocks?.right);
-  if (snapshot?.pendingActions && side && !bothLocked) {
-    const opponentSide = getOnlineOpponentSide(side);
-    snapshot.pendingActions[opponentSide] = [];
-    snapshot.pendingActionCounts = {
-      left: room?.pendingActions?.left?.length || 0,
-      right: room?.pendingActions?.right?.length || 0
-    };
-  }
-  return snapshot;
-}
-
-function buildOnlineInviteLink(roomId, baseHref = "") {
-  const normalized = normalizeOnlineRoomId(roomId);
-  const href = baseHref || globalThis.location?.href || "http://localhost/index.html";
-  const url = new URL(href, "http://localhost");
-  url.searchParams.set("onlineRoom", normalized);
-  url.searchParams.delete("onlineBackend");
-  url.searchParams.delete("playerId");
-  url.searchParams.delete("apiKey");
-  url.searchParams.delete("api_key");
-  url.searchParams.delete("authorization");
-  url.searchParams.delete("token");
-  url.searchParams.delete("secret");
-  url.searchParams.delete("onlineEndpoint");
-  url.searchParams.delete("endpoint");
-  url.searchParams.delete("proxyEndpoint");
+function buildInviteLink(roomId) {
+  const url = new URL(globalThis.location?.href || "http://localhost/index.html");
+  url.searchParams.set("onlineRoom", normalizeRoomId(roomId));
+  ["playerId", "apiKey", "api_key", "authorization", "token", "secret", "endpoint", "proxyEndpoint"].forEach((key) => url.searchParams.delete(key));
   return url.href;
 }
 
-function parseOnlineInviteLink(input = "") {
-  const href = input || globalThis.location?.href || "";
+function parseInviteLink() {
   try {
-    const url = new URL(href, globalThis.location?.origin || "http://localhost");
-    const fromSearch = normalizeOnlineRoomId(url.searchParams.get("onlineRoom"));
-    if (fromSearch) return fromSearch;
-    const hashMatch = url.hash.match(/online=([A-Za-z0-9]+)/);
-    return normalizeOnlineRoomId(hashMatch?.[1] || "");
-  } catch (error) {
-    const match = String(href).match(/(?:onlineRoom=|online=)([A-Za-z0-9]+)/);
-    return normalizeOnlineRoomId(match?.[1] || "");
+    return normalizeRoomId(new URLSearchParams(globalThis.location?.search || "").get("onlineRoom"));
+  } catch {
+    return "";
   }
 }
 
-function pollOnlineRoomState(roomId, options = {}) {
-  const intervalMs = Math.max(500, Number(options.pollIntervalMs) || DEFAULT_RULES.sync.pollIntervalMs);
+function startPolling(roomId, side) {
+  stopPolling();
   let stopped = false;
   let timer = null;
-  const tick = async () => {
-    if (stopped) return;
-    try {
-      const snapshot = await getOnlineRoomState(roomId, options);
-      options.onState?.(snapshot);
-      if (snapshot.status === "ended") {
-        stopped = true;
-        return;
-      }
-    } catch (error) {
-      options.onError?.(error);
-    }
-    const hidden = typeof document !== "undefined" && document.hidden;
-    timer = setTimeout(tick, hidden ? intervalMs * 3 : intervalMs);
-  };
-  timer = setTimeout(tick, 0);
-  return () => {
+  pollStop = () => {
     stopped = true;
-    if (timer) clearTimeout(timer);
+    if (timer) globalThis.clearTimeout(timer);
   };
-}
-
-function stopOnlinePolling() {
-  if (activePollingStop) activePollingStop();
-  activePollingStop = null;
-}
-
-function isOnlinePollingActive() {
-  return Boolean(activePollingStop);
-}
-
-function getOnlineUiState() {
-  return { ...uiState, onlineMode: Boolean(uiState.roomId) };
-}
-
-function rememberActiveRoom(roomId, playerId, side, settings = {}) {
-  const backend = getOnlineBackendSettings(settings);
-  uiState = { roomId, playerId, side, backendMode: backend.backendMode, endpoint: backend.endpoint };
-  const storage = getSessionStorage();
-  storage?.setItem?.(ACTIVE_ROOM_STORAGE_KEY, JSON.stringify(uiState));
-}
-
-function clearActiveRoom() {
-  uiState = {
-    roomId: "",
-    playerId: uiState.playerId || "",
-    side: "",
-    backendMode: uiState.backendMode || "",
-    endpoint: uiState.endpoint || ""
+  const tick = () => {
+    if (stopped || !roomId) return;
+    getRoomState(roomId, { side, viewerSide: side }).then(render).catch(showError);
+    timer = globalThis.setTimeout(tick, DEFAULT_RULES.sync.pollIntervalMs);
   };
-  getSessionStorage()?.removeItem?.(ACTIVE_ROOM_STORAGE_KEY);
+  tick();
 }
 
-function restoreActiveRoom() {
-  const storage = getSessionStorage();
-  const raw = storage?.getItem?.(ACTIVE_ROOM_STORAGE_KEY);
-  if (!raw) return;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed?.roomId) uiState = { ...uiState, ...parsed };
-  } catch (error) {
-    storage?.removeItem?.(ACTIVE_ROOM_STORAGE_KEY);
-  }
+function stopPolling() {
+  if (typeof pollStop === "function") pollStop();
+  else if (pollStop) globalThis.clearTimeout(pollStop);
+  pollStop = null;
 }
 
-function getUiElements() {
-  if (typeof document === "undefined") return null;
+function getRoomState(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("getRoom", { roomId, side: options.side || uiState.side }, settings);
+  const room = readLocalRoom(roomId);
+  if (!room) return Promise.reject(new Error("房间不存在。"));
+  const side = options.viewerSide || getPlayerSide(room, uiState.playerId) || options.side || "";
+  return Promise.resolve(snapshot(room, side));
+}
+
+function phaseLabel(phase) {
   return {
-    panel: document.querySelector("#onlineAlphaPanel"),
-    create: document.querySelector("#onlineCreateRoomBtn"),
-    join: document.querySelector("#onlineJoinRoomBtn"),
-    backendMode: document.querySelector("#onlineBackendMode"),
-    modeLabel: document.querySelector("#onlineModeLabel"),
-    officialStatus: document.querySelector("#onlineOfficialStatus"),
-    officialTest: document.querySelector("#onlineOfficialTestBtn"),
-    advancedSettings: document.querySelector("#onlineAdvancedBackendSettings"),
-    endpoint: document.querySelector("#onlineEndpointInput"),
-    endpointField: document.querySelector("#onlineEndpointField"),
-    backendActions: document.querySelector("#onlineBackendActions"),
-    saveBackend: document.querySelector("#onlineSaveBackendBtn"),
-    testBackend: document.querySelector("#onlineTestBackendBtn"),
-    clearBackend: document.querySelector("#onlineClearBackendBtn"),
-    backendHint: document.querySelector("#onlineBackendHint"),
-    joinRoomInput: document.querySelector("#onlineJoinRoomCodeInput"),
-    roomCode: document.querySelector("#onlineRoomCode"),
-    currentRoomCode: document.querySelector("#onlineCurrentRoomCode"),
-    copyRoomCode: document.querySelector("#onlineCopyRoomCodeBtn"),
-    inviteLink: document.querySelector("#onlineInviteLink"),
-    copyInvite: document.querySelector("#onlineCopyInviteBtn"),
-    createCharacter: document.querySelector("#onlineCreateCharacterSelect"),
-    joinCharacter: document.querySelector("#onlineJoinCharacterSelect"),
-    playerSide: document.querySelector("#onlinePlayerSide"),
-    opponentStatus: document.querySelector("#onlineOpponentStatus"),
-    turnLabel: document.querySelector("#onlineTurnLabel"),
-    localLock: document.querySelector("#onlineLocalLockStatus"),
-    opponentLock: document.querySelector("#onlineOpponentLockStatus"),
-    leftPlayer: document.querySelector("#onlineLeftPlayerLabel"),
-    rightPlayer: document.querySelector("#onlineRightPlayerLabel"),
-    leftCharacter: document.querySelector("#onlineLeftCharacterLabel"),
-    rightCharacter: document.querySelector("#onlineRightCharacterLabel"),
-    leftResource: document.querySelector("#onlineLeftResourceLabel"),
-    rightResource: document.querySelector("#onlineRightResourceLabel"),
-    syncStatus: document.querySelector("#onlineSyncStatus"),
-    nextStep: document.querySelector("#onlineNextStepHint"),
-    lock: document.querySelector("#onlineLockTurnBtn"),
-    unlock: document.querySelector("#onlineUnlockTurnBtn"),
-    resolve: document.querySelector("#onlineResolveTurnBtn"),
-    kickRight: document.querySelector("#onlineKickRightPlayerBtn"),
-    leave: document.querySelector("#onlineLeaveRoomBtn")
-  };
+    preparing: "准备阶段",
+    battle_starting: "进入对战",
+    turn_selecting: "对战阶段",
+    turn_resolving: "结算中",
+    reviewing: "复盘阶段",
+    ended: "已结束"
+  }[phase] || "未开始";
 }
 
-function getOnlineCharacterCards() {
-  const characterApi = globalThis.JJKCharacter;
-  if (typeof characterApi?.getDuelCharacterCards === "function") {
-    try {
-      return characterApi.getDuelCharacterCards() || [];
-    } catch (error) {
-      return [];
-    }
+function playerLabel(room, side, viewerSide) {
+  const player = room?.players?.[side];
+  if (!player?.playerId) return "等待玩家";
+  const role = player.role === "owner" ? "房主" : "加入者";
+  return `${viewerSide === side ? "你" : "对方"}（${role}）${player.connected ? "" : " 离线"}`;
+}
+
+function characterLabel(player) {
+  if (!player?.characterId) return "角色：未选择";
+  const name = player.characterSnapshot?.displayName || getCharacterById(player.characterId)?.displayName || getCharacterById(player.characterId)?.name || player.characterId;
+  return `角色：${name}${player.characterLocked ? "（已锁定）" : "（未锁定）"}`;
+}
+
+function nextHint(room, side) {
+  if (!room?.roomId) return "下一步：创建房间，或输入房间码加入。";
+  if (room.phase === "preparing") {
+    if (!hasBothPlayers(room)) return "等待对方加入；房主可以先选择并锁定角色。";
+    if (!room.players[side]?.characterLocked) return "请选择角色并锁定。";
+    return "等待对方锁定角色。";
   }
-  if (typeof globalThis.getDuelCharacterCards === "function") {
-    try {
-      return globalThis.getDuelCharacterCards() || [];
-    } catch (error) {
-      return [];
-    }
+  if (room.phase === "turn_selecting") {
+    if (room.turnState.locks[side]) return "已锁定行动，等待对方。";
+    return "选择手札后锁定行动；双方锁定后自动结算。";
   }
-  return [];
+  if (room.phase === "turn_resolving") return "服务器正在结算双方行动。";
+  if (room.phase === "reviewing") return "可以再来一把、回到准备阶段或退出房间。";
+  if (room.phase === "ended") return "房间已结束。";
+  return "同步中。";
 }
 
-function getOnlineCharacterOptionLabel(card) {
-  const name = String(card?.displayName || card?.name || card?.characterId || card?.id || "未命名角色").trim();
-  const grade = String(card?.officialGrade || card?.visibleGrade || card?.powerTier || "").trim();
-  const custom = card?.customDuel ? "自定义" : "官方";
-  return [name, grade, custom].filter(Boolean).join(" · ");
+function render(room = {}) {
+  syncCharacterSelects();
+  const side = room.viewerSide || uiState.side || getPlayerSide(room, uiState.playerId) || "";
+  const opponent = side ? otherSide(side) : "right";
+  syncBattlePageLockState(room, side);
+  setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
+  setText("#onlineRoomCode", room.roomId || "未创建");
+  setText("#onlineCurrentRoomCode", room.roomId || "未创建");
+  setText("#onlinePlayerSide", side === "left" ? "左方房主" : side === "right" ? "右方加入者" : "未加入");
+  setText("#onlinePhaseLabel", room.roomId ? phaseLabel(room.phase) : "未开始");
+  setText("#onlineOpponentStatus", room.players?.[opponent]?.playerId ? (room.players[opponent].connected ? "已加入" : "离线") : "未加入");
+  setText("#onlineTurnLabel", room.round ? `第 ${room.round} 回合` : "未开始");
+  setText("#onlineLocalLockStatus", room.phase === "preparing" ? (room.players?.[side]?.characterLocked ? "角色已锁定" : "角色未锁定") : (room.turnState?.locks?.[side] ? "行动已锁定" : "行动未锁定"));
+  setText("#onlineOpponentLockStatus", room.phase === "preparing" ? (room.players?.[opponent]?.characterLocked ? "角色已锁定" : "角色未锁定") : (room.turnState?.locks?.[opponent] ? "行动已锁定" : "行动未锁定"));
+  setText("#onlineLeftPlayerLabel", playerLabel(room, "left", side));
+  setText("#onlineRightPlayerLabel", playerLabel(room, "right", side));
+  setText("#onlineLeftCharacterLabel", characterLabel(room.players?.left));
+  setText("#onlineRightCharacterLabel", characterLabel(room.players?.right));
+  setText("#onlineLeftResourceLabel", resourceLabel(room, "left"));
+  setText("#onlineRightResourceLabel", resourceLabel(room, "right"));
+  setText("#onlineNextStepHint", nextHint(room, side || "left"));
+  setValue("#onlineInviteLink", room.roomId ? buildInviteLink(room.roomId) : "");
+  updateButtons(room, side);
+  renderBackendControls();
 }
 
-function buildOnlineCharacterOptions(cards = []) {
-  return cards
-    .filter((card) => card?.characterId || card?.id)
-    .map((card) => {
-      const id = String(card.characterId || card.id || "").slice(0, 120);
-      return `<option value="${escapeHtml(id)}">${escapeHtml(getOnlineCharacterOptionLabel(card))}</option>`;
-    })
-    .join("");
-}
-
-function getSelectedOnlineCharacterId(side) {
-  if (typeof document === "undefined") return "";
-  syncOnlineCharacterSelects();
-  const onlineSelector = side === "right" ? "#onlineJoinCharacterSelect" : "#onlineCreateCharacterSelect";
-  const onlineValue = String(document.querySelector(onlineSelector)?.value || "").slice(0, 80);
-  if (onlineValue) return onlineValue;
-  const selector = side === "right" ? "#duelRightSelect" : "#duelLeftSelect";
-  return String(document.querySelector(selector)?.value || "").slice(0, 80);
-}
-
-function syncOnlineCharacterSelects(els = getUiElements()) {
-  if (typeof document === "undefined") return;
-  const cards = getOnlineCharacterCards();
-  const options = buildOnlineCharacterOptions(cards);
-  const leftFallback = String(document.querySelector("#duelLeftSelect")?.value || cards[0]?.characterId || cards[0]?.id || "");
-  const rightFallback = String(document.querySelector("#duelRightSelect")?.value || cards[1]?.characterId || cards[1]?.id || leftFallback || "");
-  const syncOne = (target, fallback) => {
-    if (!target) return;
-    const current = target.value || fallback || "";
-    if (target.dataset.optionSignature !== options) {
-      target.innerHTML = options || `<option value="">暂无可用角色</option>`;
-      target.dataset.optionSignature = options;
-    }
-    if (current && [...target.options].some((option) => option.value === current)) {
-      target.value = current;
-    } else if (target.options.length) {
-      target.value = target.options[0].value || "";
-    }
-  };
-  syncOne(els?.createCharacter, leftFallback);
-  syncOne(els?.joinCharacter, rightFallback);
-}
-
-function getOnlineCharacterName(characterId) {
-  const id = String(characterId || "");
-  const card = getOnlineCharacterCards().find((item) => item?.characterId === id || item?.id === id);
-  if (card) return String(card.displayName || card.name || id);
-  if (typeof document !== "undefined") {
-    const option = [...document.querySelectorAll("#onlineCreateCharacterSelect option, #onlineJoinCharacterSelect option, #duelLeftSelect option, #duelRightSelect option")]
-      .find((item) => item.value === id);
-    if (option?.textContent?.trim()) return option.textContent.trim();
-  }
-  return id || "等待选择";
-}
-
-function getOnlineResourceText(snapshot, side) {
-  const resource = side === "right"
-    ? snapshot?.battleState?.resourceState?.p2
-    : snapshot?.battleState?.resourceState?.p1;
-  if (!resource) return "HP / CE / AP：等待战斗";
-  const ap = resource.ap?.current ?? resource.ap ?? "-";
-  return `HP ${Math.round(Number(resource.hp ?? 0))} / CE ${Math.round(Number(resource.ce ?? 0))} / AP ${ap}`;
-}
-
-function emitOnlineRoomState(snapshot) {
-  if (typeof document === "undefined") return;
-  document.dispatchEvent(new CustomEvent("jjk-online-room-state", {
-    detail: {
-      snapshot: snapshot || {},
-      roomId: snapshot?.roomId || "",
-      side: uiState.side || getOnlinePlayerSide(snapshot, uiState.playerId) || ""
-    }
-  }));
-}
-
-function setText(element, text) {
-  if (element) element.textContent = text;
-}
-
-function setInputValue(element, value) {
-  if (element) {
-    element.value = value;
-    element.setAttribute("value", value);
-  }
-}
-
-function readSelectedHandActionSummariesFromDom() {
-  if (typeof document === "undefined") return [];
-  return [...document.querySelectorAll(".duel-hand-card.active .duel-action-choice[data-duel-action]")]
-    .map((button, index) => normalizeOnlineActionSummary({
-      actionId: button.getAttribute("data-duel-action"),
-      displayName: button.querySelector(".duel-card-name")?.textContent ||
-        button.querySelector("strong")?.textContent ||
-        button.textContent?.trim()?.split(/\s+/).slice(0, 4).join(" ") ||
-        `手札 ${index + 1}`
-    }, index));
-}
-
-function getOnlineModeLabel(mode) {
-  const normalized = normalizeOnlineBackendMode(mode);
-  if (normalized === "local_mock_backend") return "本地 mock（开发/双标签测试）";
-  if (normalized === "custom_endpoint") return "自定义 Endpoint（高级）";
-  return "官方联机服务器";
-}
-
-async function getOnlineBackendHint(mode) {
-  const normalized = normalizeOnlineBackendMode(mode);
-  if (normalized === "custom_endpoint") {
-    return "自定义 Endpoint：双方必须使用同一个 Endpoint，否则会显示房间不存在；请自行处理 CORS。";
-  }
-  if (normalized === "local_mock_backend") {
-    return "本地 mock：只适合同一浏览器或双标签页测试。跨设备联机请使用官方联机服务器或自定义 Endpoint。";
-  }
-  const endpoint = await getOfficialOnlineEndpoint();
-  return isOfficialEndpointConfigured(endpoint)
-    ? "官方联机服务器：普通玩家不需要填写 Endpoint；当前主线路为 Cloudflare Workers，国内网络如出现 Failed to fetch，请使用高级设置里的国内可访问自定义 Endpoint，或等待站长配置国内镜像。"
-    : "官方联机服务器尚未配置。请站长部署 Worker 后填写，或切换到本地 mock / 自定义 Endpoint。";
-}
-
-async function renderOnlineBackendControls(settings, els = getUiElements()) {
-  if (!els?.panel) return;
-  const mode = normalizeOnlineBackendMode(settings?.backendMode);
-  setInputValue(els.backendMode, mode);
-  setInputValue(els.endpoint, settings?.endpoint || "");
-  setText(els.modeLabel, getOnlineModeLabel(mode));
-  const isCustomEndpoint = mode === "custom_endpoint";
-  const isOfficial = mode === "official_endpoint";
-  if (els.endpointField) els.endpointField.hidden = !isCustomEndpoint;
-  if (els.backendActions) els.backendActions.hidden = mode === "official_endpoint";
-  setText(els.backendHint, await getOnlineBackendHint(mode));
-  if (els.officialStatus) {
-    if (!isOfficial) {
-      setText(els.officialStatus, mode === "local_mock_backend"
-        ? "当前使用本地 mock，不能跨设备。"
-        : "当前使用自定义 Endpoint；双方必须配置同一个地址。");
-    } else {
-      const endpoint = await getOfficialOnlineEndpoint();
-      setText(els.officialStatus, isOfficialEndpointConfigured(endpoint)
-        ? "官方联机服务器：已配置，可测试连接；国内网络可能需要镜像线路。"
-        : "官方联机服务器尚未配置。请站长部署后端，或在高级设置切换到本地 mock / 自定义 Endpoint。");
-    }
-  }
-  if (els.officialTest) els.officialTest.hidden = !isOfficial;
-}
-
-function getOnlineOpponentStatus(snapshot, side) {
-  if (!snapshot?.roomId) return "未加入";
-  const opponentSide = getOnlineOpponentSide(side);
-  const opponent = snapshot.players?.[opponentSide];
-  if (!opponent?.playerId) return "未加入";
-  if (!opponent.connected) return "离线";
-  if (snapshot.publicLocks?.[opponentSide]) return "已锁定";
-  return snapshot.pendingActionCounts?.[opponentSide] || snapshot.pendingActions?.[opponentSide]?.length ? "选择中" : "已加入";
-}
-
-function getOnlineNextStepHint(snapshot, side, selectedActionCount) {
-  if (!snapshot?.roomId) return "下一步：创建房间，或输入房间码加入对局。";
-  if (snapshot.status === "ended") return "战斗已结束。";
-  const opponentSide = getOnlineOpponentSide(side);
-  if (!snapshot.players?.[opponentSide]?.playerId) return "等待对手加入。";
-  if (snapshot.status === "ready") return "双方已入座，等待角色确认。";
-  if (snapshot.status !== "battle") return "等待进入联机战斗。";
-  if (snapshot.publicLocks?.left && snapshot.publicLocks?.right) return "双方已锁定，正在自动结算本回合。";
-  if (snapshot.publicLocks?.[side]) return "已锁定，等待对手。";
-  if (!selectedActionCount) return "下一步：先在手札区选择本回合行动。";
-  return "下一步：点击锁定行动。";
-}
-
-function renderOnlineRoomUi(snapshot) {
-  const els = getUiElements();
-  if (!els?.panel) return;
-  syncOnlineCharacterSelects(els);
-  const hasRoom = Boolean(snapshot?.roomId);
-  const side = hasRoom ? (uiState.side || getOnlinePlayerSide(snapshot, uiState.playerId) || "left") : "";
-  const opponentSide = getOnlineOpponentSide(side);
-  const opponent = snapshot.players?.[opponentSide];
-  const selectedActionCount = readSelectedHandActionSummariesFromDom().length;
-  setText(els.roomCode, snapshot.roomId || "未创建");
-  setText(els.currentRoomCode, snapshot.roomId || "未创建");
-  setText(els.playerSide, side === "left" ? "左方" : side === "right" ? "右方" : "未加入");
-  setText(els.opponentStatus, getOnlineOpponentStatus(snapshot, side || "left"));
-  setText(els.turnLabel, snapshot.turn ? `第 ${snapshot.turn} 回合` : "未开始");
-  setText(els.localLock, snapshot.publicLocks?.[side] ? "已锁定" : "未锁定");
-  setText(els.opponentLock, snapshot.publicLocks?.[opponentSide] ? "已锁定" : "未锁定");
-  setText(els.leftPlayer, snapshot.players?.left?.playerId ? (side === "left" ? "你（左方）" : "对手（左方）") : "等待玩家");
-  setText(els.rightPlayer, snapshot.players?.right?.playerId ? (side === "right" ? "你（右方）" : "对手（右方）") : "等待玩家");
-  setText(els.leftCharacter, `角色：${getOnlineCharacterName(snapshot.players?.left?.characterId)}`);
-  setText(els.rightCharacter, `角色：${getOnlineCharacterName(snapshot.players?.right?.characterId)}`);
-  setText(els.leftResource, getOnlineResourceText(snapshot, "left"));
-  setText(els.rightResource, getOnlineResourceText(snapshot, "right"));
-  els.leftPlayer?.closest?.("article")?.setAttribute("data-you", side === "left" ? "true" : "false");
-  els.rightPlayer?.closest?.("article")?.setAttribute("data-you", side === "right" ? "true" : "false");
-  setText(els.syncStatus, statusText(snapshot));
-  setText(els.nextStep, getOnlineNextStepHint(snapshot, side || "left", selectedActionCount));
-  const settings = getOnlineBackendSettings();
-  renderOnlineBackendControls(settings, els);
-  setInputValue(els.inviteLink, snapshot.roomId ? buildOnlineInviteLink(snapshot.roomId) : "");
-  if (els.copyRoomCode) els.copyRoomCode.disabled = !snapshot.roomId;
-  if (els.copyInvite) els.copyInvite.disabled = !snapshot.roomId;
-  if (els.lock) {
-    const opponentJoined = Boolean(snapshot.players?.[opponentSide]?.playerId);
-    const battleReady = snapshot.status === "battle";
-    els.lock.disabled = !snapshot.roomId || !opponentJoined || !battleReady || !selectedActionCount || snapshot.publicLocks?.[side] || snapshot.status === "ended";
-    els.lock.textContent = !snapshot.roomId
-      ? "请先创建或加入房间"
-      : !opponentJoined
-        ? "等待对手加入"
-        : snapshot.status === "ended"
-          ? "战斗已结束"
-          : !battleReady
-            ? "等待角色确认"
-            : snapshot.publicLocks?.[side]
-              ? "已锁定，等待对手"
-              : !selectedActionCount
-                ? "请先选择手札"
-                : "锁定行动";
-  }
-  if (els.unlock) els.unlock.disabled = !snapshot.roomId || !snapshot.publicLocks?.[side] || canResolveOnlineTurn(snapshot);
-  if (els.resolve) {
-    const opponentJoined = Boolean(snapshot.players?.[opponentSide]?.playerId);
-    const ready = canResolveOnlineTurn(snapshot);
-    els.resolve.disabled = true;
-    els.resolve.textContent = snapshot.status === "ended"
-      ? "战斗已结束"
-      : !snapshot.roomId
-        ? "等待房间"
-        : !opponentJoined
-          ? "等待对手加入"
-          : ready
-            ? "双方锁定，自动结算中"
-            : "等待双方锁定";
-    els.resolve.classList.toggle("is-ready", ready);
-  }
-  if (els.kickRight) {
-    const canKickRight = Boolean(snapshot.roomId && side === "left" && snapshot.players?.right?.playerId && snapshot.status !== "ended");
-    els.kickRight.disabled = !canKickRight;
-    els.kickRight.hidden = !snapshot.roomId || side !== "left";
-  }
-  if (els.leave) els.leave.disabled = !snapshot.roomId;
-  emitOnlineRoomState(snapshot);
-}
-
-async function autoResolveOnlineTurnIfReady(snapshot, reason = "") {
-  if (!canResolveOnlineTurn(snapshot)) return snapshot;
-  const roomId = normalizeOnlineRoomId(snapshot.roomId);
-  const key = `${roomId}:${snapshot.turn || 0}`;
-  if (!roomId || autoResolveInFlight.has(key)) return snapshot;
-  autoResolveInFlight.add(key);
-  try {
-    const resolved = await resolveOnlineTurn(roomId, { ...getOnlineBackendSettings(), viewerSide: uiState.side || "left", autoReason: reason });
-    renderOnlineRoomUi(resolved);
-    return resolved;
-  } catch (error) {
-    showOnlineError(error);
-    return snapshot;
-  } finally {
-    autoResolveInFlight.delete(key);
-  }
-}
-
-function handleOnlineSnapshot(snapshot, reason = "") {
-  renderOnlineRoomUi(snapshot);
-  autoResolveOnlineTurnIfReady(snapshot, reason);
-}
-
-function statusText(snapshot) {
-  if (!snapshot?.roomId) return "未加入房间。";
-  if (snapshot.status === "waiting") return "房间已创建，等待对手加入。";
-  if (snapshot.status === "ready") return "双方已入座，等待角色确认。";
-  if (snapshot.status === "battle") return snapshot.publicLocks?.left && snapshot.publicLocks?.right
-    ? "双方已锁定，正在自动结算。"
-    : "联机战斗进行中。";
-  if (snapshot.status === "ended") return "房间已结束。";
-  return "轮询同步中。";
-}
-
-function showOnlineError(message) {
-  const els = getUiElements();
-  setText(els?.syncStatus, message instanceof Error ? message.message : String(message));
-}
-
-function startOnlineUiPolling(roomId, side) {
-  stopOnlinePolling();
-  const settings = getOnlineBackendSettings();
-  activePollingStop = pollOnlineRoomState(roomId, {
-    ...settings,
-    side,
-    viewerSide: side,
-    pollIntervalMs: DEFAULT_RULES.sync.pollIntervalMs,
-    onState: (snapshot) => handleOnlineSnapshot(snapshot, "poll"),
-    onError: showOnlineError
-  });
-}
-
-function refreshOnlineUiFromState() {
-  if (!uiState.roomId) {
-    renderOnlineRoomUi({});
+function syncBattlePageLockState(room, side) {
+  if (!globalThis.JJKBattlePage) return;
+  if (!room?.roomId || !side) {
+    if (globalThis.JJKBattlePage.getBattleMode?.() === "online") globalThis.JJKBattlePage.clearBattleMode?.("none");
     return;
   }
-  Promise.resolve(getOnlineRoomState(uiState.roomId, { ...getOnlineBackendSettings(), viewerSide: uiState.side }))
-    .then(renderOnlineRoomUi)
-    .catch(() => {});
+  if (typeof globalThis.JJKBattlePage.setBattleMode !== "function") return;
+  globalThis.JJKBattlePage.setBattleMode("online", {
+    activeRoomId: room.roomId,
+    playerSide: side,
+    activePage: "online",
+    localLocked: room.phase === "turn_selecting" && Boolean(room.turnState?.locks?.[side])
+  });
 }
 
-async function initializeOnlineUi() {
-  const els = getUiElements();
-  if (!els?.panel || els.panel.dataset.onlineBound === "true") return false;
-  els.panel.dataset.onlineBound = "true";
-  restoreActiveRoom();
-  const invitedRoom = parseOnlineInviteLink();
-  if (invitedRoom && els.joinRoomInput) els.joinRoomInput.value = invitedRoom;
-  if (globalThis.location?.search && new URLSearchParams(globalThis.location.search).get("onlineBackend") === "custom_endpoint") {
-    saveOnlineBackendSettings({ ...getOnlineBackendSettings(), backendMode: "custom_endpoint" });
+function resourceLabel(room, side) {
+  const resource = side === "left" ? room?.battleState?.resourceState?.p1 : room?.battleState?.resourceState?.p2;
+  if (!resource) return "HP / CE / AP：等待战斗";
+  return `HP ${Math.round(Number(resource.hp || 0))} / CE ${Math.round(Number(resource.ce || 0))} / AP ${resource.ap?.current ?? resource.ap ?? "-"}`;
+}
+
+function updateButtons(room, side) {
+  const hasRoom = Boolean(room?.roomId);
+  const isOwner = side === "left" || room?.ownerPlayerId === uiState.playerId;
+  setDisabled("#onlineCopyRoomCodeBtn", !hasRoom);
+  setDisabled("#onlineCopyInviteBtn", !hasRoom);
+  setDisabled("#onlineLockCharacterBtn", !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterId || room.players?.[side]?.characterLocked);
+  setDisabled("#onlineUnlockCharacterBtn", !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterLocked);
+  setDisabled("#onlineLockTurnBtn", !hasRoom || room.phase !== "turn_selecting" || room.turnState?.locks?.[side]);
+  setDisabled("#onlineUnlockTurnBtn", !hasRoom || room.phase !== "turn_selecting" || !room.turnState?.locks?.[side] || hasBothLockedActions(room));
+  setDisabled("#onlineResolveTurnBtn", true);
+  setDisabled("#onlineRematchBtn", !hasRoom || !["reviewing", "turn_selecting"].includes(room.phase));
+  setDisabled("#onlineResetPrepareBtn", !hasRoom || !isOwner || !["reviewing", "turn_selecting", "preparing"].includes(room.phase));
+  setDisabled("#onlineKickRightPlayerBtn", !hasRoom || !isOwner || !room.players?.right?.playerId || !["preparing", "reviewing"].includes(room.phase));
+  setDisabled("#onlineLeaveRoomBtn", !hasRoom);
+  setText("#onlineLockTurnBtn", room.phase === "turn_selecting" ? "锁定行动" : "等待对战阶段");
+  setText("#onlineResolveTurnBtn", room.phase === "turn_resolving" ? "结算中" : "双方锁定后自动结算");
+}
+
+async function renderBackendControls() {
+  const settings = getBackendSettings();
+  setValue("#onlineBackendMode", settings.backendMode);
+  setValue("#onlineEndpointInput", settings.endpoint);
+  setText("#onlineModeLabel", settings.backendMode === "local_mock_backend" ? "本地 mock" : settings.backendMode === "custom_endpoint" ? "自定义 Endpoint" : "官方联机服务器");
+  const endpointField = $("#onlineEndpointField");
+  if (endpointField) endpointField.hidden = settings.backendMode !== "custom_endpoint";
+  setText("#onlineBackendHint", settings.backendMode === "local_mock_backend"
+    ? "本地 mock 使用浏览器 localStorage，只适合同一浏览器或双标签测试。"
+    : "新版联机使用 POST operation 协议；服务器负责房间阶段、角色快照、行动锁定和后续 AI broker。");
+  setText("#onlineOfficialStatus", settings.backendMode === "official_endpoint"
+    ? "官方新版联机服务器需要部署 jjk_online_battle_v1 协议。"
+    : "当前未使用官方服务器。");
+}
+
+function enterBattleView(room, side) {
+  const left = room.players.left.characterId;
+  const right = room.players.right.characterId;
+  const leftSelect = $("#duelLeftSelect");
+  const rightSelect = $("#duelRightSelect");
+  if (leftSelect && [...leftSelect.options].some((option) => option.value === left)) leftSelect.value = left;
+  if (rightSelect && [...rightSelect.options].some((option) => option.value === right)) rightSelect.value = right;
+  globalThis.JJKBattlePage?.setBattleMode?.("online", { activeRoomId: room.roomId, playerSide: side, activePage: "online", localLocked: false });
+  if (typeof globalThis.startDuelBattle === "function" && !globalThis.state?.duelBattle?.onlineRoomId) {
+    try {
+      globalThis.startDuelBattle({ mode: "online", allowOnline: true, snapshot: { roomId: room.roomId, battleSeed: room.battleState?.battleSeed, players: room.players } });
+    } catch {
+      // The runtime may not be ready yet; the room state remains authoritative.
+    }
   }
-  const initialSettings = getOnlineBackendSettings();
-  renderOnlineBackendControls(initialSettings, els);
-  syncOnlineCharacterSelects(els);
-  setTimeout(() => syncOnlineCharacterSelects(els), 0);
-  setTimeout(() => syncOnlineCharacterSelects(els), 1000);
-  document.addEventListener("jjk-battle-page-state", () => syncOnlineCharacterSelects(els));
-  document.addEventListener("jjk-duel-character-pool-changed", () => {
-    syncOnlineCharacterSelects(els);
-    refreshOnlineUiFromState();
-  });
-  [els.createCharacter, els.joinCharacter].forEach((select) => {
-    select?.addEventListener("focus", () => syncOnlineCharacterSelects(els));
-  });
+}
 
-  els.backendMode?.addEventListener("change", () => {
-    const settings = saveOnlineBackendSettings({
-      backendMode: els.backendMode?.value,
-      endpoint: els.endpoint?.value
-    });
-    renderOnlineBackendControls(settings, els);
-    setText(els.syncStatus, settings.backendMode === "custom_endpoint"
-      ? "已切换到自定义 Endpoint；双方必须使用同一个地址。"
-      : settings.backendMode === "local_mock_backend"
-        ? "已切换到本地 mock；仅适合同一浏览器或双标签页测试。"
-        : "已切换到官方联机服务器；普通玩家不需要填写 Endpoint。");
-  });
+function $(selector) {
+  return typeof document === "undefined" ? null : document.querySelector(selector);
+}
 
-  els.saveBackend?.addEventListener("click", () => {
-    const settings = saveOnlineBackendSettings({
-      backendMode: els.backendMode?.value,
-      endpoint: els.endpoint?.value
-    });
-    setText(els.syncStatus, settings.backendMode === "custom_endpoint"
-      ? "自定义 Endpoint 已保存。"
-      : settings.backendMode === "local_mock_backend"
-        ? "已切换到本地 mock 后端。"
-        : "已切换到官方联机服务器。");
-    renderOnlineRoomUi(uiState.roomId ? { roomId: uiState.roomId } : {});
-  });
+function setText(selector, value) {
+  const node = typeof selector === "string" ? $(selector) : selector;
+  if (node) node.textContent = String(value ?? "");
+}
 
-  els.clearBackend?.addEventListener("click", () => {
-    clearOnlineBackendSettings();
-    setInputValue(els.backendMode, "official_endpoint");
-    setInputValue(els.endpoint, "");
-    setText(els.syncStatus, "联机后端设置已清除，当前为官方联机服务器。");
-    renderOnlineRoomUi(uiState.roomId ? { roomId: uiState.roomId } : {});
-  });
+function setValue(selector, value) {
+  const node = typeof selector === "string" ? $(selector) : selector;
+  if (node) node.value = String(value ?? "");
+}
 
-  els.testBackend?.addEventListener("click", async () => {
-    try {
-      const settings = saveOnlineBackendSettings({
-        backendMode: els.backendMode?.value,
-        endpoint: els.endpoint?.value
-      });
-      const result = await testOnlineBackendConnection(settings);
-      setText(els.syncStatus, result.message || "连接测试完成。");
-    } catch (error) {
-      showOnlineError(error);
-    }
-  });
+function setDisabled(selector, disabled) {
+  const node = typeof selector === "string" ? $(selector) : selector;
+  if (node) node.disabled = Boolean(disabled);
+}
 
-  els.officialTest?.addEventListener("click", async () => {
-    try {
-      const settings = saveOnlineBackendSettings({
-        backendMode: "official_endpoint",
-        endpoint: els.endpoint?.value
-      });
-      renderOnlineBackendControls(settings, els);
-      const result = await testOnlineBackendConnection(settings);
-      setText(els.syncStatus, result.message || "官方联机服务器测试完成。");
-      setText(els.officialStatus, result.message || "官方联机服务器连接正常。");
-    } catch (error) {
-      showOnlineError(error);
-      setText(els.officialStatus, error instanceof Error ? error.message : String(error));
-    }
-  });
+function showError(error) {
+  setText("#onlineSyncStatus", error?.message || String(error || "联机操作失败。"));
+}
 
-  els.create?.addEventListener("click", async () => {
-    try {
-      const settings = saveOnlineBackendSettings({
-        backendMode: els.backendMode?.value,
-        endpoint: els.endpoint?.value
-      });
-      syncOnlineCharacterSelects(els);
-      const snapshot = await createOnlineRoom({ ...settings, displayName: "玩家 A", characterId: getSelectedOnlineCharacterId("left") });
-      renderOnlineRoomUi(snapshot);
-      startOnlineUiPolling(snapshot.roomId, "left");
-    } catch (error) {
-      showOnlineError(error);
-    }
+function bindUi() {
+  const panel = $("#onlineAlphaPanel");
+  if (!panel || panel.dataset.onlineRewriteBound === "true") return;
+  panel.dataset.onlineRewriteBound = "true";
+  restoreRemembered();
+  const invited = parseInviteLink();
+  if (invited) setValue("#onlineJoinRoomCodeInput", invited);
+  syncCharacterSelects();
+  render({});
+  globalThis.setTimeout(() => {
+    syncCharacterSelects();
+    if (!uiState.roomId) render({});
+  }, 300);
+  globalThis.setTimeout(() => {
+    syncCharacterSelects();
+    if (!uiState.roomId) render({});
+  }, 1200);
+  document.addEventListener("jjk-duel-character-pool-changed", syncCharacterSelects);
+  document.addEventListener("jjk-battle-page-state", syncCharacterSelects);
+  $("#onlineBackendMode")?.addEventListener("change", () => {
+    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value });
+    renderBackendControls();
   });
-
-  els.join?.addEventListener("click", async () => {
-    try {
-      const settings = saveOnlineBackendSettings({
-        backendMode: els.backendMode?.value,
-        endpoint: els.endpoint?.value
-      });
-      const roomId = normalizeOnlineRoomId(els.joinRoomInput?.value || parseOnlineInviteLink());
-      syncOnlineCharacterSelects(els);
-      const snapshot = await joinOnlineRoom(roomId, { ...settings, displayName: "玩家 B", characterId: getSelectedOnlineCharacterId("right") || getSelectedOnlineCharacterId("left") });
-      renderOnlineRoomUi(snapshot);
-      startOnlineUiPolling(snapshot.roomId, uiState.side || "right");
-    } catch (error) {
-      showOnlineError(error);
-    }
+  $("#onlineSaveBackendBtn")?.addEventListener("click", () => {
+    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value });
+    renderBackendControls();
   });
-
-  els.copyRoomCode?.addEventListener("click", async () => {
-    const roomId = normalizeOnlineRoomId(uiState.roomId || els.currentRoomCode?.textContent || "");
-    if (!roomId) {
-      setText(els.syncStatus, "当前没有可复制的房间码。");
-      return;
-    }
-    try {
-      await navigator.clipboard?.writeText?.(roomId);
-      setText(els.syncStatus, "房间码已复制。");
-    } catch (error) {
-      setText(els.syncStatus, "当前浏览器未允许自动复制，请手动复制房间码。");
-    }
+  $("#onlineClearBackendBtn")?.addEventListener("click", () => {
+    clearBackendSettings();
+    renderBackendControls();
   });
-
-  els.copyInvite?.addEventListener("click", async () => {
-    const link = els.inviteLink?.value || "";
-    try {
-      await navigator.clipboard?.writeText?.(link);
-      setText(els.syncStatus, "邀请链接已复制。");
-    } catch (error) {
-      setText(els.syncStatus, "当前浏览器未允许自动复制，请手动复制链接。");
-    }
+  $("#onlineTestBackendBtn")?.addEventListener("click", () => testConnection().then((message) => setText("#onlineSyncStatus", message)).catch(showError));
+  $("#onlineOfficialTestBtn")?.addEventListener("click", () => testConnection({ backendMode: "official_endpoint" }).then((message) => setText("#onlineOfficialStatus", message)).catch((error) => setText("#onlineOfficialStatus", error.message)));
+  $("#onlineCreateRoomBtn")?.addEventListener("click", () => createRoom({ ...getBackendSettings(), characterId: $("#onlineCreateCharacterSelect")?.value }).then((room) => {
+    render(room);
+    startPolling(room.roomId, "left");
+  }).catch(showError));
+  $("#onlineJoinRoomBtn")?.addEventListener("click", () => joinRoom($("#onlineJoinRoomCodeInput")?.value, { ...getBackendSettings(), characterId: $("#onlineJoinCharacterSelect")?.value }).then((room) => {
+    render(room);
+    startPolling(room.roomId, "right");
+  }).catch(showError));
+  $("#onlineCreateCharacterSelect")?.addEventListener("change", () => {
+    if (uiState.roomId && uiState.side === "left") selectCharacter(uiState.roomId, "left", $("#onlineCreateCharacterSelect")?.value, { playerId: uiState.playerId }).then(render).catch(showError);
   });
-
-  els.lock?.addEventListener("click", async () => {
-    try {
-      if (!uiState.roomId || !uiState.side) throw new Error("请先创建或加入房间。");
-      const actions = readSelectedHandActionSummariesFromDom();
-      const snapshot = await lockOnlineTurn(uiState.roomId, uiState.side, actions, getOnlineBackendSettings());
-      renderOnlineRoomUi(snapshot);
-      autoResolveOnlineTurnIfReady(snapshot, "lock");
-    } catch (error) {
-      showOnlineError(error);
-    }
+  $("#onlineJoinCharacterSelect")?.addEventListener("change", () => {
+    if (uiState.roomId && uiState.side === "right") selectCharacter(uiState.roomId, "right", $("#onlineJoinCharacterSelect")?.value, { playerId: uiState.playerId }).then(render).catch(showError);
   });
-
-  els.unlock?.addEventListener("click", async () => {
-    try {
-      const snapshot = await unlockOnlineTurn(uiState.roomId, uiState.side, getOnlineBackendSettings());
-      renderOnlineRoomUi(snapshot);
-    } catch (error) {
-      showOnlineError(error);
-    }
-  });
-
-  els.resolve?.addEventListener("click", async () => {
-    setText(els.syncStatus, "双方锁定后会自动结算，无需手动点击。");
-  });
-
-  els.kickRight?.addEventListener("click", async () => {
-    try {
-      const snapshot = await kickOnlinePlayer(uiState.roomId, "right", { ...getOnlineBackendSettings(), playerId: uiState.playerId, side: uiState.side });
-      renderOnlineRoomUi(snapshot);
-    } catch (error) {
-      showOnlineError(error);
-    }
-  });
-
-  els.leave?.addEventListener("click", async () => {
-    try {
-      const snapshot = await leaveOnlineRoom(uiState.roomId, { ...getOnlineBackendSettings(), playerId: uiState.playerId, side: uiState.side });
-      handleOnlineSnapshot(snapshot, "restore");
-    } catch (error) {
-      showOnlineError(error);
-    }
-  });
-
-  document.addEventListener("click", (event) => {
-    if (event.target?.closest?.(".duel-action-choice")) {
-      queueMicrotask(refreshOnlineUiFromState);
-    }
-  });
-
+  $("#onlineLockCharacterBtn")?.addEventListener("click", () => lockCharacter(uiState.roomId, uiState.side, { playerId: uiState.playerId }).then(render).catch(showError));
+  $("#onlineUnlockCharacterBtn")?.addEventListener("click", () => unlockCharacter(uiState.roomId, uiState.side, { playerId: uiState.playerId }).then(render).catch(showError));
+  $("#onlineLockTurnBtn")?.addEventListener("click", () => lockTurn(uiState.roomId, uiState.side, readSelectedActionsFromDom(), { playerId: uiState.playerId }).then(render).catch(showError));
+  $("#onlineUnlockTurnBtn")?.addEventListener("click", () => unlockTurn(uiState.roomId, uiState.side, { playerId: uiState.playerId }).then(render).catch(showError));
+  $("#onlineRematchBtn")?.addEventListener("click", () => rematch(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
+  $("#onlineResetPrepareBtn")?.addEventListener("click", () => resetToPreparing(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
+  $("#onlineKickRightPlayerBtn")?.addEventListener("click", () => kickPlayer(uiState.roomId, "right", { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
+  $("#onlineLeaveRoomBtn")?.addEventListener("click", () => leaveRoom(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(() => render({})).catch(showError));
+  $("#onlineCopyRoomCodeBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.(uiState.roomId || ""));
+  $("#onlineCopyInviteBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.($("#onlineInviteLink")?.value || ""));
   if (uiState.roomId) {
-    try {
-      const snapshot = await getOnlineRoomState(uiState.roomId, { ...getOnlineBackendSettings(), viewerSide: uiState.side });
-      renderOnlineRoomUi(snapshot);
-      startOnlineUiPolling(uiState.roomId, uiState.side);
-    } catch (error) {
-      clearActiveRoom();
-    }
-  } else {
-    renderOnlineRoomUi({});
+    getRoomState(uiState.roomId, { side: uiState.side, viewerSide: uiState.side }).then((room) => {
+      render(room);
+      startPolling(room.roomId, uiState.side);
+    }).catch(() => clearRemembered());
   }
-  return true;
 }
 
-function resetOnlineLocalMockBackend() {
-  localMemoryRooms.clear();
-  const storage = getBrowserStorage();
-  if (storage) {
-    const keys = [];
-    for (let index = 0; index < storage.length; index += 1) {
-      const key = storage.key(index);
-      if (key?.startsWith(ROOM_STORAGE_PREFIX)) keys.push(key);
-    }
-    keys.forEach((key) => storage.removeItem(key));
-  }
-  clearActiveRoom();
-  stopOnlinePolling();
+async function testConnection(options = {}) {
+  const settings = getBackendSettings(options);
+  if (settings.backendMode === "local_mock_backend") return "本地 mock 可用。";
+  await remoteOperation("ping", {}, settings);
+  return "新版联机服务器连接正常。";
 }
 
 const OnlineModule = {
   namespace: "JJKOnline",
   version: APP_BUILD_VERSION,
-  status: "CANDIDATE",
-  backendMode: "official_endpoint",
-  getOnlineBackendSettings,
-  saveOnlineBackendSettings,
-  clearOnlineBackendSettings,
-  getActiveOnlineBackendMode,
-  isOfficialEndpointConfigured,
-  getOfficialOnlineEndpoint,
-  getOfficialOnlineEndpoints,
-  sendOnlineEndpointRequest,
-  testOnlineBackendConnection,
-  getOnlineRules,
-  roomStatusFlow: ONLINE_ROOM_STATUS_FLOW,
-  normalizeOnlineRoomStatus,
-  startOnlineBattle,
-  createOnlineRoom,
-  joinOnlineRoom,
-  leaveOnlineRoom,
-  kickOnlinePlayer,
-  getOnlineRoomState,
-  pollOnlineRoomState,
-  startOnlineUiPolling,
-  stopOnlinePolling,
-  isOnlinePollingActive,
-  getOnlineUiState,
-  submitOnlineHandActions,
-  lockOnlineTurn,
-  unlockOnlineTurn,
-  canResolveOnlineTurn,
-  resolveOnlineTurn,
-  syncOnlineBattleState,
-  buildOnlineInviteLink,
-  parseOnlineInviteLink,
-  getOnlinePlayerSide,
-  buildOnlineRoomSnapshot,
-  redactOnlineSecrets,
-  applyOnlineTurnActionsToBattleState,
-  resolveOnlineTurnWithExistingFightEngine,
-  initializeOnlineUi,
-  resetOnlineLocalMockBackend,
-  normalizeOnlineActionSummary,
-  normalizeOnlineActionList
+  protocol: ONLINE_PROTOCOL,
+  phases: PHASES,
+  createRoom,
+  joinRoom,
+  selectCharacter,
+  lockCharacter,
+  unlockCharacter,
+  lockTurn,
+  unlockTurn,
+  resolveTurn,
+  rematch,
+  resetToPreparing,
+  kickPlayer,
+  leaveRoom,
+  getRoomState,
+  startPolling,
+  stopPolling,
+  getBackendSettings,
+  saveBackendSettings,
+  clearBackendSettings,
+  buildInviteLink,
+  parseInviteLink,
+  bindUi,
+  initializeOnlineUi: bindUi
 };
 
 globalThis.JJKOnline = OnlineModule;
 
 if (typeof document !== "undefined") {
-  queueMicrotask(() => initializeOnlineUi());
+  queueMicrotask(bindUi);
 }
 
 export { OnlineModule };

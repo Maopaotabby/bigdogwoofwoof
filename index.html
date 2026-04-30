@@ -324,27 +324,27 @@
             </section>
             <section class="jjk-battle-page" data-jjk-battle-page-panel="online" hidden>
               <div class="jjk-battle-section-head">
-                <h3>联机对战 Alpha</h3>
-                <p class="muted">当前为联机模式。房间页与联机战斗页分开显示，双方锁定前不会显示对方具体手札。</p>
+                <h3>联机模式</h3>
+                <p class="muted">新版联机按准备、对战、复盘三阶段运行；联机页内直接选择角色。</p>
               </div>
-            <section id="onlineAlphaPanel" class="online-alpha-panel" aria-label="联机 Alpha">
+            <section id="onlineAlphaPanel" class="online-alpha-panel" aria-label="联机模式">
               <div class="online-alpha-head">
                 <div>
-                  <h3>联机 Alpha</h3>
-                  <p class="muted">非即时同步先行版：房间码、回合锁定、轮询同步；普通玩家默认使用官方联机服务器。</p>
+                  <h3>联机模式</h3>
+                  <p class="muted">准备阶段可异步创建、加入、选角和锁定；对战阶段双方锁定后自动结算；复盘阶段可再来一把或回到准备阶段。</p>
                 </div>
                 <span id="onlineSyncStatus" class="duel-chip">未加入房间。</span>
               </div>
               <div class="online-alpha-section online-sync-section">
                 <div class="online-section-title">
-                  <strong>1. 同步后端</strong>
+                  <strong>1. 服务器</strong>
                   <span>当前模式：<b id="onlineModeLabel">官方联机服务器</b></span>
                 </div>
                 <div class="online-official-status">
                   <span id="onlineOfficialStatus">官方联机服务器尚未检测。</span>
                   <button id="onlineOfficialTestBtn" class="mini" type="button">测试官方服务器</button>
                 </div>
-                <p id="onlineBackendHint" class="muted online-backend-hint">官方联机服务器只同步房间状态，不调用 AI，也不保存 API Key。普通玩家不需要填写 Endpoint。</p>
+                <p id="onlineBackendHint" class="muted online-backend-hint">新版协议使用服务器保存房间阶段、角色快照、行动锁定和结算请求；普通玩家不需要填写 Endpoint。</p>
                 <details id="onlineAdvancedBackendSettings" class="online-advanced-settings">
                   <summary>高级后端设置</summary>
                   <div class="online-alpha-grid online-sync-grid">
@@ -372,15 +372,15 @@
                 <div class="online-room-card">
                   <div class="online-section-title">
                     <strong>2A. 创建房间</strong>
-                    <span>用于发起对战</span>
-                  </div>
-                  <div class="online-alpha-actions">
-                    <button id="onlineCreateRoomBtn" class="secondary" type="button">创建新房间</button>
+                    <span>房主为左方</span>
                   </div>
                   <label class="field">
                     <span>我的角色</span>
                     <select id="onlineCreateCharacterSelect"></select>
                   </label>
+                  <div class="online-alpha-actions">
+                    <button id="onlineCreateRoomBtn" class="secondary" type="button">创建新房间</button>
+                  </div>
                   <div class="online-room-current">
                     <span>当前房间码：<strong id="onlineCurrentRoomCode">未创建</strong></span>
                     <button id="onlineCopyRoomCodeBtn" class="mini" type="button">复制房间码</button>
@@ -396,7 +396,7 @@
                 <div class="online-room-card">
                   <div class="online-section-title">
                     <strong>2B. 加入房间</strong>
-                    <span>只填写对方给你的房间码</span>
+                    <span>加入者为右方</span>
                   </div>
                   <label class="field">
                     <span>输入房间码</span>
@@ -411,14 +411,25 @@
                   </div>
                 </div>
               </div>
+              <div class="online-alpha-section online-prepare-section">
+                <div class="online-section-title">
+                  <strong>3. 准备阶段</strong>
+                  <span>双方选择角色并锁定后自动进入对战阶段</span>
+                </div>
+                <div class="online-alpha-actions online-prepare-actions">
+                  <button id="onlineLockCharacterBtn" class="primary" type="button">锁定角色</button>
+                  <button id="onlineUnlockCharacterBtn" class="secondary" type="button">取消角色锁定</button>
+                </div>
+              </div>
               <div class="online-alpha-section online-battle-section">
                 <div class="online-section-title">
-                  <strong>3. 对战状态</strong>
+                  <strong>4. 对战与复盘</strong>
                   <span id="onlineNextStepHint">下一步：创建或加入房间。</span>
                 </div>
                 <div class="online-alpha-status" aria-live="polite">
                   <span>当前房间：<strong id="onlineRoomCode">未创建</strong></span>
                   <span>你是：<strong id="onlinePlayerSide">未加入</strong></span>
+                  <span>阶段：<strong id="onlinePhaseLabel">未开始</strong></span>
                   <span>对手状态：<strong id="onlineOpponentStatus">未加入</strong></span>
                   <span>联机回合：<strong id="onlineTurnLabel">未开始</strong></span>
                   <span>你的行动：<strong id="onlineLocalLockStatus">未锁定</strong></span>
@@ -441,7 +452,9 @@
                 <div class="online-alpha-actions online-turn-actions">
                   <button id="onlineLockTurnBtn" class="primary" type="button">请先选择手札</button>
                   <button id="onlineUnlockTurnBtn" class="secondary" type="button">取消锁定</button>
-                  <button id="onlineResolveTurnBtn" class="secondary" type="button">等待对手加入</button>
+                  <button id="onlineResolveTurnBtn" class="secondary" type="button">等待自动结算</button>
+                  <button id="onlineRematchBtn" class="secondary" type="button">再来一把</button>
+                  <button id="onlineResetPrepareBtn" class="secondary" type="button">回到准备阶段</button>
                   <button id="onlineKickRightPlayerBtn" class="mini" type="button">踢出右方玩家</button>
                   <button id="onlineLeaveRoomBtn" class="mini" type="button">离开房间</button>
                 </div>

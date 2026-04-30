@@ -906,8 +906,8 @@ function isOnlineDuelModeActive() {
   return getDuelBattleMode() === "online" && Boolean(state.duelModeState.activeRoomId);
 }
 
-function forceOnlineBattleInterface(snapshot = state.duelModeState.onlineSnapshot, playerSide = state.duelModeState.playerSide || "left") {
-  const roomId = snapshot?.roomId || state.duelModeState.activeRoomId || "";
+function forceOnlineBattleInterface(playerSide = state.duelModeState.playerSide || "left") {
+  const roomId = state.duelModeState.activeRoomId || "";
   const side = playerSide === "right" ? "right" : "left";
   getBattlePageModule()?.activateBattlePage?.("online", { primeMode: "online" });
   return setDuelBattleMode("online", {
@@ -963,128 +963,6 @@ function evaluateDuelCharacterById(characterId, fallbackSide = "left") {
   return applyDuelSideDebugOverride(evaluateDuelCharacterCard(card), fallbackSide);
 }
 
-function ensureOnlineDuelBattleFromSnapshot(snapshot = state.duelModeState.onlineSnapshot) {
-  if (snapshot?.status !== "battle") return null;
-  if (!snapshot?.roomId || !snapshot.players?.left?.playerId || !snapshot.players?.right?.playerId) return null;
-  if (!snapshot.players.left.characterId || !snapshot.players.right.characterId) return null;
-  const left = evaluateDuelCharacterById(snapshot.players.left.characterId, "left");
-  const right = evaluateDuelCharacterById(snapshot.players.right.characterId, "right");
-  if (!left || !right) return null;
-  if (
-    state.duelBattle?.onlineRoomId === snapshot.roomId &&
-    state.duelBattle?.left?.id === left.id &&
-    state.duelBattle?.right?.id === right.id
-  ) {
-    syncOnlineDuelBattleFromSnapshot(snapshot);
-    return state.duelBattle;
-  }
-  if (snapshot.battleState?.resourceState) {
-    state.duelBattle = cloneOnlineDuelBattleState(snapshot.battleState);
-    restoreOnlineDuelBattleRuntimeFields(state.duelBattle, snapshot, left, right);
-    setDuelBattleMode("online", {
-      activeBattleId: state.duelBattle.battleId,
-      activeRoomId: snapshot.roomId,
-      playerSide: state.duelModeState.playerSide || "left",
-      activePage: "online"
-    });
-  } else {
-    startDuelBattle({ mode: "online", allowOnline: true, snapshot, left, right });
-  }
-  return state.duelBattle;
-}
-
-function cloneOnlineDuelBattleState(value) {
-  if (!value || typeof value !== "object") return null;
-  try {
-    return JSON.parse(JSON.stringify(value));
-  } catch (error) {
-    return null;
-  }
-}
-
-function restoreOnlineDuelBattleRuntimeFields(battle, snapshot, left, right) {
-  if (!battle) return null;
-  battle.mode = "online";
-  battle.onlineRoomId = snapshot?.roomId || battle.onlineRoomId || "";
-  battle.onlinePlayerSide = state.duelModeState.playerSide || battle.onlinePlayerSide || "left";
-  battle.left = battle.left || left;
-  battle.right = battle.right || right;
-  battle.seed = battle.seed || snapshot?.battleSeed || createDuelBattleSeed(left, right);
-  battle.battleId = battle.battleId || createDuelBattleId(left, right, battle.seed);
-  battle.operations = Array.isArray(battle.operations) ? battle.operations : ["strategy:balanced"];
-  battle.randomLog = Array.isArray(battle.randomLog) ? battle.randomLog : [];
-  battle.log = Array.isArray(battle.log) ? battle.log : [];
-  battle.rng = createDuelSeededRng(battle.seed);
-  battle.selectedHandActions ||= { left: [], right: [] };
-  battle.currentOptions = Array.isArray(battle.currentOptions) ? battle.currentOptions : [];
-  battle.actionChoices = Array.isArray(battle.actionChoices) ? battle.actionChoices : [];
-  if (battle.resourceState) {
-    battle.resourceLog = battle.resourceState.resourceLog;
-    battle.residualLog = battle.resourceState.residualLog;
-    battle.resourceState.replayKey = battle.replayKey || battle.resourceState.replayKey || "";
-  }
-  return battle;
-}
-
-function syncOnlineDuelBattleFromSnapshot(snapshot) {
-  if (!snapshot?.battleState?.resourceState || !state.duelBattle) return;
-  const incoming = cloneOnlineDuelBattleState(snapshot.battleState);
-  if (!incoming) return;
-  const currentRound = Number(state.duelBattle.round || 0);
-  const incomingRound = Number(incoming.round || 0);
-  const currentLogSize = state.duelBattle.resourceState?.resourceLog?.length || 0;
-  const incomingLogSize = incoming.resourceState?.resourceLog?.length || 0;
-  if (incomingRound < currentRound || (incomingRound === currentRound && incomingLogSize < currentLogSize)) return;
-  const playerSide = state.duelModeState.playerSide || state.duelBattle.onlinePlayerSide || "left";
-  const preserveLocalSelection = Boolean(
-    playerSide &&
-    !snapshot.publicLocks?.[playerSide] &&
-    state.duelBattle?.onlineRoomId === snapshot.roomId &&
-    incomingRound === currentRound
-  );
-  const localSelections = preserveLocalSelection
-    ? cloneOnlineDuelBattleState(state.duelBattle.selectedHandActions?.[playerSide] || [])
-    : [];
-  const localPendingAction = preserveLocalSelection ? state.duelBattle.pendingAction : null;
-  const localActionUiMessage = preserveLocalSelection ? state.duelBattle.actionUiMessage : "";
-  const left = state.duelBattle.left;
-  const right = state.duelBattle.right;
-  state.duelBattle = incoming;
-  restoreOnlineDuelBattleRuntimeFields(state.duelBattle, snapshot, left, right);
-  if (preserveLocalSelection && localSelections?.length) {
-    state.duelBattle.selectedHandActions ||= { left: [], right: [] };
-    state.duelBattle.selectedHandActions[playerSide] = localSelections;
-    state.duelBattle.pendingAction = localPendingAction || localSelections[0]?.action || null;
-    state.duelBattle.actionUiMessage = localActionUiMessage || "";
-  }
-}
-
-function handleOnlineRoomStateEvent(event) {
-  const snapshot = event.detail?.snapshot || event.detail || {};
-  const side = event.detail?.side || (snapshot.players?.left?.playerId && snapshot.players?.right?.playerId ? "" : null);
-  if (!snapshot?.roomId) {
-    state.duelModeState.onlineSnapshot = null;
-    state.duelModeState.localLocked = false;
-    if (getDuelBattleMode() === "online") setDuelBattleMode("none", { activeRoomId: "", playerSide: null, activePage: "online" });
-    renderDuelMode();
-    return;
-  }
-  const playerSide = side || getBattlePageModule()?.getBattlePageState?.().playerSide || state.duelModeState.playerSide || "left";
-  state.duelModeState.onlineSnapshot = snapshot;
-  state.duelModeState.localLocked = Boolean(snapshot.publicLocks?.[playerSide]);
-  if (snapshot.status === "battle") {
-    forceOnlineBattleInterface(snapshot, playerSide);
-  } else {
-    setDuelBattleMode("online", {
-      activeRoomId: snapshot.roomId,
-      playerSide,
-      activePage: "online"
-    });
-  }
-  ensureOnlineDuelBattleFromSnapshot(snapshot);
-  renderDuelMode();
-}
-
 function renderDuelMode() {
   if (!els.duelLeftSelect || !els.duelRightSelect || !state.characterCards) return;
   const cards = getDuelCharacterCards();
@@ -1138,8 +1016,7 @@ function getCurrentDuelProfiles() {
 
 function startDuelBattle(options = {}) {
   if (isOnlineDuelModeActive() && options.mode !== "online" && !options.allowOnline) {
-    forceOnlineBattleInterface(state.duelModeState.onlineSnapshot, state.duelModeState.playerSide);
-    ensureOnlineDuelBattleFromSnapshot(state.duelModeState.onlineSnapshot);
+    forceOnlineBattleInterface(state.duelModeState.playerSide);
     window.alert("当前为联机对战，请在联机战斗界面操作。");
     renderDuelMode();
     return;
@@ -3142,7 +3019,7 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
     : onlineMode
       ? (needsAction
         ? "未选择手札时不能锁定行动。"
-        : "锁定后会写入 online pendingActions，不会触发单人结算。")
+        : "锁定后会提交到新版联机回合状态，不会触发单人结算。")
       : needsAction
         ? "未选择手札时不会推进战斗。"
         : "将按顺序结算已选手札；普通出牌以咒力预算为主，AP 仅保留为 legacy 显示。";
@@ -3557,113 +3434,6 @@ function runDuelAutoBattle() {
     renderDuelMode();
   }, 220);
 }
-
-function getOnlineDuelActionForSide(battle, side, actionId) {
-  const actor = side === "right" ? battle?.resourceState?.p2 : battle?.resourceState?.p1;
-  const opponent = side === "right" ? battle?.resourceState?.p1 : battle?.resourceState?.p2;
-  const pools = [
-    battle?.handCandidates,
-    battle?.actionChoices,
-    buildDuelHandCandidates(actor, opponent, battle, { side })
-  ];
-  for (const pool of pools) {
-    const match = (pool || []).find((item) => item?.id === actionId || item?.actionId === actionId || item?.action?.id === actionId);
-    if (match) return match.action || match;
-  }
-  const template = globalThis.JJKDuelActions?.getDuelActionTemplates?.()
-    ?.find?.((item) => item?.id === actionId || item?.actionId === actionId);
-  return template || null;
-}
-
-function buildOnlineDuelActionEntries(battle, side, actions = []) {
-  const actor = side === "right" ? battle?.resourceState?.p2 : battle?.resourceState?.p1;
-  const opponent = side === "right" ? battle?.resourceState?.p1 : battle?.resourceState?.p2;
-  return (actions || []).map((summary) => {
-    const actionId = summary?.actionId || summary?.id || "";
-    const action = getOnlineDuelActionForSide(battle, side, actionId);
-    if (!action?.id) return null;
-    return {
-      id: action.id,
-      actionId: action.id,
-      label: summary?.displayName || summary?.label || action.label || action.id,
-      action,
-      apCost: getDuelActionApCost(action, actor, opponent, battle),
-      ceCost: Number(action.ceCost ?? action.baseCeCost ?? action.costCe ?? 0),
-      source: "online-pending-action",
-      status: "LOCKED",
-      selectedRound: Math.max(1, Number(battle?.actionRound || battle?.round || 0) + 1),
-      side
-    };
-  }).filter(Boolean);
-}
-
-function applyOnlineTurnActionsToDuelBattleState(battleState, roomState) {
-  const snapshot = { ...(roomState || {}), battleState };
-  const battle = ensureOnlineDuelBattleFromSnapshot(snapshot) || state.duelBattle;
-  if (!battle?.resourceState) return battleState || {};
-  restoreOnlineDuelBattleRuntimeFields(
-    battle,
-    snapshot,
-    battle.left || evaluateDuelCharacterById(roomState?.players?.left?.characterId, "left"),
-    battle.right || evaluateDuelCharacterById(roomState?.players?.right?.characterId, "right")
-  );
-  maybeResolveDuelBattle(battle);
-  if (battle.resolved) return battle;
-  updateDuelActionAvailability(battle);
-  const leftEntries = buildOnlineDuelActionEntries(battle, "left", roomState?.pendingActions?.left);
-  const rightEntries = buildOnlineDuelActionEntries(battle, "right", roomState?.pendingActions?.right);
-  appendDuelHandBatchLog(battle, "left", leftEntries, { phase: "selected" });
-  appendDuelHandBatchLog(battle, "right", rightEntries, { phase: "selected" });
-  const leftResult = applyDuelSelectedHandActions(battle.resourceState.p1, battle.resourceState.p2, battle, {
-    side: "left",
-    actions: leftEntries
-  });
-  const rightResult = applyDuelSelectedHandActions(battle.resourceState.p2, battle.resourceState.p1, battle, {
-    side: "right",
-    actions: rightEntries
-  });
-  appendDuelHandBatchLog(battle, "left", leftEntries, { phase: "executed", result: leftResult });
-  appendDuelHandBatchLog(battle, "right", rightEntries, { phase: "executed", result: rightResult });
-  battle.currentActions = leftResult.actions || [];
-  battle.cpuActions = rightResult.actions || [];
-  battle.currentAction = battle.currentActions[0] || null;
-  battle.cpuAction = battle.cpuActions[0] || null;
-  const domainActivationPairs = [
-    ...battle.currentActions.map((action) => ({
-      action,
-      actor: battle.resourceState.p1,
-      opponent: battle.resourceState.p2,
-      responseAction: battle.cpuActions[0] || null
-    })),
-    ...battle.cpuActions.map((action) => ({
-      action,
-      actor: battle.resourceState.p2,
-      opponent: battle.resourceState.p1,
-      responseAction: battle.currentActions[0] || null
-    }))
-  ];
-  resolveDuelDomainProfileActivations(battle, domainActivationPairs);
-  battle.currentOptions = buildDuelRoundOptions(battle);
-  const result = drawWeightedDuelOption(battle.currentOptions, () => duelRandom(battle, "onlineRoundEvent"));
-  if (result) {
-    battle.operations.push(`online:${roomState?.turn || battle.round + 1}:left:${battle.currentActions.map((action) => action.id).join("+") || "none"}:right:${battle.cpuActions.map((action) => action.id).join("+") || "none"}:event:${result.index}`);
-    updateDuelResourceReplayKey(battle);
-    applyDuelRoundResult(battle, result);
-  }
-  battle.currentOptions = [];
-  battle.selectedIndex = null;
-  battle.pendingAction = null;
-  battle.actionUiMessage = "";
-  maybeResolveDuelBattle(battle);
-  if (!battle.resolved) updateDuelActionAvailability(battle);
-  state.duelBattle = battle;
-  renderDuelMode();
-  return battle;
-}
-
-globalThis.JJKOnlineFightAdapter = {
-  applyOnlineTurnActionsToBattleState: applyOnlineTurnActionsToDuelBattleState
-};
 
 function buildDuelRoundOptions(battle) {
   const leftTactic = getDuelTacticDefinition(battle.selectedTactic);
