@@ -3,7 +3,6 @@ import { ApiModule } from "./api.js?v=20260428-v1.390A-combat-core-rationalizati
 import { CharacterModule } from "./character.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { LifeWheelModule } from "./life-wheel.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { FightModule } from "./fight.js?v=20260428-v1.390A-combat-core-rationalization-pass";
-import { OnlineModule } from "./online.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { BattlePageModule } from "./jjk-battle-page.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { UiModule } from "./ui.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { DebugModule } from "./debug.js?v=20260428-v1.390A-combat-core-rationalization-pass";
@@ -15,7 +14,6 @@ import "./main/main.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 // import { CharacterModule } from "./character.js"
 // import { LifeWheelModule } from "./life-wheel.js"
 // import { FightModule } from "./fight.js"
-// import { OnlineModule } from "./online.js"
 // import { BattlePageModule } from "./jjk-battle-page.js"
 // import { UiModule } from "./ui.js"
 // import { DebugModule } from "./debug.js"
@@ -94,9 +92,6 @@ function buildModuleRegistry() {
         "JJKDuelCardTemplate",
         "JJKDuelFeedback",
         "JJKDuelEndCondition"
-      ]),
-      online: createModuleRecord("online", "OnlineModule", OnlineModule, [
-        "JJKOnline"
       ]),
       battlePage: createModuleRecord("battlePage", "BattlePageModule", BattlePageModule, [
         "JJKBattlePage"
@@ -251,7 +246,6 @@ export const JJKSite = {
     lifeWheel: LifeWheelModule,
     api: ApiModule,
     fight: FightModule,
-    online: OnlineModule,
     battlePage: BattlePageModule,
     ui: UiModule,
     tools: ToolsModule,
