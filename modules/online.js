@@ -6,9 +6,10 @@ const PLAYER_ID_STORAGE_KEY = "jjk-online-battle-player-id-v1";
 const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-battle-active-room-v1";
 const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
 const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
+const DEBUG_LOG_STORAGE_KEY = "jjk-online-battle-debug-log-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REMOTE_OPERATION_TIMEOUT_MS = 30000;
-const ONLINE_DEBUG_LIMIT = 24;
+const ONLINE_DEBUG_LIMIT = 60;
 const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const LOCAL_DEFAULT_ENDPOINT = "";
 
@@ -74,18 +75,35 @@ function compactDebug(value) {
 }
 
 function pushDebugEvent(event = {}) {
+  if (event.operation === "getRoom" && ["send", "ok"].includes(event.level)) return;
   const entry = {
     time: new Date().toLocaleTimeString(),
     ...redactSecrets(event)
   };
   debugEvents.unshift(entry);
   if (debugEvents.length > ONLINE_DEBUG_LIMIT) debugEvents.length = ONLINE_DEBUG_LIMIT;
+  try {
+    storage("session")?.setItem?.(DEBUG_LOG_STORAGE_KEY, JSON.stringify(debugEvents));
+  } catch {
+    // Debug logging must never break online gameplay.
+  }
   renderDebugLog();
+}
+
+function restoreDebugEvents() {
+  if (debugEvents.length) return;
+  try {
+    const parsed = JSON.parse(storage("session")?.getItem?.(DEBUG_LOG_STORAGE_KEY) || "[]");
+    if (Array.isArray(parsed)) debugEvents.push(...parsed.slice(0, ONLINE_DEBUG_LIMIT));
+  } catch {
+    debugEvents.length = 0;
+  }
 }
 
 function renderDebugLog() {
   const node = typeof document === "undefined" ? null : document.querySelector("#onlineDebugLog");
   if (!node) return;
+  restoreDebugEvents();
   node.textContent = debugEvents.length
     ? debugEvents.map((event) => `[${event.time}] ${event.level || "info"} ${event.operation || ""} ${event.message || ""} ${compactDebug(event.detail)}`).join("\n")
     : "暂无联机调试日志。";
@@ -693,14 +711,17 @@ function lockSelectedTurnFromBattle() {
     showError(error);
     return Promise.reject(error);
   }
+  pushDebugEvent({ level: "info", operation: "lockTurn", message: "已读取手札，准备提交锁定行动", detail: { roomId: uiState.roomId, side: uiState.side, actionsCount: actions.length } });
   return lockTurn(uiState.roomId, uiState.side, actions, { playerId: uiState.playerId })
     .then((room) => {
+      const localLocked = room.phase === "turn_selecting" && Boolean(room.turnState?.locks?.[room.viewerSide || uiState.side]);
       globalThis.JJKBattlePage?.setBattleMode?.("online", {
         activeRoomId: room.roomId || uiState.roomId,
         playerSide: room.viewerSide || uiState.side,
         activePage: "online",
-        localLocked: true
+        localLocked
       });
+      globalThis.JJKDuelRuntime?.syncOnlineRoomState?.(room, room.viewerSide || uiState.side);
       render(room);
       return room;
     })
@@ -923,6 +944,7 @@ function render(room = {}) {
   if (handleRemovedFromRoom(room)) return;
   const opponent = side ? otherSide(side) : "right";
   syncBattlePageLockState(room, side);
+  syncDuelRuntimeRoomState(room, side);
   maybeEnterBattleView(room, side);
   setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
   setText("#onlineRoomCode", room.roomId || "未创建");
@@ -944,6 +966,11 @@ function render(room = {}) {
   updateButtons(room, side);
   renderBackendControls();
   renderDebugLog();
+}
+
+function syncDuelRuntimeRoomState(room, side) {
+  if (!room?.roomId || !side) return;
+  globalThis.JJKDuelRuntime?.syncOnlineRoomState?.(room, side);
 }
 
 function handleRemovedFromRoom(room = {}) {
@@ -1153,6 +1180,7 @@ function bindUi() {
   $("#onlineLeaveRoomBtn")?.addEventListener("click", () => leaveRoom(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(() => render({})).catch(showError));
   $("#onlineCopyRoomCodeBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.(uiState.roomId || ""));
   $("#onlineCopyInviteBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.($("#onlineInviteLink")?.value || ""));
+  $("#onlineCopyDebugLogBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.($("#onlineDebugLog")?.textContent || ""));
   if (uiState.roomId) {
     getRoomState(uiState.roomId, { side: uiState.side, viewerSide: uiState.side }).then((room) => {
       render(room);

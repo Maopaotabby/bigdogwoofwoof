@@ -896,10 +896,56 @@ function setDuelBattleMode(mode, patch = {}) {
     activeBattleId: state.duelModeState.activeBattleId,
     activeRoomId: state.duelModeState.activeRoomId,
     playerSide: state.duelModeState.playerSide,
+    localLocked: state.duelModeState.localLocked,
     activePage: patch.activePage
   });
   syncDuelModeIsolation();
   return state.duelModeState;
+}
+
+function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerSide || "left") {
+  const battle = state.duelBattle;
+  if (!battle || battle.mode !== "online" || !room?.roomId) return null;
+  const roomId = String(room.roomId || "");
+  if (battle.onlineRoomId && battle.onlineRoomId !== roomId) return battle;
+  const side = playerSide === "right" ? "right" : "left";
+  const localLocked = room.phase === "turn_selecting" && Boolean(room.turnState?.locks?.[side]);
+  const serverRound = Math.max(1, Number(room.round) || 1);
+  const targetBattleRound = Math.max(0, serverRound - 1);
+  const previousRound = battle.round;
+  battle.onlineRoomId = roomId;
+  battle.onlinePlayerSide = side;
+  setDuelBattleMode("online", {
+    activeBattleId: battle.battleId,
+    activeRoomId: roomId,
+    playerSide: side,
+    localLocked,
+    activePage: "online"
+  });
+  if (targetBattleRound > battle.round) {
+    battle.round = targetBattleRound;
+    if (battle.resourceState) battle.resourceState.round = battle.round;
+    clearDuelSelectedHandActions(battle, "left", { refund: false });
+    battle.pendingAction = null;
+    battle.currentAction = null;
+    battle.currentActions = [];
+    battle.cpuAction = null;
+    battle.cpuActions = [];
+    battle.actionChoices = [];
+    battle.handCandidates = [];
+    updateDuelActionAvailability(battle);
+    battle.actionUiMessage = room.reviewState?.lastAiDebug?.source === "ai_error_fallback"
+      ? `AI 结算超时，服务器已进入第 ${serverRound} 回合。`
+      : `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
+  } else if (room.phase === "turn_resolving") {
+    battle.actionUiMessage = "双方已锁定，正在等待服务器 AI 结算。";
+  } else if (localLocked) {
+    battle.actionUiMessage = "行动已锁定，等待对方锁定或服务器结算。";
+  } else if (battle.actionUiMessage === "正在提交联机行动..." || battle.actionUiMessage === "正在发送联机行动...") {
+    battle.actionUiMessage = previousRound !== battle.round ? "" : "服务器已同步，请选择或锁定本回合手札。";
+  }
+  renderDuelMode();
+  return battle;
 }
 
 function isOnlineDuelModeActive() {
@@ -1107,6 +1153,7 @@ globalThis.JJKDuelRuntime = {
   ...(globalThis.JJKDuelRuntime || {}),
   startDuelBattle,
   renderDuelMode,
+  syncOnlineRoomState,
   getDuelBattle: () => state.duelBattle,
   getDuelModeState: () => ({ ...state.duelModeState })
 };
@@ -3081,9 +3128,17 @@ function bindDuelBattleControls() {
   els.duelBattle.querySelector("#duelAutoRunBtn")?.addEventListener("click", runDuelAutoBattle);
   els.duelBattle.querySelector("#duelOnlineLockFromHandBtn")?.addEventListener("click", () => {
     if (globalThis.JJKOnline?.lockSelectedTurnFromBattle) {
-      state.duelBattle.actionUiMessage = "正在提交联机行动...";
+      state.duelBattle.actionUiMessage = "正在发送联机行动...";
       renderDuelMode();
-      Promise.resolve().then(() => globalThis.JJKOnline.lockSelectedTurnFromBattle()).catch((error) => {
+      Promise.resolve().then(() => globalThis.JJKOnline.lockSelectedTurnFromBattle()).then((room) => {
+        if (!state.duelBattle) return;
+        if (room) {
+          syncOnlineRoomState(room, room.viewerSide || state.duelModeState.playerSide || "left");
+          return;
+        }
+        state.duelBattle.actionUiMessage = "行动已发送，等待服务器同步。";
+        renderDuelMode();
+      }).catch((error) => {
         if (state.duelBattle) {
           state.duelBattle.actionUiMessage = `联机行动提交失败：${error?.message || "请检查房间状态后重试。"}`;
           renderDuelMode();

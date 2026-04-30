@@ -532,11 +532,17 @@ async function handleOperation(env, body) {
       debug: roomDebug(saved, {
         operation,
         side,
+        accepted: true,
+        lockedSide: side,
         actionsCount: actions.length,
+        bothLocked: shouldResolve,
         triggeredResolve: shouldResolve,
         aiStatus: saved.turnState?.aiStatus || "",
+        aiError: saved.reviewState?.lastAiDebug?.error || "",
         phaseBefore: debugBefore.phase,
-        roundBefore: debugBefore.round
+        roundBefore: debugBefore.round,
+        roundAfter: saved.round,
+        nextTurnId: saved.turnState?.turnId || ""
       }),
       room: snapshot(saved, side),
       side

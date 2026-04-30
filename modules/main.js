@@ -21,7 +21,7 @@ import "./main/main.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 // import { DebugModule } from "./debug.js"
 // import "./main/main.js"
 
-const APP_BUILD_VERSION = "20260428-v1.390A-combat-core-rationalization-pass";
+const APP_BUILD_VERSION = "20260430-online-round-sync-v1";
 const legacyMain = globalThis.JJKMain || null;
 const RUNTIME_CHUNKS = Object.freeze([
   { id: "wheel-core", path: "../wheel/runtime-core.js" },
