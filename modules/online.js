@@ -1,4 +1,4 @@
-const APP_BUILD_VERSION = "20260430-online-rule-engine-v1";
+const APP_BUILD_VERSION = "20260430-online-help-official-default-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
@@ -7,15 +7,16 @@ const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-battle-active-room-v1";
 const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
 const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
 const DEBUG_LOG_STORAGE_KEY = "jjk-online-battle-debug-log-v1";
+const ONLINE_HELP_SEEN_STORAGE_KEY = "jjk-online-battle-help-seen-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REMOTE_OPERATION_TIMEOUT_MS = 35000;
 const ONLINE_DEBUG_LIMIT = 60;
 const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
-const LOCAL_DEFAULT_ENDPOINT = "";
+const LOCAL_DEFAULT_ENDPOINT = "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev";
 
 const DEFAULT_RULES = Object.freeze({
   backend: {
-    defaultMode: "local_mock_backend",
+    defaultMode: "official_endpoint",
     officialEndpoint: { url: LOCAL_DEFAULT_ENDPOINT },
     supportedModes: ["local_mock_backend", "official_endpoint", "custom_endpoint"]
   },
@@ -213,6 +214,38 @@ function clearBackendSettings() {
 
 function shouldUseRemote(options = {}) {
   return getBackendSettings(options).backendMode !== "local_mock_backend";
+}
+
+function getOnlineHelpText() {
+  return [
+    "联机模式使用说明",
+    "",
+    "基本网络配置：",
+    "1. 默认使用官方联机服务器，普通玩家不需要填写 Endpoint。",
+    "2. 如果创建或加入失败，先点“测试官方服务器”，确认网络能访问官方服务器。",
+    "3. 高级后端设置只给开发测试使用：本地 mock 只能同一浏览器或双标签测试，不能跨设备；自定义 Endpoint 必须兼容 jjk_online_battle_v1 的 POST 协议。",
+    "",
+    "对战操作流程：",
+    "1. 房主选择角色后点击“创建新房间”，把房间码或邀请链接发给对手。",
+    "2. 对手输入房间码或打开邀请链接，选择角色后加入房间。",
+    "3. 双方都点击“锁定角色”后进入对战阶段。",
+    "4. 在联机手札区选择至少一张手札，然后点击“锁定行动”。",
+    "5. 双方都锁定后，服务器会请求 AI 裁判说明，本地规则引擎会同步结算 HP、CE、AP 和战斗记录。",
+    "6. 如果行动选错，可以在双方结算前点击“取消锁定”重新选择。",
+    "7. 对局结束或需要重开时，可以使用“再来一把”或“回到准备阶段”。"
+  ].join("\n");
+}
+
+function showOnlineHelpOnce(force = false) {
+  const store = storage("local");
+  if (!force && store?.getItem?.(ONLINE_HELP_SEEN_STORAGE_KEY) === "true") return;
+  store?.setItem?.(ONLINE_HELP_SEEN_STORAGE_KEY, "true");
+  globalThis.alert?.(getOnlineHelpText());
+}
+
+function handleBattlePageStateForHelp(event = {}) {
+  const pageState = event.detail || globalThis.JJKBattlePage?.getBattlePageState?.() || {};
+  if (pageState.activePage === "online") showOnlineHelpOnce();
 }
 
 function createEmptyPlayer(side) {
@@ -1129,7 +1162,7 @@ async function renderBackendControls() {
     ? "本地 mock 使用浏览器 localStorage，只适合同一浏览器或双标签测试。"
     : "新版联机使用 POST operation 协议；服务器负责房间阶段、角色快照、行动锁定和后续 AI broker。");
   setText("#onlineOfficialStatus", settings.backendMode === "official_endpoint"
-    ? "官方新版联机服务器需要部署 jjk_online_battle_v1 协议。"
+    ? "当前默认使用官方联机服务器；普通玩家无需填写 Endpoint。"
     : "当前未使用官方服务器。");
 }
 
@@ -1204,7 +1237,11 @@ function bindUi() {
     if (!uiState.roomId) render({});
   }, 1200);
   document.addEventListener("jjk-duel-character-pool-changed", syncCharacterSelects);
-  document.addEventListener("jjk-battle-page-state", syncCharacterSelects);
+  document.addEventListener("jjk-battle-page-state", (event) => {
+    syncCharacterSelects();
+    handleBattlePageStateForHelp(event);
+  });
+  handleBattlePageStateForHelp();
   $("#onlineBackendMode")?.addEventListener("change", () => {
     saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value });
     renderBackendControls();
