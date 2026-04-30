@@ -973,6 +973,27 @@
   function applyDuelActionEffect(action, actor, opponent, duelState) {
     var battle = getBattle(duelState);
     if (!action || !actor || !opponent || !battle) return null;
+    if (action.id === "online_pass_turn" || action.id === "duel_pass_turn" || action.type === "pass") {
+      var passResult = {
+        costCe: 0,
+        actorCe: 0,
+        actorHp: 0,
+        actorStability: 0,
+        actorDomainLoad: 0,
+        opponentStability: 0,
+        opponentHp: 0,
+        opponentDomainLoad: 0,
+        domainActivated: false,
+        domainReleased: false,
+        directDamage: 0,
+        blackFlashTriggered: false,
+        blackFlashLabel: "",
+        mechanicsApplied: [],
+        passTurn: true
+      };
+      appendDuelActionLog(action, actor, opponent, passResult, battle);
+      return passResult;
+    }
     var side = actor.side;
     var opponentSide = opponent.side;
     var mechanicsApplied = collectDuelMechanicsForAction(action);

@@ -912,6 +912,36 @@ function clonePlain(value) {
   }
 }
 
+function createDuelPassTurnAction(side = "left", battle = state.duelBattle) {
+  const turn = Number(battle?.round || 0) + 1;
+  const action = {
+    id: "duel_pass_turn",
+    label: "本回合待机",
+    name: "本回合待机",
+    type: "pass",
+    cardType: "pass",
+    risk: "low",
+    costCe: 0,
+    ceCost: 0,
+    baseCeCost: 0,
+    apCost: 0,
+    effects: {},
+    description: "无法或不选择手札时，保守待机并推进回合。"
+  };
+  return {
+    id: action.id,
+    actionId: action.id,
+    label: action.label,
+    action,
+    apCost: 0,
+    ceCost: 0,
+    source: "pass_turn",
+    status: "CANDIDATE",
+    selectedRound: turn,
+    side
+  };
+}
+
 function getSelectedOnlineActionSnapshots(side = state.duelModeState.playerSide || "left") {
   const battle = state.duelBattle;
   if (!battle) return [];
@@ -2676,7 +2706,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
         ? "未选择手札时也可以锁定待机，用于咒力归零或没有可用手札的回合。"
         : "可以锁定行动；若继续选择手札，主要受咒力和状态限制。")
       : (!selectedEntries.length
-        ? "请选择至少一张手札后执行回合。"
+        ? "未选择手札时将以 0 咒力待机行动推进回合。"
         : "可以执行回合，也可以继续选择咒力足够且状态允许的手札。");
   const regenBlocked = getDuelStatusEffectValue(actor, "ceRegenBlocked") > 0;
   const domainRisk = actor?.domain?.threshold
@@ -3195,7 +3225,7 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
   const selectedCount = getDuelSelectedHandActions(battle, actorSide).length;
   const apState = getDuelApState(battle, actorSide);
   const onlineMode = isOnlineDuelModeActive();
-  const needsAction = !onlineMode && selectedCount < 1;
+  const needsAction = false;
   const onlineLocked = onlineMode && state.duelModeState.localLocked;
   const buttonText = onlineLocked
     ? "已锁定，等待对手"
@@ -3203,7 +3233,7 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
       ? (selectedCount ? "锁定行动" : "锁定待机")
       : battle.autoRunning
     ? "生成阶段中..."
-    : (needsAction ? "请选择至少一张手札" : "执行回合");
+    : (selectedCount ? "执行回合" : "待机过回合");
   const resolveHint = onlineLocked
     ? "联机行动已锁定；等待对方锁定后结算。"
     : onlineMode
@@ -3212,6 +3242,8 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
         : "当前没有选择手札；将以 0 咒力待机行动锁定本回合，避免流程卡死。")
       : needsAction
         ? "未选择手札时不会推进战斗。"
+        : !selectedCount
+          ? "当前没有选择手札；将以 0 咒力待机行动推进回合，避免流程卡死。"
         : "将按顺序结算已选手札；普通出牌以咒力预算为主，AP 仅保留为 legacy 显示。";
   return `
     <div class="duel-auto-stage">
@@ -3547,12 +3579,6 @@ function pickDuelOpponentTactic(battle) {
 function runDuelAutoBattle() {
   const battle = state.duelBattle;
   if (!battle || battle.autoRunning || battle.resolved) return;
-  if (!getDuelSelectedHandActions(battle, getDuelControlledSide(battle)).length) {
-    updateDuelActionAvailability(battle);
-    battle.actionUiMessage = "请先选择至少一张本回合手札。";
-    renderDuelMode();
-    return;
-  }
   maybeResolveDuelBattle(battle);
   if (battle.resolved) {
     renderDuelMode();
@@ -3577,18 +3603,15 @@ function runDuelAutoBattle() {
     }
 
     activeBattle.opponentTactic = pickDuelOpponentTactic(activeBattle);
-    const leftSelections = getDuelSelectedHandActions(activeBattle, "left");
-    if (!leftSelections.length) {
-      activeBattle.autoRunning = false;
-      activeBattle.actionUiMessage = "请先选择至少一张本回合手札。";
-      renderDuelMode();
-      return;
-    }
-    const rightSelections = pickDuelCpuHandActions(activeBattle.resourceState?.p2, activeBattle.resourceState?.p1, activeBattle, { side: "right" });
+    const leftSelections = getDuelSelectedHandActions(activeBattle, "left").length
+      ? getDuelSelectedHandActions(activeBattle, "left")
+      : [createDuelPassTurnAction("left", activeBattle)];
+    const pickedRightSelections = pickDuelCpuHandActions(activeBattle.resourceState?.p2, activeBattle.resourceState?.p1, activeBattle, { side: "right" });
+    const rightSelections = pickedRightSelections.length ? pickedRightSelections : [createDuelPassTurnAction("right", activeBattle)];
     appendDuelHandBatchLog(activeBattle, "left", leftSelections, { phase: "selected" });
     appendDuelHandBatchLog(activeBattle, "right", rightSelections, { phase: "selected" });
     activeBattle.actionContext = null;
-    const leftHandResult = applyDuelSelectedHandActions(activeBattle.resourceState.p1, activeBattle.resourceState.p2, activeBattle, { side: "left" });
+    const leftHandResult = applyDuelSelectedHandActions(activeBattle.resourceState.p1, activeBattle.resourceState.p2, activeBattle, { side: "left", actions: leftSelections });
     if (!leftHandResult?.applied) {
       appendDuelHandBatchLog(activeBattle, "left", leftSelections, { phase: "executed", result: leftHandResult });
       activeBattle.autoRunning = false;
@@ -3598,9 +3621,7 @@ function runDuelAutoBattle() {
       renderDuelMode();
       return;
     }
-    const rightHandResult = rightSelections.length
-      ? applyDuelSelectedHandActions(activeBattle.resourceState.p2, activeBattle.resourceState.p1, activeBattle, { side: "right" })
-      : { applied: false, actions: [], results: [] };
+    const rightHandResult = applyDuelSelectedHandActions(activeBattle.resourceState.p2, activeBattle.resourceState.p1, activeBattle, { side: "right", actions: rightSelections });
     appendDuelHandBatchLog(activeBattle, "left", leftSelections, { phase: "executed", result: leftHandResult });
     appendDuelHandBatchLog(activeBattle, "right", rightSelections, { phase: "executed", result: rightHandResult });
     const leftActions = leftHandResult.actions || [];
