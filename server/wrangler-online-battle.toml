@@ -1,0 +1,16 @@
+name = "jjk-online-battle"
+main = "online-battle-worker.js"
+compatibility_date = "2026-04-30"
+workers_dev = true
+preview_urls = true
+
+[vars]
+AI_PROVIDER = "openai_compatible"
+AI_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+AI_MODEL = "doubao-seed-2-0-mini-260215"
+AI_MAX_TOKENS = "700"
+AI_TEMPERATURE = "0.4"
+
+[[kv_namespaces]]
+binding = "JJK_ONLINE_ROOMS"
+id = "e18d34fbddaf413d9bb01ac69d8423ee"

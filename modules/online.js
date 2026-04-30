@@ -521,6 +521,8 @@ function resolveTurn(roomId, options = {}) {
 }
 
 function rematch(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("rematch", { roomId, side: options.side || uiState.side }, settings);
   const room = requireLocalRoom(roomId);
   const actorSide = authorizeSide(room, options.side || uiState.side, options);
   room.round = 1;
@@ -535,6 +537,8 @@ function rematch(roomId, options = {}) {
 }
 
 function resetToPreparing(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  if (shouldUseRemote(settings)) return remoteOperation("resetToPreparing", { roomId, side: options.side || uiState.side }, settings);
   const room = requireLocalRoom(roomId);
   const actorSide = authorizeSide(room, options.side || uiState.side, options);
   if (actorSide !== "left" && room.ownerPlayerId !== (options.playerId || uiState.playerId)) throw new Error("只有房主可以重回准备阶段。");

@@ -5,17 +5,17 @@
   "protocol": "jjk_online_battle_v1",
   "description": "Rewritten online battle room rules. This file defines the new room phase protocol and intentionally does not use the old online alpha room flow.",
   "backend": {
-    "defaultMode": "local_mock_backend",
+    "defaultMode": "official_endpoint",
     "supportedModes": ["local_mock_backend", "official_endpoint", "custom_endpoint"],
     "officialEndpoint": {
-      "enabled": false,
+      "enabled": true,
       "label": "官方联机服务器",
-      "url": "",
+      "url": "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev",
       "requiresUserConfig": false,
       "notes": [
         "旧 jjk_online_room_alpha Worker 不兼容新版联机模式。",
-        "官方服务器部署新版 jjk_online_battle_v1 协议后再填写 url。",
-        "新版服务器将负责房间阶段、角色快照、行动锁定和后续 AI broker。"
+        "当前官方服务器已部署 jjk_online_battle_v1 协议。",
+        "新版服务器负责房间阶段、角色快照、行动锁定和服务器端 AI broker。"
       ]
     },
     "localMock": {
