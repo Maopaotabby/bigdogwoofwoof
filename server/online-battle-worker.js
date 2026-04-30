@@ -1,11 +1,12 @@
 import OpenAI from "openai";
 
 const PROTOCOL = "jjk_online_battle_v1";
-const WORKER_BUILD_VERSION = "20260430-no-ai-judge-lock-delay-v1";
+const WORKER_BUILD_VERSION = "20260430-online-pass-turn-v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
+const PASS_TURN_ACTION_ID = "online_pass_turn";
 const memoryRooms = new Map();
 
 function json(data, status = 200) {
@@ -132,8 +133,7 @@ function hasBothLockedCharacters(room) {
 }
 
 function hasBothLockedActions(room) {
-  return Boolean(room?.turnState?.locks?.left && room?.turnState?.locks?.right &&
-    room.turnState.actions?.left?.length && room.turnState.actions?.right?.length);
+  return Boolean(room?.turnState?.locks?.left && room?.turnState?.locks?.right);
 }
 
 function normalizeActions(actions = []) {
@@ -146,6 +146,37 @@ function normalizeActions(actions = []) {
     action: redactSecrets(action?.action || action?.actionSnapshot || null),
     source: "player_locked_action"
   }));
+}
+
+function createPassTurnAction() {
+  return {
+    actionId: PASS_TURN_ACTION_ID,
+    displayName: "本回合待机",
+    cardType: "pass",
+    apCost: 0,
+    ceCost: 0,
+    selectedRound: 0,
+    action: {
+      id: PASS_TURN_ACTION_ID,
+      label: "本回合待机",
+      name: "本回合待机",
+      type: "pass",
+      cardType: "pass",
+      risk: "low",
+      costCe: 0,
+      ceCost: 0,
+      baseCeCost: 0,
+      apCost: 0,
+      effects: {},
+      description: "无法或不选择手札时，保守待机并推进联机回合。"
+    },
+    source: "player_pass_turn"
+  };
+}
+
+function normalizeActionsOrPass(actions = []) {
+  const normalized = normalizeActions(actions);
+  return normalized.length ? normalized : [createPassTurnAction()];
 }
 
 function appendLog(room, type, message, patch = {}) {
@@ -586,8 +617,7 @@ async function handleOperation(env, body) {
   if (operation === "lockTurn") {
     const debugBefore = roomDebug(room, { operation, side, requestId });
     if (room.phase !== "turn_selecting") return json({ ok: false, error: "当前不能锁定行动。", requestId, debug: debugBefore }, 409);
-    const actions = normalizeActions(payload.actions);
-    if (!actions.length) return json({ ok: false, error: "请先选择至少一张手札。", requestId, debug: { ...debugBefore, actionsCount: 0 } }, 409);
+    const actions = normalizeActionsOrPass(payload.actions);
     room.turnState.actions[side] = actions;
     room.turnState.locks[side] = true;
     room.players[side].actionLocked = true;

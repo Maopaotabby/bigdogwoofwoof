@@ -2673,7 +2673,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
     ? "联机行动已锁定；等待对方锁定或结算。"
     : onlineMode
       ? (!selectedEntries.length
-        ? "请选择至少一张手札后锁定行动。"
+        ? "未选择手札时也可以锁定待机，用于咒力归零或没有可用手札的回合。"
         : "可以锁定行动；若继续选择手札，主要受咒力和状态限制。")
       : (!selectedEntries.length
         ? "请选择至少一张手札后执行回合。"
@@ -3194,22 +3194,22 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
   const actorSide = getDuelControlledSide(battle);
   const selectedCount = getDuelSelectedHandActions(battle, actorSide).length;
   const apState = getDuelApState(battle, actorSide);
-  const needsAction = selectedCount < 1;
   const onlineMode = isOnlineDuelModeActive();
+  const needsAction = !onlineMode && selectedCount < 1;
   const onlineLocked = onlineMode && state.duelModeState.localLocked;
   const buttonText = onlineLocked
     ? "已锁定，等待对手"
     : onlineMode
-      ? (needsAction ? "请先选择手札" : "锁定行动")
+      ? (selectedCount ? "锁定行动" : "锁定待机")
       : battle.autoRunning
     ? "生成阶段中..."
     : (needsAction ? "请选择至少一张手札" : "执行回合");
   const resolveHint = onlineLocked
     ? "联机行动已锁定；等待对方锁定后结算。"
     : onlineMode
-      ? (needsAction
-        ? "未选择手札时不能锁定行动。"
-        : "锁定后会提交到新版联机回合状态，不会触发单人结算。")
+      ? (selectedCount
+        ? "锁定后会提交到新版联机回合状态，不会触发单人结算。"
+        : "当前没有选择手札；将以 0 咒力待机行动锁定本回合，避免流程卡死。")
       : needsAction
         ? "未选择手札时不会推进战斗。"
         : "将按顺序结算已选手札；普通出牌以咒力预算为主，AP 仅保留为 legacy 显示。";

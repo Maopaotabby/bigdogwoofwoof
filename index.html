@@ -455,7 +455,7 @@
                   </article>
                 </div>
                 <div class="online-alpha-actions online-turn-actions">
-                  <button id="onlineLockTurnBtn" class="primary" type="button" hidden>请先选择手札</button>
+                  <button id="onlineLockTurnBtn" class="primary" type="button" hidden>锁定行动</button>
                   <button id="onlineUnlockTurnBtn" class="secondary" type="button">取消锁定</button>
                   <button id="onlineResolveTurnBtn" class="secondary" type="button">等待自动结算</button>
                   <button id="onlineRematchBtn" class="secondary" type="button">再来一把</button>
@@ -998,6 +998,7 @@
           <div class="panel notes-panel">
             <h2>更新日志</h2>
               <ul>
+          <li>2.0-hotfix（联机待机过回合）：联机模式允许未选择手札时锁定 0 咒力待机行动，解决咒力归零或无可用手札时无法过回合的问题；双方锁定后仍由本地规则引擎同步结算。</li>
           <li>2.0-hotfix（联机结算去 AI 裁判）：双方锁定行动后不再请求 AI 裁判，服务器只保留 1 秒锁定反馈并交由本地规则引擎快速进入下一回合；AI 功能保留到对战结束后的“AI生成对战过程”。</li>
           <li>2.0（联机模式开放）：联机模式默认使用官方联机服务器；首次进入联机页会弹出简体中文使用说明，说明创建 / 加入房间、锁定角色、选择手札、锁定行动、自动结算和高级后端网络配置。</li>
           <li>1.390A（战斗核心合理化）：普通手札改以咒力预算为主，AP 降级为 legacy 显示；实战卡补齐基础数值和角色属性倍率预览，zero CE 卡不扣咒力，领域负荷只属于展开领域的一方，并区分领域崩解与术式烧断；黑闪仍不是主动卡，只作为窗口触发并加强受击反馈。</li>
@@ -1090,6 +1091,6 @@
       </main>
     </div>
 
-  <script type="module" src="./modules/main.js?v=20260430-no-ai-judge-lock-delay-v1&esm=7"></script>
+  <script type="module" src="./modules/main.js?v=20260430-online-pass-turn-v1&esm=7"></script>
 </body>
 </html>

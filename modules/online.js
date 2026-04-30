@@ -1,4 +1,4 @@
-const APP_BUILD_VERSION = "20260430-no-ai-judge-lock-delay-v1";
+const APP_BUILD_VERSION = "20260430-online-pass-turn-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
@@ -13,6 +13,7 @@ const REMOTE_OPERATION_TIMEOUT_MS = 35000;
 const ONLINE_DEBUG_LIMIT = 60;
 const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const LOCAL_DEFAULT_ENDPOINT = "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev";
+const PASS_TURN_ACTION_ID = "online_pass_turn";
 
 const DEFAULT_RULES = Object.freeze({
   backend: {
@@ -252,7 +253,7 @@ function getOnlineHelpText() {
     "1. 房主选择角色后点击“创建新房间”，把房间码或邀请链接发给对手。",
     "2. 对手输入房间码或打开邀请链接，选择角色后加入房间。",
     "3. 双方都点击“锁定角色”后进入对战阶段。",
-    "4. 在联机手札区选择至少一张手札，然后点击“锁定行动”。",
+    "4. 在联机手札区选择手札后点击“锁定行动”；如果本回合咒力归零或没有可用手札，也可以直接锁定待机来跳过本回合。",
     "5. 双方都锁定后，服务器会短暂停留显示锁定状态，然后由本地规则引擎同步结算 HP、CE、AP 和战斗记录。",
     "6. 如果行动选错，可以在双方结算前点击“取消锁定”重新选择。",
     "7. 对局结束或需要重开时，可以使用“再来一把”或“回到准备阶段”。"
@@ -600,12 +601,11 @@ function unlockCharacter(roomId, side, options = {}) {
 
 function lockTurn(roomId, side, actions = [], options = {}) {
   const settings = getBackendSettings(options);
-  if (shouldUseRemote(settings)) return remoteOperation("lockTurn", { roomId, side, payload: { actions: normalizeActions(actions) } }, settings);
+  const normalized = normalizeActionsOrPass(actions);
+  if (shouldUseRemote(settings)) return remoteOperation("lockTurn", { roomId, side, payload: { actions: normalized } }, settings);
   const room = requireLocalRoom(roomId);
   const actorSide = authorizeSide(room, side, options);
   if (room.phase !== "turn_selecting") throw new Error("当前不能锁定行动。");
-  const normalized = normalizeActions(actions);
-  if (!normalized.length) throw new Error("请先选择至少一张手札。");
   room.turnState.actions[actorSide] = normalized;
   room.turnState.locks[actorSide] = true;
   room.players[actorSide].actionLocked = true;
@@ -756,6 +756,37 @@ function normalizeActions(actions = []) {
   }));
 }
 
+function createPassTurnAction() {
+  return {
+    actionId: PASS_TURN_ACTION_ID,
+    displayName: "本回合待机",
+    cardType: "pass",
+    apCost: 0,
+    ceCost: 0,
+    selectedRound: 0,
+    action: {
+      id: PASS_TURN_ACTION_ID,
+      label: "本回合待机",
+      name: "本回合待机",
+      type: "pass",
+      cardType: "pass",
+      risk: "low",
+      costCe: 0,
+      ceCost: 0,
+      baseCeCost: 0,
+      apCost: 0,
+      effects: {},
+      description: "无法或不选择手札时，保守待机并推进联机回合。"
+    },
+    source: "player_pass_turn"
+  };
+}
+
+function normalizeActionsOrPass(actions = []) {
+  const normalized = normalizeActions(actions);
+  return normalized.length ? normalized : [createPassTurnAction()];
+}
+
 function readSelectedActionsFromDom() {
   const runtimeActions = globalThis.JJKDuelRuntime?.getSelectedOnlineActionSnapshots?.(uiState.side || "left");
   if (Array.isArray(runtimeActions) && runtimeActions.length) return runtimeActions;
@@ -778,12 +809,7 @@ function lockSelectedTurnFromBattle() {
     return Promise.reject(error);
   }
   const actions = readSelectedActionsFromDom();
-  if (!actions.length) {
-    const error = enrichError(new Error("请先在手札区选择至少一张手札，再锁定联机行动。"), { operation: "lockTurn", roomId: uiState.roomId, side: uiState.side, actionsCount: 0 });
-    showError(error);
-    return Promise.reject(error);
-  }
-  pushDebugEvent({ level: "info", operation: "lockTurn", message: "已读取手札，准备提交锁定行动", detail: { roomId: uiState.roomId, side: uiState.side, actionsCount: actions.length } });
+  pushDebugEvent({ level: "info", operation: "lockTurn", message: actions.length ? "已读取手札，准备提交锁定行动" : "未选择手札，按待机行动锁定本回合", detail: { roomId: uiState.roomId, side: uiState.side, actionsCount: actions.length } });
   setLocalLockPending(true);
   return lockTurn(uiState.roomId, uiState.side, actions, { playerId: uiState.playerId })
     .then((room) => {
@@ -1077,7 +1103,7 @@ function nextHint(room, side) {
   }
   if (room.phase === "turn_selecting") {
     if (room.turnState.locks[side]) return "已锁定行动，等待对方。";
-    return "选择手札后锁定行动；双方锁定后自动结算。";
+    return "选择手札后锁定行动；无可用手札时可直接锁定待机。";
   }
   if (room.phase === "turn_resolving") return "服务器正在结算双方行动。";
   if (room.phase === "reviewing") return "可以再来一把、回到准备阶段或退出房间。";
