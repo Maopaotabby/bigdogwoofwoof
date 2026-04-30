@@ -6,7 +6,6 @@ const PLAYER_ID_STORAGE_KEY = "jjk-online-battle-player-id-v1";
 const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-battle-active-room-v1";
 const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
 const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
-const AI_PROVIDER_STORAGE_KEY = "jjk-online-battle-ai-provider-v1";
 const DEBUG_LOG_STORAGE_KEY = "jjk-online-battle-debug-log-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REMOTE_OPERATION_TIMEOUT_MS = 30000;
@@ -29,14 +28,12 @@ let cachedRules = null;
 let pollStop = null;
 let removalNoticeShown = false;
 const debugEvents = [];
-const mirroredOnlineLogIds = new Set();
 let uiState = {
   roomId: "",
   playerId: "",
   side: "",
   backendMode: "",
-  endpoint: "",
-  aiProvider: "ark"
+  endpoint: ""
 };
 
 function cloneJson(value) {
@@ -112,35 +109,6 @@ function renderDebugLog() {
     : "暂无联机调试日志。";
 }
 
-function mirrorAiRoomLogs(room = {}) {
-  const logs = Array.isArray(room.logs) ? room.logs : [];
-  logs.forEach((entry) => {
-    if (!["ai_resolve_queued", "ai_resolve_started", "turn_resolved"].includes(entry?.type)) return;
-    const key = [room.roomId || "", entry.type || "", entry.turn || "", entry.at || "", entry.message || ""].join("|");
-    if (mirroredOnlineLogIds.has(key)) return;
-    mirroredOnlineLogIds.add(key);
-    if (mirroredOnlineLogIds.size > 240) mirroredOnlineLogIds.clear();
-    const detail = {
-      roomId: room.roomId || "",
-      round: room.round || 0,
-      log: entry,
-      lastAiDebug: room.reviewState?.lastAiDebug || null,
-      summary: room.reviewState?.summary || ""
-    };
-    pushDebugEvent({
-      level: entry.type === "turn_resolved" ? "ai" : "info",
-      operation: "aiResolve",
-      message: entry.message || "AI 结算日志",
-      detail
-    });
-    try {
-      globalThis.console?.log?.("[JJK Online AI]", entry.message || "AI 结算日志", redactSecrets(detail));
-    } catch {
-      // Console mirroring is diagnostic only.
-    }
-  });
-}
-
 function enrichError(error, detail = {}) {
   const message = error?.message || String(error || "联机操作失败。");
   const next = new Error(message);
@@ -185,10 +153,6 @@ function normalizeBackendMode(value) {
   return "local_mock_backend";
 }
 
-function normalizeOnlineAiProvider(value) {
-  return value === "openai" || value === "chatgpt" ? "openai" : "ark";
-}
-
 function roomKey(roomId) {
   return `${ROOM_STORAGE_PREFIX}${normalizeRoomId(roomId)}`;
 }
@@ -225,29 +189,25 @@ function getBackendSettings(options = {}) {
   const store = storage("local");
   const backendMode = normalizeBackendMode(options.backendMode || store?.getItem?.(BACKEND_MODE_STORAGE_KEY) || uiState.backendMode || DEFAULT_RULES.backend.defaultMode);
   const endpoint = normalizeEndpoint(options.endpoint || options.customEndpoint || store?.getItem?.(CUSTOM_ENDPOINT_STORAGE_KEY) || uiState.endpoint || "");
-  const aiProvider = normalizeOnlineAiProvider(options.aiProvider || store?.getItem?.(AI_PROVIDER_STORAGE_KEY) || uiState.aiProvider || "ark");
-  return { backendMode, endpoint, aiProvider };
+  return { backendMode, endpoint };
 }
 
 function saveBackendSettings(settings = {}) {
   const backendMode = normalizeBackendMode(settings.backendMode);
   const endpoint = normalizeEndpoint(settings.endpoint || settings.customEndpoint || "");
-  const aiProvider = normalizeOnlineAiProvider(settings.aiProvider);
   const store = storage("local");
   store?.setItem?.(BACKEND_MODE_STORAGE_KEY, backendMode);
-  store?.setItem?.(AI_PROVIDER_STORAGE_KEY, aiProvider);
   if (endpoint) store?.setItem?.(CUSTOM_ENDPOINT_STORAGE_KEY, endpoint);
   else store?.removeItem?.(CUSTOM_ENDPOINT_STORAGE_KEY);
-  uiState = { ...uiState, backendMode, endpoint, aiProvider };
-  return { backendMode, endpoint, aiProvider };
+  uiState = { ...uiState, backendMode, endpoint };
+  return { backendMode, endpoint };
 }
 
 function clearBackendSettings() {
   const store = storage("local");
   store?.removeItem?.(BACKEND_MODE_STORAGE_KEY);
   store?.removeItem?.(CUSTOM_ENDPOINT_STORAGE_KEY);
-  store?.removeItem?.(AI_PROVIDER_STORAGE_KEY);
-  uiState = { ...uiState, backendMode: DEFAULT_RULES.backend.defaultMode, endpoint: "", aiProvider: "ark" };
+  uiState = { ...uiState, backendMode: DEFAULT_RULES.backend.defaultMode, endpoint: "" };
   return getBackendSettings();
 }
 
@@ -345,9 +305,6 @@ function normalizeRoom(room) {
   if (!room || typeof room !== "object") return null;
   room.protocol = ONLINE_PROTOCOL;
   room.phase = normalizePhase(room.phase);
-  room.aiSettings = {
-    provider: normalizeOnlineAiProvider(room.aiSettings?.provider || room.aiProvider || "ark")
-  };
   room.players = {
     left: { ...createEmptyPlayer("left"), ...(room.players?.left || {}) },
     right: { ...createEmptyPlayer("right"), ...(room.players?.right || {}) }
@@ -474,7 +431,7 @@ function restoreRemembered() {
 }
 
 function clearRemembered() {
-  uiState = { roomId: "", playerId: uiState.playerId || "", side: "", backendMode: uiState.backendMode, endpoint: uiState.endpoint, aiProvider: uiState.aiProvider };
+  uiState = { roomId: "", playerId: uiState.playerId || "", side: "", backendMode: uiState.backendMode, endpoint: uiState.endpoint };
   storage("session")?.removeItem?.(ACTIVE_ROOM_STORAGE_KEY);
 }
 
@@ -508,7 +465,6 @@ function createRoomObject(options = {}) {
     updatedAt: now,
     revision: 1,
     ownerPlayerId: left.playerId,
-    aiSettings: { provider: normalizeOnlineAiProvider(options.aiProvider) },
     players: { left, right: createEmptyPlayer("right") },
     readyState: { leftCharacterLocked: false, rightCharacterLocked: false },
     round: 1,
@@ -887,18 +843,6 @@ async function remoteOperation(operation, request = {}, options = {}) {
     throw enrichError(new Error(message), responseDebug);
   }
   pushDebugEvent({ level: "ok", operation, message: `请求完成 ${response.status}`, detail: responseDebug });
-  if (data?.room?.reviewState?.summary || data?.room?.reviewState?.lastAiDebug) {
-    pushDebugEvent({
-      level: "ai",
-      operation,
-      message: data.room.reviewState?.summary || "AI 结算状态已更新。",
-      detail: {
-        roomId: data.room.roomId || body.roomId || "",
-        lastAiDebug: data.room.reviewState?.lastAiDebug || null,
-        summary: data.room.reviewState?.summary || ""
-      }
-    });
-  }
   if (operation === "ping") return data || { ok: true };
   const room = normalizeRoom(data.room || data.snapshot);
   const actualSide = getPlayerSide(room, body.playerId);
@@ -995,7 +939,6 @@ function nextHint(room, side) {
 }
 
 function render(room = {}) {
-  mirrorAiRoomLogs(room);
   syncCharacterSelects();
   const side = room.viewerSide || uiState.side || getPlayerSide(room, uiState.playerId) || "";
   if (handleRemovedFromRoom(room)) return;
@@ -1116,13 +1059,12 @@ async function renderBackendControls() {
   const settings = getBackendSettings();
   setValue("#onlineBackendMode", settings.backendMode);
   setValue("#onlineEndpointInput", settings.endpoint);
-  setValue("#onlineAiProvider", settings.aiProvider);
   setText("#onlineModeLabel", settings.backendMode === "local_mock_backend" ? "本地 mock" : settings.backendMode === "custom_endpoint" ? "自定义 Endpoint" : "官方联机服务器");
   const endpointField = $("#onlineEndpointField");
   if (endpointField) endpointField.hidden = settings.backendMode !== "custom_endpoint";
   setText("#onlineBackendHint", settings.backendMode === "local_mock_backend"
     ? "本地 mock 使用浏览器 localStorage，只适合同一浏览器或双标签测试。"
-    : `新版联机使用 POST operation 协议；服务器负责房间阶段、角色快照、行动锁定和后续 AI broker。当前 AI：${settings.aiProvider === "openai" ? "ChatGPT" : "Ark AI"}。`);
+    : "新版联机使用 POST operation 协议；服务器负责房间阶段、角色快照、行动锁定和后续 AI broker。");
   setText("#onlineOfficialStatus", settings.backendMode === "official_endpoint"
     ? "官方新版联机服务器需要部署 jjk_online_battle_v1 协议。"
     : "当前未使用官方服务器。");
@@ -1201,15 +1143,11 @@ function bindUi() {
   document.addEventListener("jjk-duel-character-pool-changed", syncCharacterSelects);
   document.addEventListener("jjk-battle-page-state", syncCharacterSelects);
   $("#onlineBackendMode")?.addEventListener("change", () => {
-    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value, aiProvider: $("#onlineAiProvider")?.value });
-    renderBackendControls();
-  });
-  $("#onlineAiProvider")?.addEventListener("change", () => {
-    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value, aiProvider: $("#onlineAiProvider")?.value });
+    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value });
     renderBackendControls();
   });
   $("#onlineSaveBackendBtn")?.addEventListener("click", () => {
-    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value, aiProvider: $("#onlineAiProvider")?.value });
+    saveBackendSettings({ backendMode: $("#onlineBackendMode")?.value, endpoint: $("#onlineEndpointInput")?.value });
     renderBackendControls();
   });
   $("#onlineClearBackendBtn")?.addEventListener("click", () => {
