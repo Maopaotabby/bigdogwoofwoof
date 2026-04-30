@@ -7,6 +7,8 @@ const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-battle-active-room-v1";
 const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
 const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const REMOTE_OPERATION_TIMEOUT_MS = 30000;
+const ONLINE_DEBUG_LIMIT = 24;
 const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const LOCAL_DEFAULT_ENDPOINT = "";
 
@@ -24,6 +26,7 @@ const memoryRooms = new Map();
 let cachedRules = null;
 let pollStop = null;
 let removalNoticeShown = false;
+const debugEvents = [];
 let uiState = {
   roomId: "",
   playerId: "",
@@ -47,6 +50,53 @@ function storage(kind = "local") {
 
 function nowMs() {
   return Date.now();
+}
+
+function makeRequestId(operation = "op") {
+  const random = Math.random().toString(36).slice(2, 8);
+  return `${String(operation || "op").slice(0, 20)}_${nowMs().toString(36)}_${random}`;
+}
+
+function maskId(value) {
+  const text = String(value || "");
+  if (text.length <= 8) return text || "-";
+  return `${text.slice(0, 4)}...${text.slice(-4)}`;
+}
+
+function compactDebug(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value.slice(0, 360);
+  try {
+    return JSON.stringify(redactSecrets(value)).slice(0, 720);
+  } catch {
+    return String(value).slice(0, 360);
+  }
+}
+
+function pushDebugEvent(event = {}) {
+  const entry = {
+    time: new Date().toLocaleTimeString(),
+    ...redactSecrets(event)
+  };
+  debugEvents.unshift(entry);
+  if (debugEvents.length > ONLINE_DEBUG_LIMIT) debugEvents.length = ONLINE_DEBUG_LIMIT;
+  renderDebugLog();
+}
+
+function renderDebugLog() {
+  const node = typeof document === "undefined" ? null : document.querySelector("#onlineDebugLog");
+  if (!node) return;
+  node.textContent = debugEvents.length
+    ? debugEvents.map((event) => `[${event.time}] ${event.level || "info"} ${event.operation || ""} ${event.message || ""} ${compactDebug(event.detail)}`).join("\n")
+    : "暂无联机调试日志。";
+}
+
+function enrichError(error, detail = {}) {
+  const message = error?.message || String(error || "联机操作失败。");
+  const next = new Error(message);
+  next.cause = error;
+  next.debugDetail = redactSecrets(detail);
+  return next;
 }
 
 function normalizeRoomId(value) {
@@ -264,6 +314,7 @@ function normalizeRoom(room) {
   room.players.left.actionLocked = room.turnState.locks.left;
   room.players.right.actionLocked = room.turnState.locks.right;
   room.reviewState ||= { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
+  room.reviewState.lastAiDebug ||= null;
   room.logs = Array.isArray(room.logs) ? room.logs.slice(-100) : [];
   room.round = Math.max(1, Number(room.round) || 1);
   room.revision = Math.max(1, Number(room.revision) || 1);
@@ -626,7 +677,22 @@ function readSelectedActionsFromDom() {
 }
 
 function lockSelectedTurnFromBattle() {
+  if (!uiState.roomId) {
+    const error = enrichError(new Error("当前没有联机房间，无法提交行动。"), { operation: "lockTurn", roomId: "", side: uiState.side || "" });
+    showError(error);
+    return Promise.reject(error);
+  }
+  if (!uiState.side) {
+    const error = enrichError(new Error("当前玩家阵营未同步，无法提交行动。"), { operation: "lockTurn", roomId: uiState.roomId, side: "" });
+    showError(error);
+    return Promise.reject(error);
+  }
   const actions = readSelectedActionsFromDom();
+  if (!actions.length) {
+    const error = enrichError(new Error("请先在手札区选择至少一张手札，再锁定联机行动。"), { operation: "lockTurn", roomId: uiState.roomId, side: uiState.side, actionsCount: 0 });
+    showError(error);
+    return Promise.reject(error);
+  }
   return lockTurn(uiState.roomId, uiState.side, actions, { playerId: uiState.playerId })
     .then((room) => {
       globalThis.JJKBattlePage?.setBattleMode?.("online", {
@@ -696,9 +762,12 @@ async function remoteOperation(operation, request = {}, options = {}) {
   const settings = getBackendSettings(options);
   const endpoint = settings.backendMode === "official_endpoint" ? await getOfficialEndpoint() : settings.endpoint;
   if (!endpoint) throw new Error("新版联机服务器尚未配置；请使用本地 mock 或填写新版自定义 Endpoint。");
+  const requestId = makeRequestId(operation);
+  const startedAt = nowMs();
   const body = redactSecrets({
     protocol: ONLINE_PROTOCOL,
     operation,
+    requestId,
     roomId: normalizeRoomId(request.roomId || options.roomId),
     playerId: options.playerId || uiState.playerId || getOrCreatePlayerId(),
     side: request.side || options.side || uiState.side || "",
@@ -706,13 +775,53 @@ async function remoteOperation(operation, request = {}, options = {}) {
     siteVersion: APP_BUILD_VERSION,
     sentAt: nowMs()
   });
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok || data?.ok === false) throw new Error(data?.error || `联机服务器请求失败：${response.status}`);
+  const actionsCount = Array.isArray(body.payload?.actions) ? body.payload.actions.length : undefined;
+  const debugBase = {
+    requestId,
+    operation,
+    roomId: body.roomId || "-",
+    side: body.side || "-",
+    playerId: maskId(body.playerId),
+    backendMode: settings.backendMode,
+    actionsCount
+  };
+  pushDebugEvent({ level: "send", operation, message: "发送联机请求", detail: debugBase });
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeout = controller ? globalThis.setTimeout(() => controller.abort(), REMOTE_OPERATION_TIMEOUT_MS) : null;
+  let response;
+  let data;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller?.signal
+    });
+    data = await response.json().catch(() => null);
+  } catch (error) {
+    const timedOut = error?.name === "AbortError";
+    const message = timedOut
+      ? `联机请求超时（${Math.round(REMOTE_OPERATION_TIMEOUT_MS / 1000)} 秒）：${operation}`
+      : `联机请求发送失败：${error?.message || error}`;
+    const detail = { ...debugBase, elapsedMs: nowMs() - startedAt, timedOut };
+    pushDebugEvent({ level: "error", operation, message, detail });
+    throw enrichError(new Error(message), detail);
+  } finally {
+    if (timeout) globalThis.clearTimeout(timeout);
+  }
+  const responseDebug = {
+    ...debugBase,
+    status: response.status,
+    elapsedMs: nowMs() - startedAt,
+    serverDebug: data?.debug || null,
+    serverRequestId: data?.requestId || ""
+  };
+  if (!response.ok || data?.ok === false) {
+    const message = data?.error || `联机服务器请求失败：${response.status}`;
+    pushDebugEvent({ level: "error", operation, message, detail: responseDebug });
+    throw enrichError(new Error(message), responseDebug);
+  }
+  pushDebugEvent({ level: "ok", operation, message: `请求完成 ${response.status}`, detail: responseDebug });
   if (operation === "ping") return data || { ok: true };
   const room = normalizeRoom(data.room || data.snapshot);
   const actualSide = getPlayerSide(room, body.playerId);
@@ -834,6 +943,7 @@ function render(room = {}) {
   setValue("#onlineInviteLink", room.roomId ? buildInviteLink(room.roomId) : "");
   updateButtons(room, side);
   renderBackendControls();
+  renderDebugLog();
 }
 
 function handleRemovedFromRoom(room = {}) {
@@ -975,7 +1085,9 @@ function setDisabled(selector, disabled) {
 }
 
 function showError(error) {
-  setText("#onlineSyncStatus", error?.message || String(error || "联机操作失败。"));
+  const message = error?.message || String(error || "联机操作失败。");
+  setText("#onlineSyncStatus", message);
+  pushDebugEvent({ level: "error", operation: error?.debugDetail?.operation || "ui", message, detail: error?.debugDetail || null });
 }
 
 function bindUi() {
@@ -1052,8 +1164,10 @@ function bindUi() {
 async function testConnection(options = {}) {
   const settings = getBackendSettings(options);
   if (settings.backendMode === "local_mock_backend") return "本地 mock 可用。";
-  await remoteOperation("ping", {}, settings);
-  return "新版联机服务器连接正常。";
+  const result = await remoteOperation("ping", {}, settings);
+  const aiLabel = result?.aiConfigured ? "AI Key 已配置" : "AI Key 未配置";
+  const modelLabel = result?.aiModel ? `模型：${result.aiModel}` : "模型未知";
+  return `服务器 ping 正常（不代表房间或结算一定成功）；${aiLabel}；${modelLabel}。`;
 }
 
 const OnlineModule = {

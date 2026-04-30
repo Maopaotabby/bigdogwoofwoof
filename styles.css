@@ -842,6 +842,34 @@ main {
   background: rgba(240, 253, 250, 0.78);
 }
 
+.online-debug-panel {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.online-debug-panel summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.online-debug-log {
+  max-height: 180px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 8px 0 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .online-advanced-settings {
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 8px;

@@ -3083,9 +3083,9 @@ function bindDuelBattleControls() {
     if (globalThis.JJKOnline?.lockSelectedTurnFromBattle) {
       state.duelBattle.actionUiMessage = "正在提交联机行动...";
       renderDuelMode();
-      globalThis.JJKOnline.lockSelectedTurnFromBattle().catch(() => {
+      Promise.resolve().then(() => globalThis.JJKOnline.lockSelectedTurnFromBattle()).catch((error) => {
         if (state.duelBattle) {
-          state.duelBattle.actionUiMessage = "联机行动提交失败，请检查房间状态后重试。";
+          state.duelBattle.actionUiMessage = `联机行动提交失败：${error?.message || "请检查房间状态后重试。"}`;
           renderDuelMode();
         }
       });

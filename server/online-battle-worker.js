@@ -3,6 +3,7 @@ import OpenAI from "openai";
 const PROTOCOL = "jjk_online_battle_v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
+const DEFAULT_AI_TIMEOUT_MS = 18000;
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const memoryRooms = new Map();
 
@@ -37,6 +38,37 @@ function normalizePhase(value) {
 
 function nowMs() {
   return Date.now();
+}
+
+function clampNumber(value, fallback, min, max) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.max(min, Math.min(max, num));
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function requestIdFrom(body = {}) {
+  return String(body.requestId || "").replace(/[^a-zA-Z0-9_.:-]/g, "").slice(0, 80);
+}
+
+function roomDebug(room, extra = {}) {
+  return redactSecrets({
+    roomId: room?.roomId || "",
+    phase: room?.phase || "",
+    round: room?.round || 0,
+    locks: room?.turnState?.locks || {},
+    leftHasPlayer: Boolean(room?.players?.left?.playerId),
+    rightHasPlayer: Boolean(room?.players?.right?.playerId),
+    lastAiDebug: room?.reviewState?.lastAiDebug || null,
+    ...extra
+  });
 }
 
 function emptyPlayer(side) {
@@ -161,7 +193,8 @@ function normalizeRoom(room) {
       winnerSide: String(room.reviewState?.winnerSide || ""),
       summary: String(room.reviewState?.summary || ""),
       rematchVotes: room.reviewState?.rematchVotes || {},
-      resetVotes: room.reviewState?.resetVotes || {}
+      resetVotes: room.reviewState?.resetVotes || {},
+      lastAiDebug: redactSecrets(room.reviewState?.lastAiDebug || null)
     },
     logs: Array.isArray(room.logs) ? room.logs.slice(-MAX_LOGS) : []
   };
@@ -316,6 +349,7 @@ function parseAiText(value) {
 async function resolveTurnWithAi(env, room) {
   const model = env.AI_MODEL || "doubao-seed-2-0-mini-260215";
   const baseURL = env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
+  const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000);
   const apiKey = String(env.AI_API_KEY || "").trim();
   if (!apiKey) {
     return {
@@ -325,13 +359,14 @@ async function resolveTurnWithAi(env, room) {
     };
   }
   const client = new OpenAI({ apiKey, baseURL });
-  const completion = await client.chat.completions.create({
+  const startedAt = nowMs();
+  const completion = await withTimeout(client.chat.completions.create({
     model,
     messages: buildAiPrompt(room),
     temperature: Number(env.AI_TEMPERATURE || 0.4),
     max_tokens: Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700))),
     response_format: { type: "json_object" }
-  });
+  }), timeoutMs, `AI 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
   const text = completion.choices?.[0]?.message?.content || "";
   const parsed = parseAiText(text) || { summary: `第 ${room.round} 回合 AI 已返回，但内容为空。`, winnerHint: "undecided" };
   return {
@@ -342,6 +377,8 @@ async function resolveTurnWithAi(env, room) {
     leftEffect: parsed.leftEffect,
     rightEffect: parsed.rightEffect,
     winnerHint: parsed.winnerHint,
+    durationMs: nowMs() - startedAt,
+    timeoutMs,
     usage: completion.usage || null,
     actions: redactSecrets(room.turnState.actions)
   };
@@ -357,11 +394,13 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
     room.turnState.result = result;
     room.turnState.aiStatus = result.source;
     room.reviewState.summary = result.summary || room.reviewState.summary || "";
+    room.reviewState.lastAiDebug = { source: result.source, model: result.model || "", durationMs: result.durationMs || 0, timeoutMs: result.timeoutMs || 0 };
     appendLog(room, "turn_resolved", result.summary || `第 ${beforeRound} 回合已结算。`, { turn: beforeRound, aiSource: result.source });
   } catch (error) {
     const summary = `第 ${beforeRound} 回合 AI 结算失败，已保留双方行动并进入下一回合。原因：${String(error?.message || error).slice(0, 160)}`;
     room.turnState.result = { source: "ai_error_fallback", summary, actions: redactSecrets(room.turnState.actions) };
     room.turnState.aiStatus = "ai_error_fallback";
+    room.reviewState.lastAiDebug = { source: "ai_error_fallback", error: String(error?.message || error).slice(0, 200) };
     appendLog(room, "turn_resolved", summary, { turn: beforeRound });
   }
   room.round += 1;
@@ -373,30 +412,41 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
 }
 
 async function handleOperation(env, body) {
-  if (body.protocol !== PROTOCOL) return json({ ok: false, error: "协议不匹配。" }, 400);
+  const requestId = requestIdFrom(body);
+  if (body.protocol !== PROTOCOL) return json({ ok: false, error: "协议不匹配。", requestId }, 400);
   const operation = String(body.operation || "");
   const playerId = String(body.playerId || "").slice(0, 120);
   const payload = redactSecrets(body.payload || {});
   const roomId = normalizeRoomId(body.roomId || payload.room?.roomId);
   const requestedSide = body.side ? normalizeSide(body.side) : "";
 
-  if (operation === "ping") return json({ ok: true, protocol: PROTOCOL, message: "online battle endpoint ready" });
+  if (operation === "ping") return json({
+    ok: true,
+    protocol: PROTOCOL,
+    requestId,
+    message: "online battle endpoint ready",
+    aiConfigured: Boolean(String(env.AI_API_KEY || "").trim()),
+    aiProvider: env.AI_PROVIDER || "openai_compatible",
+    aiBaseURL: env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
+    aiModel: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
+    aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000)
+  });
 
   if (operation === "createRoom") {
     const room = normalizeRoom(payload.room || {});
-    if (!room?.roomId) return json({ ok: false, error: "房间码无效。" }, 400);
-    if (await readRoom(env, room.roomId)) return json({ ok: false, error: "房间已存在。" }, 409);
+    if (!room?.roomId) return json({ ok: false, error: "房间码无效。", requestId }, 400);
+    if (await readRoom(env, room.roomId)) return json({ ok: false, error: "房间已存在。", requestId }, 409);
     room.ownerPlayerId = room.ownerPlayerId || room.players.left.playerId || playerId;
     room.players.left.playerId = room.players.left.playerId || playerId;
     room.players.left.connected = true;
     room.players.left.lastSeenAt = nowMs();
     appendLog(room, "room_created", "房间已创建。", { side: "left", playerId: room.players.left.playerId });
     const saved = await writeRoom(env, room);
-    return json({ ok: true, room: snapshot(saved, "left"), side: "left" });
+    return json({ ok: true, requestId, debug: roomDebug(saved, { operation, side: "left" }), room: snapshot(saved, "left"), side: "left" });
   }
 
   const room = await readRoom(env, roomId);
-  if (!room) return json({ ok: false, error: "房间不存在。" }, 404);
+  if (!room) return json({ ok: false, error: "房间不存在。", requestId, debug: { operation, roomId, requestedSide } }, 404);
 
   if (operation === "getRoom") {
     const side = getPlayerSide(room, playerId) || requestedSide;
@@ -427,7 +477,7 @@ async function handleOperation(env, body) {
   try {
     side = authorize(room, playerId, requestedSide);
   } catch (error) {
-    return json({ ok: false, error: error.message }, error.status || 403);
+    return json({ ok: false, error: error.message, requestId, debug: roomDebug(room, { operation, requestedSide }) }, error.status || 403);
   }
 
   if (operation === "selectCharacter") {
@@ -461,20 +511,36 @@ async function handleOperation(env, body) {
   }
 
   if (operation === "lockTurn") {
-    if (room.phase !== "turn_selecting") return json({ ok: false, error: "当前不能锁定行动。" }, 409);
+    const debugBefore = roomDebug(room, { operation, side, requestId });
+    if (room.phase !== "turn_selecting") return json({ ok: false, error: "当前不能锁定行动。", requestId, debug: debugBefore }, 409);
     const actions = normalizeActions(payload.actions);
-    if (!actions.length) return json({ ok: false, error: "请先选择至少一张手札。" }, 409);
+    if (!actions.length) return json({ ok: false, error: "请先选择至少一张手札。", requestId, debug: { ...debugBefore, actionsCount: 0 } }, 409);
     room.turnState.actions[side] = actions;
     room.turnState.locks[side] = true;
     room.players[side].actionLocked = true;
     appendLog(room, "turn_locked", `${side === "left" ? "左方" : "右方"}已锁定第 ${room.round} 回合行动。`, { side, turn: room.round });
     applyPhaseTransition(room);
     let saved = await writeRoom(env, room, { preservePlayers: true, preserveTurnLocks: true });
+    const shouldResolve = hasBothLockedActions(saved);
     if (hasBothLockedActions(saved)) {
       await resolveTurnIfReady(env, saved, side);
       saved = await writeRoom(env, saved, { preservePlayers: true });
     }
-    return json({ ok: true, room: snapshot(saved, side), side });
+    return json({
+      ok: true,
+      requestId,
+      debug: roomDebug(saved, {
+        operation,
+        side,
+        actionsCount: actions.length,
+        triggeredResolve: shouldResolve,
+        aiStatus: saved.turnState?.aiStatus || "",
+        phaseBefore: debugBefore.phase,
+        roundBefore: debugBefore.round
+      }),
+      room: snapshot(saved, side),
+      side
+    });
   }
 
   if (operation === "unlockTurn") {
@@ -565,7 +631,17 @@ export default {
     try {
       return await handleOperation(env, body);
     } catch (error) {
-      return json({ ok: false, error: String(error?.message || error || "服务器错误。") }, Number(error?.status || 500));
+      return json({
+        ok: false,
+        requestId: requestIdFrom(body),
+        error: String(error?.message || error || "服务器错误。"),
+        debug: redactSecrets({
+          operation: body?.operation || "",
+          roomId: normalizeRoomId(body?.roomId || ""),
+          side: body?.side || "",
+          status: Number(error?.status || 500)
+        })
+      }, Number(error?.status || 500));
     }
   }
 };
