@@ -192,8 +192,15 @@ function getOrCreatePlayerId() {
 
 function getBackendSettings(options = {}) {
   const store = storage("local");
-  const backendMode = normalizeBackendMode(options.backendMode || store?.getItem?.(BACKEND_MODE_STORAGE_KEY) || uiState.backendMode || DEFAULT_RULES.backend.defaultMode);
-  const endpoint = normalizeEndpoint(options.endpoint || options.customEndpoint || store?.getItem?.(CUSTOM_ENDPOINT_STORAGE_KEY) || uiState.endpoint || "");
+  const storedMode = store?.getItem?.(BACKEND_MODE_STORAGE_KEY);
+  const storedEndpoint = store?.getItem?.(CUSTOM_ENDPOINT_STORAGE_KEY);
+  const platformDefault = getPlatformDefaultBackendSettings();
+  const hasExplicitMode = Object.prototype.hasOwnProperty.call(options, "backendMode");
+  const sameOriginDefaultActive = platformDefault.backendMode === "custom_endpoint" && !hasExplicitMode;
+  const rememberedMode = sameOriginDefaultActive && storedMode === "official_endpoint" ? "" : storedMode;
+  const liveMode = sameOriginDefaultActive && uiState.backendMode === "official_endpoint" ? "" : uiState.backendMode;
+  const backendMode = normalizeBackendMode(options.backendMode || rememberedMode || liveMode || platformDefault.backendMode);
+  const endpoint = normalizeEndpoint(options.endpoint || options.customEndpoint || storedEndpoint || uiState.endpoint || platformDefault.endpoint || "");
   return { backendMode, endpoint };
 }
 
@@ -212,7 +219,8 @@ function clearBackendSettings() {
   const store = storage("local");
   store?.removeItem?.(BACKEND_MODE_STORAGE_KEY);
   store?.removeItem?.(CUSTOM_ENDPOINT_STORAGE_KEY);
-  uiState = { ...uiState, backendMode: DEFAULT_RULES.backend.defaultMode, endpoint: "" };
+  const platformDefault = getPlatformDefaultBackendSettings();
+  uiState = { ...uiState, backendMode: platformDefault.backendMode, endpoint: platformDefault.endpoint };
   return getBackendSettings();
 }
 
@@ -220,13 +228,24 @@ function shouldUseRemote(options = {}) {
   return getBackendSettings(options).backendMode !== "local_mock_backend";
 }
 
+function getPlatformDefaultBackendSettings() {
+  const sameOriginEndpoint = getSameOriginOfficialEndpoint();
+  if (sameOriginEndpoint) {
+    return { backendMode: "custom_endpoint", endpoint: sameOriginEndpoint };
+  }
+  return { backendMode: DEFAULT_RULES.backend.defaultMode, endpoint: "" };
+}
+
 function getOnlineHelpText() {
+  const sameOriginEndpoint = getSameOriginOfficialEndpoint();
   return [
     "联机模式使用说明",
     "",
     "基本网络配置：",
-    "1. 默认使用官方联机服务器，普通玩家不需要填写 Endpoint。",
-    "2. 如果创建或加入失败，先点“测试官方服务器”，确认网络能访问官方服务器。",
+    sameOriginEndpoint
+      ? `1. 当前页面运行在服务器环境，默认使用本机联机后端：${sameOriginEndpoint}`
+      : "1. GitHub Pages 默认使用官方联机服务器，普通玩家不需要填写 Endpoint。",
+    "2. 如果创建或加入失败，先点“测试官方服务器 / 后端连接”，确认当前网络能访问后端。",
     "3. 高级后端设置只给开发测试使用：本地 mock 只能同一浏览器或双标签测试，不能跨设备；自定义 Endpoint 必须兼容 jjk_online_battle_v1 的 POST 协议。",
     "",
     "对战操作流程：",
@@ -1199,15 +1218,21 @@ function updateButtons(room, side) {
 
 async function renderBackendControls() {
   const settings = getBackendSettings();
+  const sameOriginEndpoint = getSameOriginOfficialEndpoint();
+  const usesSameOriginEndpoint = settings.backendMode === "custom_endpoint" && sameOriginEndpoint && normalizeEndpoint(settings.endpoint) === sameOriginEndpoint;
   setValue("#onlineBackendMode", settings.backendMode);
   setValue("#onlineEndpointInput", settings.endpoint);
-  setText("#onlineModeLabel", settings.backendMode === "local_mock_backend" ? "本地 mock" : settings.backendMode === "custom_endpoint" ? "自定义 Endpoint" : "官方联机服务器");
+  setText("#onlineModeLabel", settings.backendMode === "local_mock_backend" ? "本地 mock" : usesSameOriginEndpoint ? "本机联机后端" : settings.backendMode === "custom_endpoint" ? "自定义 Endpoint" : "官方联机服务器");
   const endpointField = $("#onlineEndpointField");
   if (endpointField) endpointField.hidden = settings.backendMode !== "custom_endpoint";
   setText("#onlineBackendHint", settings.backendMode === "local_mock_backend"
     ? "本地 mock 使用浏览器 localStorage，只适合同一浏览器或双标签测试。"
+    : usesSameOriginEndpoint
+      ? "当前使用本机 /online-room 后端，适合腾讯云一体化部署。"
     : "新版联机使用 POST operation 协议；服务器负责房间阶段、角色快照、行动锁定和后续 AI broker。");
-  setText("#onlineOfficialStatus", settings.backendMode === "official_endpoint"
+  setText("#onlineOfficialStatus", usesSameOriginEndpoint
+    ? "当前使用本机联机后端；国内访问无需跳转到 Cloudflare。"
+    : settings.backendMode === "official_endpoint"
     ? "当前默认使用官方联机服务器；普通玩家无需填写 Endpoint。"
     : "当前未使用官方服务器。");
 }

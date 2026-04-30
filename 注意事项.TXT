@@ -1,0 +1,39 @@
+咒术转盘 / 联机模式注意事项
+
+1. 腾讯云入口
+   当前腾讯云一体化入口是：
+   http://119.91.224.223/
+
+   该入口同时提供前端页面和联机后端：
+   http://119.91.224.223/online-room
+   http://119.91.224.223/health
+
+2. 后端模式默认值
+   在腾讯云页面打开项目时，联机模式默认应使用本机联机后端 /online-room。
+   不应默认跳到 Cloudflare Worker，否则国内用户可能出现访问慢、失败或需要代理的问题。
+
+   在 GitHub Pages 页面打开项目时，默认仍使用 Cloudflare Worker：
+   https://jjk-online-battle.maopaotabby-jjk-life.workers.dev
+
+3. 本地 mock 的含义
+   “本地 mock”只使用浏览器 localStorage，适合同一台电脑、同一个浏览器或双标签测试。
+   它不能跨设备联机，也不能作为腾讯云正式联机后端。
+
+4. API Key
+   Ark AI Key 已部署到服务器环境变量 / Worker secret。
+   不要把 API Key 写入 README、源码、注意事项或任何会提交到 GitHub 的文件。
+
+5. AI 功能范围
+   联机每回合 AI 裁判已经取消。
+   AI 调用只应保留给对战结束后的“AI生成对战过程 / 对战总结”等非实时裁判功能。
+
+6. 腾讯服务器更新
+   本地修改后，使用以下脚本更新腾讯云代码：
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1
+
+   只更新代码和 Node 服务，不刷新 Nginx 时：
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1 -SkipNginx
+
+7. HTTPS
+   当前腾讯云入口是 HTTP。
+   由于裸 IP 不能申请 Let's Encrypt 证书，正式 HTTPS 需要绑定已解析到该服务器的域名后再配置证书。
