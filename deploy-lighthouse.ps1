@@ -35,9 +35,9 @@ if ($KeyFile) {
   scp $archive $target
 }
 
-Invoke-Remote "sudo mkdir -p $RemoteDir && sudo tar -xzf /tmp/bigdogwoofwoof-lighthouse.tar.gz -C $RemoteDir && sudo chown -R www-data:www-data $RemoteDir"
+Invoke-Remote "sudo mkdir -p $RemoteDir && sudo tar -xzf /tmp/bigdogwoofwoof-lighthouse.tar.gz -C $RemoteDir && sudo chown -R www-data:www-data $RemoteDir && sudo chmod u+rwX,g+rX,o+rX $RemoteDir && sudo find $RemoteDir -type d -exec chmod u+rwx,g+rx,o+rx {} \;"
 Invoke-Remote "cd $RemoteDir && if ! command -v node >/dev/null 2>&1; then curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs; fi && sudo npm ci --omit=dev"
-Invoke-Remote "cd $RemoteDir && if [ ! -f .env ]; then sudo cp server/lighthouse.env.example .env; fi && sudo chown www-data:www-data .env"
+Invoke-Remote "cd $RemoteDir && if [ ! -f .env ]; then sudo cp server/lighthouse.env.example .env; fi && sudo mkdir -p server-data && sudo chown -R www-data:www-data server-data && sudo chmod 750 server-data && sudo chown www-data:www-data .env && sudo chmod 600 .env"
 Invoke-Remote "sudo cp $RemoteDir/server/bigdogwoofwoof-online.service /etc/systemd/system/bigdogwoofwoof-online.service && sudo systemctl daemon-reload && sudo systemctl enable --now bigdogwoofwoof-online.service && sudo systemctl restart bigdogwoofwoof-online.service"
 
 if (-not $SkipNginx) {
