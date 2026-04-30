@@ -625,6 +625,25 @@ function readSelectedActionsFromDom() {
   }));
 }
 
+function lockSelectedTurnFromBattle() {
+  const actions = readSelectedActionsFromDom();
+  return lockTurn(uiState.roomId, uiState.side, actions, { playerId: uiState.playerId })
+    .then((room) => {
+      globalThis.JJKBattlePage?.setBattleMode?.("online", {
+        activeRoomId: room.roomId || uiState.roomId,
+        playerSide: room.viewerSide || uiState.side,
+        activePage: "online",
+        localLocked: true
+      });
+      render(room);
+      return room;
+    })
+    .catch((error) => {
+      showError(error);
+      throw error;
+    });
+}
+
 function snapshot(room, viewerSide = "") {
   const copy = redactSecrets(cloneJson(normalizeRoom(room)));
   copy.viewerSide = viewerSide || getPlayerSide(copy, uiState.playerId) || "";
@@ -1048,6 +1067,7 @@ const OnlineModule = {
   lockCharacter,
   unlockCharacter,
   lockTurn,
+  lockSelectedTurnFromBattle,
   unlockTurn,
   resolveTurn,
   rematch,

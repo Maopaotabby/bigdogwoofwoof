@@ -3080,6 +3080,17 @@ function bindDuelBattleControls() {
   });
   els.duelBattle.querySelector("#duelAutoRunBtn")?.addEventListener("click", runDuelAutoBattle);
   els.duelBattle.querySelector("#duelOnlineLockFromHandBtn")?.addEventListener("click", () => {
+    if (globalThis.JJKOnline?.lockSelectedTurnFromBattle) {
+      state.duelBattle.actionUiMessage = "正在提交联机行动...";
+      renderDuelMode();
+      globalThis.JJKOnline.lockSelectedTurnFromBattle().catch(() => {
+        if (state.duelBattle) {
+          state.duelBattle.actionUiMessage = "联机行动提交失败，请检查房间状态后重试。";
+          renderDuelMode();
+        }
+      });
+      return;
+    }
     document.querySelector("#onlineLockTurnBtn")?.click();
   });
   els.duelBattle.querySelector("#duelAiBattleTextBtn")?.addEventListener("click", generateDuelBattleNarrative);

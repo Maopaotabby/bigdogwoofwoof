@@ -469,8 +469,11 @@ async function handleOperation(env, body) {
     room.players[side].actionLocked = true;
     appendLog(room, "turn_locked", `${side === "left" ? "左方" : "右方"}已锁定第 ${room.round} 回合行动。`, { side, turn: room.round });
     applyPhaseTransition(room);
-    if (room.phase === "turn_resolving") await resolveTurnIfReady(env, room, side);
-    const saved = await writeRoom(env, room, { preservePlayers: true, preserveTurnLocks: room.phase === "turn_selecting" });
+    let saved = await writeRoom(env, room, { preservePlayers: true, preserveTurnLocks: true });
+    if (hasBothLockedActions(saved)) {
+      await resolveTurnIfReady(env, saved, side);
+      saved = await writeRoom(env, saved, { preservePlayers: true });
+    }
     return json({ ok: true, room: snapshot(saved, side), side });
   }
 
