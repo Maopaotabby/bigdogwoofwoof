@@ -697,7 +697,7 @@ async function remoteOperation(operation, request = {}, options = {}) {
   if (operation === "ping") return data || { ok: true };
   const room = normalizeRoom(data.room || data.snapshot);
   const actualSide = getPlayerSide(room, body.playerId);
-  const side = data.side || actualSide || body.side;
+  const side = data.side || actualSide || (operation === "getRoom" ? "" : body.side);
   if (room?.roomId && actualSide) remember(room.roomId, body.playerId, actualSide, settings);
   return snapshot(room, side);
 }
@@ -965,7 +965,13 @@ function bindUi() {
   panel.dataset.onlineRewriteBound = "true";
   restoreRemembered();
   const invited = parseInviteLink();
-  if (invited) setValue("#onlineJoinRoomCodeInput", invited);
+  if (invited) {
+    if (uiState.roomId && normalizeRoomId(uiState.roomId) !== invited) {
+      stopPolling();
+      clearRemembered();
+    }
+    setValue("#onlineJoinRoomCodeInput", invited);
+  }
   syncCharacterSelects();
   render({});
   globalThis.setTimeout(() => {

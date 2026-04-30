@@ -372,7 +372,7 @@ async function handleOperation(env, body) {
       const saved = await writeRoom(env, room);
       return json({ ok: true, room: snapshot(saved, side), side });
     }
-    return json({ ok: true, room: snapshot(room, side), side });
+    return json({ ok: true, room: snapshot(room, ""), side: "" });
   }
 
   if (operation === "joinRoom") {
