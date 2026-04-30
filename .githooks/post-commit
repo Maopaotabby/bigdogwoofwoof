@@ -1,0 +1,11 @@
+#!/bin/sh
+changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+
+case "$changed_files" in
+  *server/online-battle-worker.js*|*server/wrangler-online-battle.toml*|*deploy-worker.ps1*|*monitor-worker.ps1*)
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "./deploy-worker.ps1"
+    ;;
+  *)
+    echo "Worker deploy skipped: commit did not change Worker files."
+    ;;
+esac
