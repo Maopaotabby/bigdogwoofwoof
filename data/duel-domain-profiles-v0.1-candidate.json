@@ -1,0 +1,964 @@
+{
+  "schema": "jjk-duel-domain-profiles",
+  "version": "0.1.2-candidate",
+  "status": "CANDIDATE",
+  "sourceLayer": [
+    "site_1.386",
+    "canon_lore",
+    "prototype_balance"
+  ],
+  "scope": "named canon domain profile layer with barrier type behavior candidates",
+  "notes": [
+    "This file separates domain effect profiles from domain response profiles.",
+    "Profiles and barrier behavior values are gameplay candidates, not final canon numeric rulings.",
+    "AI may narrate these profiles after local resolution, but AI must not create domain rules or write numeric effects into combat.",
+    "Barrier behavior fields are introduced by 1.386C-domain-barrier-type-hotfix and remain CANDIDATE.",
+    "Nonstandard trial target behavior candidates are kept in duel-trial-target-rules-v0.1-candidate.json and are not final canon."
+  ],
+  "relatedDataFiles": {
+    "trialTargetRules": "duel-trial-target-rules-v0.1-candidate.json"
+  },
+  "standardBarrierTypes": [
+    "closed_barrier",
+    "open_barrier",
+    "incomplete_barrier",
+    "rule_barrier",
+    "hybrid_barrier",
+    "pseudo_domain",
+    "unknown"
+  ],
+  "standardDomainCompletion": [
+    "complete",
+    "incomplete",
+    "unstable",
+    "conditional",
+    "unknown"
+  ],
+  "standardDomainSwitchability": [
+    "fixed",
+    "can_shift",
+    "forced_by_context",
+    "none",
+    "unknown"
+  ],
+  "standardEffectTags": [
+    "sure_hit",
+    "rule_binding",
+    "trial_phase",
+    "evidence_system",
+    "verdict_resolution",
+    "confiscation_possible",
+    "execution_state_possible",
+    "jackpot_rule",
+    "probability_loop",
+    "resource_loop",
+    "information_overload",
+    "action_suppression",
+    "cognition_lock",
+    "auto_attack",
+    "shikigami_auto_attack",
+    "slash_auto_attack",
+    "soul_touch",
+    "transformation_pressure",
+    "environment_pressure",
+    "open_domain",
+    "closed_barrier",
+    "incomplete_domain",
+    "domain_buff",
+    "domain_debuff",
+    "violence_restriction",
+    "sure_hit_component",
+    "manual_attack_component",
+    "sustained_damage",
+    "shadow_environment",
+    "unstable_domain"
+  ],
+  "profiles": [
+    {
+      "id": "higuruma_deadly_sentencing",
+      "ownerId": "higuruma_hiromi_culling",
+      "ownerName": "日车宽见",
+      "domainName": "诛伏赐死",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "rule_trial",
+      "barrierType": "rule_barrier",
+      "domainCompletion": "conditional",
+      "domainSwitchability": "fixed",
+      "barrierBehavior": {
+        "escapeDifficulty": "high",
+        "externalBreakRisk": "medium",
+        "sureHitStability": "high",
+        "domainLoadModifier": 0.55,
+        "counterplayModifier": {
+          "domainClash": 1.05,
+          "simpleDomain": 0.9,
+          "hollowWickerBasket": 0.9,
+          "zeroCeBypass": 0.75,
+          "physicalBreak": 0.75
+        }
+      },
+      "effectTags": [
+        "rule_binding",
+        "trial_phase",
+        "violence_restriction",
+        "evidence_system",
+        "verdict_resolution",
+        "confiscation_possible",
+        "execution_state_possible"
+      ],
+      "sureHit": {
+        "enabled": false,
+        "type": "rule_binding",
+        "description": "第一版不视为普通伤害必中，而是把战斗拖入审判规则。"
+      },
+      "domainEffects": [
+        {
+          "id": "trial_sub_phase",
+          "label": "审判子阶段",
+          "description": "领域展开后进入证据压力、辩护压力和判决准备的轻量子阶段。"
+        },
+        {
+          "id": "violence_restriction",
+          "label": "暴力限制",
+          "description": "审判期间直接输出倾向下降，规则类手法权重提高。"
+        }
+      ],
+      "trialTargetRuleProfileRef": "duel-trial-target-rules-v0.1-candidate",
+      "domainActions": [
+        {
+          "id": "present_evidence",
+          "label": "提出证据",
+          "status": "CANDIDATE",
+          "role": "prosecution",
+          "description": "提高证据压力，使判决更容易进入重判。",
+          "cost": {
+            "ceRatio": 0.03,
+            "minCe": 6
+          },
+          "effects": {
+            "evidencePressureDelta": 2,
+            "defensePressureDelta": 0.2,
+            "verdictProgress": 1,
+            "weightDeltas": {
+              "counter": 0.5,
+              "technique": -0.2
+            }
+          },
+          "risk": "low"
+        },
+        {
+          "id": "press_charge",
+          "label": "推进指控",
+          "status": "CANDIDATE",
+          "role": "prosecution",
+          "description": "推进审判轮次并提高判决准备度。",
+          "cost": {
+            "ceRatio": 0.035,
+            "minCe": 8
+          },
+          "effects": {
+            "evidencePressureDelta": 1.1,
+            "trialRoundDelta": 1,
+            "opponentStabilityDelta": -0.012
+          },
+          "risk": "medium"
+        },
+        {
+          "id": "advance_trial",
+          "label": "推进审判",
+          "status": "CANDIDATE",
+          "role": "prosecution",
+          "description": "推动审判流程，较快让判决进入可申请状态。",
+          "cost": {
+            "ceRatio": 0.025,
+            "minCe": 6
+          },
+          "effects": {
+            "evidencePressureDelta": 0.7,
+            "trialRoundDelta": 1,
+            "verdictProgress": 1,
+            "ownerDomainLoadDelta": 2
+          },
+          "risk": "low"
+        },
+        {
+          "id": "rule_pressure",
+          "label": "规则压制",
+          "status": "CANDIDATE",
+          "role": "prosecution",
+          "description": "压低对方直接防御和术式手法质量。",
+          "cost": {
+            "ceRatio": 0.045,
+            "minCe": 10
+          },
+          "effects": {
+            "opponentStatus": {
+              "id": "trialRulePressure",
+              "label": "审判规则压制",
+              "rounds": 1,
+              "value": 1
+            },
+            "opponentWeightDeltas": {
+              "technique": -0.5,
+              "finisher": -0.4,
+              "domain": -0.35
+            }
+          },
+          "risk": "medium"
+        },
+        {
+          "id": "request_verdict",
+          "label": "申请判决",
+          "status": "CANDIDATE",
+          "role": "prosecution",
+          "description": "根据证据压力结算证据不足、轻判、没收或处刑状态候选。",
+          "cost": {
+            "ceRatio": 0.055,
+            "minCe": 12
+          },
+          "effects": {
+            "requestVerdict": true
+          },
+          "risk": "high"
+        }
+      ],
+      "opponentActions": [
+        {
+          "id": "defend",
+          "label": "辩护",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "降低证据压力，提高辩护压力。",
+          "cost": {
+            "ceRatio": 0.025,
+            "minCe": 5
+          },
+          "effects": {
+            "evidencePressureDelta": -1.2,
+            "defensePressureDelta": 1
+          },
+          "risk": "low"
+        },
+        {
+          "id": "remain_silent",
+          "label": "沉默",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "低风险，不主动削弱证据，但避免自证风险。",
+          "cost": {
+            "ceRatio": 0.01,
+            "minCe": 0
+          },
+          "effects": {
+            "defensePressureDelta": 0.4,
+            "selfIncriminationRiskDelta": -0.6,
+            "heavyVerdictRiskDelta": -0.2
+          },
+          "risk": "low"
+        },
+        {
+          "id": "deny_charge",
+          "label": "否认指控",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "尝试降低证据；若证据压力已高，失败时会提高重判风险。",
+          "cost": {
+            "ceRatio": 0.02,
+            "minCe": 4
+          },
+          "effects": {
+            "denyCharge": true
+          },
+          "risk": "medium"
+        },
+        {
+          "id": "challenge_evidence",
+          "label": "反驳证据",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "削弱控诉方提出证据的收益。",
+          "cost": {
+            "ceRatio": 0.035,
+            "minCe": 7
+          },
+          "effects": {
+            "evidencePressureDelta": -1.1,
+            "selfStatus": {
+              "id": "evidenceChallenged",
+              "label": "反驳证据",
+              "rounds": 1,
+              "value": 1
+            }
+          },
+          "risk": "medium"
+        },
+        {
+          "id": "delay_trial",
+          "label": "拖延审理",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "延后判决窗口，但会推高领域负荷。",
+          "cost": {
+            "ceRatio": 0.03,
+            "minCe": 6
+          },
+          "effects": {
+            "trialRoundDelta": -1,
+            "ownerDomainLoadDelta": 5
+          },
+          "risk": "high"
+        }
+      ],
+      "resourceRules": {
+        "ceCostRatio": 0.16,
+        "domainLoadBase": 8,
+        "domainLoadGrowth": 2,
+        "stabilityPressure": 0.018
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "第一版只实现轻量审判子阶段，不实现完整处刑剑机制。"
+    },
+    {
+      "id": "hakari_idle_death_gamble",
+      "ownerId": "hakari_kinji_jackpot",
+      "ownerName": "秤金次",
+      "domainName": "坐杀搏徒",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "jackpot_rule",
+      "barrierType": "rule_barrier",
+      "domainCompletion": "conditional",
+      "domainSwitchability": "fixed",
+      "barrierBehavior": {
+        "escapeDifficulty": "medium",
+        "externalBreakRisk": "medium",
+        "sureHitStability": "medium",
+        "domainLoadModifier": 0.55,
+        "counterplayModifier": {
+          "domainClash": 1,
+          "simpleDomain": 0.88,
+          "hollowWickerBasket": 0.86,
+          "zeroCeBypass": 0.7,
+          "physicalBreak": 0.8
+        }
+      },
+      "effectTags": [
+        "jackpot_rule",
+        "probability_loop",
+        "resource_loop",
+        "domain_buff"
+      ],
+      "sureHit": {
+        "enabled": false,
+        "type": "none",
+        "description": "第一版按规则/概率循环处理，不作为直接伤害领域。"
+      },
+      "domainEffects": [
+        {
+          "id": "jackpot_cycle",
+          "label": "坐杀搏徒循环",
+          "description": "领域推进概率循环，可能产生临时续航/恢复候选状态。"
+        }
+      ],
+      "domainActions": [
+        {
+          "id": "advance_jackpot",
+          "label": "推进演出",
+          "status": "CANDIDATE",
+          "role": "owner",
+          "description": "推进概率循环并提高 jackpot 期待度。",
+          "cost": {
+            "ceRatio": 0.04,
+            "minCe": 8
+          },
+          "effects": {
+            "jackpotGaugeDelta": 28,
+            "jackpotRoundDelta": 1,
+            "domainLoadDelta": 2,
+            "selfStatus": {
+              "id": "jackpotCycleCandidate",
+              "label": "坐杀搏徒循环候选",
+              "rounds": 2,
+              "value": 1
+            },
+            "weightDeltas": {
+              "sustain": 0.8,
+              "resource": 0.4
+            }
+          },
+          "risk": "medium"
+        },
+        {
+          "id": "raise_probability",
+          "label": "提高期待度",
+          "status": "CANDIDATE",
+          "role": "owner",
+          "description": "以更多咒力推动概率演出，期待度提高但领域负荷上升。",
+          "cost": {
+            "ceRatio": 0.055,
+            "minCe": 10
+          },
+          "effects": {
+            "jackpotGaugeDelta": 36,
+            "jackpotRoundDelta": 1,
+            "domainLoadDelta": 2,
+            "stabilityDelta": -0.012,
+            "weightDeltas": {
+              "resource": 0.7,
+              "sustain": 0.4
+            }
+          },
+          "risk": "medium"
+        },
+        {
+          "id": "risk_spin",
+          "label": "高风险推进",
+          "status": "CANDIDATE",
+          "role": "owner",
+          "description": "强行推进 jackpot 期待度，未中奖前负荷和稳定压力显著增加。",
+          "cost": {
+            "ceRatio": 0.075,
+            "minCe": 14
+          },
+          "effects": {
+            "jackpotGaugeDelta": 48,
+            "jackpotRoundDelta": 1,
+            "domainLoadDelta": 2,
+            "stabilityDelta": -0.028,
+            "weightDeltas": {
+              "resource": 1,
+              "finisher": 0.25
+            }
+          },
+          "risk": "high"
+        },
+        {
+          "id": "stabilize_cycle",
+          "label": "稳定循环",
+          "status": "CANDIDATE",
+          "role": "owner",
+          "description": "压低本轮推进速度，降低领域负荷和咒力失控风险。",
+          "cost": {
+            "ceRatio": 0.025,
+            "minCe": 6
+          },
+          "effects": {
+            "jackpotGaugeDelta": 16,
+            "jackpotRoundDelta": 1,
+            "domainLoadDelta": -4,
+            "stabilityDelta": 0.03,
+            "weightDeltas": {
+              "sustain": 0.9
+            }
+          },
+          "risk": "low"
+        },
+        {
+          "id": "claim_jackpot",
+          "label": "结算中奖",
+          "status": "CANDIDATE",
+          "role": "owner",
+          "description": "在期待度成熟后结算 jackpot，成功后获得 jackpot 状态候选。",
+          "cost": {
+            "ceRatio": 0.045,
+            "minCe": 8
+          },
+          "effects": {
+            "claimJackpot": true
+          },
+          "risk": "high"
+        }
+      ],
+      "opponentActions": [],
+      "resourceRules": {
+        "ceCostRatio": 0.17,
+        "domainLoadBase": 8,
+        "domainLoadGrowth": 2,
+        "stabilityPressure": 0.018
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "第一版不完整还原坐杀搏徒全部概率演出，只把它和普通伤害领域分开。"
+    },
+    {
+      "id": "gojo_unlimited_void",
+      "ownerId": "gojo_satoru_shinjuku",
+      "ownerName": "五条悟",
+      "domainName": "无量空处",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "control",
+      "barrierType": "closed_barrier",
+      "domainCompletion": "complete",
+      "domainSwitchability": "fixed",
+      "barrierBehavior": {
+        "escapeDifficulty": "extreme",
+        "externalBreakRisk": "medium",
+        "sureHitStability": "extreme",
+        "domainLoadModifier": 1,
+        "counterplayModifier": {
+          "domainClash": 1,
+          "simpleDomain": 0.95,
+          "hollowWickerBasket": 0.95,
+          "zeroCeBypass": 0.85,
+          "physicalBreak": 1
+        }
+      },
+      "effectTags": [
+        "sure_hit",
+        "information_overload",
+        "action_suppression",
+        "cognition_lock",
+        "domain_debuff",
+        "closed_barrier"
+      ],
+      "sureHit": {
+        "enabled": true,
+        "type": "information_overload",
+        "description": "必中组件以信息过载和行动压制为主，而非普通伤害。"
+      },
+      "domainEffects": [
+        {
+          "id": "cognition_lock",
+          "label": "信息过载",
+          "description": "压低对方可用手法质量、术式输出和行动连续性。"
+        }
+      ],
+      "domainActions": [
+        {
+          "id": "maintain_information_overload",
+          "label": "维持信息压制",
+          "role": "owner",
+          "description": "延长行动压制并提高领域权重。",
+          "cost": {
+            "ceRatio": 0.06,
+            "minCe": 12
+          },
+          "effects": {
+            "opponentStatus": {
+              "id": "domainActionSuppression",
+              "label": "信息过载压制",
+              "rounds": 1,
+              "value": 1
+            },
+            "weightDeltas": {
+              "domain": 0.8
+            }
+          },
+          "risk": "medium"
+        }
+      ],
+      "opponentActions": [],
+      "resourceRules": {
+        "ceCostRatio": 0.2,
+        "domainLoadBase": 18,
+        "domainLoadGrowth": 8,
+        "stabilityPressure": 0.04
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "第一版表现为强控和行动压制，不把无量空处做成普通伤害。"
+    },
+    {
+      "id": "sukuna_malevolent_shrine",
+      "ownerId": "sukuna_heian_or_shinjuku",
+      "ownerName": "两面宿傩",
+      "domainName": "伏魔御厨子",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "auto_attack",
+      "barrierType": "open_barrier",
+      "domainCompletion": "complete",
+      "domainSwitchability": "fixed",
+      "barrierBehavior": {
+        "escapeDifficulty": "medium",
+        "externalBreakRisk": "low",
+        "sureHitStability": "high",
+        "domainLoadModifier": 1.16,
+        "counterplayModifier": {
+          "domainClash": 0.9,
+          "simpleDomain": 0.82,
+          "hollowWickerBasket": 0.82,
+          "zeroCeBypass": 0.78,
+          "physicalBreak": 0.25
+        }
+      },
+      "effectTags": [
+        "sure_hit",
+        "open_domain",
+        "auto_attack",
+        "slash_auto_attack",
+        "sure_hit_component",
+        "manual_attack_component",
+        "environment_pressure"
+      ],
+      "sureHit": {
+        "enabled": true,
+        "type": "damage",
+        "description": "开放领域中的斩击压力包含必中组件、领域压制和手动攻击/环境伤害。"
+      },
+      "domainEffects": [
+        {
+          "id": "open_slash_pressure",
+          "label": "开放斩击压力",
+          "description": "持续斩击和环境压制，不与普通封闭领域完全等同。"
+        }
+      ],
+      "domainActions": [
+        {
+          "id": "sustain_open_slash",
+          "label": "维持开放斩击",
+          "role": "owner",
+          "description": "维持开放领域中的斩击压力。",
+          "cost": {
+            "ceRatio": 0.075,
+            "minCe": 15
+          },
+          "effects": {
+            "opponentStatus": {
+              "id": "openSlashPressure",
+              "label": "开放斩击压力",
+              "rounds": 1,
+              "value": 1
+            },
+            "opponentWeightDeltas": {
+              "sustain": -0.4
+            },
+            "weightDeltas": {
+              "domain": 0.9
+            }
+          },
+          "risk": "high"
+        }
+      ],
+      "opponentActions": [],
+      "resourceRules": {
+        "ceCostRatio": 0.2,
+        "domainLoadBase": 16,
+        "domainLoadGrowth": 7,
+        "stabilityPressure": 0.035
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "开放领域第一版只做结构差异与持续斩击压力，不完整模拟半径或结界坐标。"
+    },
+    {
+      "id": "mahito_self_embodiment",
+      "ownerId": "mahito_shibuya",
+      "ownerName": "真人",
+      "domainName": "自闭圆顿裹",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "hybrid",
+      "barrierType": "closed_barrier",
+      "domainCompletion": "complete",
+      "domainSwitchability": "unknown",
+      "barrierBehavior": {
+        "escapeDifficulty": "high",
+        "externalBreakRisk": "medium",
+        "sureHitStability": "high",
+        "domainLoadModifier": 1,
+        "counterplayModifier": {
+          "domainClash": 1,
+          "simpleDomain": 0.95,
+          "hollowWickerBasket": 0.95,
+          "zeroCeBypass": 0.85,
+          "physicalBreak": 1
+        }
+      },
+      "effectTags": [
+        "sure_hit",
+        "soul_touch",
+        "transformation_pressure",
+        "domain_debuff",
+        "closed_barrier"
+      ],
+      "sureHit": {
+        "enabled": true,
+        "type": "soul_touch",
+        "description": "必中组件以灵魂接触和变形压力为主。"
+      },
+      "domainEffects": [
+        {
+          "id": "soul_touch_pressure",
+          "label": "灵魂接触压力",
+          "description": "提高术式命中和反制风险，压迫对方体势与稳定。"
+        }
+      ],
+      "domainActions": [
+        {
+          "id": "force_soul_touch",
+          "label": "强迫灵魂接触",
+          "role": "owner",
+          "description": "强化灵魂接触压力，使对方稳定和体势承受变差。",
+          "cost": {
+            "ceRatio": 0.07,
+            "minCe": 14
+          },
+          "effects": {
+            "opponentStatus": {
+              "id": "soulTouchPressure",
+              "label": "灵魂接触压力",
+              "rounds": 1,
+              "value": 1
+            },
+            "opponentStabilityDelta": -0.03,
+            "weightDeltas": {
+              "technique": 0.8
+            }
+          },
+          "risk": "high"
+        }
+      ],
+      "opponentActions": [],
+      "resourceRules": {
+        "ceCostRatio": 0.18,
+        "domainLoadBase": 16,
+        "domainLoadGrowth": 7,
+        "stabilityPressure": 0.04
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "第一版不直接判定一触即死，只作为灵魂压力候选。"
+    },
+    {
+      "id": "dagon_horizon_of_captivating_skandha",
+      "ownerId": "dagon_shibuya_domain",
+      "ownerName": "陀艮",
+      "domainName": "荡蕴平线",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "auto_attack",
+      "barrierType": "closed_barrier",
+      "domainCompletion": "complete",
+      "domainSwitchability": "fixed",
+      "barrierBehavior": {
+        "escapeDifficulty": "high",
+        "externalBreakRisk": "medium",
+        "sureHitStability": "high",
+        "domainLoadModifier": 1.02,
+        "counterplayModifier": {
+          "domainClash": 1,
+          "simpleDomain": 0.96,
+          "hollowWickerBasket": 0.96,
+          "zeroCeBypass": 0.86,
+          "physicalBreak": 1
+        }
+      },
+      "effectTags": [
+        "sure_hit",
+        "auto_attack",
+        "shikigami_auto_attack",
+        "environment_pressure",
+        "sustained_damage",
+        "closed_barrier"
+      ],
+      "sureHit": {
+        "enabled": true,
+        "type": "auto_attack",
+        "description": "必中组件以式神洪流和持续自动攻击为主。"
+      },
+      "domainEffects": [
+        {
+          "id": "shikigami_surge",
+          "label": "式神洪流",
+          "description": "持续自动攻击和环境压制共同消耗对方体势。"
+        }
+      ],
+      "domainActions": [
+        {
+          "id": "shikigami_surge",
+          "label": "式神洪流",
+          "role": "owner",
+          "description": "提高自动攻击压力并消耗对方体势。",
+          "cost": {
+            "ceRatio": 0.06,
+            "minCe": 12
+          },
+          "effects": {
+            "opponentStatus": {
+              "id": "shikigamiAutoAttack",
+              "label": "式神自动攻击",
+              "rounds": 1,
+              "value": 1
+            },
+            "weightDeltas": {
+              "domain": 0.65,
+              "resource": 0.35
+            }
+          },
+          "risk": "medium"
+        }
+      ],
+      "opponentActions": [],
+      "resourceRules": {
+        "ceCostRatio": 0.17,
+        "domainLoadBase": 15,
+        "domainLoadGrowth": 6,
+        "stabilityPressure": 0.03
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "第一版表现式神洪流和环境压制，不把陀艮领域做成一次性强伤害。"
+    },
+    {
+      "id": "megumi_chimera_shadow_garden",
+      "ownerId": "megumi_fushiguro_culling",
+      "ownerName": "伏黑惠",
+      "domainName": "嵌合暗翳庭",
+      "status": "CANDIDATE",
+      "sourceLayer": [
+        "site_1.386",
+        "canon_lore",
+        "prototype_balance"
+      ],
+      "domainClass": "hybrid",
+      "barrierType": "incomplete_barrier",
+      "domainCompletion": "incomplete",
+      "domainSwitchability": "forced_by_context",
+      "barrierBehavior": {
+        "escapeDifficulty": "medium",
+        "externalBreakRisk": "high",
+        "sureHitStability": "low",
+        "domainLoadModifier": 1.28,
+        "counterplayModifier": {
+          "domainClash": 1.25,
+          "simpleDomain": 1.12,
+          "hollowWickerBasket": 1,
+          "zeroCeBypass": 0.95,
+          "physicalBreak": 1.35
+        }
+      },
+      "effectTags": [
+        "incomplete_domain",
+        "environment_pressure",
+        "shikigami_auto_attack",
+        "shadow_environment",
+        "domain_buff",
+        "unstable_domain"
+      ],
+      "sureHit": {
+        "enabled": false,
+        "type": "none",
+        "description": "未完成领域不按完整必中处理，第一版主要表现影子环境、式神压制和术式增幅。"
+      },
+      "domainEffects": [
+        {
+          "id": "shadow_environment",
+          "label": "影子环境扩张",
+          "description": "影子与式神压制战场，但领域结构未完成，负荷更不稳定。"
+        }
+      ],
+      "domainActions": [
+        {
+          "id": "expand_shadow_garden",
+          "label": "扩张嵌合暗翳庭",
+          "role": "owner",
+          "description": "扩大影子环境与式神压制，但未完成领域会推高负荷。",
+          "cost": {
+            "ceRatio": 0.055,
+            "minCe": 10
+          },
+          "effects": {
+            "opponentStatus": {
+              "id": "shikigamiAutoAttack",
+              "label": "式神自动攻击",
+              "rounds": 1,
+              "value": 0.65
+            },
+            "selfStatus": {
+              "id": "incompleteDomainInstability",
+              "label": "未完成领域不稳",
+              "rounds": 1,
+              "value": 1
+            },
+            "domainLoadDelta": 5,
+            "weightDeltas": {
+              "domain": 0.45,
+              "resource": 0.45
+            }
+          },
+          "risk": "high"
+        }
+      ],
+      "opponentActions": [],
+      "resourceRules": {
+        "ceCostRatio": 0.13,
+        "domainLoadBase": 12,
+        "domainLoadGrowth": 9,
+        "stabilityPressure": 0.055
+      },
+      "counterplay": [
+        "domain_clash",
+        "simple_domain_guard",
+        "hollow_wicker_basket_guard",
+        "falling_blossom_emotion",
+        "zero_ce_domain_bypass",
+        "domain_survival_guard"
+      ],
+      "notes": "未完成领域样板；不等同完整领域，不提供完整必中。"
+    }
+  ]
+}

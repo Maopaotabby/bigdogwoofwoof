@@ -1,0 +1,2517 @@
+{
+  "schema": "jjk-duel-action-templates",
+  "version": "0.1.2-candidate",
+  "status": "CANDIDATE",
+  "sourceLayer": [
+    "site_1.386",
+    "site_1.386A_resource_layer",
+    "prototype_balance"
+  ],
+  "scope": "cyber duel three-choice action layer",
+  "notes": [
+    "This file defines candidate action templates for the 1.386B cyber duel three-choice technique layer.",
+    "These actions are not cards, do not form a deck, and must not be treated as canon balance.",
+    "AI may narrate selected actions after local resolution, but AI must not write CE costs, output multipliers, domain thresholds, resources, win rates, or final outcomes.",
+    "Target-specific trial three-choice candidates are kept in duel-trial-target-rules-v0.1-candidate.json and are not part of the generic combat action deck.",
+    "1.389A expands CANDIDATE action-backed hand candidates while keeping local deterministic effect resolution.",
+    "MechanicIds point to duel-mechanic-templates metadata; AI may narrate only after local resolution."
+  ],
+  "relatedDataFiles": {
+    "trialTargetRules": "duel-trial-target-rules-v0.1-candidate.json",
+    "mechanicTemplates": "duel-mechanic-templates-v0.1-candidate.json"
+  },
+  "choiceCount": 3,
+  "riskLabels": {
+    "low": "低风险",
+    "medium": "中风险",
+    "high": "高风险",
+    "critical": "极高风险"
+  },
+  "templates": [
+    {
+      "id": "ce_reinforcement",
+      "label": "咒力强化",
+      "status": "CANDIDATE",
+      "description": "将咒力贴合肉体与近身节奏，本回合直接压制更强。",
+      "cost": {
+        "ceRatio": 0.045,
+        "minCe": 10
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "effects": {
+        "outgoingScale": 1.12,
+        "weightDeltas": {
+          "initiative": 0.8,
+          "melee": 1.15,
+          "finisher": 0.35
+        },
+        "stabilityDelta": -0.012,
+        "domainLoadDelta": 1.5
+      },
+      "baseDamage": 12,
+      "baseDomainLoadDelta": 1.5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你将咒力集中于近身压制，本回合体术与直接输出上升，但咒力流动略有紊乱。"
+    },
+    {
+      "id": "defensive_frame",
+      "label": "防御构筑",
+      "status": "CANDIDATE",
+      "description": "用咒力构成防线，压低本回合体势损耗。",
+      "cost": {
+        "ceRatio": 0.035,
+        "minCe": 8
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "effects": {
+        "incomingHpScale": 0.76,
+        "incomingCeScale": 0.88,
+        "stabilityDelta": 0.018,
+        "weightDeltas": {
+          "counter": 0.45,
+          "sustain": 0.65
+        }
+      },
+      "baseBlock": 24,
+      "baseStabilityRestore": 18,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "defense",
+      "risk": "low",
+      "logTemplate": "你先补足防御构筑，减少本回合体势损耗，并让咒力稳定略有回正。"
+    },
+    {
+      "id": "technique_interference",
+      "label": "术式干涉",
+      "status": "CANDIDATE",
+      "description": "干扰对方术式与回流节奏，推高领域负荷。",
+      "cost": {
+        "ceRatio": 0.07,
+        "minCe": 14
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "effects": {
+        "weightDeltas": {
+          "counter": 1.15,
+          "technique": 0.35
+        },
+        "opponentWeightDeltas": {
+          "technique": -0.7,
+          "domain": -0.55
+        },
+        "opponentStabilityDelta": -0.026,
+        "opponentDomainLoadDelta": 7,
+        "opponentRegenInterference": 0.22,
+        "opponentStatus": {
+          "id": "techniqueInterfered",
+          "label": "术式受扰",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseStabilityDamage": 26,
+      "baseCeDamage": 22,
+      "baseDomainPressure": 7,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你把咒力打入对方术式节奏，干扰其咒力回流与领域维持。"
+    },
+    {
+      "id": "residue_reading",
+      "label": "残秽读解",
+      "status": "CANDIDATE",
+      "description": "读取对方咒力流向，提升后续反制判断。",
+      "cost": {
+        "ceRatio": 0.018,
+        "minCe": 4
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "effects": {
+        "stabilityDelta": 0.024,
+        "weightDeltas": {
+          "counter": 0.8,
+          "initiative": 0.25
+        },
+        "selfStatus": {
+          "id": "residueReading",
+          "label": "残秽读解",
+          "rounds": 2,
+          "value": 1
+        }
+      },
+      "baseStabilityRestore": 24,
+      "baseDefensePressure": 4,
+      "durationRounds": 2,
+      "baseCeCost": 4,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "low",
+      "logTemplate": "你压低输出读取残秽，对方咒力流向被记录，下一轮反制判断更清楚。"
+    },
+    {
+      "id": "forced_output",
+      "label": "强制输出",
+      "status": "CANDIDATE",
+      "description": "强行拉高术式输出，换取更高收束上限。",
+      "cost": {
+        "ceRatio": 0.11,
+        "minCe": 22
+      },
+      "requirements": {
+        "domainActive": "any",
+        "blocksOnTechniqueImbalance": true
+      },
+      "effects": {
+        "outgoingScale": 1.26,
+        "weightDeltas": {
+          "technique": 1.15,
+          "finisher": 1.35
+        },
+        "stabilityDelta": -0.045,
+        "domainLoadDelta": 6,
+        "selfStatus": {
+          "id": "forcedOutputStrain",
+          "label": "强制输出负担",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 26,
+      "baseDomainLoadDelta": 6,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "logTemplate": "你强行拉高术式输出，本回合上限提高，但咒力稳定与领域负荷风险同步恶化。"
+    },
+    {
+      "id": "ce_compression",
+      "label": "压缩咒力",
+      "status": "CANDIDATE",
+      "description": "收束咒力流动，降低过载与领域负担。",
+      "cost": {
+        "ceRatio": 0.028,
+        "minCe": 6
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "effects": {
+        "outgoingScale": 0.9,
+        "stabilityDelta": 0.042,
+        "domainLoadDelta": -5,
+        "domainLoadScale": 0.72,
+        "weightDeltas": {
+          "sustain": 0.9,
+          "counter": 0.35,
+          "finisher": -0.55
+        }
+      },
+      "baseStabilityRestore": 42,
+      "baseDomainLoadDelta": -5,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 6,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "low",
+      "logTemplate": "你主动压缩咒力输出，降低领域负荷增长并回稳咒力流。"
+    },
+    {
+      "id": "domain_expand",
+      "label": "领域展开",
+      "status": "CANDIDATE",
+      "description": "展开领域，把战局拖入高压结界状态。",
+      "cost": {
+        "ceRatio": 0.18,
+        "minCe": 34
+      },
+      "requirements": {
+        "requiresDomainAccess": true,
+        "domainActive": false,
+        "blocksOnTechniqueImbalance": true
+      },
+      "effects": {
+        "activateDomain": true,
+        "domainLoadDelta": 18,
+        "weightDeltas": {
+          "domain": 2.4,
+          "technique": 0.7
+        },
+        "outgoingScale": 1.12,
+        "stabilityDelta": -0.018
+      },
+      "baseDamage": 12,
+      "baseDomainLoadDelta": 18,
+      "durationRounds": 1,
+      "baseCeCost": 34,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "logTemplate": "你展开领域，结界压制启动，领域负荷同步上升。",
+      "baseDomainPressure": 24
+    },
+    {
+      "id": "domain_compress",
+      "label": "压缩领域",
+      "status": "CANDIDATE",
+      "description": "主动收束领域边界，降低维持负荷。",
+      "cost": {
+        "ceRatio": 0.045,
+        "minCe": 10
+      },
+      "requirements": {
+        "domainActive": true
+      },
+      "effects": {
+        "domainLoadDelta": -10,
+        "domainLoadScale": 0.45,
+        "outgoingScale": 0.88,
+        "stabilityDelta": 0.03,
+        "weightDeltas": {
+          "domain": -0.5,
+          "sustain": 1
+        }
+      },
+      "baseStabilityRestore": 30,
+      "baseDomainLoadDelta": -10,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "low",
+      "logTemplate": "你主动收束领域边界，压低领域输出，换取负荷回落。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "domain_force_sustain",
+      "label": "强行维持领域",
+      "status": "CANDIDATE",
+      "description": "不顾负荷继续扩大领域压制。",
+      "cost": {
+        "ceRatio": 0.13,
+        "minCe": 24
+      },
+      "requirements": {
+        "domainActive": true
+      },
+      "effects": {
+        "domainLoadDelta": 16,
+        "domainLoadScale": 1.45,
+        "outgoingScale": 1.2,
+        "stabilityDelta": -0.038,
+        "weightDeltas": {
+          "domain": 1.8,
+          "finisher": 0.6
+        }
+      },
+      "baseDamage": 20,
+      "baseDomainLoadDelta": 16,
+      "durationRounds": 1,
+      "baseCeCost": 24,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "critical",
+      "logTemplate": "你强行维持领域压制，领域收益提高，但负荷逼近领域崩解临界线。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "domain_release",
+      "label": "主动解除领域",
+      "status": "CANDIDATE",
+      "description": "主动撤去领域，避免领域崩解 / 术式烧断反噬。",
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 0
+      },
+      "requirements": {
+        "domainActive": true
+      },
+      "effects": {
+        "releaseDomain": true,
+        "stabilityDelta": 0.035,
+        "domainLoadDelta": -8,
+        "weightDeltas": {
+          "sustain": 0.75,
+          "domain": -1.4
+        }
+      },
+      "baseStabilityRestore": 35,
+      "baseDomainLoadDelta": -8,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "none",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "low",
+      "logTemplate": "你主动解除领域，避免领域崩解 / 术式烧断，把剩余咒力重新收束。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "domain_clash",
+      "label": "领域对抗",
+      "status": "CANDIDATE",
+      "description": "以真正领域展开或高阶领域干涉正面对撞对方领域。",
+      "cost": {
+        "ceRatio": 0.14,
+        "minCe": 28
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresDomainClash": true
+      },
+      "effects": {
+        "weightDeltas": {
+          "counter": 1.1,
+          "domain": 1.05
+        },
+        "opponentWeightDeltas": {
+          "domain": -1.35,
+          "technique": -0.35
+        },
+        "opponentDomainLoadDelta": 16,
+        "domainLoadDelta": 8,
+        "sureHitScale": 0.46,
+        "domainPressureScale": 0.72,
+        "manualAttackScale": 0.92,
+        "stabilityDelta": -0.024,
+        "lowStabilityHpRecoil": 5
+      },
+      "baseShield": 54,
+      "baseDomainPressure": 16,
+      "baseDomainLoadDelta": 8,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 28,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "logTemplate": "你以领域或高阶结界干涉正面对抗对方领域，推高对方领域负荷，但自身也承受领域负担。"
+    },
+    {
+      "id": "simple_domain_guard",
+      "label": "简易领域防御",
+      "status": "CANDIDATE",
+      "description": "以简易领域削弱必中，拖住对方领域压制。",
+      "cost": {
+        "ceRatio": 0.065,
+        "minCe": 12
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresSimpleDomain": true
+      },
+      "effects": {
+        "sureHitScale": 0.35,
+        "domainPressureScale": 0.72,
+        "manualAttackScale": 0.95,
+        "incomingHpScale": 0.82,
+        "incomingCeScale": 0.9,
+        "opponentWeightDeltas": {
+          "domain": -0.35
+        },
+        "opponentDomainLoadDelta": 2,
+        "stabilityDelta": -0.006,
+        "selfStatus": {
+          "id": "simpleDomainWearing",
+          "label": "简易领域磨损",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseBlock": 18,
+      "baseShield": 65,
+      "baseDomainPressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "logTemplate": "你展开简易领域削弱必中，结界边界被对方领域持续压缩并开始磨损。"
+    },
+    {
+      "id": "hollow_wicker_basket_guard",
+      "label": "弥虚葛笼",
+      "status": "CANDIDATE",
+      "description": "以弥虚葛笼抵消必中，但行动和输出受到明显限制。",
+      "cost": {
+        "ceRatio": 0.055,
+        "minCe": 10
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresHollowWickerBasket": true
+      },
+      "effects": {
+        "sureHitScale": 0.28,
+        "domainPressureScale": 0.78,
+        "manualAttackScale": 1,
+        "incomingHpScale": 0.86,
+        "outgoingScale": 0.68,
+        "weightDeltas": {
+          "technique": -0.7,
+          "finisher": -0.8,
+          "melee": -0.35
+        },
+        "opponentDomainLoadDelta": 1,
+        "selfStatus": {
+          "id": "hollowWickerBasketPosture",
+          "label": "弥虚葛笼架势受限",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseBlock": 14,
+      "baseShield": 72,
+      "baseDomainPressure": 1,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "logTemplate": "你维持弥虚葛笼抵消必中，架势被迫固定，输出和机动同步受限。"
+    },
+    {
+      "id": "falling_blossom_emotion",
+      "label": "落花之情",
+      "status": "CANDIDATE",
+      "description": "以自动迎击削弱必中，是预留的反必中防线而非领域对撞。",
+      "cost": {
+        "ceRatio": 0.05,
+        "minCe": 10
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresFallingBlossomEmotion": true
+      },
+      "effects": {
+        "sureHitScale": 0.48,
+        "domainPressureScale": 0.82,
+        "manualAttackScale": 0.95,
+        "incomingHpScale": 0.88,
+        "weightDeltas": {
+          "counter": 0.4
+        },
+        "stabilityDelta": -0.004
+      },
+      "baseBlock": 12,
+      "baseShield": 52,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "logTemplate": "你以落花之情自动迎击必中，削弱命中伤害，但这不是领域对撞。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "zero_ce_domain_bypass",
+      "label": "零咒力必中规避",
+      "status": "CANDIDATE",
+      "description": "零咒力个体不被领域必中正常捕捉，但仍会承受领域压制和手动攻击。",
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 0,
+        "flatCe": 0
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresZeroCeBypass": true
+      },
+      "effects": {
+        "sureHitScale": 0.08,
+        "domainPressureScale": 0.82,
+        "manualAttackScale": 1,
+        "incomingHpScale": 0.88,
+        "outgoingScale": 1.02,
+        "weightDeltas": {
+          "melee": 0.9,
+          "initiative": 0.55,
+          "counter": 0.35
+        }
+      },
+      "baseDamage": 2,
+      "baseBlock": 12,
+      "baseShield": 92,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "domain",
+      "scalingProfile": "zero_ce",
+      "risk": "low",
+      "logTemplate": "零咒力个体不被领域必中正常捕捉，转而寻找近身突入、破坏结界锚点或脱出的机会。",
+      "requiresZeroCe": true
+    },
+    {
+      "id": "domain_survival_guard",
+      "label": "域内求生",
+      "status": "CANDIDATE",
+      "description": "缺少硬防线时以体势和咒力硬扛领域，只能争取一回合窗口。",
+      "cost": {
+        "ceRatio": 0.045,
+        "minCe": 0
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresNoDomainResponse": true
+      },
+      "effects": {
+        "sureHitScale": 0.86,
+        "domainPressureScale": 0.93,
+        "manualAttackScale": 1,
+        "incomingHpScale": 0.92,
+        "stabilityDelta": -0.025,
+        "weightDeltas": {
+          "sustain": 0.55,
+          "counter": 0.15
+        }
+      },
+      "baseBlock": 8,
+      "baseShield": 14,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "ce_ratio",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "logTemplate": "你缺少领域或反领域硬防线，只能以体势和咒力硬扛，等待领域崩解、咒力耗尽或近身机会。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "divergent_fist_delay",
+      "label": "逕庭拳延迟",
+      "status": "CANDIDATE",
+      "description": "体术命中先于咒力冲击，当前压制较稳并留下延迟震荡。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.035,
+        "minCe": 8
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "divergent_fist_delay"
+      ],
+      "tags": [
+        "虎杖",
+        "体术",
+        "延迟"
+      ],
+      "effects": {
+        "outgoingScale": 1.06,
+        "opponentStabilityDelta": -0.012,
+        "weightDeltas": {
+          "melee": 0.75,
+          "counter": 0.25
+        },
+        "opponentStatus": {
+          "id": "delayedImpactCandidate",
+          "label": "延迟冲击候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 6,
+      "baseStabilityDamage": 12,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你以逕庭拳错开咒力冲击，对方体势被延迟震荡牵制。"
+    },
+    {
+      "id": "melee_chain_pressure",
+      "label": "连续打击",
+      "status": "CANDIDATE",
+      "description": "以短距离连打压迫对手动作选择。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.04,
+        "minCe": 9
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "melee_chain_pressure"
+      ],
+      "tags": [
+        "虎杖",
+        "体术",
+        "连击"
+      ],
+      "effects": {
+        "outgoingScale": 1.1,
+        "weightDeltas": {
+          "melee": 1.05,
+          "initiative": 0.45
+        },
+        "opponentWeightDeltas": {
+          "initiative": -0.3,
+          "sustain": -0.25
+        }
+      },
+      "baseDamage": 10,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你贴身连续打击，迫使对方把资源投入防守节奏。"
+    },
+    {
+      "id": "ce_burst_strike",
+      "label": "咒力爆发打击",
+      "status": "CANDIDATE",
+      "description": "瞬间拉高咒力贴合打击，换取短促爆发。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.06,
+        "minCe": 13
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "ce_burst_strike"
+      ],
+      "tags": [
+        "虎杖",
+        "咒力",
+        "爆发"
+      ],
+      "effects": {
+        "outgoingScale": 1.16,
+        "stabilityDelta": -0.018,
+        "domainLoadDelta": 3,
+        "weightDeltas": {
+          "melee": 0.8,
+          "finisher": 0.45
+        }
+      },
+      "baseDamage": 16,
+      "baseDomainLoadDelta": 3,
+      "durationRounds": 1,
+      "baseCeCost": 13,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "logTemplate": "你把咒力压入一击爆发，输出窗口扩大但体势略被拉紧。"
+    },
+    {
+      "id": "impact_timing_window",
+      "label": "爆发窗口",
+      "status": "CANDIDATE",
+      "description": "建立下一次 strike 类动作的爆发机会；这不是主动暴击卡。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.03,
+        "minCe": 7
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [],
+      "tags": [
+        "虎杖",
+        "窗口",
+        "爆发"
+      ],
+      "effects": {
+        "outgoingScale": 1.05,
+        "stabilityDelta": 0.012,
+        "weightDeltas": {
+          "melee": 0.55,
+          "finisher": 0.65,
+          "initiative": 0.35
+        },
+        "selfStatus": {
+          "id": "impactWindowCandidate",
+          "label": "爆发窗口候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 5,
+      "baseStabilityRestore": 12,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "support_stability",
+      "risk": "medium",
+      "logTemplate": "你校准打击与咒力误差，下一次近身爆发窗口成形。"
+    },
+    {
+      "id": "shikigami_intercept",
+      "label": "式神牵制",
+      "status": "CANDIDATE",
+      "description": "让式神切入承接第一波压力并打乱路线。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.045,
+        "minCe": 10
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "shikigami_intercept"
+      ],
+      "tags": [
+        "伏黑",
+        "式神",
+        "防御"
+      ],
+      "effects": {
+        "incomingHpScale": 0.82,
+        "outgoingScale": 0.96,
+        "weightDeltas": {
+          "sustain": 0.55,
+          "counter": 0.35
+        },
+        "opponentWeightDeltas": {
+          "melee": -0.35
+        },
+        "selfStatus": {
+          "id": "shikigamiInterceptCandidate",
+          "label": "式神牵制候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseBlock": 18,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "defense",
+      "risk": "low",
+      "logTemplate": "你让式神切入牵制，对方第一段压迫被分流。"
+    },
+    {
+      "id": "shadow_storage",
+      "label": "影中收纳",
+      "status": "CANDIDATE",
+      "description": "把武器或节奏藏入影中，保存一次低成本反击窗口。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.035,
+        "minCe": 8
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "shadow_storage"
+      ],
+      "tags": [
+        "伏黑",
+        "影",
+        "资源"
+      ],
+      "effects": {
+        "stabilityDelta": 0.018,
+        "weightDeltas": {
+          "counter": 0.7,
+          "resource": 0.45,
+          "initiative": 0.25
+        },
+        "selfStatus": {
+          "id": "shadowStorageCandidate",
+          "label": "影中收纳候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseStabilityRestore": 18,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "low",
+      "logTemplate": "你把路线藏入影中，后续反击与资源调度更稳定。"
+    },
+    {
+      "id": "shadow_terrain_pressure",
+      "label": "影域地形压迫",
+      "status": "CANDIDATE",
+      "description": "扩大影子地形，限制对手路线。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.06,
+        "minCe": 13
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "shadow_storage"
+      ],
+      "tags": [
+        "伏黑",
+        "影",
+        "地形"
+      ],
+      "effects": {
+        "opponentStabilityDelta": -0.02,
+        "opponentWeightDeltas": {
+          "initiative": -0.45,
+          "melee": -0.25
+        },
+        "weightDeltas": {
+          "technique": 0.55,
+          "counter": 0.3
+        },
+        "domainLoadDelta": 2
+      },
+      "baseStabilityDamage": 20,
+      "baseDomainLoadDelta": 2,
+      "durationRounds": 1,
+      "baseCeCost": 13,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你铺开影子地形，对手移动路线被压缩。"
+    },
+    {
+      "id": "incomplete_domain_shadow_support",
+      "label": "未完成领域支援",
+      "status": "CANDIDATE",
+      "description": "用不完整领域的影子结构提供压制辅助。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.09,
+        "minCe": 20
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "domain_instinct_resistance"
+      ],
+      "tags": [
+        "伏黑",
+        "领域",
+        "影"
+      ],
+      "effects": {
+        "domainLoadDelta": 7,
+        "outgoingScale": 1.12,
+        "weightDeltas": {
+          "domain": 0.85,
+          "technique": 0.55
+        },
+        "stabilityDelta": -0.02,
+        "selfStatus": {
+          "id": "incompleteShadowDomainCandidate",
+          "label": "未完成领域支援候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 12,
+      "baseDomainLoadDelta": 7,
+      "durationRounds": 1,
+      "baseCeCost": 20,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "logTemplate": "你借不完整领域支援影子压制，收益和领域负荷同步上升。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "infinity_guard",
+      "label": "无下限防线",
+      "status": "CANDIDATE",
+      "description": "以无下限间隔削弱近身与手动追击，但消耗咒力稳定。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.07,
+        "minCe": 16
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "infinity_guard"
+      ],
+      "tags": [
+        "五条",
+        "无下限",
+        "防御"
+      ],
+      "effects": {
+        "incomingHpScale": 0.68,
+        "incomingCeScale": 0.9,
+        "manualAttackScale": 0.74,
+        "domainPressureScale": 0.94,
+        "domainLoadDelta": 4,
+        "stabilityDelta": -0.01,
+        "weightDeltas": {
+          "sustain": 0.7,
+          "counter": 0.45
+        }
+      },
+      "baseBlock": 32,
+      "baseShield": 26,
+      "baseDomainLoadDelta": 4,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 16,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "logTemplate": "你维持无下限防线，直接攻击被拉开，但咒力与领域负荷同步承压。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "lapse_blue_pressure",
+      "label": "苍压缩",
+      "status": "CANDIDATE",
+      "description": "以收束吸引打乱对方体势和路线。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.075,
+        "minCe": 17
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "soul_touch_pressure"
+      ],
+      "tags": [
+        "五条",
+        "苍",
+        "术式"
+      ],
+      "effects": {
+        "outgoingScale": 1.14,
+        "opponentStabilityDelta": -0.024,
+        "opponentWeightDeltas": {
+          "initiative": -0.5,
+          "melee": -0.35
+        },
+        "weightDeltas": {
+          "technique": 0.75,
+          "counter": 0.25
+        }
+      },
+      "baseDamage": 14,
+      "baseStabilityDamage": 24,
+      "durationRounds": 1,
+      "baseCeCost": 17,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你压缩苍的吸引路线，对方体势被拖离原本节奏。"
+    },
+    {
+      "id": "reversal_red_burst",
+      "label": "赫反转",
+      "status": "CANDIDATE",
+      "description": "释放高消耗反转爆发。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.105,
+        "minCe": 24
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "binding_vow_overclock"
+      ],
+      "tags": [
+        "五条",
+        "赫",
+        "反转"
+      ],
+      "effects": {
+        "outgoingScale": 1.24,
+        "stabilityDelta": -0.026,
+        "domainLoadDelta": 6,
+        "weightDeltas": {
+          "technique": 0.9,
+          "finisher": 0.75
+        }
+      },
+      "baseDamage": 24,
+      "baseDomainLoadDelta": 6,
+      "durationRounds": 1,
+      "baseCeCost": 24,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "logTemplate": "你释放赫的反转爆发，输出上升但稳定和负荷承压。"
+    },
+    {
+      "id": "unlimited_void_suppression",
+      "label": "无量空处压制",
+      "status": "CANDIDATE",
+      "description": "在自身领域中提高信息压制，不直接决定胜负。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.12,
+        "minCe": 28
+      },
+      "requirements": {
+        "domainActive": true
+      },
+      "availability": {
+        "domainActive": true,
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "domain_anchor_spike"
+      ],
+      "tags": [
+        "五条",
+        "领域",
+        "压制"
+      ],
+      "effects": {
+        "domainLoadDelta": 10,
+        "opponentStabilityDelta": -0.035,
+        "opponentWeightDeltas": {
+          "technique": -0.75,
+          "initiative": -0.55
+        },
+        "weightDeltas": {
+          "domain": 1.1,
+          "finisher": 0.35
+        },
+        "selfStatus": {
+          "id": "informationPressureCandidate",
+          "label": "信息压制候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseStabilityDamage": 35,
+      "baseDomainLoadDelta": 10,
+      "durationRounds": 1,
+      "baseCeCost": 28,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "burst",
+      "risk": "critical",
+      "logTemplate": "你提高无量空处的信息压制，领域负荷随之升高。"
+    },
+    {
+      "id": "dismantle_pressure",
+      "label": "解：远距压迫",
+      "status": "CANDIDATE",
+      "description": "以斩击压力限制对手行动。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.055,
+        "minCe": 12
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "shrine_slash_pressure"
+      ],
+      "tags": [
+        "宿傩",
+        "解",
+        "斩击"
+      ],
+      "effects": {
+        "outgoingScale": 1.11,
+        "opponentWeightDeltas": {
+          "initiative": -0.35,
+          "sustain": -0.3
+        },
+        "opponentStatus": {
+          "id": "slashPressureCandidate",
+          "label": "斩击压迫候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 11,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你以解维持远距斩击压迫，对方行动空间收窄。"
+    },
+    {
+      "id": "cleave_adaptation",
+      "label": "捌：适应斩击",
+      "status": "CANDIDATE",
+      "description": "根据阻抗调节斩击输出。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.075,
+        "minCe": 16
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "shrine_slash_pressure"
+      ],
+      "tags": [
+        "宿傩",
+        "捌",
+        "斩击"
+      ],
+      "effects": {
+        "outgoingScale": 1.18,
+        "stabilityDelta": -0.012,
+        "weightDeltas": {
+          "technique": 0.8,
+          "finisher": 0.55
+        }
+      },
+      "baseDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 16,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "logTemplate": "你调整捌的输出标尺，斩击威胁提高。"
+    },
+    {
+      "id": "shrine_slash_pressure",
+      "label": "伏魔斩压",
+      "status": "CANDIDATE",
+      "description": "以领域或准领域斩压施加持续压力。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.095,
+        "minCe": 22
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "shrine_slash_pressure"
+      ],
+      "tags": [
+        "宿傩",
+        "伏魔御厨子",
+        "领域压制"
+      ],
+      "effects": {
+        "outgoingScale": 1.16,
+        "domainPressureScale": 1.14,
+        "manualAttackScale": 1.05,
+        "opponentStabilityDelta": -0.022,
+        "weightDeltas": {
+          "domain": 0.7,
+          "technique": 0.55
+        }
+      },
+      "baseDamage": 16,
+      "baseStabilityDamage": 22,
+      "baseDomainPressure": 14,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "logTemplate": "你让伏魔斩压持续推进，对方稳定和领域承受压力。"
+    },
+    {
+      "id": "open_domain_pressure",
+      "label": "开放领域压制",
+      "status": "CANDIDATE",
+      "description": "开放结界压制，区分必中、领域压力与手动追击。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.13,
+        "minCe": 30
+      },
+      "requirements": {
+        "domainActive": true
+      },
+      "availability": {
+        "domainActive": true,
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "open_domain_pressure"
+      ],
+      "tags": [
+        "宿傩",
+        "开放领域",
+        "压制"
+      ],
+      "effects": {
+        "sureHitScale": 1.08,
+        "domainPressureScale": 1.18,
+        "manualAttackScale": 1.04,
+        "domainLoadDelta": 12,
+        "opponentDomainLoadDelta": 6,
+        "stabilityDelta": -0.02,
+        "weightDeltas": {
+          "domain": 1.25,
+          "finisher": 0.45
+        }
+      },
+      "baseDomainPressure": 18,
+      "baseDomainLoadDelta": 12,
+      "durationRounds": 1,
+      "baseCeCost": 30,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "critical",
+      "logTemplate": "你提高开放领域压制，必中、领域压力与手动追击各自增强但负荷攀升。"
+    },
+    {
+      "id": "soul_touch_pressure",
+      "label": "灵魂触碰压力",
+      "status": "CANDIDATE",
+      "description": "以灵魂边界威胁削弱稳定。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.08,
+        "minCe": 18
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "soul_touch_pressure"
+      ],
+      "tags": [
+        "真人",
+        "灵魂",
+        "术式"
+      ],
+      "effects": {
+        "opponentStabilityDelta": -0.04,
+        "opponentStatus": {
+          "id": "soulDistortionCandidate",
+          "label": "灵魂扭曲候选",
+          "rounds": 1,
+          "value": 1
+        },
+        "weightDeltas": {
+          "technique": 0.75,
+          "finisher": 0.35
+        }
+      },
+      "baseStabilityDamage": 40,
+      "durationRounds": 1,
+      "baseCeCost": 18,
+      "costType": "ce_ratio_min",
+      "damageType": "soul",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "logTemplate": "你逼近灵魂触碰距离，对方稳定度下降。"
+    },
+    {
+      "id": "body_morph_guard",
+      "label": "躯体变形防御",
+      "status": "CANDIDATE",
+      "description": "临时变形躯体分散伤害路线。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.055,
+        "minCe": 12
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "soul_touch_pressure"
+      ],
+      "tags": [
+        "真人",
+        "躯体",
+        "防御"
+      ],
+      "effects": {
+        "incomingHpScale": 0.78,
+        "stabilityDelta": -0.006,
+        "weightDeltas": {
+          "counter": 0.55,
+          "melee": 0.25
+        },
+        "selfStatus": {
+          "id": "bodyMorphGuardCandidate",
+          "label": "躯体变形防御候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseBlock": 22,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "defense",
+      "risk": "medium",
+      "logTemplate": "你变形躯体滑开攻击路线，承伤下降。"
+    },
+    {
+      "id": "transfigured_swarm",
+      "label": "改造人牵制",
+      "status": "CANDIDATE",
+      "description": "以改造人群压迫路线，不写死伤害。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.06,
+        "minCe": 14
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "curse_miasma"
+      ],
+      "tags": [
+        "真人",
+        "改造人",
+        "牵制"
+      ],
+      "effects": {
+        "opponentWeightDeltas": {
+          "initiative": -0.45,
+          "counter": -0.3
+        },
+        "opponentStabilityDelta": -0.018,
+        "weightDeltas": {
+          "sustain": 0.35,
+          "technique": 0.45
+        }
+      },
+      "baseStabilityDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你放出改造人牵制路线，对方节奏被迫放慢。"
+    },
+    {
+      "id": "self_embodiment_pressure",
+      "label": "自闭圆顿裹压制",
+      "status": "CANDIDATE",
+      "description": "在领域中提高灵魂触碰压迫。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.11,
+        "minCe": 26
+      },
+      "requirements": {
+        "domainActive": true
+      },
+      "availability": {
+        "domainActive": true,
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "soul_touch_pressure"
+      ],
+      "tags": [
+        "真人",
+        "领域",
+        "灵魂"
+      ],
+      "effects": {
+        "domainLoadDelta": 9,
+        "opponentStabilityDelta": -0.045,
+        "sureHitScale": 1.08,
+        "domainPressureScale": 1.12,
+        "weightDeltas": {
+          "domain": 0.9,
+          "technique": 0.75
+        }
+      },
+      "baseStabilityDamage": 45,
+      "baseDomainPressure": 12,
+      "baseDomainLoadDelta": 9,
+      "durationRounds": 1,
+      "baseCeCost": 26,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "critical",
+      "logTemplate": "你让自闭圆顿裹压制灵魂边界，但领域负荷同步攀升。"
+    },
+    {
+      "id": "zero_ce_entry",
+      "label": "零咒力突入",
+      "status": "CANDIDATE",
+      "description": "以零咒力盲区切入，不消耗 CE。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 0,
+        "flatCe": 0
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "zero_ce_entry"
+      ],
+      "tags": [
+        "零咒力",
+        "突入",
+        "体术"
+      ],
+      "effects": {
+        "outgoingScale": 1.04,
+        "incomingHpScale": 0.9,
+        "weightDeltas": {
+          "initiative": 0.95,
+          "melee": 0.8,
+          "counter": 0.35
+        },
+        "selfStatus": {
+          "id": "zeroCeEntryCandidate",
+          "label": "零咒力突入候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 4,
+      "baseBlock": 10,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "physical",
+      "scalingProfile": "zero_ce",
+      "risk": "low",
+      "logTemplate": "你压低咒力反应切入盲区，获得接近与反击机会。",
+      "requiresZeroCe": true
+    },
+    {
+      "id": "sure_hit_bypass_counter",
+      "label": "必中规避反击",
+      "status": "CANDIDATE",
+      "description": "只规避 sure-hit 捕捉，仍承受领域压制与手动攻击。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 0,
+        "flatCe": 0
+      },
+      "requirements": {
+        "opponentDomainActive": true,
+        "requiresZeroCeBypass": true
+      },
+      "availability": {
+        "opponentDomainActive": true,
+        "requiresZeroCeBypass": true,
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "sure_hit_bypass_counter"
+      ],
+      "tags": [
+        "零咒力",
+        "必中",
+        "反击"
+      ],
+      "effects": {
+        "sureHitScale": 0.12,
+        "domainPressureScale": 1.02,
+        "manualAttackScale": 1.02,
+        "weightDeltas": {
+          "counter": 0.8,
+          "melee": 0.55
+        }
+      },
+      "baseShield": 88,
+      "baseDomainPressure": 2,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "melee",
+      "scalingProfile": "zero_ce",
+      "risk": "medium",
+      "logTemplate": "你避开必中捕捉并寻找反击，但领域压制仍然存在。",
+      "requiresZeroCe": true
+    },
+    {
+      "id": "cursed_tool_combo",
+      "label": "咒具连击",
+      "status": "CANDIDATE",
+      "description": "用咒具多段角度撬动对手体势。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 0,
+        "flatCe": 0
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "tool_breakthrough"
+      ],
+      "tags": [
+        "咒具",
+        "连击",
+        "零咒力"
+      ],
+      "effects": {
+        "outgoingScale": 1.13,
+        "opponentStabilityDelta": -0.018,
+        "weightDeltas": {
+          "melee": 0.85,
+          "finisher": 0.35
+        }
+      },
+      "baseDamage": 13,
+      "baseStabilityDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "physical",
+      "scalingProfile": "cursed_tool",
+      "risk": "medium",
+      "logTemplate": "你以咒具连击切入，对方防线被连续撬动。",
+      "requiresCursedTool": true,
+      "requiresZeroCe": true
+    },
+    {
+      "id": "barrier_boundary_break",
+      "label": "结界边界突破",
+      "status": "CANDIDATE",
+      "description": "寻找结界边界并尝试突破或脱出。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 0,
+        "flatCe": 0
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "zero_ce_entry"
+      ],
+      "tags": [
+        "零咒力",
+        "结界",
+        "突破"
+      ],
+      "effects": {
+        "domainPressureScale": 0.88,
+        "manualAttackScale": 0.96,
+        "opponentDomainLoadDelta": 8,
+        "weightDeltas": {
+          "counter": 0.45,
+          "initiative": 0.55
+        }
+      },
+      "baseShield": 12,
+      "baseDomainPressure": 8,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "physical",
+      "scalingProfile": "zero_ce",
+      "risk": "high",
+      "logTemplate": "你沿结界边界突入，优先撬动领域结构。",
+      "requiresZeroCe": true
+    },
+    {
+      "id": "rika_assist",
+      "label": "里香援护",
+      "status": "CANDIDATE",
+      "description": "以里香援护防守或反压，产生冷却候选。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.065,
+        "minCe": 15
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "rika_assist"
+      ],
+      "tags": [
+        "乙骨",
+        "里香",
+        "支援"
+      ],
+      "effects": {
+        "incomingHpScale": 0.76,
+        "outgoingScale": 1.05,
+        "weightDeltas": {
+          "sustain": 0.65,
+          "counter": 0.45
+        },
+        "selfStatus": {
+          "id": "rikaAssistCooldownCandidate",
+          "label": "里香援护冷却候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseDamage": 5,
+      "baseBlock": 24,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 15,
+      "costType": "ce_ratio_min",
+      "damageType": "cursed_energy",
+      "scalingProfile": "defense",
+      "risk": "high",
+      "logTemplate": "里香切入援护，攻防窗口扩大但后续需要回收节奏。"
+    },
+    {
+      "id": "reverse_output_support",
+      "label": "反转输出支援",
+      "status": "CANDIDATE",
+      "description": "输出反转术式进行支援或压制咒灵恢复。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.08,
+        "minCe": 18
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "rika_assist"
+      ],
+      "tags": [
+        "乙骨",
+        "反转术式",
+        "支援"
+      ],
+      "effects": {
+        "incomingHpScale": 0.86,
+        "stabilityDelta": 0.026,
+        "opponentRegenInterference": 0.22,
+        "weightDeltas": {
+          "support": 0.65,
+          "resource": 0.35
+        }
+      },
+      "baseBlock": 14,
+      "baseStabilityRestore": 26,
+      "baseCeDamage": 22,
+      "baseHealing": 10,
+      "durationRounds": 1,
+      "baseCeCost": 18,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "medium",
+      "logTemplate": "你输出反转支援，体势回稳并干扰对方恢复。"
+    },
+    {
+      "id": "copy_stock_candidate",
+      "label": "术式复制候选",
+      "status": "CANDIDATE",
+      "description": "临时调整行动权重，不建立无限复制系统。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.05,
+        "minCe": 12
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "copy_stock_candidate"
+      ],
+      "tags": [
+        "乙骨",
+        "复制",
+        "候选"
+      ],
+      "effects": {
+        "stabilityDelta": 0.018,
+        "weightDeltas": {
+          "technique": 0.7,
+          "counter": 0.55
+        },
+        "selfStatus": {
+          "id": "copyStockCandidate",
+          "label": "术式复制候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseStabilityRestore": 18,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "support_stability",
+      "risk": "medium",
+      "logTemplate": "你确认复制候选的使用条件，后续术式选择更灵活。"
+    },
+    {
+      "id": "ce_reserve_release",
+      "label": "咒力储备释放",
+      "status": "CANDIDATE",
+      "description": "释放储备咒力提高一段压制。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.095,
+        "minCe": 22
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "rika_assist"
+      ],
+      "tags": [
+        "乙骨",
+        "咒力储备",
+        "爆发"
+      ],
+      "effects": {
+        "outgoingScale": 1.2,
+        "stabilityDelta": -0.018,
+        "weightDeltas": {
+          "technique": 0.75,
+          "finisher": 0.65
+        }
+      },
+      "baseDamage": 20,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "logTemplate": "你释放储备咒力，一段压制力明显提高。"
+    },
+    {
+      "id": "press_contradiction",
+      "label": "追问矛盾",
+      "status": "CANDIDATE",
+      "description": "审判中追问矛盾，推动证据压力。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.025,
+        "minCe": 6
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "enforce_confiscation"
+      ],
+      "tags": [
+        "日车",
+        "审判",
+        "证据"
+      ],
+      "effects": {
+        "opponentStabilityDelta": -0.014,
+        "weightDeltas": {
+          "trial": 0.8,
+          "counter": 0.35
+        },
+        "opponentWeightDeltas": {
+          "initiative": -0.25
+        }
+      },
+      "baseStabilityDamage": 14,
+      "baseEvidencePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 6,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "low",
+      "logTemplate": "你追问供述矛盾，审判压力继续积累。"
+    },
+    {
+      "id": "lock_charge",
+      "label": "锁定罪状",
+      "status": "CANDIDATE",
+      "description": "固定当前罪状方向，增加后续判决准备。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.035,
+        "minCe": 8
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "enforce_confiscation"
+      ],
+      "tags": [
+        "日车",
+        "审判",
+        "罪状"
+      ],
+      "effects": {
+        "weightDeltas": {
+          "trial": 1,
+          "domain": 0.25
+        },
+        "selfStatus": {
+          "id": "chargeLockedCandidate",
+          "label": "罪状锁定候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseEvidencePressure": 10,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "logTemplate": "你锁定罪状方向，让后续判决路线更清晰。"
+    },
+    {
+      "id": "organize_evidence_chain",
+      "label": "证据链整理",
+      "status": "CANDIDATE",
+      "description": "整理证据链，提高审判稳定。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.025,
+        "minCe": 5
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "enforce_confiscation"
+      ],
+      "tags": [
+        "日车",
+        "审判",
+        "证据链"
+      ],
+      "effects": {
+        "stabilityDelta": 0.022,
+        "weightDeltas": {
+          "trial": 0.7,
+          "sustain": 0.35
+        },
+        "selfStatus": {
+          "id": "evidenceChainReadyCandidate",
+          "label": "证据链整理候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseStabilityRestore": 22,
+      "baseEvidencePressure": 7,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 5,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "low",
+      "logTemplate": "你整理证据链，审判推进更稳定。"
+    },
+    {
+      "id": "enforce_confiscation",
+      "label": "没收执行",
+      "status": "CANDIDATE",
+      "description": "与没收候选状态联动，限制术式或咒具。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.055,
+        "minCe": 12
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "enforce_confiscation"
+      ],
+      "tags": [
+        "日车",
+        "审判",
+        "没收"
+      ],
+      "effects": {
+        "opponentStatus": {
+          "id": "techniqueConfiscated",
+          "label": "术式没收候选",
+          "rounds": 1,
+          "value": 1
+        },
+        "opponentWeightDeltas": {
+          "technique": -0.9,
+          "domain": -0.55
+        },
+        "weightDeltas": {
+          "trial": 0.85
+        }
+      },
+      "baseEvidencePressure": 9,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "high",
+      "logTemplate": "你执行没收候选，对方术式路线被暂时压低。"
+    },
+    {
+      "id": "accelerate_reach",
+      "label": "演出加速",
+      "status": "CANDIDATE",
+      "description": "推动 jackpot 演出期待度，不直接中奖。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.035,
+        "minCe": 8
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "jackpot_pressure"
+      ],
+      "tags": [
+        "秤",
+        "jackpot",
+        "演出"
+      ],
+      "effects": {
+        "weightDeltas": {
+          "jackpot": 0.9,
+          "initiative": 0.25
+        },
+        "stabilityDelta": -0.006,
+        "selfStatus": {
+          "id": "reachAcceleratedCandidate",
+          "label": "演出加速候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseJackpotGauge": 9,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "medium",
+      "logTemplate": "你加快演出节奏，期待度上升但没有直接中奖。"
+    },
+    {
+      "id": "stabilize_probability",
+      "label": "期待度稳定",
+      "status": "CANDIDATE",
+      "description": "稳定 jackpot 期待度，降低高风险波动。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.03,
+        "minCe": 7
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "jackpot_pressure"
+      ],
+      "tags": [
+        "秤",
+        "jackpot",
+        "稳定"
+      ],
+      "effects": {
+        "incomingHpScale": 0.9,
+        "stabilityDelta": 0.024,
+        "weightDeltas": {
+          "jackpot": 0.55,
+          "sustain": 0.45
+        }
+      },
+      "baseBlock": 10,
+      "baseStabilityRestore": 24,
+      "baseDefensePressure": 2,
+      "baseJackpotGauge": 6,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "low",
+      "logTemplate": "你稳定期待度与回流，避免演出波动失控。"
+    },
+    {
+      "id": "risky_reach_loop",
+      "label": "高风险再演出",
+      "status": "CANDIDATE",
+      "description": "高风险再演出，压高期待但消耗稳定。",
+      "apCost": 2,
+      "cost": {
+        "ceRatio": 0.06,
+        "minCe": 14
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "jackpot_pressure"
+      ],
+      "tags": [
+        "秤",
+        "jackpot",
+        "高风险"
+      ],
+      "effects": {
+        "outgoingScale": 1.1,
+        "stabilityDelta": -0.028,
+        "domainLoadDelta": 4,
+        "weightDeltas": {
+          "jackpot": 1.1,
+          "finisher": 0.45
+        }
+      },
+      "baseDamage": 10,
+      "baseDomainLoadDelta": 4,
+      "baseJackpotGauge": 11,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "high",
+      "logTemplate": "你强行进入再演出，期待提高但体势被拉紧。"
+    },
+    {
+      "id": "jackpot_pressure",
+      "label": "中奖后压制",
+      "status": "CANDIDATE",
+      "description": "在 jackpot 候选状态下增强持续压迫。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.04,
+        "minCe": 9
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "jackpot_pressure"
+      ],
+      "tags": [
+        "秤",
+        "jackpot",
+        "压制"
+      ],
+      "effects": {
+        "outgoingScale": 1.13,
+        "incomingHpScale": 0.88,
+        "weightDeltas": {
+          "sustain": 0.65,
+          "melee": 0.45
+        },
+        "selfStatus": {
+          "id": "jackpotPressureCandidate",
+          "label": "中奖后压制候选",
+          "rounds": 1,
+          "value": 0.5
+        }
+      },
+      "baseDamage": 13,
+      "baseBlock": 12,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "medium",
+      "logTemplate": "你借 jackpot 余韵持续压迫，但不进入无代价持续收益。"
+    },
+    {
+      "id": "curse_miasma",
+      "label": "咒力瘴气",
+      "status": "CANDIDATE",
+      "description": "咒灵类单位释放瘴气扰乱对方回流。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.045,
+        "minCe": 10
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "curse_miasma"
+      ],
+      "tags": [
+        "咒灵",
+        "瘴气",
+        "扰乱"
+      ],
+      "effects": {
+        "opponentRegenInterference": 0.18,
+        "opponentStabilityDelta": -0.014,
+        "opponentWeightDeltas": {
+          "initiative": -0.3
+        },
+        "weightDeltas": {
+          "sustain": 0.35,
+          "technique": 0.35
+        }
+      },
+      "baseStabilityDamage": 14,
+      "baseCeDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "logTemplate": "你释放咒力瘴气，对方回流和判断被轻微污染。"
+    },
+    {
+      "id": "residue_distortion",
+      "label": "残秽扰乱",
+      "status": "CANDIDATE",
+      "description": "扭曲残秽路线，使对手读解失准。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.035,
+        "minCe": 8
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "curse_miasma"
+      ],
+      "tags": [
+        "咒灵",
+        "残秽",
+        "扰乱"
+      ],
+      "effects": {
+        "weightDeltas": {
+          "counter": 0.55,
+          "initiative": 0.35
+        },
+        "opponentWeightDeltas": {
+          "counter": -0.45,
+          "technique": -0.25
+        },
+        "opponentStatus": {
+          "id": "residueDistortedCandidate",
+          "label": "残秽扰乱候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "balanced",
+      "risk": "low",
+      "logTemplate": "你扭曲残秽路线，对方读解出现偏差。",
+      "baseStabilityDamage": 4
+    },
+    {
+      "id": "domain_instinct_resistance",
+      "label": "领域本能反抗",
+      "status": "CANDIDATE",
+      "description": "智能咒灵在领域压制下凭本能反抗。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.05,
+        "minCe": 10
+      },
+      "requirements": {
+        "opponentDomainActive": true
+      },
+      "availability": {
+        "opponentDomainActive": true,
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "domain_instinct_resistance"
+      ],
+      "tags": [
+        "咒灵",
+        "领域应对",
+        "本能"
+      ],
+      "effects": {
+        "sureHitScale": 0.82,
+        "domainPressureScale": 0.88,
+        "incomingHpScale": 0.9,
+        "stabilityDelta": 0.012,
+        "weightDeltas": {
+          "counter": 0.55,
+          "sustain": 0.45
+        }
+      },
+      "baseBlock": 10,
+      "baseShield": 18,
+      "baseStabilityRestore": 12,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "logTemplate": "你凭领域本能反抗压制，必中没有完全消失但压力下降。",
+      "baseDomainPressure": 16
+    },
+    {
+      "id": "curse_regen_candidate",
+      "label": "咒灵再生候选",
+      "status": "CANDIDATE",
+      "description": "咒灵类单位小幅回复稳定，受术式干涉限制。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0.055,
+        "minCe": 11
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [
+        "curse_regen_candidate"
+      ],
+      "tags": [
+        "咒灵",
+        "再生",
+        "候选"
+      ],
+      "effects": {
+        "incomingHpScale": 0.84,
+        "stabilityDelta": 0.034,
+        "weightDeltas": {
+          "sustain": 0.85,
+          "resource": 0.35
+        },
+        "selfStatus": {
+          "id": "curseRegenCandidate",
+          "label": "咒灵再生候选",
+          "rounds": 1,
+          "value": 1
+        }
+      },
+      "baseBlock": 16,
+      "baseStabilityRestore": 34,
+      "baseHealing": 12,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 11,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "defense",
+      "risk": "medium",
+      "logTemplate": "你利用咒灵躯体再生回稳，但术式干涉仍可能压制恢复。"
+    }
+  ]
+}

@@ -1,0 +1,1379 @@
+{
+  "schema": "jjk-wheel-strength-config",
+  "version": "0.3-candidate",
+  "status": "CANDIDATE",
+  "lastUpdated": "2026-04-25",
+  "sourceSupport": [
+    "S001",
+    "S004",
+    "S005",
+    "S008",
+    "S010",
+    "S011",
+    "S012"
+  ],
+  "notes": [
+    "This file is a website-readable candidate config, not a final balance decision.",
+    "Formula-book evidence is used for mechanism plausibility, not to override confirmed flow rules.",
+    "Wheel dbIds are internal implementation IDs and must be hidden from users.",
+    "Base attribute draw weights are now high-strength-biased: EX 0.06 / SSS 0.16 / SS 0.34 / S 0.95."
+  ],
+  "rankScale": {
+    "E-": 0,
+    "E": 1,
+    "D": 2,
+    "C": 3,
+    "B": 4,
+    "A": 5,
+    "S": 6,
+    "SS": 7,
+    "SSS": 8,
+    "EX-": 10,
+    "EX": 12
+  },
+  "exceptionPolicy": {
+    "ordinarySSSIsNotEX": true,
+    "exMeaning": "EX is a nonlinear exception tier, significantly above SSS.",
+    "triggerSources": [
+      "explicit EX option text",
+      "explicit if-scenario or fan-fantasy state",
+      "explicit user-confirmed exception state",
+      "68-year-later module Yuji-level exception"
+    ],
+    "confirmedWholeCharacterEXExamples": [
+      "68-year-later module Yuji EX-anchor fields: control EX- / insight EX-"
+    ],
+    "notAutomaticallyEX": [
+      "ordinary special grade",
+      "ordinary SSS stat",
+      "ordinary top-tier cursed spirit"
+    ]
+  },
+  "baseAttributeWheels": {
+    "cursedEnergyScore": {
+      "wheelId": 12,
+      "title": "咒力总量",
+      "dimension": "resource",
+      "options": {
+        "1": {
+          "label": "SSS（宿傩）",
+          "rank": "SSS",
+          "score": 8
+        },
+        "2": {
+          "label": "SS（乙骨）",
+          "rank": "SS",
+          "score": 7
+        },
+        "3": {
+          "label": "S（五条）",
+          "rank": "S",
+          "score": 6
+        },
+        "4": {
+          "label": "A（一级）",
+          "rank": "A",
+          "score": 5
+        },
+        "5": {
+          "label": "B（二级）",
+          "rank": "B",
+          "score": 4
+        },
+        "6": {
+          "label": "C（三级）",
+          "rank": "C",
+          "score": 3
+        },
+        "7": {
+          "label": "D（四级）",
+          "rank": "D",
+          "score": 2
+        },
+        "8": {
+          "label": "E（弱四级）",
+          "rank": "E",
+          "score": 1
+        },
+        "9": {
+          "label": "E-（不如高专真希级）",
+          "rank": "E-",
+          "score": 0
+        },
+        "10": {
+          "label": "EX（伪无限）",
+          "rank": "EX",
+          "score": 12,
+          "exceptionTier": "EX"
+        }
+      }
+    },
+    "controlScore": {
+      "wheelId": 13,
+      "title": "咒力操纵",
+      "dimension": "control",
+      "options": {
+        "1": {
+          "label": "SSS（六眼）",
+          "rank": "SSS",
+          "score": 8
+        },
+        "2": {
+          "label": "SS（顶尖特级）",
+          "rank": "SS",
+          "score": 7
+        },
+        "3": {
+          "label": "S（宿傩/特级）",
+          "rank": "S",
+          "score": 6
+        },
+        "4": {
+          "label": "A（一级）",
+          "rank": "A",
+          "score": 5
+        },
+        "5": {
+          "label": "B（二级）",
+          "rank": "B",
+          "score": 4
+        },
+        "6": {
+          "label": "C（三级）",
+          "rank": "C",
+          "score": 3
+        },
+        "7": {
+          "label": "D（四级）",
+          "rank": "D",
+          "score": 2
+        },
+        "8": {
+          "label": "E（弱四级）",
+          "rank": "E",
+          "score": 1
+        },
+        "9": {
+          "label": "E-（笑死，根本控制不了）",
+          "rank": "E-",
+          "score": 0
+        },
+        "10": {
+          "label": "EX（远超六眼）",
+          "rank": "EX",
+          "score": 12,
+          "exceptionTier": "EX"
+        }
+      }
+    },
+    "martialScore": {
+      "wheelId": 14,
+      "title": "体术水平",
+      "dimension": "body",
+      "options": {
+        "1": {
+          "label": "SSS（四手宿傩）",
+          "rank": "SSS",
+          "score": 8
+        },
+        "2": {
+          "label": "SS（五宿）",
+          "rank": "SS",
+          "score": 7
+        },
+        "3": {
+          "label": "S（特级）",
+          "rank": "S",
+          "score": 6
+        },
+        "4": {
+          "label": "A（一级）",
+          "rank": "A",
+          "score": 5
+        },
+        "5": {
+          "label": "B（二级）",
+          "rank": "B",
+          "score": 4
+        },
+        "6": {
+          "label": "C（三级）",
+          "rank": "C",
+          "score": 3
+        },
+        "7": {
+          "label": "D（四级）",
+          "rank": "D",
+          "score": 2
+        },
+        "8": {
+          "label": "E（弱四级）",
+          "rank": "E",
+          "score": 1
+        },
+        "9": {
+          "label": "E-（普通上班族）",
+          "rank": "E-",
+          "score": 0
+        },
+        "10": {
+          "label": "EX（两只手能打四手宿傩）",
+          "rank": "EX",
+          "score": 12,
+          "exceptionTier": "EX"
+        }
+      }
+    },
+    "bodyScore": {
+      "wheelId": 15,
+      "title": "体质（基础体质）",
+      "dimension": "body",
+      "options": {
+        "1": {
+          "label": "SSS（天与暴君）",
+          "rank": "SSS",
+          "score": 8
+        },
+        "2": {
+          "label": "SS（入学虎）",
+          "rank": "SS",
+          "score": 7
+        },
+        "3": {
+          "label": "S（普通人极限）",
+          "rank": "S",
+          "score": 6
+        },
+        "4": {
+          "label": "A（顶尖运动员）",
+          "rank": "A",
+          "score": 5
+        },
+        "5": {
+          "label": "B（体育生）",
+          "rank": "B",
+          "score": 4
+        },
+        "6": {
+          "label": "C（正常人）",
+          "rank": "C",
+          "score": 3
+        },
+        "7": {
+          "label": "D（体弱多病）",
+          "rank": "D",
+          "score": 2
+        },
+        "8": {
+          "label": "E（残疾）",
+          "rank": "E",
+          "score": 1
+        },
+        "9": {
+          "label": "E-（脑花，指只剩下脑子）",
+          "rank": "E-",
+          "score": 0
+        },
+        "10": {
+          "label": "EX（超人，指DC超人）",
+          "rank": "EX",
+          "score": 12,
+          "exceptionTier": "EX"
+        }
+      }
+    },
+    "efficiencyScore": {
+      "wheelId": 16,
+      "title": "咒力效率",
+      "dimension": "resource",
+      "options": {
+        "1": {
+          "label": "SSS（六眼/宿傩）",
+          "rank": "SSS",
+          "score": 8
+        },
+        "2": {
+          "label": "SS（顶尖特级）",
+          "rank": "SS",
+          "score": 7
+        },
+        "3": {
+          "label": "S（特级）",
+          "rank": "S",
+          "score": 6
+        },
+        "4": {
+          "label": "A（一级）",
+          "rank": "A",
+          "score": 5
+        },
+        "5": {
+          "label": "B（二级）",
+          "rank": "B",
+          "score": 4
+        },
+        "6": {
+          "label": "C（三级）",
+          "rank": "C",
+          "score": 3
+        },
+        "7": {
+          "label": "D（四级）",
+          "rank": "D",
+          "score": 2
+        },
+        "8": {
+          "label": "E（弱四级）",
+          "rank": "E",
+          "score": 1
+        },
+        "9": {
+          "label": "E-（漏气水平）",
+          "rank": "E-",
+          "score": 0
+        },
+        "10": {
+          "label": "EX（你比六眼效率还高）",
+          "rank": "EX",
+          "score": 12,
+          "exceptionTier": "EX"
+        }
+      }
+    },
+    "talentScore": {
+      "wheelId": 35,
+      "title": "悟性",
+      "dimension": "insight",
+      "options": {
+        "1": {
+          "label": "SSS（宿傩/顶级悟性、进入奖励池）",
+          "rank": "SSS",
+          "score": 8,
+          "rewardPool": true
+        },
+        "2": {
+          "label": "SS（五条/乙骨级）",
+          "rank": "SS",
+          "score": 7
+        },
+        "3": {
+          "label": "S（伏黑）",
+          "rank": "S",
+          "score": 6
+        },
+        "4": {
+          "label": "A（一般一级术师）",
+          "rank": "A",
+          "score": 5,
+          "highTalentThreshold": true
+        },
+        "5": {
+          "label": "B（一般二级术师）",
+          "rank": "B",
+          "score": 4
+        },
+        "6": {
+          "label": "C（一般三级术师）",
+          "rank": "C",
+          "score": 3
+        },
+        "7": {
+          "label": "D（正常人）",
+          "rank": "D",
+          "score": 2
+        },
+        "8": {
+          "label": "E（是否开智存疑）",
+          "rank": "E",
+          "score": 1
+        },
+        "9": {
+          "label": "E-（学不明白任何事）",
+          "rank": "E-",
+          "score": 0
+        }
+      }
+    }
+  },
+  "derivedDimensions": {
+    "resource": {
+      "formula": "0.6*cursedEnergyScore + 0.4*efficiencyScore",
+      "status": "provisional"
+    },
+    "control": {
+      "formula": "0.7*controlScore + 0.3*efficiencyScore",
+      "status": "provisional"
+    },
+    "body": {
+      "formula": "0.55*martialScore + 0.45*bodyScore",
+      "status": "provisional"
+    },
+    "growth": {
+      "formula": "talentScore",
+      "status": "provisional"
+    },
+    "basePowerScore": {
+      "formula": "0.25*resource + 0.25*control + 0.25*body + 0.25*growth",
+      "status": "provisional",
+      "note": "Equal dimension weights are a temporary baseline until playtesting."
+    }
+  },
+  "gradeWeightAdjustment": {
+    "status": "legacyReference",
+    "appliesToWheel": "legacy 59/126/142 grade wheels",
+    "meaning": "历史版本使用等级评定抽取权重；当前版本改为 deterministicGradeRanges 直接判定等级。",
+    "implementedInPrototype": true,
+    "effectiveScoreFormula": "0.38*basePowerScore + 0.28*top1Raw + 0.20*top2Raw + 0.14*top3Raw + highAttributeCountBonus, shifted into bell-like grade target bands centered on grade2/grade1",
+    "floorRules": {
+      "martialSAndBodySS": "grade1 floor",
+      "martialSSSAndBodySSS": "semiSpecialGrade1 floor",
+      "anyBaseAttributeSSPlus": "semiSpecialGrade1 floor"
+    },
+    "targetScores": {
+      "support": 0.8,
+      "grade4": 2.4,
+      "grade3": 4.5,
+      "grade2": 6.3,
+      "grade1": 7.3,
+      "semiSpecialGrade1": 9.4,
+      "specialGrade": 10.4
+    },
+    "notes": [
+      "This is a second playable weighting curve for review, not a final balance decision.",
+      "The curve now treats JJK grades as coarse bands: several A/S/SS attributes sharply raise grade1/semiSpecial/special probabilities.",
+      "A strong body package can carry grade even when cursed-energy-side stats are poor.",
+      "Low control/resource still matters for domain and technique outcomes, but no longer erases physical monsters in grade assessment.",
+      "Debug mode displays base weight and adjusted weight for each grade option.",
+      "1.12 update: grade output now has a bell-like prior centered on grade2/grade1; base attribute wheels remain equal-weight draws.",
+      "1.12 update: any base attribute at SS/SSS/EX is above-grade1 floor, so grade1-or-lower options are removed for that character.",
+      "Current update: grade output is no longer rolled from weighted grade wheels; effectiveScore maps directly to deterministic score bands and then applies floor rules."
+    ],
+    "distributionPrior": {
+      "support": 0.6,
+      "grade4": 0.8,
+      "grade3": 1,
+      "grade2": 1.55,
+      "grade1": 1.55,
+      "semiSpecialGrade1": 0.12,
+      "specialGrade": 0.04
+    },
+    "strongPowerGate": {
+      "effectiveScoreAtLeast": 9.6,
+      "orCondition": "ssPlusCountAtLeast 5 and gradeFloor semiSpecialGrade1"
+    }
+  },
+  "gradeSystem": {
+    "fields": {
+      "sorcererGrade": [
+        "support",
+        "grade4",
+        "grade3",
+        "grade2",
+        "grade1",
+        "semiSpecialGrade1",
+        "specialGrade"
+      ],
+      "curseGrade": [
+        "grade4",
+        "grade3",
+        "grade2",
+        "grade1",
+        "specialGrade"
+      ],
+      "threatTier": [
+        "low",
+        "normal",
+        "strong",
+        "specialThreat",
+        "disaster",
+        "topTier"
+      ],
+      "exceptionTier": [
+        "none",
+        "ifScenario",
+        "EX",
+        "legendaryException"
+      ]
+    },
+    "wheelMappings": {
+      "59": {
+        "title": "等级评定（强者专属）",
+        "field": "sorcererGrade",
+        "options": {
+          "1": "grade1",
+          "2": "specialGrade",
+          "3": "semiSpecialGrade1"
+        }
+      },
+      "126": {
+        "title": "等级评定（弱者专属）",
+        "field": "sorcererGrade",
+        "options": {
+          "1": "support",
+          "2": "grade4",
+          "3": "grade3",
+          "4": "grade2"
+        }
+      },
+      "142": {
+        "title": "等级评定",
+        "field": "sorcererGrade",
+        "options": {
+          "1": "specialGrade",
+          "2": "grade1",
+          "3": "grade2",
+          "4": "grade3",
+          "5": "grade4",
+          "6": "support",
+          "7": "semiSpecialGrade1"
+        }
+      }
+    },
+    "sorcererVsCurseReference": {
+      "grade1Sorcerer": "can contest weaker special-grade cursed spirits",
+      "semiSpecialGrade1Sorcerer": "can contest or possibly kill ordinary special-grade cursed spirits",
+      "specialGradeSorcerer": "can easily exorcise ordinary special-grade cursed spirits"
+    },
+    "curseDisadvantagesAgainstSorcerers": [
+      "positiveEnergyFromReverseCursedTechnique",
+      "mahoragaExorcismBlade",
+      "general sorcerer exorcism matchup correction"
+    ]
+  },
+  "highTalentRules": {
+    "thresholdRank": "A",
+    "usesHighTalentPools": [
+      103,
+      106
+    ],
+    "aRankExtraOneTechniqueWeight": {
+      "appliesOnlyToRank": "A",
+      "status": "confirmedByS005",
+      "suggestedMultiplierForOneTechnique": 1.6,
+      "note": "A is only the entry threshold, so it should more often get only one advanced technique."
+    },
+    "growthFunction": {
+      "status": "provisional",
+      "rankMultipliers": {
+        "A": 1,
+        "S": 1.25,
+        "SS": 1.45,
+        "SSS": 1.7
+      }
+    }
+  },
+  "weakTalentRules": {
+    "trigger": "sorcererGrade in support/grade4/grade3/grade2",
+    "usesWeakPools": [
+      125,
+      126,
+      127,
+      128
+    ]
+  },
+  "advancedTechniqueRules": {
+    "countWheels": {
+      "default": 44,
+      "highTalent": 106,
+      "weakTalent": 125
+    },
+    "contentWheel": 45,
+    "noRepeatScope": "single content pool multi-draw only",
+    "techniqueTags": {
+      "领域展延": [
+        "domainAmplification",
+        "antiTechnique",
+        "ownTechniqueSuppressed",
+        "requiresDomainExpansion"
+      ],
+      "反转术式": [
+        "reverseCursedTechnique",
+        "positiveEnergySelfOutput"
+      ],
+      "反转术式外放": [
+        "reverseCursedTechnique",
+        "positiveEnergyOutput",
+        "antiCurse",
+        "requiresReverseCursedTechnique"
+      ],
+      "术式反转": [
+        "techniqueReversal",
+        "highControlRequired",
+        "requiresReverseCursedTechnique",
+        "requiresInnateTechnique"
+      ],
+      "简易领域": [
+        "simpleDomain",
+        "antiDomain"
+      ],
+      "黑闪（68虎水平）": [
+        "blackFlashTechniqueResult",
+        "legendaryExceptionHint",
+        "blackFlashChainReversalGate",
+        "yujiOnlyLateCanon",
+        "needsUserReviewIfNonYuji"
+      ],
+      "极之番": [
+        "maximumTechnique"
+      ],
+      "领域展开": [
+        "domainExpansion",
+        "requiresInnateTechnique"
+      ],
+      "傀儡咒术学（指咒骸制作）": [
+        "cursedCorpseCraft"
+      ],
+      "制作咒具": [
+        "cursedToolCraft"
+      ],
+      "无敌贷款王（会精明利用束缚）": [
+        "bindingMastery"
+      ],
+      "神秘农家乐（？）": [
+        "domainExpansion",
+        "yujiDomainVariant",
+        "requiresInnateTechnique",
+        "needsUserReview"
+      ]
+    },
+    "dependencyRules": {
+      "领域展延": {
+        "requires": ["领域展开"],
+        "policy": "cannotDrawBeforePrerequisite"
+      },
+      "反转术式外放": {
+        "requires": ["反转术式"],
+        "policy": "cannotDrawBeforePrerequisite"
+      },
+      "术式反转": {
+        "requires": ["反转术式", "生得术式"],
+        "policy": "cannotDrawBeforePrerequisite"
+      },
+      "领域展开": {
+        "requires": ["生得术式", "咒力操纵/效率门槛"],
+        "policy": "hardGate"
+      },
+      "神秘农家乐（？）": {
+        "requires": ["生得术式", "咒力操纵/效率门槛"],
+        "policy": "hardGate",
+        "note": "按用户确认视为虎杖悠仁领域变体；低概率彩蛋但应接入领域强度。"
+      },
+      "极之番": {
+        "requires": ["生得术式", "咒力总量/操纵门槛"],
+        "policy": "hardGate"
+      },
+      "黑闪（68虎水平）": {
+        "requires": ["高体术", "高操纵", "高悟性"],
+        "policy": "yujiLevelExceptionGate"
+      }
+    }
+  },
+  "blackFlash": {
+    "mode": "advanced-technique-result-and-independent-combat-event",
+    "sourceSupport": [
+      "S008",
+      "S010",
+      "S011",
+      "S012"
+    ],
+    "eventTag": "blackFlashEvent",
+    "baseChance": 0.03,
+    "chanceFormula": "baseChance * (1 + 0.06*martialScore + 0.05*controlScore + 0.04*talentScore)",
+    "chainRule": {
+      "enabled": true,
+      "requiresAdvancedTechnique": "黑闪（68虎水平）",
+      "requiresCharacterOrException": "Yuji Itadori late-canon, or explicit user-confirmed Yuji-level anomaly",
+      "reversalGateTag": "blackFlashChainReversalGate",
+      "maxChainForSimulation": 7,
+      "chainChanceMultiplierAfterTrigger": 1.35,
+      "note": "Only the advanced technique result 黑闪（68虎水平） may enable chain-based battle reversal."
+    },
+    "ordinaryEventPolicy": {
+      "canTriggerWithoutAdvancedTechnique": true,
+      "canBeActivatedAtWill": false,
+      "canReverseSpecialGradeFight": false,
+      "allowedEffects": [
+        "criticalBurst",
+        "temporaryUnderstandingBoost",
+        "minorOutcomeAdjustment"
+      ],
+      "note": "Ordinary black flash events cannot allow a normal grade 2 or grade 1 sorcerer to defeat a special grade sorcerer."
+    },
+    "controllabilityPolicy": {
+      "blackFlashIsAtWillSkill": false,
+      "activeUseByAnySorcererAllowed": false,
+      "controlledChainAbilityHolder": "Yuji Itadori",
+      "canonTiming": "late main canon / near ending",
+      "nonYujiAdvancedTechniqueHandling": "mark needsUserReview; do not grant at-will black flash or chain reversal without explicit user confirmation"
+    },
+    "specialGradeUpsetExceptions": [
+      "targetSpecialGradeWornDownByPriorBattles",
+      "targetSpecialGradeHasMajorNegativeBuffs",
+      "attackerActuallySpecialGradeStrengthButUnevaluated"
+    ],
+    "impact": {
+      "positiveOutcomeMultiplierPerTrigger": 1.18,
+      "deathAvoidanceMultiplierPerTrigger": 0.92,
+      "temporaryUnderstandingBoost": {
+        "controlScoreBonus": 0.4,
+        "duration": "current combat sequence"
+      }
+    }
+  },
+  "domainRules": {
+    "domainTypeWheel": 51,
+    "effectCountWheel": 53,
+    "highTalentEffectCountWheel": 103,
+    "effectWheel": 52,
+    "simulatePostDomainCost": false,
+    "sourceSupport": [
+      "S008",
+      "S010"
+    ],
+    "qualityFormula": "0.35*resource + 0.35*control + 0.2*talentScore + 0.1*innateTechniqueCompatibility",
+    "effectTags": {
+      "必中": [
+        "sureHit"
+      ],
+      "自动攻击（宿傩）": [
+        "automaticAttack",
+        "highLethality"
+      ],
+      "增幅自身类（称金次）": [
+        "selfBuff"
+      ],
+      "增幅咒术类（乙骨）": [
+        "techniqueBuff"
+      ],
+      "打击灵魂类（虎杖）": [
+        "soulDamage"
+      ],
+      "强控类（五条）": [
+        "hardControl"
+      ],
+      "规则类（日车）": [
+        "ruleBased"
+      ]
+    }
+  },
+  "reverseCursedTechniqueRules": {
+    "rctRequiresHighControl": true,
+    "suggestedGate": "control >= 6 or advancedTechnique contains 反转术式外放",
+    "antiCurseMechanic": {
+      "enabled": true,
+      "description": "Positive energy output can become a one-shot exorcism route against cursed spirits when the physical gap is not severe.",
+      "winRateFloorAgainstCursedSpirit": 0.88,
+      "requiresNoSevereBodyGap": true
+    }
+  },
+  "cursedToolRules": {
+    "hasToolWheel": 80,
+    "toolCountWheel": 83,
+    "toolWheel": 81,
+    "defaultWinRateBoost": "minor",
+    "prototypeCraftingLink": {
+      "trigger": "advancedTechnique contains 制作咒具",
+      "hasToolWeight": "yes x20, no x0.2",
+      "toolCountWeight": "1 x0.65, 2 x1.1, 3 x1.35, 4+ x1.6",
+      "status": "implementedInPrototype"
+    },
+    "sourceSupport": [
+      "S008",
+      "S010"
+    ],
+    "globalCap": {
+      "defaultMaxPositiveMultiplier": 1.18,
+      "note": "Cursed tools can improve win rate, but should not generally produce a large boost unless their property specifically counters the opponent."
+    },
+    "toolProfiles": {
+      "游云": {
+        "status": "needsPropertyReview",
+        "tags": []
+      },
+      "天逆鉾": {
+        "status": "needsPropertyReview",
+        "tags": [
+          "possibleTechniqueNullification"
+        ]
+      },
+      "万里锁": {
+        "status": "needsPropertyReview",
+        "tags": []
+      },
+      "龙骨": {
+        "status": "needsPropertyReview",
+        "tags": []
+      },
+      "释魂刀": {
+        "status": "needsPropertyReview",
+        "tags": [
+          "possibleSoulDamage"
+        ]
+      },
+      "神武解": {
+        "status": "needsPropertyReview",
+        "tags": []
+      },
+      "飞天": {
+        "status": "needsPropertyReview",
+        "tags": []
+      },
+      "黑绳": {
+        "status": "needsPropertyReview",
+        "tags": [
+          "possibleTechniqueInterference"
+        ]
+      },
+      "屠座魔": {
+        "status": "needsPropertyReview",
+        "tags": []
+      },
+      "一堆蝇头（咒具在哪？）": {
+        "status": "lowValueOrJoke",
+        "tags": [
+          "weakToolOutcome"
+        ]
+      },
+      "狱门疆（表）": {
+        "status": "needsPropertyReview",
+        "tags": [
+          "possibleSealing"
+        ]
+      },
+      "狱门疆（里）": {
+        "status": "needsPropertyReview",
+        "tags": [
+          "possibleSealing"
+        ]
+      },
+      "里香戒指": {
+        "status": "needsPropertyReview",
+        "tags": [
+          "possibleRikaConnection"
+        ]
+      }
+    }
+  },
+  "bindingRules": {
+    "bindingWheel": 82,
+    "mode": "conditional multiplier, not flat power",
+    "note": "Bindings should change specific probabilities or constraints only after the binding profile gate is yes.",
+    "profileGateWheel": 164,
+    "profileGate": "bindingProfileGate == 是"
+  },
+  "outcomeAdjustment": {
+    "positiveOutcomeMultiplier": "1 + clamp((basePowerScore - 4.0) * 0.08, -0.25, 0.45)",
+    "negativeOutcomeMultiplier": "1 - clamp((basePowerScore - 4.0) * 0.06, -0.25, 0.35)",
+    "deathOutcomeMultiplier": "1 - clamp((body + control - 8.0) * 0.05, -0.25, 0.35)",
+    "appearanceMiguelEasterEgg": {
+      "trigger": "appearance rank E- and hostile Miguel-related opponent encounter",
+      "triggerChance": 0.35,
+      "winWeightMultiplier": 1.2,
+      "status": "implementedInPrototype",
+      "note": "User-facing copy avoids geographic labels and uses the fictional matchup condition."
+    },
+    "status": "provisional",
+    "notes": [
+      "These multipliers are deliberately mild before playtesting.",
+      "Strong matchup counters, gated 68-Yuji-level black flash chains, RCT anti-curse, and Mahoraga anti-curse may override mild global multipliers."
+    ]
+  },
+  "matchupOverrides": {
+    "sorcererVsCurse": {
+      "humanWithinOneGradeNotGradeSuppressed": true,
+      "sameGradeHumanSuppressesCurse": true,
+      "specialGradeSorcererWinRateFloor": 0.82,
+      "ifSorcererHasRCTOutputWinRateFloor": 0.88,
+      "ifSorcererHasMahoragaExorcismBlade": 0.35,
+      "note": "Special-grade sorcerers should clearly suppress special-grade cursed spirits; RCT output can become an execution route if the body gap is not severe."
+    },
+    "domainClash": {
+      "useDomainQuality": true,
+      "includeDomainTypeAndEffects": true,
+      "simulateAfterCost": false
+    }
+  },
+  "needsReview": [
+    "Base dimension weights are provisional.",
+    "A/S/SS/SSS high-talent growth multipliers are provisional.",
+    "Cursed tool properties must be reviewed individually.",
+    "Strong-causal outcome wheels still need per-option labels: win, loss, death, heavyInjury, skipFlow, decisiveImpact.",
+    "Module-era 68-year-later Yuji is accepted as a user-confirmed EX reference for this project; external fact checking is not yet integrated."
+  ],
+  "flavorAdjustmentRules": {
+    "status": "candidate",
+    "source": "20260424-122432 selected profile/flavor modules",
+    "profileNodes": [
+      "occupation",
+      "culture",
+      "hobby",
+      "assets",
+      "personality",
+      "luck"
+    ],
+    "flavorNodes": [
+      "cursedEnergyNature",
+      "cursedEnergyColor",
+      "bindingProfileGate",
+      "bindingCount",
+      "sweetPreference",
+      "effortLevel"
+    ],
+    "notes": [
+      "Personality technique-strength text is converted into small hidden score modifiers, not direct grade overrides.",
+      "Cursed energy nature/color lightly affect resource/control/body dimensions without changing raw attribute high-count gates.",
+      "Binding count and binding philosophy only bias binding-related advanced technique odds and small build bonus.",
+      "Binding count and binding philosophy are now gated by bindingProfileGate; no-binding characters skip those wheels and receive no binding affinity boost.",
+      "Effort level creates hidden score modifiers after base attributes and before advanced techniques or grade evaluation; advanced technique count can gain at most a low-probability +1 from effort and must still pass prerequisite gates.",
+      "High assets combined with 再契象 now provide a substantial hidden build-score boost."
+    ],
+    "caps": {
+      "scoreDimensionModifier": 0.35,
+      "flavorBuildBonus": 0.55,
+      "bindingAffinityMultiplier": 1.9,
+      "effortAdvancedTechniqueDeltaMax": 1,
+      "abilityBuildBonus": 3
+    }
+  },
+  "gradeDistributionPrior": {
+    "status": "legacyReference",
+    "appliesToNode": "legacy grade wheel only",
+    "shape": "bell-like prior plus shifted target bands centered on grade2/grade1",
+    "meaning": "历史版本中基础属性本身采用高等级稀有权重，等级评定阶段通过目标分区间和先验倍率共同形成类正态分布；当前版本改由 deterministicGradeRanges 直接形成中心峰值。",
+    "multipliers": {
+      "support": 0.3,
+      "grade4": 0.45,
+      "grade3": 0.55,
+      "grade2": 2,
+      "grade1": 2.75,
+      "semiSpecialGrade1": 0.09,
+      "specialGrade": 0.03
+    },
+    "targets": {
+      "support": 0.8,
+      "grade4": 2.4,
+      "grade3": 4,
+      "grade2": 5.55,
+      "grade1": 6.55,
+      "semiSpecialGrade1": 9.25,
+      "specialGrade": 10.4
+    },
+    "note": "Retained for review history. Current grade node uses deterministicGradeRanges instead of weighted rolling."
+  },
+  "deterministicGradeRanges": {
+    "status": "candidate",
+    "appliesToNode": "grade",
+    "score": "computeGradeEffectiveScore output, clamped 0-10",
+    "floorRulesStillApply": true,
+    "meaning": "等级不再抽取；有效分落入哪个区间就直接给对应中文等级，随后应用 SS/SSS/EX、强体术强体质、术式组合等保底规则。",
+    "ranges": [
+      { "grade": "support", "min": 0, "max": 1.3 },
+      { "grade": "grade4", "min": 1.3, "max": 2.2 },
+      { "grade": "grade3", "min": 2.2, "max": 3.2 },
+      { "grade": "grade2", "min": 3.2, "max": 4.6 },
+      { "grade": "grade1", "min": 4.6, "max": 6.2 },
+      { "grade": "semiSpecialGrade1", "min": 6.2, "max": 7.6 },
+      { "grade": "specialGrade", "min": 7.6, "max": null }
+    ],
+    "notes": [
+      "The center mass is intentionally shifted to grade1/semiSpecialGrade1 because this build favors stronger player characters.",
+      "A single SS/SSS/EX base attribute still floors the final grade to semiSpecialGrade1, so high-end base stats do not collapse to grade1 or below.",
+      "Special grade requires either a high effective score or strong build synergy rather than a lucky grade wheel result."
+    ]
+  },
+  "baseAttributeRankWeights": {
+    "status": "candidate",
+    "appliesToWheelIds": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      35
+    ],
+    "reason": "SS/SSS/EX triggers above-grade1 floor, but E/E- should also be rare low-end outliers instead of absorbing all probability mass removed from high ranks.",
+    "EX": 0.06,
+    "SSS": 0.16,
+    "SS": 0.34,
+    "S": 0.95,
+    "A": 1.25,
+    "B": 1.25,
+    "C": 1.05,
+    "D": 0.62,
+    "E": 0.24,
+    "E-": 0.08,
+    "default": 1,
+    "note": "Base attributes now use a high-strength-biased rarity curve: A/B remain common, S is no longer rare, SS+ is uncommon but reachable, and low-end D/E/E- results are strongly reduced. Grade output uses deterministicGradeRanges and hard floor rules."
+  },
+  "wealthTechniqueSynergy": {
+    "status": "candidate",
+    "trigger": "assets rank A or above and innate/custom technique text includes 再契象",
+    "appliesTo": "abilityBuildBonus / gradeEffectiveScore",
+    "multipliers": {
+      "A": 0.75,
+      "S": 1.1,
+      "SS": 1.45,
+      "SSSOrAbove": 1.75
+    },
+    "note": "High wealth is treated as enabling stronger Recontract-style performance, so it substantially raises combat build score without changing the raw attribute ranks."
+  },
+  "techniqueSynergy": {
+    "status": "candidate",
+    "scale": 1,
+    "gradeOnlyBeforeFinalGrade": true,
+    "attributeCap": 0.55,
+    "attributeFloor": -0.35,
+    "domainBonusCap": 0.45,
+    "domainPenaltyFloor": -0.2,
+    "targetDistribution": {
+      "grade2": "8%~14%",
+      "grade1": "30%~38%",
+      "semiSpecialGrade1": "36%~46%",
+      "specialGrade": "10%~16%"
+    },
+    "notes": [
+      "Technique synergy is only applied to final grade, domain quality/effect weights, and story outcome weights through final strength snapshots.",
+      "It must not alter advanced technique count, special talent gate, or cursed tool ownership gates.",
+      "If high-end grades exceed target after testing, reduce scale to 0.75 before tuning individual techniques."
+    ]
+  },
+  "techniqueProfiles": {
+    "十种影法术": {
+      "displayName": "十种影法术",
+      "baseCombatBonus": 0.45,
+      "tags": ["controlHungry", "talentScaling", "shikigami", "domainFriendly"],
+      "sourceNote": "公式书/正篇；魔虚罗适应、嵌合兽和世界斩参照属于决战资源包，另行提高构筑上限。"
+    },
+    "无下限": {
+      "displayName": "无下限术式",
+      "baseCombatBonus": 0.48,
+      "tags": ["controlHungry", "resourceHungry", "precision", "domainFriendly", "hardControl"],
+      "sourceNote": "公式书/正篇；六眼是关键经典组合。"
+    },
+    "赤血操术": {
+      "displayName": "赤血操术",
+      "baseCombatBonus": 0.24,
+      "tags": ["resourceHungry", "bodyScaling", "midRange"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "咒灵操术": {
+      "displayName": "咒灵操术",
+      "baseCombatBonus": 0.36,
+      "tags": ["resourceHungry", "talentScaling", "stockScaling", "strategic"],
+      "sourceNote": "公式书/正篇；强度依赖咒灵库存。"
+    },
+    "无为转变": {
+      "displayName": "无为转变",
+      "baseCombatBonus": 0.56,
+      "tags": ["controlHungry", "soulTargeting", "domainFriendly", "hardControl"],
+      "sourceNote": "公式书/正篇；灵魂特例需剧情克制。"
+    },
+    "十划咒法（七海）": {
+      "displayName": "十划咒法（七海）",
+      "baseCombatBonus": 0.16,
+      "tags": ["precision", "bodyScaling"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "咒言": {
+      "displayName": "咒言",
+      "baseCombatBonus": 0.24,
+      "tags": ["controlHungry", "resourceHungry", "hardControl"],
+      "sourceNote": "公式书/正篇；强命令有反噬。"
+    },
+    "不义游戏": {
+      "displayName": "不义游戏",
+      "baseCombatBonus": 0.26,
+      "tags": ["precision", "bodyScaling", "support", "teamFight"],
+      "sourceNote": "公式书/正篇；战术价值高于直接输出。"
+    },
+    "黑鸟操术": {
+      "displayName": "黑鸟操术",
+      "baseCombatBonus": 0.2,
+      "tags": ["strategic", "resourceHungry", "singleBurst"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "投射咒法": {
+      "displayName": "投射咒法",
+      "baseCombatBonus": 0.3,
+      "tags": ["bodyScaling", "controlHungry", "speed", "precision"],
+      "sourceNote": "公式书/正篇；高体术和高操纵时升值。"
+    },
+    "构筑术式": {
+      "displayName": "构筑术式",
+      "baseCombatBonus": 0.22,
+      "tags": ["resourceHungry", "controlHungry", "talentScaling", "construction"],
+      "sourceNote": "公式书/后期漫画；使用者差异极大。"
+    },
+    "傀儡操术": {
+      "displayName": "傀儡操术",
+      "baseCombatBonus": 0.16,
+      "tags": ["resourceHungry", "strategic", "preparation"],
+      "sourceNote": "公式书/正篇；依赖硬件和准备。"
+    },
+    "付丧操术": {
+      "displayName": "付丧操术",
+      "baseCombatBonus": 0.08,
+      "tags": ["support", "mobility"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "降灵术（参拜婆）": {
+      "displayName": "降灵术（参拜婆）",
+      "baseCombatBonus": 0.22,
+      "tags": ["preparation", "strategic", "unstable"],
+      "sourceNote": "公式书/正篇；降灵对象决定上限。"
+    },
+    "刍灵咒法（野蔷薇）": {
+      "displayName": "刍灵咒法（野蔷薇）",
+      "baseCombatBonus": 0.24,
+      "tags": ["precision", "soulTargeting", "midRange"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "星之怒（九十九）": {
+      "displayName": "星之怒（九十九）",
+      "baseCombatBonus": 0.64,
+      "tags": ["bodyScaling", "resourceHungry", "highLethality", "domainFriendly"],
+      "sourceNote": "后期漫画；黑洞视为死亡代价异常。"
+    },
+    "冰凝咒法": {
+      "displayName": "冰凝咒法",
+      "baseCombatBonus": 0.42,
+      "tags": ["resourceHungry", "controlHungry", "hardControl", "areaControl"],
+      "sourceNote": "后期漫画。"
+    },
+    "不死（天元）": {
+      "displayName": "不死（天元）",
+      "baseCombatBonus": 0.02,
+      "tags": ["strategic", "support", "lowCombat"],
+      "sourceNote": "公式书/正篇；战略价值不等于战斗输出。"
+    },
+    "奇迹（重面春太）": {
+      "displayName": "奇迹",
+      "baseCombatBonus": 0.14,
+      "tags": ["survival", "luck", "lowOutput"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "漏壶": {
+      "displayName": "灾害火山术式（漏壶）",
+      "baseCombatBonus": 0.42,
+      "tags": ["resourceHungry", "highLethality", "domainFriendly", "areaControl"],
+      "sourceNote": "公式书/正篇；作为灾害术式性质而非变成漏壶本人。"
+    },
+    "花御": {
+      "displayName": "灾害植物术式（花御）",
+      "baseCombatBonus": 0.38,
+      "tags": ["resourceHungry", "areaControl", "survival", "domainFriendly"],
+      "sourceNote": "公式书/正篇；作为灾害术式性质而非变成花御本人。"
+    },
+    "陀艮": {
+      "displayName": "灾害海洋术式（陀艮）",
+      "baseCombatBonus": 0.4,
+      "tags": ["resourceHungry", "shikigami", "domainFriendly", "areaControl"],
+      "sourceNote": "公式书/正篇；作为灾害术式性质而非变成陀艮本人。"
+    },
+    "乐岩寺": {
+      "displayName": "咒力音波（乐岩寺）",
+      "baseCombatBonus": 0.1,
+      "tags": ["midRange", "support"],
+      "sourceNote": "公式书/正篇；表现有限。"
+    },
+    "蚀烂术式（坏相、血涂）": {
+      "displayName": "蚀烂术式",
+      "baseCombatBonus": 0.18,
+      "tags": ["bodyScaling", "midRange", "damageOverTime"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "疱疮神": {
+      "displayName": "疱疮神领域机制",
+      "baseCombatBonus": 0.42,
+      "tags": ["ruleBased", "domainFriendly", "highLethality"],
+      "sourceNote": "公式书/正篇；领域机制杀。"
+    },
+    "夺舍（羂索）": {
+      "displayName": "夺舍（羂索）",
+      "baseCombatBonus": 0.24,
+      "tags": ["strategic", "stockScaling", "talentScaling"],
+      "sourceNote": "公式书/后期漫画；长生和布局价值高。"
+    },
+    "坐杀搏徒": {
+      "displayName": "坐杀搏徒",
+      "baseCombatBonus": 0.42,
+      "tags": ["ruleBased", "domainFriendly", "survival"],
+      "sourceNote": "后期漫画；依赖领域中奖。"
+    },
+    "诛伏赐死": {
+      "displayName": "诛伏赐死",
+      "baseCombatBonus": 0.42,
+      "tags": ["ruleBased", "domainFriendly", "highLethality"],
+      "sourceNote": "后期漫画；依赖审判规则。"
+    },
+    "超人（高羽）": {
+      "displayName": "超人（高羽）",
+      "baseCombatBonus": 0.86,
+      "exceptionTier": "EX-",
+      "tags": ["realityWarp", "unstable", "highDisruption"],
+      "sourceNote": "后期漫画；术式强度按 EX- 处理，但本人理解、杀意和稳定性限制即时击杀兑现。"
+    },
+    "模仿": {
+      "displayName": "模仿",
+      "baseCombatBonus": 0.46,
+      "tags": ["copy", "talentScaling", "resourceHungry", "stockScaling", "domainFriendly"],
+      "sourceNote": "公式书/后期漫画；强度依赖复制库存。"
+    },
+    "天空术式（乌鹭）": {
+      "displayName": "天空术式（乌鹭）",
+      "baseCombatBonus": 0.32,
+      "tags": ["controlHungry", "precision", "defense"],
+      "sourceNote": "后期漫画。"
+    },
+    "石流龙": {
+      "displayName": "咒力放出（石流龙）",
+      "baseCombatBonus": 0.4,
+      "tags": ["resourceHungry", "highLethality", "midRange"],
+      "sourceNote": "后期漫画；角色名规范为术式表现。"
+    },
+    "漫画家": {
+      "displayName": "G 战杖/未来画面（漫画家）",
+      "baseCombatBonus": 0.1,
+      "tags": ["strategic", "precision", "lowOutput"],
+      "sourceNote": "后期漫画。"
+    },
+    "反重力": {
+      "displayName": "反重力机构",
+      "baseCombatBonus": 0.38,
+      "tags": ["controlHungry", "defense", "counter"],
+      "sourceNote": "后期漫画。"
+    },
+    "天使": {
+      "displayName": "术式消灭（天使）",
+      "baseCombatBonus": 0.52,
+      "tags": ["ruleBased", "antiTechnique", "domainFriendly"],
+      "sourceNote": "后期漫画；对结界/受肉/术式特攻。"
+    },
+    "鹿紫云一": {
+      "displayName": "幻兽琥珀（鹿紫云一）",
+      "baseCombatBonus": 0.5,
+      "tags": ["bodyScaling", "resourceHungry", "highLethality", "selfDestructive"],
+      "sourceNote": "后期漫画；一次性爆发。"
+    },
+    "达布拉": {
+      "displayName": "光/杀意具现（达布拉）",
+      "baseCombatBonus": 0.74,
+      "tags": ["resourceHungry", "controlHungry", "speed", "domainFriendly", "highDisruption"],
+      "sourceNote": "Modulo；术式强度高于宿傩，但角色总强度仍按后传天花板而非 EX。"
+    },
+    "混沌与调和": {
+      "displayName": "混沌与调和",
+      "baseCombatBonus": 0.56,
+      "tags": ["ruleBased", "realityWarp", "strategic", "support", "highDisruption"],
+      "sourceNote": "Modulo；规则级高扰动/辅助价值高，但马鲁单体战力不应被硬抬到顶级。"
+    },
+    "再契象": {
+      "displayName": "再契象",
+      "baseCombatBonus": 0.22,
+      "tags": ["strategic", "resourceHungry", "stockScaling"],
+      "sourceNote": "后期漫画；财富/收据库存会额外联动。"
+    },
+    "黄栌折": {
+      "displayName": "爆炸肉体（黄栌折）",
+      "baseCombatBonus": 0.18,
+      "tags": ["resourceHungry", "selfDestructive", "midRange"],
+      "sourceNote": "后期漫画；有反转术式时升值。"
+    },
+    "强弱颠倒": {
+      "displayName": "强弱颠倒",
+      "baseCombatBonus": 0.18,
+      "tags": ["defense", "counter", "ruleBased"],
+      "sourceNote": "后期漫画。"
+    },
+    "御厨子（宿傩）": {
+      "displayName": "御厨子（宿傩）",
+      "baseCombatBonus": 0.5,
+      "tags": ["resourceHungry", "controlHungry", "highLethality", "domainFriendly"],
+      "sourceNote": "公式书/正篇；术式本身不是特级术式中的最高档，宿傩强度主要来自基础数值、开放领域、战斗执行、善用束缚和决战资源包。"
+    },
+    "星间飞行": {
+      "displayName": "星间飞行",
+      "baseCombatBonus": 0.18,
+      "tags": ["ruleBased", "precision", "areaControl"],
+      "sourceNote": "后期漫画。"
+    },
+    "忧忧": {
+      "displayName": "空间转移（忧忧）",
+      "baseCombatBonus": 0.08,
+      "tags": ["strategic", "support", "mobility", "lowCombat"],
+      "sourceNote": "公式书/后期漫画；撤退/调度价值高。"
+    },
+    "新田新": {
+      "displayName": "痛苦杀手（新田新）",
+      "baseCombatBonus": 0.02,
+      "tags": ["support", "survival", "lowCombat"],
+      "sourceNote": "公式书/正篇；医疗辅助不等于输出。"
+    },
+    "羽生（喷气背包头发）": {
+      "displayName": "喷气头发（羽生）",
+      "baseCombatBonus": 0.06,
+      "tags": ["mobility", "bodyScaling", "lowOutput"],
+      "sourceNote": "后期漫画。"
+    },
+    "羽场（直升机头发）": {
+      "displayName": "直升机头发（羽场）",
+      "baseCombatBonus": 0.06,
+      "tags": ["mobility", "bodyScaling", "lowOutput"],
+      "sourceNote": "后期漫画。"
+    },
+    "禅院甚一": {
+      "displayName": "巨大咒力拳（禅院甚一）",
+      "baseCombatBonus": 0.18,
+      "tags": ["resourceHungry", "midRange", "areaControl"],
+      "sourceNote": "后期漫画；角色名规范为术式表现。"
+    },
+    "禅院兰太": {
+      "displayName": "视线拘束（禅院兰太）",
+      "baseCombatBonus": 0.18,
+      "tags": ["controlHungry", "hardControl", "support"],
+      "sourceNote": "后期漫画；角色名规范为术式表现。"
+    },
+    "降灵术来访瑞兽（猪也）": {
+      "displayName": "来访瑞兽（猪野）",
+      "baseCombatBonus": 0.18,
+      "tags": ["talentScaling", "support", "midRange"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "丽美（拿头发扎人，没别的）": {
+      "displayName": "蝎尾头发（丽美）",
+      "baseCombatBonus": 0.02,
+      "tags": ["lowCombat", "lowOutput"],
+      "sourceNote": "后期漫画；弱术式。"
+    },
+    "杜鲁布": {
+      "displayName": "式神轨迹领域（杜鲁布）",
+      "baseCombatBonus": 0.3,
+      "tags": ["shikigami", "areaControl", "domainFriendly", "strategic"],
+      "sourceNote": "后期漫画；角色名规范为术式表现。"
+    },
+    "自定义": {
+      "displayName": "自定义术式流程",
+      "baseCombatBonus": 0,
+      "tags": ["custom"],
+      "sourceNote": "由自定义参数决定，不给固定术式加成。"
+    },
+    "淀月（顺平）": {
+      "displayName": "淀月（顺平）",
+      "baseCombatBonus": 0.08,
+      "tags": ["shikigami", "support", "damageOverTime"],
+      "sourceNote": "公式书/正篇。"
+    },
+    "分身（神秘纸袋男）": {
+      "displayName": "分身术式",
+      "baseCombatBonus": 0.08,
+      "tags": ["strategic", "support", "lowOutput"],
+      "sourceNote": "公式书/正篇；情报有限。"
+    },
+    "穿越者当然是外挂（进入彩蛋池）": {
+      "displayName": "穿越者当然是外挂（进入彩蛋池）",
+      "baseCombatBonus": 0,
+      "tags": ["custom", "highDisruption", "easterEgg"],
+      "sourceNote": "彩蛋入口，实际强度由彩蛋池决定。"
+    }
+  }
+}

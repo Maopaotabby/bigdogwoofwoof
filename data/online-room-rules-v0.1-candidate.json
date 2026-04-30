@@ -1,0 +1,68 @@
+{
+  "version": "0.1.1",
+  "status": "CANDIDATE",
+  "mode": "turn_sync_alpha",
+  "description": "Non-realtime online room alpha rules. This file defines room sync policy only and does not define combat effects.",
+  "backend": {
+    "defaultMode": "official_endpoint",
+    "supportedModes": ["official_endpoint", "local_mock_backend", "custom_endpoint"],
+    "officialEndpoint": {
+      "enabled": true,
+      "label": "官方联机服务器",
+      "url": "https://jjk-online-room.maopaotabby-jjk-life.workers.dev",
+      "fallbackUrls": [],
+      "mainlandMirrorUrls": [],
+      "requiresUserConfig": false,
+      "notes": [
+        "当前已配置站长部署的 Cloudflare Worker。",
+        "workers.dev 在部分国内网络可能显示 Failed to fetch；如需覆盖国内玩家，请在 mainlandMirrorUrls 填入共用同一房间数据的国内 HTTPS 镜像。",
+        "官方联机服务器只同步 room JSON，不调用 AI，也不接收 API key。"
+      ]
+    },
+    "localMock": {
+      "enabled": true,
+      "label": "本地 mock（开发/双标签测试）",
+      "notes": [
+        "只适合同一浏览器或双标签测试。",
+        "不能跨设备共享房间。"
+      ]
+    },
+    "customEndpoint": {
+      "enabled": true,
+      "label": "自定义 Endpoint（高级）",
+      "advanced": true,
+      "method": "POST",
+      "protocol": "jjk_online_room_alpha",
+      "requestBody": "{ protocol, operation, roomId, playerId, side, payload, siteVersion }",
+      "responseBody": "{ ok, room, side, error }",
+      "notes": [
+        "Both players must use the same endpoint.",
+        "Invite links do not include endpoint URLs or secrets.",
+        "The endpoint stores room JSON and does not receive API keys or AI settings."
+      ]
+    }
+  },
+  "room": {
+    "roomIdLength": 6,
+    "maxPlayers": 2,
+    "allowSpectator": false,
+    "expireMinutes": 120
+  },
+  "sync": {
+    "pollIntervalMs": 2000,
+    "requireBothLocked": true,
+    "hideOpponentActionsUntilBothLocked": true
+  },
+  "security": {
+    "uploadApiKeys": false,
+    "uploadAiSettings": false,
+    "uploadLocalStorage": false,
+    "redactSecrets": true
+  },
+  "notes": [
+    "Alpha room sync defaults to official_endpoint for普通玩家；local_mock_backend is retained for development and same-browser testing.",
+    "No WebSocket, account system, matchmaking, leaderboard, chat, server-authoritative anticheat, or full replay is included.",
+    "Online sync must not change AP, CE, trial, jackpot, domain, card effect, wheel pointer, or sound behavior.",
+    "Room snapshots must not contain API keys, BYOK settings, proxy endpoint secrets, raw AI responses, or full localStorage dumps."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "version": "0.1.0",
+  "status": "CANDIDATE",
+  "primaryEndConditions": ["hp_depleted", "mutual_collapse", "special_rule"],
+  "safety": {
+    "normalSafetyRoundCap": 80,
+    "debugSafetyRoundCap": 120,
+    "endReason": "safety_cap_reached"
+  },
+  "legacy": {
+    "maxRoundsWinRateResolution": false,
+    "maxRoundsUse": ["legacy_mode", "ai_narrative_reference", "ui_estimated_battle_length", "debug_display"]
+  },
+  "notes": "Normal hand beta combat ends by HP collapse, explicit special rule, or technical safety cap. Legacy maxRounds no longer resolves normal combat by winRate."
+}

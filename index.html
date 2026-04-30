@@ -1,0 +1,990 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>咒术转盘1.386 / 1.390A 战斗核心合理化</title>
+    <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./styles.css?v=20260428-v1.390A-combat-core-rationalization-pass">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>咒术转盘1.386 / 1.390A 战斗核心合理化</h1>
+          <p id="modeHint">一键抽取 · 自动跳转</p>
+          <button id="feedbackContactBtn" class="feedback-contact" type="button">问题反馈 QQ：3429672291</button>
+        </div>
+        <div class="top-actions">
+          <fieldset class="play-mode-control" aria-label="游玩模式">
+            <legend>模式</legend>
+            <label>
+              <input type="radio" name="playMode" value="random" checked>
+              <span>随机</span>
+            </label>
+            <label>
+              <input type="radio" name="playMode" value="semi">
+              <span>半自定义</span>
+            </label>
+          </fieldset>
+          <label class="ai-free-toggle">
+            <input id="aiFreeToggle" type="checkbox">
+            <span>AI自由辅助</span>
+            <small>叠加在随机 / 半自定义上：先抽取合法结果，再填写行动策略；只影响后续倾向。</small>
+          </label>
+          <label class="debug-toggle debug-summon-only">
+            <input id="debugToggle" type="checkbox">
+            <span>调试模式</span>
+          </label>
+          <button id="globalSettingsBtn" class="secondary settings-gear" type="button" aria-expanded="false" aria-controls="globalSettingsPanel">⚙ AI 设置</button>
+          <button id="restartBtn" class="secondary" type="button">重启流程</button>
+        </div>
+      </header>
+
+      <section id="globalSettingsPanel" class="panel global-settings-panel" aria-label="全局设置" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>全局设置</h2>
+            <p id="globalSettingsStatus" class="muted">AI Provider 设置会同时作用于 AI 总结、AI 自由辅助、斗蛐蛐解析、战斗叙事、机制解释和反馈摘要。</p>
+          </div>
+          <button id="globalSettingsCloseBtn" class="secondary" type="button">关闭</button>
+        </div>
+        <section class="ai-provider-settings" aria-label="AI Provider 全局设置">
+          <div class="creator-grid">
+            <label class="field">
+              <span>AI 模式</span>
+              <select id="aiProviderMode">
+                <option value="off">关闭 AI</option>
+                <option value="local_fallback" selected>本地 fallback</option>
+                <option value="openai_byok_direct">玩家自带 OpenAI API Key（实验性）</option>
+                <option value="deepseek_byok_direct">玩家自带 DeepSeek API Key（实验性）</option>
+                <option value="openai_compatible_byok_direct">自定义 OpenAI-compatible Provider（实验性）</option>
+                <option value="user_proxy_endpoint">玩家自托管 Proxy Endpoint（推荐）</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Provider</span>
+              <select id="aiProviderIdInput">
+                <option value="openai">OpenAI</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="openai_compatible">自定义 OpenAI-compatible Provider</option>
+                <option value="user_proxy">玩家自托管 Proxy Endpoint（推荐）</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>当前模型</span>
+              <input id="aiModelInput" type="text" value="gpt-5-mini" autocomplete="off" list="aiModelPresets">
+              <datalist id="aiModelPresets">
+                <option value="gpt-5-mini"></option>
+                <option value="deepseek-chat"></option>
+                <option value="deepseek-reasoner"></option>
+                <option value="deepseek-v4-flash"></option>
+                <option value="deepseek-v4-pro"></option>
+              </datalist>
+            </label>
+            <label class="field">
+              <span>最大输出 token</span>
+              <input id="aiOutputTokenInput" type="number" min="64" max="4000" step="50" value="700">
+            </label>
+            <label class="field" data-ai-provider-panel="openai_compatible">
+              <span>Base URL</span>
+              <input id="aiBaseUrlInput" type="url" placeholder="https://your-compatible-provider.example/v1">
+            </label>
+            <label class="field" data-ai-provider-panel="openai_compatible">
+              <span>Path</span>
+              <input id="aiPathInput" type="text" placeholder="/chat/completions">
+            </label>
+          </div>
+          <p id="aiProviderWarning" class="muted">
+            当前默认使用本地 fallback，不调用远程 AI，也不消耗任何 API token。
+          </p>
+          <div class="ai-mode-panel" data-ai-mode-panel="openai_byok_direct deepseek_byok_direct openai_compatible_byok_direct" hidden>
+            <p class="error-text">
+              安全提示：官方不建议在浏览器中暴露 API Key。此模式仅适合个人本地使用。Key 只保存在你的浏览器中，不会上传到本站服务器。请自行承担泄露与调用费用风险。
+            </p>
+            <div class="creator-grid">
+              <label class="field">
+                <span>Provider API Key</span>
+                <input id="aiByokKeyInput" type="password" autocomplete="off" placeholder="只保存在你的浏览器中">
+              </label>
+              <label class="field checkbox-field">
+                <span>长期保存到本机 localStorage</span>
+                <input id="aiByokPersistLocal" type="checkbox">
+              </label>
+            </div>
+            <div class="action-row compact">
+              <button id="aiByokRevealToggle" class="secondary" type="button">显示 Key</button>
+              <button id="clearAiKeyBtn" class="secondary" type="button">清除 API Key</button>
+            </div>
+          </div>
+          <div class="ai-mode-panel" data-ai-mode-panel="user_proxy_endpoint" hidden>
+            <p class="muted">
+              推荐：使用自托管 Proxy Endpoint，由你的后端保存 API Key，网页只发送 prompt payload。协议：POST /ai，body 为 { providerId, endpointType, payload, siteVersion, promptTemplateId }，response 为 { text, usage?, raw? }。
+            </p>
+            <label class="field">
+              <span>Proxy endpoint</span>
+              <input id="aiProxyEndpointInput" type="url" placeholder="https://your-domain.example/ai">
+            </label>
+            <div class="action-row compact">
+              <button id="clearAiProxyBtn" class="secondary" type="button">清除 Proxy Endpoint</button>
+            </div>
+          </div>
+          <div class="ai-provider-meta">
+            <span id="aiPromptEstimate">估算 prompt token：待生成；最大输出 token：700</span>
+            <span id="aiCostNotice">玩家自行承担 API 费用；local fallback / off 不消耗 token。</span>
+            <span id="aiFallbackStatus">本地 fallback：不调用 API，适合零成本使用。</span>
+          </div>
+          <div class="action-row compact">
+            <button id="testAiProviderBtn" class="secondary" type="button">测试连接设置</button>
+            <button id="clearAiAllSettingsBtn" class="secondary" type="button">清除全部 AI 设置</button>
+          </div>
+        </section>
+      </section>
+
+      <nav class="tabs" aria-label="主视图">
+        <button class="tab active" data-tab="run" type="button">转盘</button>
+        <button class="tab" data-tab="duel" type="button">咒术回战</button>
+        <button class="tab debug-tab" data-tab="tree" type="button">审阅树</button>
+        <button class="tab debug-tab" data-tab="graph" type="button">路线图谱</button>
+        <button class="tab debug-tab" data-tab="library" type="button">原始转盘库</button>
+        <button class="tab debug-tab" data-tab="creator" type="button">模板原型</button>
+        <button class="tab" data-tab="aiNarrative" type="button">AI总结</button>
+        <button class="tab" data-tab="results" type="button">结果</button>
+        <button class="tab" data-tab="changelog" type="button">更新日志</button>
+        <button class="tab debug-tab" data-tab="notes" type="button">规则</button>
+      </nav>
+
+      <main>
+        <section id="run" class="tab-panel active">
+          <div class="run-grid">
+            <section class="panel current-panel">
+              <div class="panel-heading debug-only">
+                <span id="stageBadge" class="badge">载入中</span>
+                <span id="stepCounter" class="muted"></span>
+              </div>
+              <h2 id="currentTitle">正在载入数据</h2>
+              <p id="currentWhy" class="why-text debug-only">请稍候。</p>
+
+              <div id="wheelArea" class="wheel-area">
+                <div class="empty-state">数据载入后开始流程。</div>
+              </div>
+
+              <div id="debugForcePanel" class="debug-force debug-only" hidden>
+                <label for="debugForcedOptionSelect">指定下次抽取</label>
+                <select id="debugForcedOptionSelect">
+                  <option value="">按权重随机</option>
+                </select>
+                <span id="debugForcedOptionHint" class="muted">只影响下一次抽取，且不会保存到普通模式。</span>
+              </div>
+
+              <div id="debugEntryPanel" class="debug-entry-panel debug-only" hidden>
+                <div class="debug-entry-head">
+                  <strong>调试词条编辑</strong>
+                  <span id="debugEntryStatus" class="muted">运行态编辑，不写回原始 JSON。</span>
+                </div>
+                <div class="debug-entry-grid">
+                  <label class="field">
+                    <span>选中词条</span>
+                    <select id="debugEntrySelect">
+                      <option value="">新建词条</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>权重</span>
+                    <input id="debugEntryWeight" type="number" min="0.001" step="0.001" value="1">
+                  </label>
+                </div>
+                <label class="field">
+                  <span>词条文本</span>
+                  <textarea id="debugEntryText" rows="2" maxlength="220" placeholder="手动写入当前转盘可抽取的词条"></textarea>
+                </label>
+                <div class="action-row">
+                  <button id="debugEntryAddBtn" class="secondary" type="button">新增词条</button>
+                  <button id="debugEntrySaveBtn" class="secondary" type="button" disabled>保存选中</button>
+                  <button id="debugEntryDeleteBtn" class="secondary danger" type="button" disabled>删除选中</button>
+                </div>
+              </div>
+
+              <div class="action-row">
+                <button id="drawBtn" class="primary" type="button" disabled>抽取</button>
+                <button id="runAllBtn" class="secondary debug-only" type="button">一键跑完整流程</button>
+                <button id="nextBtn" class="secondary" type="button" disabled>下一步</button>
+              </div>
+            </section>
+
+            <aside class="side-stack">
+              <section class="panel compact">
+                <h3>当前状态</h3>
+                <dl id="stateList" class="state-list"></dl>
+              </section>
+
+              <section class="panel compact wheel-settings-panel">
+                <div class="compact-heading">
+                  <h3>转盘设置</h3>
+                  <button id="wheelSettingsResetBtn" class="secondary mini" type="button">重置</button>
+                </div>
+                <div class="wheel-settings-grid">
+                  <label class="wheel-setting-field">
+                    <span>前摇 <output data-wheel-setting-output="preDelayMs">0ms</output></span>
+                    <input data-wheel-setting="preDelayMs" type="range" min="0" max="5000" step="100">
+                  </label>
+                  <label class="wheel-setting-field">
+                    <span>旋转 <output data-wheel-setting-output="spinDurationMs">3400ms</output></span>
+                    <input data-wheel-setting="spinDurationMs" type="range" min="300" max="10000" step="100">
+                  </label>
+                  <label class="wheel-setting-field">
+                    <span>后摇 <output data-wheel-setting-output="resultHoldMs">2000ms</output></span>
+                    <input data-wheel-setting="resultHoldMs" type="range" min="0" max="10000" step="100">
+                  </label>
+                  <label class="wheel-setting-field">
+                    <span>选择跳转 <output data-wheel-setting-output="choiceDelayMs">350ms</output></span>
+                    <input data-wheel-setting="choiceDelayMs" type="range" min="0" max="5000" step="50">
+                  </label>
+                </div>
+                <div class="wheel-setting-toggles" aria-label="转盘开关">
+                  <label><input data-wheel-setting="animationEnabled" type="checkbox"> <span>动画</span></label>
+                  <label><input data-wheel-setting="soundEnabled" type="checkbox"> <span>音效</span></label>
+                  <label><input data-wheel-setting="speechEnabled" type="checkbox"> <span>语音</span></label>
+                </div>
+              </section>
+
+              <section class="panel compact debug-only">
+                <h3>隐藏强度</h3>
+                <div id="strengthSummary" class="strength-summary">
+                  <p class="muted">基础能力抽完后显示。</p>
+                </div>
+              </section>
+
+              <section class="panel compact">
+                <h3>全站使用统计</h3>
+                <dl id="usageStats" class="state-list"></dl>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section id="duel" class="tab-panel">
+          <div class="panel duel-panel" data-jjk-battle-root data-active-battle-page="home" data-battle-mode="none">
+            <div class="panel-heading">
+              <div>
+                <h2>咒术回战 · 对战</h2>
+                <p class="muted">单人、联机、自定义、情报和设置页已分离，避免模式状态混在一起。</p>
+              </div>
+              <div class="panel-actions">
+                <button id="duelSwapBtn" class="secondary" data-solo-disabled-when-online type="button">交换双方</button>
+                <button id="duelStartBtn" class="primary" data-solo-disabled-when-online type="button">开始单人对战</button>
+              </div>
+            </div>
+
+            <nav class="jjk-battle-tabs" aria-label="咒术回战模块导航">
+              <button class="jjk-battle-tab active" data-jjk-battle-tab="home" type="button">对战首页</button>
+              <button class="jjk-battle-tab" data-jjk-battle-tab="solo" type="button">单人对战</button>
+              <button class="jjk-battle-tab" data-jjk-battle-tab="online" type="button">联机对战 Alpha</button>
+              <button class="jjk-battle-tab" data-jjk-battle-tab="custom" type="button">自定义角色</button>
+              <button class="jjk-battle-tab" data-jjk-battle-tab="archive" type="button">情报档案</button>
+              <button class="jjk-battle-tab" data-jjk-battle-tab="settings" type="button">对战设置</button>
+            </nav>
+
+            <section class="jjk-battle-page active" data-jjk-battle-page-panel="home">
+              <div class="jjk-battle-home-grid">
+                <button class="jjk-battle-home-card" data-jjk-battle-open="solo" data-jjk-battle-mode="solo" type="button">
+                  <strong>单人对战</strong>
+                  <span>选择我方 / 对方角色，进入手札、AP、领域、trial / jackpot 和日志界面。</span>
+                </button>
+                <button class="jjk-battle-home-card" data-jjk-battle-open="online" data-jjk-battle-mode="online" type="button">
+                  <strong>联机对战 Alpha</strong>
+                  <span>房间码、邀请链接、回合锁定和轮询同步。联机时不会误触发单人结算。</span>
+                </button>
+                <button class="jjk-battle-home-card" data-jjk-battle-open="custom" type="button">
+                  <strong>自定义角色</strong>
+                  <span>角色编辑、AI 辅助解析、术式库、领域库、咒具库和外部资源库。</span>
+                </button>
+                <button class="jjk-battle-home-card" data-jjk-battle-open="archive" type="button">
+                  <strong>情报档案</strong>
+                  <span>查看角色、卡牌、领域、机制、trial / jackpot、AI Provider 和联机 Alpha 说明。</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="jjk-battle-page" data-jjk-battle-page-panel="solo" hidden>
+              <div class="jjk-battle-section-head">
+                <h3>单人对战</h3>
+                <p class="muted">单人模式只显示角色选择和本地战斗操作；联机房间控件不会参与这里的结算。</p>
+              </div>
+            <div class="duel-selectors">
+              <label class="field">
+                <span>我方角色</span>
+                <select id="duelLeftSelect"></select>
+              </label>
+              <label class="field">
+                <span>对方角色</span>
+                <select id="duelRightSelect"></select>
+              </label>
+            </div>
+
+            </section>
+            <section class="jjk-battle-page" data-jjk-battle-page-panel="online" hidden>
+              <div class="jjk-battle-section-head">
+                <h3>联机对战 Alpha</h3>
+                <p class="muted">当前为联机模式。房间页与联机战斗页分开显示，双方锁定前不会显示对方具体手札。</p>
+              </div>
+            <section id="onlineAlphaPanel" class="online-alpha-panel" aria-label="联机 Alpha">
+              <div class="online-alpha-head">
+                <div>
+                  <h3>联机 Alpha</h3>
+                  <p class="muted">非即时同步先行版：房间码、回合锁定、轮询同步；普通玩家默认使用官方联机服务器。</p>
+                </div>
+                <span id="onlineSyncStatus" class="duel-chip">未加入房间。</span>
+              </div>
+              <div class="online-alpha-section online-sync-section">
+                <div class="online-section-title">
+                  <strong>1. 同步后端</strong>
+                  <span>当前模式：<b id="onlineModeLabel">官方联机服务器</b></span>
+                </div>
+                <div class="online-official-status">
+                  <span id="onlineOfficialStatus">官方联机服务器尚未检测。</span>
+                  <button id="onlineOfficialTestBtn" class="mini" type="button">测试官方服务器</button>
+                </div>
+                <p id="onlineBackendHint" class="muted online-backend-hint">官方联机服务器只同步房间状态，不调用 AI，也不保存 API Key。普通玩家不需要填写 Endpoint。</p>
+                <details id="onlineAdvancedBackendSettings" class="online-advanced-settings">
+                  <summary>高级后端设置</summary>
+                  <div class="online-alpha-grid online-sync-grid">
+                    <label class="field">
+                      <span>后端模式</span>
+                      <select id="onlineBackendMode">
+                        <option value="official_endpoint">官方联机服务器</option>
+                        <option value="local_mock_backend">本地 mock（开发/双标签测试）</option>
+                        <option value="custom_endpoint">自定义 Endpoint（高级）</option>
+                      </select>
+                    </label>
+                    <label id="onlineEndpointField" class="field online-endpoint-field">
+                      <span>自定义 Endpoint</span>
+                      <input id="onlineEndpointInput" type="url" autocomplete="off" placeholder="https://你的后端.example/online-room">
+                    </label>
+                    <div id="onlineBackendActions" class="online-alpha-actions">
+                      <button id="onlineSaveBackendBtn" class="mini" type="button">保存后端</button>
+                      <button id="onlineTestBackendBtn" class="mini" type="button">测试连接</button>
+                      <button id="onlineClearBackendBtn" class="mini" type="button">清除</button>
+                    </div>
+                  </div>
+                </details>
+              </div>
+              <div class="online-alpha-section online-room-section">
+                <div class="online-room-card">
+                  <div class="online-section-title">
+                    <strong>2A. 创建房间</strong>
+                    <span>用于发起对战</span>
+                  </div>
+                  <div class="online-alpha-actions">
+                    <button id="onlineCreateRoomBtn" class="secondary" type="button">创建新房间</button>
+                  </div>
+                  <label class="field">
+                    <span>我的角色</span>
+                    <select id="onlineCreateCharacterSelect"></select>
+                  </label>
+                  <div class="online-room-current">
+                    <span>当前房间码：<strong id="onlineCurrentRoomCode">未创建</strong></span>
+                    <button id="onlineCopyRoomCodeBtn" class="mini" type="button">复制房间码</button>
+                  </div>
+                  <label class="field online-invite-field">
+                    <span>邀请链接</span>
+                    <input id="onlineInviteLink" type="text" readonly value="" placeholder="创建房间后显示完整邀请链接">
+                  </label>
+                  <div class="online-alpha-actions">
+                    <button id="onlineCopyInviteBtn" class="mini" type="button">复制邀请链接</button>
+                  </div>
+                </div>
+                <div class="online-room-card">
+                  <div class="online-section-title">
+                    <strong>2B. 加入房间</strong>
+                    <span>只填写对方给你的房间码</span>
+                  </div>
+                  <label class="field">
+                    <span>输入房间码</span>
+                    <input id="onlineJoinRoomCodeInput" type="text" maxlength="12" autocomplete="off" placeholder="例如 ABCD12">
+                  </label>
+                  <label class="field">
+                    <span>我的角色</span>
+                    <select id="onlineJoinCharacterSelect"></select>
+                  </label>
+                  <div class="online-alpha-actions">
+                    <button id="onlineJoinRoomBtn" class="secondary" type="button">加入房间</button>
+                  </div>
+                </div>
+              </div>
+              <div class="online-alpha-section online-battle-section">
+                <div class="online-section-title">
+                  <strong>3. 对战状态</strong>
+                  <span id="onlineNextStepHint">下一步：创建或加入房间。</span>
+                </div>
+                <div class="online-alpha-status" aria-live="polite">
+                  <span>当前房间：<strong id="onlineRoomCode">未创建</strong></span>
+                  <span>你是：<strong id="onlinePlayerSide">未加入</strong></span>
+                  <span>对手状态：<strong id="onlineOpponentStatus">未加入</strong></span>
+                  <span>联机回合：<strong id="onlineTurnLabel">未开始</strong></span>
+                  <span>你的行动：<strong id="onlineLocalLockStatus">未锁定</strong></span>
+                  <span>对方行动：<strong id="onlineOpponentLockStatus">未锁定</strong></span>
+                </div>
+                <div class="online-player-grid" aria-label="联机双方角色">
+                  <article>
+                    <strong>左方</strong>
+                    <span id="onlineLeftPlayerLabel">等待玩家</span>
+                    <span id="onlineLeftCharacterLabel">角色：等待选择</span>
+                    <span id="onlineLeftResourceLabel">HP / CE / AP：等待战斗</span>
+                  </article>
+                  <article>
+                    <strong>右方</strong>
+                    <span id="onlineRightPlayerLabel">等待玩家</span>
+                    <span id="onlineRightCharacterLabel">角色：等待选择</span>
+                    <span id="onlineRightResourceLabel">HP / CE / AP：等待战斗</span>
+                  </article>
+                </div>
+                <div class="online-alpha-actions online-turn-actions">
+                  <button id="onlineLockTurnBtn" class="primary" type="button">请先选择手札</button>
+                  <button id="onlineUnlockTurnBtn" class="secondary" type="button">取消锁定</button>
+                  <button id="onlineResolveTurnBtn" class="secondary" type="button">等待对手加入</button>
+                  <button id="onlineKickRightPlayerBtn" class="mini" type="button">踢出右方玩家</button>
+                  <button id="onlineLeaveRoomBtn" class="mini" type="button">离开房间</button>
+                </div>
+              </div>
+            </section>
+
+            </section>
+            <section class="jjk-battle-page" data-jjk-battle-page-panel="custom" hidden>
+              <div class="jjk-battle-section-head">
+                <h3>自定义角色</h3>
+                <p class="muted">这里只编辑角色，不直接显示当前战斗手札。</p>
+              </div>
+            <div class="duel-custom-panel">
+              <div class="duel-custom-head">
+                <h3>自定义角色</h3>
+                <span id="duelCustomCount" class="duel-chip">0 个</span>
+              </div>
+              <div class="duel-import-code-panel">
+                <label class="field">
+                  <span>战力编码导入</span>
+                  <textarea id="duelImportCode" rows="3" placeholder="粘贴本站导出的 JJKCP1 战力编码"></textarea>
+                </label>
+                <div class="action-row">
+                  <button id="duelImportCodeBtn" class="secondary" type="button">解码到角色卡</button>
+                  <span id="duelImportStatus" class="muted">只读取本站战力编码；不会请求 AI。</span>
+                </div>
+              </div>
+              <fieldset class="duel-custom-mode">
+                <legend>自定义方式</legend>
+                <label>
+                  <input type="radio" name="duelCustomMode" value="library" checked>
+                  <span>定义库组装</span>
+                </label>
+                <label>
+                  <input type="radio" name="duelCustomMode" value="ai">
+                  <span>AI完整定义</span>
+                </label>
+              </fieldset>
+              <div class="duel-custom-grid">
+                <label class="field">
+                  <span>名字</span>
+                  <input id="duelCustomName" type="text" maxlength="30" placeholder="新角色">
+                </label>
+                <label class="field">
+                  <span>显性等级</span>
+                  <select id="duelCustomGrade"></select>
+                </label>
+                <label class="field">
+                  <span>术式强度</span>
+                  <select id="duelCustomTechniquePower"></select>
+                </label>
+                <label class="field">
+                  <span>战斗时期</span>
+                  <select id="duelCustomStage"></select>
+                </label>
+                <label class="field debug-only">
+                  <span>直填战力分</span>
+                  <input id="duelCustomCombatScore" type="number" min="0" max="12" step="0.01" placeholder="空白=公式">
+                </label>
+                <label class="field debug-only">
+                  <span>直填战力单位</span>
+                  <input id="duelCustomCombatUnit" type="number" min="1" step="1" placeholder="优先于战力分">
+                </label>
+              </div>
+              <div class="duel-ai-assist" data-duel-custom-mode-panel="ai">
+                <label class="duel-ai-toggle">
+                  <input id="duelAiAssistToggle" type="checkbox">
+                  <span>AI辅助解析</span>
+                </label>
+                <label class="field">
+                  <span>自然语言设定</span>
+                  <textarea id="duelAiDescription" rows="4" placeholder="例：自定义一名特级术师，术式能操纵尸体与僵尸群，领域是封闭式必中，外部资源是可消耗僵尸军团和一把能破坏术式防御的咒具。"></textarea>
+                </label>
+                <div class="action-row">
+                  <button id="duelAiAnalyzeBtn" class="secondary" type="button">AI解析并填入</button>
+                  <span id="duelAiStatus" class="muted"></span>
+                </div>
+                <pre id="duelAiOutput" class="duel-ai-output" hidden></pre>
+              </div>
+              <div class="duel-library-assist" data-duel-custom-mode-panel="library">
+                <div class="duel-library-grid">
+                  <label class="field">
+                    <span>术式库</span>
+                    <select id="duelCustomTechniqueTags" multiple size="5"></select>
+                  </label>
+                  <label class="field">
+                    <span>领域库</span>
+                    <select id="duelCustomDomainTags" multiple size="5"></select>
+                  </label>
+                  <label class="field">
+                    <span>特质/高级技巧库</span>
+                    <select id="duelCustomAdvancedTags" multiple size="5"></select>
+                  </label>
+                  <label class="field">
+                    <span>外部资源库</span>
+                    <select id="duelCustomResourceTags" multiple size="5"></select>
+                  </label>
+                </div>
+                <div class="action-row">
+                  <button id="duelApplyLibraryBtn" class="secondary" type="button">应用选择到角色卡</button>
+                  <span id="duelLibraryStatus" class="muted">可直接选择既有术式、领域、咒具、特质和外部资源；加入角色池时也会自动读取这些选择。</span>
+                </div>
+              </div>
+              <div class="duel-custom-stats">
+                <label class="field">
+                  <span>咒力总量</span>
+                  <select data-duel-custom-rank="cursedEnergy" data-default-rank="B"></select>
+                </label>
+                <label class="field">
+                  <span>咒力操纵</span>
+                  <select data-duel-custom-rank="control" data-default-rank="B"></select>
+                </label>
+                <label class="field">
+                  <span>咒力效率</span>
+                  <select data-duel-custom-rank="efficiency" data-default-rank="B"></select>
+                </label>
+                <label class="field">
+                  <span>体质</span>
+                  <select data-duel-custom-rank="body" data-default-rank="B"></select>
+                </label>
+                <label class="field">
+                  <span>体术</span>
+                  <select data-duel-custom-rank="martial" data-default-rank="B"></select>
+                </label>
+                <label class="field">
+                  <span>悟性</span>
+                  <select data-duel-custom-rank="talent" data-default-rank="B"></select>
+                </label>
+              </div>
+              <div class="duel-custom-grid duel-custom-grid-wide">
+                <label class="field">
+                  <span>术式</span>
+                  <input id="duelCustomTechnique" type="text" maxlength="80" placeholder="例：无下限 / 十种影法术">
+                </label>
+                <label class="field">
+                  <span>领域</span>
+                  <input id="duelCustomDomain" type="text" maxlength="80" placeholder="例：领域展开：自定义领域">
+                </label>
+                <label class="field">
+                  <span>咒具</span>
+                  <textarea id="duelCustomTools" rows="2" placeholder="用逗号或换行分隔"></textarea>
+                </label>
+                <label class="field">
+                  <span>特质/高级技巧</span>
+                  <textarea id="duelCustomTraits" rows="2" placeholder="例：六眼、天与咒缚、反转术式"></textarea>
+                </label>
+                <label class="field">
+                  <span>定义库机制</span>
+                  <select id="duelCustomMechanisms" multiple size="4"></select>
+                </label>
+                <label class="field">
+                  <span>定义库咒具</span>
+                  <select id="duelCustomToolTags" multiple size="4"></select>
+                </label>
+                <label class="field">
+                  <span>外部资源</span>
+                  <input id="duelCustomResource" type="text" maxlength="100" placeholder="例：式神、咒灵库存、里香资源、僵尸军团">
+                </label>
+                <label class="field">
+                  <span>说明</span>
+                  <input id="duelCustomNotes" type="text" maxlength="140" placeholder="战斗备注">
+                </label>
+              </div>
+              <div class="action-row">
+                <button id="duelCustomAddBtn" class="primary" type="button">加入角色池</button>
+                <button id="duelCustomClearBtn" class="secondary" type="button">清空自定义</button>
+              </div>
+              <div id="duelCustomList" class="duel-custom-list"></div>
+            </div>
+
+            </section>
+            <section class="jjk-battle-page" data-jjk-battle-page-panel="archive" hidden>
+              <div class="jjk-battle-section-head">
+                <h3>情报档案</h3>
+                <p class="muted">战斗操作不在这里进行。这里集中解释角色、卡牌、领域、规则子阶段和联机 Alpha。</p>
+              </div>
+              <div class="jjk-battle-info-grid">
+                <article><strong>角色说明</strong><span>显示显性等级、战力单位、术式、咒具、外部资源与候选机制。</span></article>
+                <article><strong>卡牌说明</strong><span>术式手札仍来自 action-backed candidates，不是 deck / drawPile / discardPile。</span></article>
+                <article><strong>领域说明</strong><span>领域应对、领域 Profile、开放领域、必中与领域压制保持现有规则。</span></article>
+                <article><strong>规则子阶段</strong><span>日车 trial 与秤 jackpot 只在既有子阶段逻辑内生效。</span></article>
+                <article><strong>AI Provider</strong><span>AI 只能叙事、解释和整理反馈，不能决定数值、胜负或卡牌效果。</span></article>
+                <article><strong>联机 Alpha</strong><span>非即时轮询同步；房间服务器只存 room JSON，不做实时 PvP 或反作弊。</span></article>
+              </div>
+            </section>
+
+            <section class="jjk-battle-page" data-jjk-battle-page-panel="settings" hidden>
+              <div class="jjk-battle-section-head">
+                <h3>对战设置 / 调试</h3>
+                <p class="muted">AI 设置在右上角全局齿轮内；这里保留对战调试、反馈导出和测试开关。</p>
+              </div>
+            <div class="duel-debug-panel debug-only">
+              <div class="debug-entry-head">
+                <strong>对战特殊词条</strong>
+                <span id="duelSpecialTermCount" class="muted">0 条；例如“耐活”可设置回合保护。</span>
+              </div>
+              <div class="duel-special-grid">
+                <label class="field">
+                  <span>词条名</span>
+                  <input id="duelSpecialTermName" type="text" maxlength="30" placeholder="耐活">
+                </label>
+                <label class="field">
+                  <span>回合数</span>
+                  <input id="duelSpecialTermRounds" type="number" min="1" max="30" step="1" placeholder="例：3">
+                </label>
+                <label class="field duel-special-definition">
+                  <span>定义</span>
+                  <textarea id="duelSpecialTermDefinition" rows="2" maxlength="360" placeholder="例：在标注回合数内，受到攻击会显得十分狼狈，但不结算死亡。"></textarea>
+                </label>
+              </div>
+              <div class="action-row">
+                <button id="duelSpecialTermAddBtn" class="primary" type="button">加入词条</button>
+                <button id="duelSpecialTermClearBtn" class="secondary" type="button">清空词条</button>
+              </div>
+              <div id="duelSpecialTermList" class="duel-custom-list"></div>
+            </div>
+
+            <div class="duel-debug-panel debug-only">
+              <div class="debug-entry-head">
+                <strong>对战调试覆盖</strong>
+                <span id="duelDebugStatus" class="muted">空白则使用公式；胜率填 0-100 或 0-1。</span>
+              </div>
+              <div class="duel-debug-grid">
+                <label class="field">
+                  <span>我方战力分</span>
+                  <input id="duelDebugLeftScore" type="number" min="0" max="12" step="0.01" placeholder="空白=公式">
+                </label>
+                <label class="field">
+                  <span>我方战力单位</span>
+                  <input id="duelDebugLeftUnit" type="number" min="1" step="1" placeholder="空白=公式">
+                </label>
+                <label class="field">
+                  <span>我方胜率</span>
+                  <input id="duelDebugLeftRate" type="number" min="0" max="100" step="0.1" placeholder="例：62 或 0.62">
+                </label>
+                <label class="field">
+                  <span>对方战力分</span>
+                  <input id="duelDebugRightScore" type="number" min="0" max="12" step="0.01" placeholder="空白=公式">
+                </label>
+                <label class="field">
+                  <span>对方战力单位</span>
+                  <input id="duelDebugRightUnit" type="number" min="1" step="1" placeholder="空白=公式">
+                </label>
+                <label class="field">
+                  <span>对方胜率</span>
+                  <input id="duelDebugRightRate" type="number" min="0" max="100" step="0.1" placeholder="例：38 或 0.38">
+                </label>
+              </div>
+              <div class="action-row">
+                <button id="duelDebugClearBtn" class="secondary" type="button">清空覆盖</button>
+              </div>
+            </div>
+
+            </section>
+            <section class="jjk-battle-active-surface" data-jjk-battle-surface>
+              <div class="jjk-battle-section-head">
+                <h3>当前对战</h3>
+                <p class="muted" id="duelModeStatus">尚未进入对战。</p>
+              </div>
+            <div id="duelSummary" class="duel-summary"></div>
+            <div id="duelBattle" class="duel-battle"></div>
+            <div id="duelCards" class="duel-cards"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="tree" class="tab-panel">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>流程审阅树</h2>
+              <span class="muted debug-only">调试模式显示 W 编号、条件、选项和分流后果</span>
+            </div>
+            <div id="flowTree" class="flow-tree"></div>
+          </div>
+        </section>
+
+        <section id="graph" class="tab-panel">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>流程路线图谱</h2>
+              <span class="muted debug-only">调试模式显示全局节点连线图，可横向滚动和缩放审阅</span>
+            </div>
+            <div id="flowGraph" class="flow-tree"></div>
+          </div>
+        </section>
+
+        <section id="library" class="tab-panel">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>原始转盘库</h2>
+              <span id="librarySummary" class="muted debug-only"></span>
+            </div>
+            <div id="wheelLibrary" class="wheel-library"></div>
+          </div>
+        </section>
+
+        <section id="creator" class="tab-panel">
+          <div class="panel creator-panel">
+            <div class="panel-heading">
+              <h2>模板参数化原型</h2>
+              <span class="muted">调试内测</span>
+            </div>
+            <div class="creator-grid">
+              <label class="field">
+                <span>模板名</span>
+                <input id="templateName" type="text" value="能力构建 + 剧情主线 + 结局评价">
+              </label>
+              <label class="field">
+                <span>基础属性数</span>
+                <input id="templateAttributeCount" type="number" min="1" max="12" value="6">
+              </label>
+              <label class="field">
+                <span>等级数量</span>
+                <input id="templateGradeCount" type="number" min="2" max="12" value="7">
+              </label>
+              <label class="field">
+                <span>大事件数量</span>
+                <input id="templateEventCount" type="number" min="0" max="12" value="4">
+              </label>
+              <label class="field">
+                <span>基础死亡率%</span>
+                <input id="templateDeathRate" type="number" min="0" max="95" value="20">
+              </label>
+              <label class="field">
+                <span>阵营分歧</span>
+                <select id="templateFactionMode">
+                  <option value="yes" selected>启用</option>
+                  <option value="no">关闭</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>隐藏权重</span>
+                <select id="templateHiddenWeightMode">
+                  <option value="yes" selected>启用</option>
+                  <option value="no">关闭</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>最终评价</span>
+                <select id="templateFinalEvaluation">
+                  <option value="yes" selected>启用</option>
+                  <option value="no">关闭</option>
+                </select>
+              </label>
+            </div>
+            <div class="action-row">
+              <button id="generateTemplateBtn" class="secondary" type="button">生成预览 JSON</button>
+            </div>
+            <pre id="templatePreview" class="export-box template-preview"></pre>
+          </div>
+        </section>
+
+        <section id="results" class="tab-panel">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>抽取记录</h2>
+              <div class="panel-actions">
+                <button id="downloadMdBtn" class="secondary" type="button">下载 MD</button>
+                <button id="combatExportBtn" class="secondary" type="button">导出战力编码</button>
+                <button id="exportBtn" class="secondary debug-only" type="button">导出完整逻辑链 JSON</button>
+              </div>
+            </div>
+            <pre id="exportBox" class="export-box" hidden></pre>
+            <div id="resultLog" class="result-log"></div>
+          </div>
+        </section>
+
+        <section id="aiNarrative" class="tab-panel">
+          <div class="panel ai-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>人生故事总结</h2>
+                <p class="muted">根据本局结果整理完整经历。</p>
+              </div>
+            </div>
+            <p class="ai-intro">
+              这里会把本局抽取结果整理成符合咒术回战世界观的人生经历记录；抽取、死亡、阵营、等级和跳转仍由规则引擎决定。
+            </p>
+            <section class="ai-provider-settings ai-provider-settings-summary" aria-label="AI服务设置摘要">
+              <p class="muted">
+                API、Provider、模型、Key、Proxy 和 token 预算已移到右上角「⚙ AI 设置」。AI 总结、AI 自由辅助、斗蛐蛐解析、战斗叙事、机制解释和反馈摘要共用同一份设置。
+              </p>
+            </section>
+            <div class="creator-grid">
+              <label class="field debug-only">
+                <span>AI线路</span>
+                <select id="aiEndpointMode">
+                  <option value="auto" selected>自动切换</option>
+                  <option value="global">海外线路</option>
+                  <option value="cn">国内备用</option>
+                </select>
+              </label>
+              <label class="field debug-only">
+                <span>海外服务地址（调试）</span>
+                <input id="aiEndpointInput" type="url" placeholder="仅调试模式使用">
+              </label>
+              <label class="field debug-only">
+                <span>国内备用服务地址（调试）</span>
+                <input id="aiCnEndpointInput" type="url" placeholder="部署国内中转后填入">
+              </label>
+              <label class="field">
+                <span>记录类型</span>
+                <select id="aiNarrativeKind">
+                  <option value="finalBiography" selected>完整人生经历</option>
+                  <option value="stageSummary">当前阶段小结</option>
+                  <option value="logicAudit">流程合理性检查</option>
+                </select>
+              </label>
+            </div>
+            <div class="action-row">
+              <button id="saveAiEndpointBtn" class="secondary debug-only" type="button">保存调试地址</button>
+              <button id="generateAiNarrativeBtn" class="primary" type="button">生成你的人生经历记录</button>
+            </div>
+            <p id="aiNarrativeStatus" class="muted">流程结束后可以生成你的人生经历记录。</p>
+            <div id="aiNarrativeOutput" class="ai-output">流程结束后，可在这里生成本局的人生经历记录。</div>
+          </div>
+        </section>
+
+        <section id="notes" class="tab-panel">
+          <div class="panel notes-panel">
+            <h2>已锁定规则</h2>
+            <ul>
+              <li>缺失权重按 1 处理。</li>
+              <li>使用严格流程，不能回退；需要改变前序结果时重启。</li>
+              <li>防重只作用于单个内容池的一次多抽，不跨转盘。</li>
+              <li>W139「轮空一人是谁？」暂时忽略。</li>
+              <li>W054「被受肉了」触发 W070「被谁受肉」。</li>
+              <li>黑闪同时作为高级技巧结果和战斗临界事件。</li>
+              <li>等级拆成术师等级、咒灵等级、威胁等级、EX 异常档。</li>
+              <li>等级判定不再抽取等级转盘：等级有效分直接落入辅助人员、四级、三级、二级、一级、超一级、特级区间；体术 S + 体质 SS 保底一级，体术 SSS + 体质 SSS 保底超一级。特别一级只按行政/体系外一级等效理解。</li>
+              <li>基础属性中出现 SS/SSS/EX 时，等级至少按超一级段处理，不会落到一级或以下。</li>
+              <li>性别认同在“穿越后的性别”后抽取，按上一页结果动态加权；该结果只用于人设记录，不影响强度、阵营或剧情主线。</li>
+              <li>抽到「制作咒具」后，「是否拥有咒具」和咒具数量会获得显著权重补正。</li>
+              <li>1.21 继续保留低风险人设与能力风味模块；涩谷、死灭、新宿强因果分支暂不融合。</li>
+              <li>普通用户可在随机模式与半自定义模式之间切换；半自定义只开放时间点、地点、年龄、性别、性别认同、颜值、职业、文化、爱好、资产、性格和运气，强度、术式、咒具、阵营胜负与战斗结果仍保持随机。</li>
+              <li>激活码完全自定义整局会在结果界面与 MD/JSON 导出中公开标记为「激活码自定义局」，不伪装成普通随机局。</li>
+              <li>束缚先抽前置门；只有存在束缚倾向时才抽束缚数和束缚理念参考。无束缚角色不会进入束缚数池，也不会抽到依赖束缚的无敌贷款王。</li>
+              <li>努力程度在基础属性之后、特殊天赋和高级技巧之前结算，只生成隐藏修正；原始基础属性记录不会被覆盖。</li>
+              <li>基础属性池采用双端稀有权重：EX=0.05，SSS=0.12，SS=0.25，S=0.65，A=1.0，B/C=1.2，D=0.85，E=0.45，E-=0.25；高低实力分布由等级有效分区间最终处理。</li>
+              <li>即时战力已接入调试模式：咒术、肉体、悟性、构筑四轴会生成 weak/normal/strong/special 池；直接战斗可较重加权，非直接战斗只做轻量修正。</li>
+              <li>胜率模型加入显性等级基础盘：同级默认正常对战，高一级有基础优势，高两级以上有虐菜加成；战力单位负责同级内修正，EX 锚点提供稳定下限。</li>
+              <li>新宿入场顺序改为参考战力单位与宿傩削弱阶段：五条前十影宿傩、五条败后一削、鹿紫云后一到二削、众人二削、米格尔三削、东堂虎杖四削、黑闪王虎杖五削；削弱会记录领域熔断、日车没收、反转输出下降等动态状态；68年后 EX 锚点可反制满血十影压制，「一坨宿傩」只保留为极低权重玩梗项。</li>
+              <li>公式书用于机制合理性，不覆盖已确认流程规则。</li>
+            </ul>
+          </div>
+        </section>
+        <section id="changelog" class="tab-panel">
+          <div class="panel notes-panel">
+            <h2>更新日志</h2>
+              <ul>
+          <li>1.390A（战斗核心合理化）：普通手札改以咒力预算为主，AP 降级为 legacy 显示；实战卡补齐基础数值和角色属性倍率预览，zero CE 卡不扣咒力，领域负荷只属于展开领域的一方，并区分领域崩解与术式烧断；黑闪仍不是主动卡，只作为窗口触发并加强受击反馈。</li>
+          <li>1.389F（官方联机服务器模式）：联机 Alpha 默认改为官方联机服务器，普通玩家无需填写 Endpoint；本地 mock 保留为开发 / 双标签测试，自定义 Endpoint 收入高级后端设置，邀请链接继续只携带 roomId、不携带任何密钥。</li>
+          <li>1.389F（联机面板清晰化）：联机 Alpha 面板拆为同步模式、房间操作、对战状态三个区块；本地 mock 与共享 Endpoint 分开显示，创建 / 加入房间分区，当前房间码与加入输入框分离，邀请链接完整显示 roomId，并根据对手加入、手札选择和双方锁定状态更新按钮文案。</li>
+          <li>1.389E（共享联机后端 Alpha）：联机面板新增同步后端选择与共享 Endpoint 设置，可继续用本地 mock 做双标签测试，也可接入自托管 POST Endpoint / Worker 让跨设备玩家读取同一房间状态；邀请链接仍不携带 endpoint、玩家 ID 或任何密钥。</li>
+          <li>1.389D（联机 Alpha）：新增非即时同步房间模式，支持创建房间、加入房间、复制邀请链接、双方锁定行动后统一结算；先行版使用 local mock backend 与轮询同步，不做实时 WebSocket、账号、匹配、排行榜或反作弊，不改变咒术回战对战数值和主转盘箭头 / 音效。</li>
+          <li>1.389C-hotfix（AI Provider 全局设置）：新增右上角「⚙ AI 设置」，OpenAI、DeepSeek、自定义 OpenAI-compatible Provider 与自托管 Proxy 统一走同一份 provider settings；AI 总结、AI 自由辅助、咒术回战对战解析、战斗叙事、机制解释和反馈摘要共享 prompt 预算与隐私保护。</li>
+          <li>1.389C（手札文案 / UI 设计整理）：新增独立 duel-card-copy 显示文案层，统一卡牌名称、副标题、短效果、风险标签、不可用原因与折叠 debug 信息；copy 层不定义战斗效果，不进入完整牌堆 / 抽牌堆 / 弃牌堆，黑闪仍只作为窗口文案。</li>
+          <li>1.389A（大量卡牌 / 机制 / 性能缓存）：card template 扩充到 100+，新增 action-backed 候选手札与 unique mechanic 数据层，fight 模块增加 card/action/mechanic 索引缓存，反馈导出附带卡牌、机制和缓存摘要；仍未进入完整卡组、抽牌堆或弃牌堆系统。</li>
+          <li>1.389B（BYOK AI / prompt / token 治理）：AI 默认改为本地 fallback，不再默认消耗站长 API；玩家可选择自带 OpenAI API Key（实验性）或自托管 Proxy Endpoint（推荐）；prompt 模板、token 预算、上下文裁剪和 key 隐私保护已接入。</li>
+          <li>1.388B（刷新续跑）：主转盘流程会在本机浏览器自动保存稳定草稿；刷新页面后恢复当前任务、记录、队列、旗标和模式，点击“重启流程”会清空草稿并从头开始。</li>
+          <li>1.388A（粗粒度 ESM 架构）：入口改为单一 <code>modules/main.js</code>，由 ESM import 图聚合 character / life-wheel / api / fight / ui / tools / debug；旧全局命名空间保留为 legacy bridge，不改变转盘概率、防重范围、流程跳转、箭头、音效或咒术回战对战结算。</li>
+          <li>1.387N（主转盘核心 helper 迁移）：life_wheel 接入 data / state / flow / random / result 真实 helper；主兼容入口保留 wrapper，不改变转盘概率、防重范围、流程跳转、箭头、音效或咒术回战对战结算。</li>
+          <li>1.387M（全站模块真实迁移 sweep）：在 1.387I 边界基础上接入 character / api / tool / debug / ui / life_wheel 第一批纯 helper；主兼容入口保留 wrapper，不改变主转盘概率、咒术回战对战结算、手札 Beta、箭头或音效。</li>
+          <li>1.387I（全站模块架构预备）：新增 character / life_wheel / api / fight / ui / tool / debug / main 边界与 JJKMain registry；保留主兼容入口，不迁移业务逻辑、不新增玩法、不进入完整卡组、抽牌堆或弃牌堆系统。</li>
+          <li>1.387H（战斗终局 hotfix）：咒术回战对战 / 术式手札 Beta 不再用旧 maxRounds 胜率开奖作为正常终局；体势归零、明确特殊规则或技术 safety cap 才会结束战斗，并在反馈导出中记录 endReason 与最终快照。</li>
+          <li>1.387G-hotfix（AI自由辅助旋转锁）：修复普通随机抽取旋转中切换 AI自由辅助触发重绘，可能把转盘残留方向误认成选中结果的问题；旋转和结果待确认期间会锁定模式控件，并以抽取开始时的模式快照为准。</li>
+          <li>1.387G（手札 Beta 反馈包）：新增 CANDIDATE 反馈导出面板，可导出本场 buildVersion、battleId / seed / replayKey、资源、手札候选、已选手札、领域 / trial / jackpot 状态、日志与 card metadata 摘要；反馈包只用于复现与试玩反馈，不参与战斗结算。</li>
+          <li>1.387F（手札 Beta 试玩 polish）：术式手札区改用「剩余 AP」和「已选择消耗」文案，已选卡片显示「第 N 手」，并增加普通 / trial / jackpot / 领域状态对手札池影响的提示；不改变 AP / CE / action effect。</li>
+          <li>1.387E（card template drift audit）：建立 action template、hand candidate、card template、card view model 的一致性审计，检查 missing / orphan / duplicate / fallback / CANDIDATE 状态，防止后续 metadata 漂移。</li>
+          <li>1.387D（card template prototype）：新增基础 card template metadata 层，为既有 action templates 提供 cardId、cardType、rarity、tags、sourceActionId 等显示字段；card template 不负责战斗结算。</li>
+          <li>1.387C（hand polish）：优化术式手札 UI、已选手札顺序、撤销 / 清空、AP / CE 不足提示、执行顺序日志与行为测试，保持 trial / jackpot / 领域优先级。</li>
+          <li>1.387B（AP 多行动 Beta）：在 5 张手札候选基础上接入 AP 多行动选择，玩家和 CPU 可在 AP / CE 限制内选择 1 到多张手札后统一执行回合。</li>
+          <li>1.387A（术式手札 Beta 框架）：将原三选一手法升级为 5 张 hand candidates，并显示 AP、CE、效果、风险、标签与不可用原因；仍从 existing action pool 生成，不进入完整牌堆、抽牌堆或弃牌堆。</li>
+          <li>1.386H（规则子阶段模块迁移）：日车 trial 与秤 jackpot 规则子阶段迁入 `duel-rule-subphase.js`，保持审判 / jackpot 候选优先级与上下文持久化。</li>
+          <li>1.386G（领域 Profile 模块迁移）：领域 profile、barrier type、领域负荷和领域展开相关读取迁入 `duel-domain-profile.js`。</li>
+          <li>1.386F（领域应对模块迁移）：领域对抗、简易领域防御、弥虚葛笼、零咒力必中规避、域内求生等领域应对逻辑迁入 `duel-domain-response.js`。</li>
+          <li>1.386E（资源层 + 手法层真实迁移）：资源计算与 action pool / availability / effect 分别迁入 `duel-resource.js` 与 `duel-actions.js`。</li>
+          <li>1.386D（模块化边界预埋）：建立 duel 模块边界和 namespace 绑定，为资源、手法、领域、规则子阶段拆分做准备。</li>
+          <li>1.386C（领域系统与 trial / jackpot 铺垫）：引入领域系统、规则子阶段、trial target type 与 trial context persistence 的 CANDIDATE 行为基础。</li>
+          <li>1.386B（功能阶段）：咒术回战对战在 1.386A 资源层上新增三选一手法层，每回合可选择咒力强化、防御构筑、术式干涉、残秽读解、领域展开/维持/解除/对抗等 CANDIDATE 操作；不进入完整卡牌系统。</li>
+          <li>1.386A（功能阶段）：咒术回战对战新增 CANDIDATE 资源可视化层，展示体势、咒力、咒力回流、咒力稳定、领域负荷、残秽记录与 battleId / seed / replayKey；不改变当前 1.386 基准版本口径。</li>
+          <li>1.386：旋转音效先唤醒音频再和转盘动画一起启动；click 改为按动画时长预排程并进一步提高音量，移除结束提示音。</li>
+          <li>1.385：提高旋转期间固定节拍 click 的音量，降低落点提示音量，避免只听到转到后的声音。</li>
+          <li>1.384：转盘旋转音效改为清脆且恒定的固定节拍 click，去掉上一版偏软的滚动摩擦层和逐渐变慢的节奏。</li>
+          <li>1.383：转盘指针改为明确向内指示；旋转音效改为柔和滚动声、低噪声摩擦层与轻量落点提示，关闭音效会立即淡出。</li>
+          <li>1.382：AI自由辅助改为先抽取合法结果，再输入或点击行动策略；策略只补充本次已抽中结果的后续倾向，不再在抽取前选择主线锚点。</li>
+          <li>1.381：AI自由辅助面板的 AI解析改为远端 Worker 解析，并把软桥接钩子写入后续扩展节点；本地关键词不再替代正式 AI解析。</li>
+          <li>1.380：新增全站使用统计公开面板；Worker `/api/usage-stats` 优先，12 秒超时或异常时回退 `hitscounter.dev`，两条线路都失败时保留缓存或显示「全站统计暂不可用（不影响抽取）」。</li>
+          <li>1.379：AI自由辅助新增可收束桥接转盘与 AI总结能力账本，要求总结即时核对术式、领域、咒具和隐藏战力，避免能力越权。</li>
+          <li>1.378：重构 AI自由辅助面板文案与解析反馈，明确其为行动策略层而非第三主模式。</li>
+                <li>1.377：AI自由改为辅助开关，可叠加在随机 / 半自定义模式上。</li>
+                <li>1.376：运行页新增 AI自由能力；主线仍由网站前端的合法节点和既有结果锚定，玩家/AI自由行动会被解析为阵营、训练、调查、生存、强攻等影响标签，并切实写入后续权重、记录导出与 AI总结输入。</li>
+                <li>1.375：基于 Pro 1.374 删除新宿主动流程中的「遇见宿傩次数 / 遇见宿傩时间」遗留链；咒灵「全打一遍」路线战胜高专后保留 W114/W115 后续；路线图谱中宿傩方入口改为先进入 W056「宿傩方在哪里」分流。</li>
+                <li>1.374：接入 W134「决战影响（一胜以上专属）」作为宿傩方一胜后的战局终局节点；宿傩方五条胜只写一胜前置，最终由 W134 结算宿傩胜或高专惨胜；W57/W141 在战局已终结后会被阻断。</li>
+                <li>1.373：修复新宿宿傩方路线；W056 写入运行时分流，W140 仅宿傩/里梅同组触发，W067 接回五条前大削路线，高专方五条胜不再写成玩家宿傩战胜。</li>
+                <li>1.372：同步全局流程一致性修复；真人濒死与极限跑路不再误判为玩家死亡，400年前不再进入千年前宿傩结果，被高专诏安会从夏油杰方回转为高专方。</li>
+                <li>1.371：运行页新增转盘设置，可手动调整前摇、旋转时长、结果后摇、选择跳转时间，并单独开关动画、音效和语音。</li>
+                <li>1.37：修复新宿宿傩战 battleStuck 判定口径；第三方旁观不再被错误要求宿傩战结果，W40 早退会显式结束宿傩战链，W131 第三回合保持特级专属。</li>
+                <li>1.36：调试模式保留「审阅树」逐节点列出全部选项、条件、权重与分流后果；另开「路线图谱」页，以可缩放宽幅节点连线图铺开主流程、时间线和关键分流，并锁定百鬼夜行高专方/夏油杰方/旧盘星教分流。</li>
+                <li>1.36：对战 AI 短文改为读取双方术式、领域、咒具、特质、特殊词条、胜路、风险和回合日志；回合日志本身也会写出更具体的咒术操作，避免泛化战斗模板。</li>
+                <li>1.35：新增 optionEffects/resultTags 数据层，重点强因果池的死亡、重伤、跳过流程、阵营结果和隐藏强度资格先走可追溯标签解释器。</li>
+                <li>1.35：W134/W135/W141 改为阵营贡献口径，不使用普通正负池倍率；AI 自主词条补充 calculationTemplate/params，继续禁止直接写战力、倍率或胜率。</li>
+                <li>1.34：AI完整定义可返回 generatedTerms 词条候选；前端按耐活、成长、领域、干扰、资源、恢复等白名单模板接入计算，不允许 AI 直接写倍率或胜率。</li>
+              <li>1.34：自定义角色新增战斗时期；五条悟、宿傩、68年后虎杖等锚点改为可复现字段与机制组合，而不是只靠角色名硬写战力。</li>
+              <li>1.34：咒术回战对战改为每点击一次推进一个战斗阶段，不再一键自动跑完整场。</li>
+              <li>1.34：调试模式加入对战特殊词条，可定义「耐活」等带回合数的规则，并传入 AI 辅助与对战结算。</li>
+              <li>1.34：同为特级时加入巨大战力单位差压制，近档特级仍可互打，宿傩级/68年后虎杖级对低单位特级会体现明显胜率优势。</li>
+              <li>1.34：自定义角色可从定义库选择已有机制/咒具标签；六眼+无限/无下限+无量空处等组合会进入专门识别补正。</li>
+              <li>1.34：对战 AI解析线路不可用时，自动使用本地关键词规则回填自定义角色卡，保证六眼、无下限、领域、天与暴君和宿傩系等核心标签仍可参与战力计算。</li>
+              <li>1.34：咒术回战对战自定义角色拆成「定义库组装」和「AI完整定义」；定义库组装可从现有术式、领域、咒具、特质/高级技巧和外部资源中选择，外部资源补入僵尸军团、咒灵库存、里香资源等示例。</li>
+              <li>1.32：接入三大家族、祖传术式遗传、百鬼夜行/交流会参与、高专校区与地位、诅咒师组织、御三家地位、地下赌场职位等补充池。</li>
+              <li>1.32：将「天与咒缚」拆为出生咒缚总类与具体类型页；零咒力天与暴君型和咒力强化型分别使用不同强度锁定规则。</li>
+              <li>1.32：将「神秘农家乐（？）」修正为虎杖悠仁领域变体彩蛋；低概率保留，但接入领域流程和专属强度补正。</li>
+              <li>1.32：确认米格尔（0卷，黑绳）按特级战力口径结算，并纳入角色强度测试。</li>
+              <li>1.31：咒术回战对战回合数改为按显性等级差决定；同级 10 回合，差一级 5 回合，差两级及以上 1 回合。</li>
+              <li>1.31：咒术回战对战加入当前页面内的自定义角色池，可自定义名字、基础属性、术式、领域、咒具、特质和外部资源，并支持自定义角色互相对战。</li>
+              <li>1.31：自定义角色加入可选 AI 辅助解析；可用自然语言设定自动回填角色卡，并在结算后生成一段战斗短文。</li>
+              <li>1.31：咒术回战对战去掉回合转盘，改为赛前策略 + 战斗条自动推演，展示时更紧凑。</li>
+              <li>1.31：移动端顶部标题、随机/半自定义与重启流程按钮会在向下滚动时收起，向上滚动时恢复。</li>
+              <li>1.31：是否拥有生得术式的基础权重调整为有/无 7:3。</li>
+              <li>1.3：界面改为高专档案风格，背景、面板、标题标签、批注和角色卡统一为任务记录/评定表视觉。</li>
+              <li>1.3：咒术回战对战角色池扩展到 42 张，并加入咒灵、死灭回游、新宿决战和 0卷补充角色。</li>
+              <li>1.3：人类对咒灵加入专门等级相性；同级人类压制咒灵，一级差内人类不会被咒灵等级压制，反转术式外放可形成秒杀型对咒灵相性。</li>
+              <li>1.3：咒术回战对战角色卡的机制标签改为仅调试模式显示。</li>
+              <li>1.25：接入即时战力档案，调试模式显示分数、池、胜路、风险、咒具和机制标签。</li>
+              <li>1.25：新增机制卡、角色卡和战例校准表；六眼、双面四臂、半人半咒、天与咒缚、领域/反领域和咒具进入即时战力计算。</li>
+              <li>1.25：剧情危险结果改参考即时战力；到场、阵营、关系、政治和评价类池只做轻量权重修正。</li>
+              <li>1.25：新宿决战入场顺序改按战力单位动态加权，并记录当前宿傩削弱阶段；宿傩角色卡补入善用束缚、十影资源、魔虚罗适应与世界斩兑现。</li>
+              <li>1.24：等级评定改为等级有效分区间判定，不再从等级转盘中随机抽取；SS/SSS/EX 等高面板保底规则仍保留。</li>
+              <li>1.24：新增颜值 E- 与米格尔相关敌对遭遇的小概率容貌彩蛋；触发后对应战斗胜利权重提高 20%。</li>
+              <li>1.24：新增努力程度转盘，按天道酬勤规则生成隐藏面板、咒具数量和高级技巧轻量修正。</li>
+              <li>1.24：将「甜食热爱」改为「束缚理念」，保留其作为束缚收益参考的作用。</li>
+              <li>1.24：新增公开更新日志入口，便于玩家查看当前版本变化。</li>
+              <li>1.22：术式与强度联动继续保持调试可追踪；普通下载不展示隐藏权重细节。</li>
+            </ul>
+          </div>
+        </section>
+      </main>
+    </div>
+
+  <script type="module" src="./modules/main.js?v=20260428-v1.390A-combat-core-rationalization-pass&esm=6"></script>
+</body>
+</html>
+
+

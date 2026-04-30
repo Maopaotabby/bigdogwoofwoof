@@ -1,0 +1,207 @@
+{
+  "version": "0.1.0",
+  "status": "CANDIDATE",
+  "templates": {
+    "life_narrative": {
+      "label": "人生经历整理",
+      "staticPrefix": [
+        "你是咒术回战风格的人生经历记录整理器。",
+        "你只能基于提供的 runProfile、lifeState、capabilityLedger、strength、records、recentRecords 和 aiFreeAssistTimeline 进行整理。",
+        "不得改写已经确定的抽取结果、死亡、阵营、胜负、等级或流程跳转。",
+        "不得新增 payload 中不存在的术式、领域、反转术式、咒具、黑闪结果或角色能力。",
+        "不得把 CANDIDATE 当作最终 canon。",
+        "输出中文，简洁、有画面感。"
+      ],
+      "dynamicSections": [
+        "kind",
+        "kindLabel",
+        "runProfile",
+        "stateSummary",
+        "lifeState",
+        "capabilityLedger",
+        "strength",
+        "recentRecords",
+        "aiFreeAssistTimeline",
+        "aiFreeBridgeEvents"
+      ],
+      "maxOutputChars": 1100
+    },
+    "article_summary": {
+      "label": "AI 总结文章",
+      "staticPrefix": [
+        "你是咒术回战风格的人生经历记录整理器。",
+        "你只能基于提供的 runProfile、lifeState、capabilityLedger、strength、records、recentRecords 和 aiFreeAssistTimeline 进行整理。",
+        "不得改写已经确定的抽取结果、死亡、阵营、胜负、等级或流程跳转。",
+        "不得新增 payload 中不存在的术式、领域、反转术式、咒具、黑闪结果或角色能力。",
+        "不得把 CANDIDATE 当作最终 canon。",
+        "不得请求或输出 API key。",
+        "输出中文，简洁、有画面感。"
+      ],
+      "dynamicSections": [
+        "kind",
+        "kindLabel",
+        "runProfile",
+        "stateSummary",
+        "lifeState",
+        "capabilityLedger",
+        "strength",
+        "recentRecords",
+        "aiFreeAssistTimeline",
+        "aiFreeBridgeEvents"
+      ],
+      "maxOutputChars": 1100
+    },
+    "battle_narration": {
+      "label": "战斗叙事",
+      "staticPrefix": [
+        "你是咒术回战风格的战斗叙事生成器。",
+        "你只能基于提供的 battleSummary、roundEvents、resources、domainState、handActions 进行叙事。",
+        "不得改写数值。",
+        "不得决定胜负。",
+        "不得新增不存在的技能。",
+        "不得把 CANDIDATE 当作最终 canon。",
+        "输出中文，简洁、有画面感。"
+      ],
+      "dynamicSections": [
+        "battleSummary",
+        "recentRoundEvents",
+        "resourceSnapshot",
+        "domainSnapshot",
+        "handActionSummary",
+        "trialOrJackpotState"
+      ],
+      "maxOutputChars": 900
+    },
+    "combat_explanation": {
+      "label": "机制解释",
+      "staticPrefix": [
+        "你是战斗机制解释器。",
+        "解释当前战斗为什么出现这个结果。",
+        "只能解释，不得重算，不得改数值。"
+      ],
+      "dynamicSections": [
+        "visibleMechanics",
+        "resourceDeltas",
+        "domainResponses",
+        "handSelections"
+      ],
+      "maxOutputChars": 700
+    },
+    "beta_feedback_summary": {
+      "label": "Beta 反馈摘要",
+      "staticPrefix": [
+        "你是测试反馈整理器。",
+        "将玩家反馈和 battle export 总结成 bug report。",
+        "不得请求或输出 API key。"
+      ],
+      "dynamicSections": [
+        "testerNotes",
+        "battleExportSummary",
+        "errors",
+        "recentLogs"
+      ],
+      "maxOutputChars": 1200
+    },
+    "duel_character_assist": {
+      "label": "斗蛐蛐角色卡辅助",
+      "staticPrefix": [
+        "你是斗蛐蛐角色卡辅助解析器。",
+        "只能根据玩家提供的 description、draft、allowedRanks、allowedGrades、allowedStages 和 mechanismHints 给出角色卡候选。",
+        "不得决定战斗胜负。",
+        "不得直接修改 AP、CE、HP、领域结算、卡牌效果或回合结果。",
+        "输出应尽量使用 JSON 字段 suggestion、analysis、generatedTerms。"
+      ],
+      "dynamicSections": [
+        "description",
+        "draft",
+        "allowedRanks",
+        "allowedGrades",
+        "allowedStages",
+        "generatedTermTemplates",
+        "customSpecialTerms",
+        "mechanismHints"
+      ],
+      "maxOutputChars": 1000
+    },
+    "ai_free_analysis": {
+      "label": "AI自由行动解析",
+      "staticPrefix": [
+        "你是 AI 自由行动解析器。",
+        "你只能把玩家文字解析为行动倾向、软扩展钩子和后续权重影响。",
+        "当前正式结果必须使用 selectedLegalResult / legalCandidates，不得由 AI 生成不存在的正式结果。",
+        "不得直接改写角色生死、阵营、最终战胜负、核心角色命运或当前节点结果。",
+        "不得请求或输出 API key。"
+      ],
+      "dynamicSections": [
+        "actionText",
+        "anchorText",
+        "task",
+        "legalCandidates",
+        "selectedLegalResult",
+        "stateSummary",
+        "lifeState",
+        "capabilityLedger",
+        "strength",
+        "recentRecords",
+        "allowedInfluenceKeys"
+      ],
+      "maxOutputChars": 700
+    },
+    "ai_assist": {
+      "label": "AI 辅助模式",
+      "staticPrefix": [
+        "你是咒术转盘网站的辅助解释器。",
+        "你只能解释当前页面、规则和选项。",
+        "不得决定战斗数值。",
+        "不得替玩家选择付费 API。",
+        "不得输出 API key。"
+      ],
+      "dynamicSections": [
+        "currentPageState",
+        "selectedMode",
+        "recentUserAction",
+        "visibleRules",
+        "actionText",
+        "anchorText",
+        "task",
+        "legalCandidates",
+        "selectedLegalResult",
+        "stateSummary",
+        "lifeState",
+        "capabilityLedger",
+        "strength",
+        "recentRecords",
+        "allowedInfluenceKeys"
+      ],
+      "maxOutputChars": 800
+    },
+    "duel_analysis": {
+      "label": "赛博斗蛐蛐 AI 解析",
+      "staticPrefix": [
+        "你是赛博斗蛐蛐战斗解析器。",
+        "你只能基于 battleSummary、resources、handActions、domainState、trialState、jackpotState 或玩家提供的角色草稿解释战斗。",
+        "不得重算数值。",
+        "不得决定胜负。",
+        "不得新增不存在的技能。",
+        "不得请求或输出 API key。"
+      ],
+      "dynamicSections": [
+        "battleSummary",
+        "resourceSnapshot",
+        "handActionSummary",
+        "domainSnapshot",
+        "trialOrJackpotState",
+        "recentLogs",
+        "description",
+        "draft",
+        "allowedRanks",
+        "allowedGrades",
+        "allowedStages",
+        "generatedTermTemplates",
+        "customSpecialTerms",
+        "mechanismHints"
+      ],
+      "maxOutputChars": 1000
+    }
+  }
+}

@@ -1,0 +1,1487 @@
+{
+  "schema": "jjk-wheel-flow-config",
+  "version": "1.36-review-candidate",
+  "status": "CANDIDATE",
+  "sourceSupport": [
+    "S001",
+    "S003",
+    "S004",
+    "S006",
+    "S009",
+    "S010",
+    "S001-full-wheel-coverage",
+    "20260427-120020-batch1",
+    "20260424-122432-batch2-organization",
+    "20260424-122432-batch3-great-family-status",
+    "20260424-122432-batch4-underground-casino-role",
+    "user-heavenly-restriction-type-confirmation",
+    "user-family-inherited-technique-confirmation",
+    "user-night-parade-geto-side-confirmation",
+    "user-jujutsu-council-great-family-gate-confirmation"
+  ],
+  "uiPolicy": {
+    "hideDbIdsFromUsers": true,
+    "strictFlow": true,
+    "allowBack": false,
+    "restartToChangePreviousResults": true
+  },
+  "customNodes": [
+    {
+      "id": "ce001",
+      "title": "是否接受外挂带来的异常命运？",
+      "type": "binaryChoice",
+      "options": [
+        {
+          "text": "接受，进入彩蛋池",
+          "next": "easterEggPool"
+        },
+        {
+          "text": "拒绝，回到普通流程",
+          "next": "cursedEnergy"
+        }
+      ]
+    }
+  ],
+  "mainFlow": [
+    "identity",
+    "startTime",
+    "location",
+    "greatFamilyGate",
+    "greatFamily",
+    "familyTechniqueInheritance",
+    "greatFamilyStatus",
+    "jujutsuCouncilGate",
+    "familyInnateTechnique",
+    "curseUserOrganization",
+    "undergroundCasinoRole",
+    "age",
+    "gender",
+    "genderIdentity",
+    "appearance",
+    "occupation",
+    "culture",
+    "hobby",
+    "assets",
+    "personality",
+    "luck",
+    "hasTechnique",
+    "innateTechnique",
+    "ordinaryAwakening",
+    "customTechnique",
+    "easterEggGate",
+    "alienArrival",
+    "curseFear",
+    "curseIntelligence",
+    "curseBirthState",
+    "cursedEnergy",
+    "control",
+    "martial",
+    "body",
+    "efficiency",
+    "talent",
+    "talentReward",
+    "cursedEnergyNature",
+    "cursedEnergyColor",
+    "bindingProfileGate",
+    "bindingCount",
+    "sweetPreference",
+    "effortLevel",
+    "specialTalentGate",
+    "specialTalent",
+    "heavenlyRestrictionType",
+    "advancedTechniqueCount",
+    "advancedTechniques",
+    "mahoragaTune",
+    "domainGate",
+    "domainType",
+    "domainEffectCount",
+    "domainEffects",
+    "bindingGate",
+    "binding",
+    "hasTool",
+    "toolCount",
+    "tools",
+    "curseWombGrowthBonus",
+    "curseWombDomainGate",
+    "curseSpecialDomain",
+    "curseSpecialMaximum",
+    "curseDomainAmplification",
+    "grade",
+    "curseGrowthCeiling",
+    "timeline",
+    "postEvaluation",
+    "endingMeta"
+  ],
+  "nodes": {
+    "identity": {
+      "type": "wheel",
+      "wheelId": 1,
+      "title": "穿越后的初始身份",
+      "stage": "基础生成",
+      "why": "确定角色路线：人类、诅咒师、咒灵等；咒术高层不再由本池直接抽出，改由御三家前置和高层适配门决定。"
+    },
+    "greatFamilyGate": {
+      "type": "wheel",
+      "wheelId": 177,
+      "title": "是否为御三家",
+      "stage": "基础生成",
+      "condition": "identity != 诅咒师 and identity != 咒灵 and location == 日本",
+      "why": "用户确认：先判定是否属于御三家，再用家族、祖传术式和御三家地位加权是否进入咒术高层。"
+    },
+    "greatFamily": {
+      "type": "wheel",
+      "wheelId": 167,
+      "title": "三大家族",
+      "stage": "基础生成",
+      "condition": "greatFamilyGate == 是",
+      "why": "20260427-120020 补充池；御三家身份细分。"
+    },
+    "greatFamilyStatus": {
+      "type": "wheel",
+      "wheelId": 174,
+      "title": "御三家地位",
+      "stage": "阵营/组织",
+      "condition": "greatFamilyKnown == true",
+      "why": "20260424-122432 补充池；只记录御三家的社会位置，不直接改变阵营、隐藏强度或祖传术式资格。"
+    },
+    "familyTechniqueInheritance": {
+      "type": "wheel",
+      "wheelId": 168,
+      "title": "是否遗传祖传术式",
+      "stage": "能力构建",
+      "condition": "greatFamilyKnown == true",
+      "why": "20260427-120020 补充池；若遗传祖传术式，则视为已有生得术式并跳过后续二元门，避免前后矛盾。"
+    },
+    "familyInnateTechnique": {
+      "type": "wheel",
+      "title": "祖传术式",
+      "stage": "能力构建",
+      "condition": "familyInheritedTechnique == true",
+      "why": "御三家遗传术式收敛池：五条家为无下限，加茂家为赤血操术，禅院家以十种影法术为主、投射咒法为低概率备选。",
+      "options": [
+        {
+          "text": "无下限"
+        },
+        {
+          "text": "赤血操术"
+        },
+        {
+          "text": "十种影法术"
+        },
+        {
+          "text": "投射咒法"
+        }
+      ]
+    },
+    "jujutsuCouncilGate": {
+      "type": "wheel",
+      "wheelId": 178,
+      "title": "是否进入咒术高层",
+      "stage": "阵营/组织",
+      "condition": "greatFamilyKnown == true",
+      "why": "用户确认：由御三家身份、是否遗传祖传术式和御三家地位动态加权；若进入高层，则自动视作高专/咒术界侧并自动新宿参战。"
+    },
+    "startTime": {
+      "type": "wheel",
+      "wheelId": 2,
+      "title": "穿越后的时间点",
+      "stage": "基础生成",
+      "why": "决定从哪个时间段开始模拟后续人生。"
+    },
+    "location": {
+      "type": "wheel",
+      "wheelId": 3,
+      "title": "穿越后的地点",
+      "stage": "基础生成",
+      "why": "决定地点；西姆利亚星会覆盖初始身份并进入外星人线。"
+    },
+    "curseUserOrganization": {
+      "type": "wheel",
+      "wheelId": 173,
+      "title": "属于组织（诅咒师）",
+      "stage": "阵营/组织",
+      "condition": "identity == 诅咒师 and location == 日本",
+      "why": "20260424-122432 补充池；仅记录诅咒师所属组织，不直接锁定最终阵营或战斗结算。"
+    },
+    "undergroundCasinoRole": {
+      "type": "wheel",
+      "wheelId": 175,
+      "title": "地下赌场职位",
+      "stage": "阵营/组织",
+      "condition": "curseUserOrganization includes 地下赌场",
+      "why": "20260424-122432 补充池；仅在诅咒师组织为地下赌场相关时记录职位，不直接改变阵营、隐藏强度或战斗结算。"
+    },
+    "age": {
+      "type": "wheel",
+      "wheelId": 4,
+      "title": "穿越后的年龄",
+      "stage": "基础生成",
+      "why": "角色基础信息。"
+    },
+    "gender": {
+      "type": "wheel",
+      "wheelId": 8,
+      "title": "穿越后的性别",
+      "stage": "基础生成",
+      "why": "角色基础信息。"
+    },
+    "appearance": {
+      "type": "wheel",
+      "wheelId": 9,
+      "title": "穿越后的颜值",
+      "stage": "基础生成",
+      "why": "角色基础信息。"
+    },
+    "hasTechnique": {
+      "type": "wheel",
+      "wheelId": 10,
+      "title": "是否拥有生得术式",
+      "stage": "能力构建",
+      "why": "二元门；否会跳过生得术式池。"
+    },
+    "innateTechnique": {
+      "type": "wheel",
+      "wheelId": 11,
+      "title": "生得术式",
+      "stage": "能力构建",
+      "condition": "hasTechnique == 是",
+      "why": "只有拥有生得术式时进入。自定义和彩蛋选项会触发额外流程。"
+    },
+    "customTechnique": {
+      "type": "subflow",
+      "title": "自定义术式流程",
+      "stage": "能力构建",
+      "condition": "innateTechnique == 自定义",
+      "wheels": [
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        92
+      ],
+      "why": "抽到自定义时进入完整自定义术式流程。"
+    },
+    "easterEggGate": {
+      "type": "customChoice",
+      "customNodeId": "ce001",
+      "title": "彩蛋抉择",
+      "stage": "彩蛋",
+      "condition": "innateTechnique includes 进入彩蛋池",
+      "why": "先由新增二元门决定是否进入独立彩蛋线。"
+    },
+    "alienArrival": {
+      "type": "wheel",
+      "wheelId": 68,
+      "title": "怎么到地球的（西姆利亚星人专属）",
+      "stage": "彩蛋/跨作品",
+      "condition": "location includes 西姆利亚星",
+      "why": "西姆利亚星结果覆盖初始身份，进入外星人相关线。"
+    },
+    "cursedEnergy": {
+      "type": "wheel",
+      "wheelId": 12,
+      "title": "咒力总量",
+      "stage": "隐藏强度",
+      "why": "进入 strength-v0.2 的 resource 维度。"
+    },
+    "control": {
+      "type": "wheel",
+      "wheelId": 13,
+      "title": "咒力操纵",
+      "stage": "隐藏强度",
+      "why": "影响反转、领域、黑闪和技巧稳定性。"
+    },
+    "martial": {
+      "type": "wheel",
+      "wheelId": 14,
+      "title": "体术水平",
+      "stage": "隐藏强度",
+      "why": "体术独立影响近战、存活和黑闪。"
+    },
+    "body": {
+      "type": "wheel",
+      "wheelId": 15,
+      "title": "体质（基础体质）",
+      "stage": "隐藏强度",
+      "why": "影响耐久、存活和身体系异常档。"
+    },
+    "efficiency": {
+      "type": "wheel",
+      "wheelId": 16,
+      "title": "咒力效率",
+      "stage": "隐藏强度",
+      "why": "影响消耗、反转、领域和长期战斗。"
+    },
+    "talent": {
+      "type": "wheel",
+      "wheelId": 35,
+      "title": "天赋",
+      "stage": "隐藏强度",
+      "why": "A 为高天赋门槛；SSS 会进入奖励池。"
+    },
+    "talentReward": {
+      "type": "wheel",
+      "wheelId": 99,
+      "title": "天赋奖励池",
+      "stage": "隐藏强度",
+      "condition": "talent starts SSS",
+      "why": "天赋 SSS 明确写入奖励池。"
+    },
+    "grade": {
+      "type": "computedGrade",
+      "title": "等级判定",
+      "stage": "隐藏强度",
+      "why": "不再抽取等级转盘；直接用等级有效分区间判定中文等级，并保留高面板保底规则。"
+    },
+    "specialTalentGate": {
+      "type": "wheel",
+      "wheelId": 46,
+      "title": "是否有特殊天赋",
+      "stage": "能力构建",
+      "why": "二元门；是则进入特殊天赋池。"
+    },
+    "specialTalent": {
+      "type": "wheel",
+      "wheelId": 47,
+      "title": "特殊天赋是",
+      "stage": "能力构建",
+      "condition": "specialTalentGate == 是",
+      "why": "抽到特殊天赋时进入。"
+    },
+    "heavenlyRestrictionType": {
+      "type": "wheel",
+      "wheelId": 176,
+      "title": "天与咒缚类型",
+      "stage": "能力构建",
+      "condition": "specialTalent includes 天与咒缚",
+      "why": "用户确认：天与咒缚只表示出生带有咒缚，不能自动等于零咒力天与暴君型；必须先抽具体类型再改写面板和机制。"
+    },
+    "advancedTechniqueCount": {
+      "type": "dynamicWheel",
+      "title": "高级技巧数量",
+      "stage": "能力构建",
+      "wheelSelection": [
+        {
+          "when": "weakPower",
+          "wheelId": 125,
+          "why": "基础隐藏强度明显偏弱时走弱者/E天赋数量池；等级判定会在高级技巧和咒具后计算。"
+        },
+        {
+          "when": "highTalent",
+          "wheelId": 106,
+          "why": "天赋 A 及以上走高天赋数量池。"
+        },
+        {
+          "when": "default",
+          "wheelId": 44,
+          "why": "普通高级技巧数量池。"
+        }
+      ],
+      "condition": "identity != 咒灵",
+      "why": "非咒灵角色使用高级技巧数量池；咒灵改走咒灵专属领域、极之番和领域展延判定。"
+    },
+    "advancedTechniques": {
+      "type": "multiDraw",
+      "contentWheelId": 45,
+      "countFrom": "advancedTechniqueCount",
+      "title": "会哪个高级技巧",
+      "stage": "能力构建",
+      "condition": "identity != 咒灵 and advancedTechniqueCount > 0",
+      "noRepeatScope": "singlePool",
+      "why": "只有非咒灵且高级技巧数量大于 0 时抽取 N 个高级技巧；咒灵不进入该池。"
+    },
+    "domainGate": {
+      "type": "branch",
+      "title": "是否进入领域流程",
+      "stage": "能力构建",
+      "condition": "identity != 咒灵 and advancedTechniques includes 领域展开",
+      "why": "抽到领域展开后进入领域类型与效果。"
+    },
+    "domainType": {
+      "type": "wheel",
+      "wheelId": 51,
+      "title": "领域类型",
+      "stage": "领域",
+      "condition": "identity != 咒灵 and advancedTechniques includes 领域展开"
+    },
+    "domainEffectCount": {
+      "type": "dynamicWheel",
+      "title": "有几个领域效果",
+      "stage": "领域",
+      "condition": "identity != 咒灵 and advancedTechniques includes 领域展开",
+      "wheelSelection": [
+        {
+          "when": "highTalent",
+          "wheelId": 103,
+          "why": "高天赋专属领域效果数量池。"
+        },
+        {
+          "when": "default",
+          "wheelId": 53,
+          "why": "普通领域效果数量池。"
+        }
+      ]
+    },
+    "domainEffects": {
+      "type": "multiDraw",
+      "contentWheelId": 52,
+      "countFrom": "domainEffectCount",
+      "title": "领域效果",
+      "stage": "领域",
+      "condition": "identity != 咒灵 and advancedTechniques includes 领域展开",
+      "noRepeatScope": "singlePool"
+    },
+    "bindingGate": {
+      "type": "branch",
+      "title": "是否进入束缚流程",
+      "stage": "能力构建",
+      "condition": "identity != 咒灵 and advancedTechniques includes 无敌贷款王"
+    },
+    "binding": {
+      "type": "wheel",
+      "wheelId": 82,
+      "title": "贷款王的束缚",
+      "stage": "能力构建",
+      "condition": "identity != 咒灵 and advancedTechniques includes 无敌贷款王"
+    },
+    "hasTool": {
+      "type": "wheel",
+      "wheelId": 80,
+      "title": "是否拥有咒具",
+      "stage": "咒具",
+      "why": "二元门；是则进入数量与具体咒具。"
+    },
+    "toolCount": {
+      "type": "wheel",
+      "wheelId": 83,
+      "title": "拥有咒具数量",
+      "stage": "咒具",
+      "condition": "hasTool == 是"
+    },
+    "tools": {
+      "type": "multiDraw",
+      "contentWheelId": 81,
+      "countFrom": "toolCount",
+      "title": "拥有咒具",
+      "stage": "咒具",
+      "condition": "hasTool == 是",
+      "noRepeatScope": "singlePool"
+    },
+    "joinHighSchool": {
+      "type": "wheel",
+      "wheelId": 145,
+      "title": "是否加入高专",
+      "stage": "阵营/组织",
+      "condition": "identity is humanlike and location == 日本",
+      "why": "只有在日本且身份近似人类时才可选择是否加入高专。"
+    },
+    "timeline": {
+      "type": "timelineSubflow",
+      "title": "从抽中时间点开始模拟后续人生",
+      "stage": "剧情事件",
+      "periods": [
+        "ancient",
+        "hiddenInventory",
+        "volume0",
+        "mainStart",
+        "shibuya",
+        "cullingGame",
+        "shinjuku",
+        "after68"
+      ],
+      "why": "S004 确认从时间点开始继续模拟后续人生。"
+    },
+    "endingMeta": {
+      "type": "wheel",
+      "wheelId": 130,
+      "title": "观众是否会投币",
+      "stage": "结束/元互动",
+      "why": "流程结束后的元互动池。"
+    },
+    "postEvaluation": {
+      "type": "wheel",
+      "wheelId": 91,
+      "title": "后代评价",
+      "stage": "结束/评价",
+      "condition": "shouldRunPostEvaluation == true",
+      "why": "非彩蛋线、非羂索方、非宿傩方的结尾评价池。"
+    },
+    "ordinaryAwakening": {
+      "type": "wheel",
+      "wheelId": 94,
+      "title": "普通人怎么觉醒的术式",
+      "stage": "能力构建",
+      "condition": "identity == 普通人 and hasTechnique == 否",
+      "why": "普通人且无生得术式时接入原始觉醒池。"
+    },
+    "curseFear": {
+      "type": "wheel",
+      "wheelId": 64,
+      "title": "由什么恐惧诞生的（咒灵专属）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵",
+      "why": "咒灵身份专属来源池。"
+    },
+    "curseIntelligence": {
+      "type": "wheel",
+      "wheelId": 84,
+      "title": "智力（咒灵）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵",
+      "why": "咒灵专属智力池。"
+    },
+    "curseBirthState": {
+      "type": "wheel",
+      "wheelId": 100,
+      "title": "诞生时是什么状态（咒灵专属）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵",
+      "why": "咒灵诞生状态池。"
+    },
+    "curseWombGrowthBonus": {
+      "type": "wheel",
+      "wheelId": 101,
+      "title": "成长到完全体的加成是（咒胎专属）",
+      "stage": "咒灵专属线",
+      "condition": "isCurseWomb == true",
+      "why": "咒胎成长到完全体的能力加成，会在等级判定前计入咒灵隐藏强度。"
+    },
+    "curseWombDomainGate": {
+      "type": "wheel",
+      "wheelId": 102,
+      "title": "成长到完全体会不会领域（咒胎专属）",
+      "stage": "咒灵专属线",
+      "condition": "isCurseWomb == true",
+      "why": "咒胎成长到完全体后的领域门，会在等级判定前计入咒灵隐藏强度。"
+    },
+    "curseSpecialDomain": {
+      "type": "wheel",
+      "wheelId": 60,
+      "title": "是否拥有领域（特级咒灵专属）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵 and curseSpecialPotential == true",
+      "why": "咒灵在等级判定前先按基础隐藏强度判断是否进入领域门；结果参与等级判定。"
+    },
+    "curseSpecialMaximum": {
+      "type": "wheel",
+      "wheelId": 61,
+      "title": "是否拥有极之番（特级咒灵专属）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵 and curseSpecialPotential == true",
+      "why": "咒灵在等级判定前先按基础隐藏强度判断是否进入极之番门；结果参与等级判定。"
+    },
+    "curseDomainAmplification": {
+      "type": "wheel",
+      "wheelId": 111,
+      "title": "会不会领域展延（咒灵专属）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵",
+      "why": "咒灵专属领域展延池；先于等级判定，结果参与等级判定。"
+    },
+    "curseGrowthCeiling": {
+      "type": "wheel",
+      "wheelId": 112,
+      "title": "成长上限（咒灵专属）",
+      "stage": "咒灵专属线",
+      "condition": "identity == 咒灵",
+      "why": "咒灵等级判定完成后，再判断后续成长潜力上限。"
+    },
+    "mahoragaTune": {
+      "type": "wheel",
+      "wheelId": 77,
+      "title": "调幅魔虚罗（十影）",
+      "stage": "能力构建",
+      "condition": "innateTechnique includes 十种影法术",
+      "why": "十种影法术专属魔虚罗调幅池。"
+    },
+    "zeninMassacre": {
+      "type": "wheel",
+      "wheelId": 71,
+      "title": "禅院家灭族结果（禅院家专属）",
+      "stage": "剧情事件",
+      "condition": "zeninFamily == true",
+      "why": "禅院家相关身份/术式时接入原始专属结果池。"
+    },
+    "joinMainTeam": {
+      "type": "wheel",
+      "wheelId": 36,
+      "title": "是否加入主角小队（高专专属）",
+      "stage": "阵营/组织",
+      "condition": "joinHighSchool == 是",
+      "why": "高专专属组织池。"
+    },
+    "occupation": {
+      "type": "wheel",
+      "wheelId": 154,
+      "title": "职业（普通人）",
+      "stage": "人设补充",
+      "why": "普通人身份的职业背景；仅作人设与记录扩展。",
+      "condition": "identity == 普通人"
+    },
+    "culture": {
+      "type": "wheel",
+      "wheelId": 155,
+      "title": "文化水平（人类）",
+      "stage": "人设补充",
+      "why": "人类路线的文化与教育背景。",
+      "condition": "identity is humanlike"
+    },
+    "hobby": {
+      "type": "wheel",
+      "wheelId": 156,
+      "title": "业余爱好",
+      "stage": "人设补充",
+      "why": "人设风味，不直接改写剧情主线。",
+      "condition": "identity is humanlike"
+    },
+    "assets": {
+      "type": "wheel",
+      "wheelId": 157,
+      "title": "资产",
+      "stage": "人设补充",
+      "why": "补充经济与社会背景。",
+      "condition": "identity is humanlike"
+    },
+    "personality": {
+      "type": "wheel",
+      "wheelId": 158,
+      "title": "性格",
+      "stage": "人设补充",
+      "why": "性格文本中的术式强度提示会被转为轻量隐藏权重修正。",
+      "condition": "identity is humanlike"
+    },
+    "luck": {
+      "type": "wheel",
+      "wheelId": 159,
+      "title": "运气",
+      "stage": "人设补充",
+      "why": "记录运气倾向，暂不直接覆盖剧情结果。",
+      "condition": "identity is humanlike"
+    },
+    "cursedEnergyNature": {
+      "type": "wheel",
+      "wheelId": 160,
+      "title": "咒力性质",
+      "stage": "能力风味",
+      "why": "咒力性质会小幅修正资源或操作维度。"
+    },
+    "cursedEnergyColor": {
+      "type": "wheel",
+      "wheelId": 161,
+      "title": "咒力颜色",
+      "stage": "能力风味",
+      "why": "咒力颜色作为能力风味，只提供小幅隐藏修正。"
+    },
+    "bindingCount": {
+      "type": "wheel",
+      "wheelId": 162,
+      "title": "束缚数",
+      "stage": "能力风味",
+      "why": "只有存在束缚倾向时才抽取束缚数量；束缚数会提高束缚类高级技巧的抽中倾向，不强制胜负。",
+      "condition": "bindingProfileGate == 是"
+    },
+    "sweetPreference": {
+      "type": "wheel",
+      "wheelId": 163,
+      "title": "束缚理念（仅用于决定束缚增益强度）",
+      "stage": "能力风味",
+      "why": "只有存在束缚倾向时才抽取；作为束缚类能力收益的轻量参考。",
+      "condition": "bindingProfileGate == 是"
+    },
+    "effortLevel": {
+      "type": "wheel",
+      "wheelId": 166,
+      "title": "努力程度",
+      "stage": "能力构建",
+      "why": "依据天道酬勤规则生成隐藏修正：可影响弱项面板、高级技巧数量、咒具损耗和最终等级权重。"
+    },
+    "bindingProfileGate": {
+      "type": "wheel",
+      "wheelId": 164,
+      "title": "是否存在束缚倾向",
+      "stage": "能力风味",
+      "why": "先判定角色是否存在束缚设定；否则不进入束缚数和束缚理念参考。"
+    },
+    "genderIdentity": {
+      "type": "wheel",
+      "wheelId": 165,
+      "title": "性别认同",
+      "stage": "基础生成",
+      "why": "根据穿越后的性别进行动态加权，仅用于人设记录。"
+    }
+  },
+  "timeline": {
+    "startMapping": {
+      "千年前平安时代": "ancient",
+      "400年前": "ancient",
+      "怀玉时期": "hiddenInventory",
+      "0卷时期": "volume0",
+      "剧情开始时": "mainStart",
+      "涩谷事变时期": "shibuya",
+      "死灭回游时期": "cullingGame",
+      "新宿决战时期": "shinjuku",
+      "68年后外传": "after68"
+    },
+    "periods": {
+      "ancient": [
+        {
+          "wheelId": 48,
+          "title": "如何来到现世（百年，千年前专属）"
+        },
+        {
+          "wheelId": 50,
+          "title": "千年前遇见宿傩的结果",
+          "condition": "startTime includes 千年前"
+        }
+      ],
+      "hiddenInventory": [
+        {
+          "nodeId": "joinHighSchool",
+          "wheelId": 145,
+          "title": "是否加入高专",
+          "condition": "canChooseHighSchool == true"
+        },
+        {
+          "nodeId": "highSchoolCampus",
+          "wheelId": 171,
+          "title": "高专在哪个校",
+          "condition": "joinHighSchool == 是 and highSchoolCampus unset",
+          "why": "20260424-122432 补充池；加入高专后记录所属校区。"
+        },
+        {
+          "nodeId": "highSchoolStatus",
+          "wheelId": 172,
+          "title": "高专地位",
+          "condition": "joinHighSchool == 是 and highSchoolStatus unset",
+          "why": "20260424-122432 补充池；仅学生进入主角小队池，老师/校长/老登保留为高专身份记录。"
+        },
+        {
+          "nodeId": "joinMainTeamHiddenInventory",
+          "wheelId": 36,
+          "title": "是否加入主角小队（怀玉：五条悟、夏油杰、家入硝子）",
+          "condition": "joinHighSchool == 是 and highSchoolStatus == 学生 and joinMainTeam unset",
+          "why": "怀玉篇主角团指五条悟、夏油杰、家入硝子。"
+        },
+        {
+          "nodeId": "protectRiko",
+          "wheelId": 75,
+          "title": "是否保卫理子（时间早加高专专属）",
+          "condition": "joinHighSchool == 是"
+        },
+        {
+          "wheelId": 76,
+          "title": "保卫理子后",
+          "condition": "protectRiko == 是"
+        }
+      ],
+      "volume0": [
+        {
+          "nodeId": "joinHighSchool",
+          "wheelId": 145,
+          "title": "是否加入高专",
+          "condition": "canChooseHighSchool == true"
+        },
+        {
+          "nodeId": "highSchoolCampus",
+          "wheelId": 171,
+          "title": "高专在哪个校",
+          "condition": "joinHighSchool == 是 and highSchoolCampus unset",
+          "why": "20260424-122432 补充池；加入高专后记录所属校区。"
+        },
+        {
+          "nodeId": "highSchoolStatus",
+          "wheelId": 172,
+          "title": "高专地位",
+          "condition": "joinHighSchool == 是 and highSchoolStatus unset",
+          "why": "20260424-122432 补充池；仅学生进入主角小队池，老师/校长/老登保留为高专身份记录。"
+        },
+        {
+          "nodeId": "joinMainTeamVolume0",
+          "wheelId": 36,
+          "title": "是否加入主角小队（0卷：乙骨忧太、狗卷棘、禅院真希、熊猫）",
+          "condition": "joinHighSchool == 是 and highSchoolStatus == 学生 and joinMainTeam unset",
+          "why": "0卷主角团指乙骨忧太、狗卷棘、禅院真希、熊猫。"
+        },
+        {
+          "nodeId": "nightParadeParticipation",
+          "wheelId": 169,
+          "title": "是否参加百鬼夜行",
+          "condition": "joinHighSchool == 是 or getoSide == true",
+          "why": "20260427-120020 补充前置门；先决定是否参与，再进入对应百鬼夜行结果池。"
+        },
+        {
+          "wheelId": 78,
+          "title": "百鬼夜行结果（高专方）",
+          "condition": "joinHighSchool == 是 and getoSide != true and participatesNightParade == true"
+        },
+        {
+          "wheelId": 79,
+          "title": "百鬼夜行结果（夏油杰方）",
+          "condition": "getoSide == true and participatesNightParade == true"
+        }
+      ],
+      "mainStart": [
+        {
+          "nodeId": "joinHighSchool",
+          "wheelId": 145,
+          "title": "是否加入高专",
+          "condition": "canChooseHighSchool == true"
+        },
+        {
+          "nodeId": "highSchoolCampus",
+          "wheelId": 171,
+          "title": "高专在哪个校",
+          "condition": "joinHighSchool == 是 and highSchoolCampus unset",
+          "why": "20260424-122432 补充池；加入高专后记录所属校区。"
+        },
+        {
+          "nodeId": "highSchoolStatus",
+          "wheelId": 172,
+          "title": "高专地位",
+          "condition": "joinHighSchool == 是 and highSchoolStatus unset",
+          "why": "20260424-122432 补充池；仅学生进入主角小队池，老师/校长/老登保留为高专身份记录。"
+        },
+        {
+          "nodeId": "joinMainTeamMainStart",
+          "wheelId": 36,
+          "title": "是否加入主角小队（剧情开始：虎杖悠仁、伏黑惠、钉崎野蔷薇）",
+          "condition": "joinHighSchool == 是 and highSchoolStatus == 学生 and joinMainTeam unset",
+          "why": "剧情开始篇主角团指虎杖悠仁、伏黑惠、钉崎野蔷薇。"
+        },
+        {
+          "nodeId": "exchangeEventParticipation",
+          "wheelId": 170,
+          "title": "是否参加交流会",
+          "condition": "joinHighSchool == 是",
+          "why": "20260427-120020 补充前置门；未参加时不再强制结算交流会结果。"
+        },
+        {
+          "wheelId": 93,
+          "title": "交流会结果",
+          "condition": "joinHighSchool == 是 and participatesExchangeEvent == true"
+        },
+        {
+          "wheelId": 95,
+          "title": "参与幼鱼与逆罚（仅限日本人类）",
+          "condition": "identity is humanlike and location == 日本"
+        },
+        {
+          "wheelId": 96,
+          "title": "幼鱼与逆罚（高专方）",
+          "condition": "junpeiArcSide == 高专方 and location == 日本"
+        },
+        {
+          "wheelId": 97,
+          "title": "幼鱼与逆罚（真人方）",
+          "condition": "junpeiArcSide == 真人方 and location == 日本"
+        }
+      ],
+      "shibuya": [
+        {
+          "nodeId": "joinHighSchool",
+          "wheelId": 145,
+          "title": "是否加入高专",
+          "condition": "canChooseHighSchool == true"
+        },
+        {
+          "nodeId": "highSchoolCampus",
+          "wheelId": 171,
+          "title": "高专在哪个校",
+          "condition": "joinHighSchool == 是 and highSchoolCampus unset",
+          "why": "20260424-122432 补充池；加入高专后记录所属校区。"
+        },
+        {
+          "nodeId": "highSchoolStatus",
+          "wheelId": 172,
+          "title": "高专地位",
+          "condition": "joinHighSchool == 是 and highSchoolStatus unset",
+          "why": "20260424-122432 补充池；仅学生进入主角小队池，老师/校长/老登保留为高专身份记录。"
+        },
+        {
+          "nodeId": "joinMainTeamMainStart",
+          "wheelId": 36,
+          "title": "是否加入主角小队（剧情开始：虎杖悠仁、伏黑惠、钉崎野蔷薇）",
+          "condition": "joinHighSchool == 是 and highSchoolStatus == 学生 and joinMainTeam unset"
+        },
+        {
+          "wheelId": 143,
+          "title": "是否参加涩谷事变"
+        },
+        {
+          "wheelId": 132,
+          "title": "涩谷事变阵营",
+          "condition": "participatesShibuya == true and faction == 未定"
+        },
+        {
+          "nodeId": "shibuyaHighSchoolOpening",
+          "wheelId": 149,
+          "title": "涩谷事变经过·开场（高专）",
+          "condition": "participatesShibuya == true and faction == 高专方",
+          "why": "新版 29 期补充：高专方涩谷线先决定开场行动。"
+        },
+        {
+          "nodeId": "shibuyaHighSchoolImpact",
+          "wheelId": 148,
+          "title": "对涩谷事变的影响（高专方）",
+          "condition": "participatesShibuya == true and faction == 高专方",
+          "why": "新版 29 期补充：高专方对涩谷事变造成的直接改写。"
+        },
+        {
+          "nodeId": "shibuyaGojoRescueResult",
+          "wheelId": 150,
+          "title": "事件结果·救五条（高专）",
+          "condition": "shibuyaGojoRescueAttempt == true and gojoShibuyaState unset",
+          "why": "尝试救五条或夺取狱门疆时，决定五条封印线结果。"
+        },
+        {
+          "nodeId": "shibuyaSealFailureResult",
+          "wheelId": 151,
+          "title": "事件结果·封印失败（高专）",
+          "condition": "gojoSealFailed == true",
+          "why": "五条封印失败后，决定天灾和羂索的后续。"
+        },
+        {
+          "nodeId": "shibuyaGojoStateBridge",
+          "type": "wheel",
+          "title": "涩谷后五条状态",
+          "condition": "participatesShibuya == true and faction == 高专方 and gojoShibuyaState unset",
+          "why": "当新版事件没有明确给出五条状态时，用收敛节点承接世界线。",
+          "options": [
+            {
+              "text": "五条未被封印，高专抢回主动权",
+              "weight": 2
+            },
+            {
+              "text": "五条被封印但狱门疆被高专夺回",
+              "weight": 2
+            },
+            {
+              "text": "五条仍被封印，涩谷按原著主轴推进",
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "nodeId": "shibuyaKenjakuPlanState",
+          "type": "wheel",
+          "title": "羂索计划是否继续",
+          "condition": "participatesShibuya == true and faction == 高专方 and kenjakuPlanState unset",
+          "why": "将五条/狱门疆/羂索变化收敛成死灭回游前置状态。",
+          "options": [
+            {
+              "text": "羂索被捕，死灭回游无法正常发动"
+            },
+            {
+              "text": "羂索逃走，但计划严重受损"
+            },
+            {
+              "text": "羂索逃走，原著大体继续"
+            },
+            {
+              "text": "羂索启用备用方案强行发动"
+            }
+          ]
+        },
+        {
+          "nodeId": "shibuyaSukunaAfterGojoLine",
+          "wheelId": 152,
+          "title": "宿傩结果·五条破封线（高专）",
+          "condition": "gojoCanAffectSukuna == true and sukunaRevivalState unset",
+          "why": "五条线被高专改写后，决定宿傩复活是否被压制。"
+        },
+        {
+          "nodeId": "shibuyaSukunaAfterGojoRevival",
+          "wheelId": 153,
+          "title": "宿傩复活后·五条破封（高专）",
+          "condition": "sukunaRevivalState == nerfed",
+          "why": "宿傩削弱复活后，决定是否恢复新宿决战强度。"
+        },
+        {
+          "nodeId": "shibuyaWorldlineState",
+          "type": "wheel",
+          "title": "改写后的世界线走向",
+          "condition": "participatesShibuya == true and faction == 高专方",
+          "why": "把高专方涩谷改写收敛为后续大事件的总体方向。",
+          "options": [
+            {
+              "text": "原著修正力回归，后续仍大体发生",
+              "weight": 3
+            },
+            {
+              "text": "高专提前占优，死灭回游削弱或跳过",
+              "weight": 2
+            },
+            {
+              "text": "羂索残党继续推动事件",
+              "weight": 2
+            },
+            {
+              "text": "宿傩潜伏，直接转向新宿变体线"
+            }
+          ]
+        },
+        {
+          "wheelId": 98,
+          "title": "涩谷事变过程（如果是羂索方则反着来）",
+          "condition": "participatesShibuya == true and faction != 高专方",
+          "why": "新版高专方已拆出专属线；旧 W98 暂作为非高专方/备用涩谷过程。"
+        },
+        {
+          "wheelId": 69,
+          "title": "涩谷事变后状态",
+          "condition": "participatesShibuya == true"
+        },
+        {
+          "nodeId": "shibuyaOutcome",
+          "title": "涩谷事变结局",
+          "condition": "participatesShibuya == true or participatesShibuya == false",
+          "why": "未参与时固定采用漫画参考战局；参与时按所在阵营提高对应胜利项权重。",
+          "options": [
+            {
+              "text": "高专胜利",
+              "weight": 1
+            },
+            {
+              "text": "咒灵胜利",
+              "weight": 1
+            },
+            {
+              "text": "诅咒师胜利",
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "cullingGame": [
+        {
+          "nodeId": "joinHighSchool",
+          "wheelId": 145,
+          "title": "是否加入高专",
+          "condition": "canChooseHighSchool == true"
+        },
+        {
+          "nodeId": "highSchoolCampus",
+          "wheelId": 171,
+          "title": "高专在哪个校",
+          "condition": "joinHighSchool == 是 and highSchoolCampus unset",
+          "why": "20260424-122432 补充池；加入高专后记录所属校区。"
+        },
+        {
+          "nodeId": "highSchoolStatus",
+          "wheelId": 172,
+          "title": "高专地位",
+          "condition": "joinHighSchool == 是 and highSchoolStatus unset",
+          "why": "20260424-122432 补充池；仅学生进入主角小队池，老师/校长/老登保留为高专身份记录。"
+        },
+        {
+          "nodeId": "joinMainTeamMainStart",
+          "wheelId": 36,
+          "title": "是否加入主角小队（剧情开始：虎杖悠仁、伏黑惠、钉崎野蔷薇）",
+          "condition": "joinHighSchool == 是 and highSchoolStatus == 学生 and joinMainTeam unset"
+        },
+        {
+          "wheelId": 71,
+          "title": "禅院家灭族结果（禅院家专属）",
+          "condition": "zeninFamily == true"
+        },
+        {
+          "nodeId": "cullingGameAlteredOutcome",
+          "type": "wheel",
+          "title": "死灭回游改写后走向",
+          "condition": "cullingGameCanOccur == false",
+          "why": "涩谷线已使羂索计划无法正常发动时，给出死灭回游替代结局。",
+          "options": [
+            {
+              "text": "死灭回游胎死腹中，高专开始清算残余术师"
+            },
+            {
+              "text": "残党零星作乱，但没有形成大规模结界战"
+            },
+            {
+              "text": "羂索计划被迫延期，后续事件大幅缩水"
+            }
+          ]
+        },
+        {
+          "nodeId": "guardTengen",
+          "wheelId": 73,
+          "title": "是否留下守卫天元（死灭回游高专）",
+          "condition": "joinHighSchool == 是 and cullingGameCanOccur == true",
+          "why": "守卫天元属于死灭回游前后的高专任务，不应出现在怀玉篇。"
+        },
+        {
+          "wheelId": 74,
+          "title": "守卫天元结果",
+          "condition": "guardTengen == 是",
+          "why": "只有选择留下守卫天元时才结算。"
+        },
+        {
+          "wheelId": 144,
+          "title": "是否参加死灭回游",
+          "condition": "cullingGameCanOccur == true"
+        },
+        {
+          "nodeId": "cullingAwakening",
+          "wheelId": 54,
+          "title": "死灭回游中能不能觉醒术式（没有生得术式专属）",
+          "condition": "hasTechnique == 否 and participatesCullingGame == true"
+        },
+        {
+          "wheelId": 70,
+          "title": "被谁受肉",
+          "condition": "W054 == 被受肉了"
+        },
+        {
+          "wheelId": 107,
+          "title": "参加死灭地点（特级专属）",
+          "condition": "participatesCullingGame == true and isSpecialGrade == true"
+        },
+        {
+          "wheelId": 55,
+          "title": "参加死灭回游地点",
+          "condition": "participatesCullingGame == true and isSpecialGrade == false"
+        },
+        {
+          "wheelId": 127,
+          "title": "参加死灭结果（弱者专属）",
+          "condition": "participatesCullingGame == true and isWeakGrade == true"
+        },
+        {
+          "wheelId": 72,
+          "title": "死灭回游结果",
+          "condition": "participatesCullingGame == true and isWeakGrade == false"
+        }
+      ],
+      "shinjuku": [
+        {
+          "nodeId": "joinHighSchool",
+          "wheelId": 145,
+          "title": "是否加入高专",
+          "condition": "canChooseHighSchool == true"
+        },
+        {
+          "nodeId": "highSchoolCampus",
+          "wheelId": 171,
+          "title": "高专在哪个校",
+          "condition": "joinHighSchool == 是 and highSchoolCampus unset",
+          "why": "20260424-122432 补充池；加入高专后记录所属校区。"
+        },
+        {
+          "nodeId": "highSchoolStatus",
+          "wheelId": 172,
+          "title": "高专地位",
+          "condition": "joinHighSchool == 是 and highSchoolStatus unset",
+          "why": "20260424-122432 补充池；仅学生进入主角小队池，老师/校长/老登保留为高专身份记录。"
+        },
+        {
+          "nodeId": "joinMainTeamMainStart",
+          "wheelId": 36,
+          "title": "是否加入主角小队（剧情开始：虎杖悠仁、伏黑惠、钉崎野蔷薇）",
+          "condition": "joinHighSchool == 是 and highSchoolStatus == 学生 and joinMainTeam unset"
+        },
+        {
+          "wheelId": 133,
+          "title": "决战阵营（诅咒师专属）",
+          "condition": "faction == 未定 and identity == 诅咒师"
+        },
+        {
+          "wheelId": 104,
+          "title": "决战阵营（咒灵专属）",
+          "condition": "faction == 未定 and identity == 咒灵"
+        },
+        {
+          "wheelId": 49,
+          "title": "决战阵营",
+          "condition": "faction == 未定 and identity != 诅咒师 and identity != 咒灵"
+        },
+        {
+          "nodeId": "shinjukuAlteredOutcome",
+          "type": "wheel",
+          "title": "新宿决战改写后结果",
+          "condition": "shinjukuSukunaAltered == true",
+          "why": "涩谷线已导致宿傩无法作为标准新宿主目标时，给出改写结局。",
+          "options": [
+            {
+              "text": "宿傩未能复活，高专提前清算残局"
+            },
+            {
+              "text": "宿傩被五条提前压制，决战规模大幅缩小"
+            },
+            {
+              "text": "宿傩削弱后被围剿，高专付出代价获胜"
+            }
+          ]
+        },
+        {
+          "wheelId": 128,
+          "title": "是否参加新宿决战（弱者专属）",
+          "condition": "faction == 高专方 and isWeakGrade == true and sukunaCanFight == true",
+          "why": "原始 W128 是弱者专属池；一级、特别一级、特级等非弱者高专方默认进入参战路线，不再抽云参加。"
+        },
+        {
+          "nodeId": "thirdPartyShinjukuParticipation",
+          "title": "是否参加新宿决战（第三方专属）",
+          "condition": "faction == 第三方",
+          "why": "第三方角色不默认参战；先决定是否主动介入新宿决战。",
+          "options": [
+            {
+              "text": "参加",
+              "weight": 2
+            },
+            {
+              "text": "不参加（旁观）",
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "nodeId": "shinjukuThirdPartyFightResult",
+          "title": "新宿决战结果（第三方参战）",
+          "condition": "faction == 第三方 and participatesShinjuku == true",
+          "why": "第三方主动介入新宿决战后的个人结果。",
+          "options": [
+            {
+              "text": "活到战局结束（高专方胜）",
+              "weight": 3
+            },
+            {
+              "text": "活到战局结束（宿傩方胜）",
+              "weight": 1
+            },
+            {
+              "text": "重伤退场",
+              "weight": 2
+            },
+            {
+              "text": "战至死亡",
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "nodeId": "shinjukuThirdPartySpectatorOutcome",
+          "title": "新宿决战大势（第三方旁观）",
+          "condition": "faction == 第三方 and participatesShinjuku == false",
+          "why": "第三方选择不参加新宿决战时，仍给出大势结局。",
+          "options": [
+            {
+              "text": "高专胜利",
+              "weight": 3
+            },
+            {
+              "text": "宿傩胜利",
+              "weight": 1
+            },
+            {
+              "text": "双方死伤惨重，你趁乱活下来",
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "nodeId": "shinjukuSpectatorResult",
+          "wheelId": 66,
+          "title": "新宿决战结局（云参加）",
+          "condition": "faction == 高专方 and participatesShinjuku == false and sukunaCanFight == true"
+        },
+        {
+          "wheelId": 129,
+          "title": "决战宿傩入场顺序（特级专属）",
+          "condition": "faction == 高专方 and participatesShinjuku == true and isSpecialGrade == true and sukunaCanFight == true"
+        },
+        {
+          "wheelId": 39,
+          "title": "决战宿傩入场顺序",
+          "condition": "faction == 高专方 and participatesShinjuku == true and isSpecialGrade == false and sukunaCanFight == true"
+        },
+        {
+          "wheelId": 62,
+          "title": "单挑宿傩结果",
+          "condition": "faction == 高专方 and participatesShinjuku == true and soloSukuna == true and sukunaCanFight == true"
+        },
+        {
+          "nodeId": "gojoVsSukunaAfterPlayerFirstFight",
+          "wheelId": 67,
+          "title": "五条对决胜负（五条前大削）",
+          "condition": "gojoAfterPlayerFirstFight == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 108,
+          "title": "参战宿傩后（特级专属）",
+          "condition": "faction == 高专方 and participatesShinjuku == true and isSpecialGrade == true and sukunaBattleUnresolved == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 40,
+          "title": "参战宿傩后",
+          "condition": "faction == 高专方 and participatesShinjuku == true and isSpecialGrade == false and sukunaBattleUnresolved == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 109,
+          "title": "二番战（特级专属）",
+          "condition": "faction == 高专方 and participatesShinjuku == true and isSpecialGrade == true and canSecondRound == true and sukunaBattleUnresolved == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 41,
+          "title": "二番战战绩",
+          "condition": "faction == 高专方 and participatesShinjuku == true and isSpecialGrade == false and canSecondRound == true and sukunaBattleUnresolved == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 131,
+          "title": "第三回合（特级专属）",
+          "condition": "isSpecialGrade == true and canThirdRound == true and sukunaBattleUnresolved == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "nodeId": "highSchoolSukunaFinalResult",
+          "wheelId": 66,
+          "title": "宿傩战最终结果（高专方）",
+          "condition": "faction == 高专方 and participatesShinjuku == true and needsSukunaBattleResult == true and sukunaCanFight == true and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 110,
+          "title": "战胜宿傩后（特级专属）",
+          "condition": "faction == 高专方 and participatesShinjuku == true and sukunaBattleResult == 胜 and isSpecialGrade == true and sukunaCanFight == true"
+        },
+        {
+          "wheelId": 43,
+          "title": "战胜宿傩后结果",
+          "condition": "faction == 高专方 and participatesShinjuku == true and sukunaBattleResult == 胜 and isSpecialGrade == false and sukunaCanFight == true"
+        },
+        {
+          "wheelId": 56,
+          "title": "宿傩方在哪里",
+          "condition": "faction == 宿傩方"
+        },
+        {
+          "wheelId": 140,
+          "title": "和宿傩一起战术（宿傩方）",
+          "condition": "faction == 宿傩方 and sukunaSideWithSukunaGroup == true and sukunaBattleResult == 未定"
+        },
+        {
+          "nodeId": "sukunaSideGojoResult",
+          "wheelId": 146,
+          "title": "宿傩对五条悟结果（宿傩方）",
+          "condition": "sukunaSideGojoFight == true"
+        },
+        {
+          "nodeId": "sukunaSideWarImpact",
+          "wheelId": 134,
+          "title": "决战影响（一胜以上专属）",
+          "condition": "faction == 宿傩方 and sukunaSideOneWin == true and shinjukuWarOutcome == 未定 and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 57,
+          "title": "高专车轮战结果（宿傩方）",
+          "condition": "faction == 宿傩方 and sukunaSideStrategyResolved == true and sukunaSideGojoFight != true and sukunaBattleResult == 未定 and sukunaSideAfterDefeat != true and shinjukuWarOutcome == 未定 and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 141,
+          "title": "战斗结果（宿傩方·宿傩战败）",
+          "condition": "sukunaSideAfterDefeat == true and shinjukuWarOutcome == 未定 and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 65,
+          "title": "由谁来对付你（单独一队专属）",
+          "condition": "faction == 自己一队 and hostileToHighSchool == true and battleFlowClosed != true"
+        },
+        {
+          "nodeId": "appearanceMiguelEasterEgg",
+          "type": "wheel",
+          "title": "意外见面（容貌彩蛋）",
+          "condition": "appearanceMiguelEasterEgg == true",
+          "why": "颜值为 E- 且遇到米格尔相关敌对组合时，小概率触发一次性彩蛋；触发后对应战斗胜利权重提高 20%。",
+          "options": [
+            {
+              "text": "对方刚摆出架势，却在看清你的脸后明显停顿了。那一瞬间，他像是被强行塞进了某种无法理解的视觉冲击里，战意和判断都被撕开了一个缺口。【红字：战斗力明显下降了】",
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "wheelId": 113,
+          "title": "全打一遍战术（咒灵线）",
+          "condition": "identity == 咒灵 and faction == 自己一队 and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 135,
+          "title": "车轮战结果（第三方敌对）",
+          "condition": "faction == 自己一队 and hostileToHighSchool == true and curseLineResolved != true and battleFlowClosed != true"
+        },
+        {
+          "nodeId": "selfTeamFinalBattleResult",
+          "wheelId": 66,
+          "title": "战斗结果",
+          "condition": "faction == 自己一队 and sukunaBattleResult == 未定 and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 58,
+          "title": "战败结局",
+          "condition": "shouldRunBattleDefeatEnding == true"
+        },
+        {
+          "wheelId": 114,
+          "title": "胜利结果（咒灵线）",
+          "condition": "curseAllFight == true and sukunaBattleResult == 胜 and battleFlowClosed != true"
+        },
+        {
+          "wheelId": 115,
+          "title": "战后结果（咒灵线·胜）",
+          "condition": "curseVictory == true and battleFlowClosed != true"
+        }
+      ],
+      "after68": [
+        {
+          "wheelId": 42,
+          "title": "是否活到68年后（存活专属）",
+          "condition": "startPeriod != after68"
+        },
+        {
+          "wheelId": 63,
+          "title": "请挑选你的对手（68年专属）",
+          "condition": "aliveAfter68 == 是 or startPeriod == after68"
+        },
+        {
+          "wheelId": 116,
+          "title": "68年后外星人到来结果",
+          "condition": "aliveAfter68 == 是 or startPeriod == after68 or isAlien == true"
+        }
+      ]
+    }
+  },
+  "endingRules": {
+    "deathKeywords": [
+      "死亡",
+      "战死",
+      "死了",
+      "被杀",
+      "当场暴毙",
+      "去世",
+      "牺牲",
+      "腰斩",
+      "战至死亡"
+    ],
+    "skipFlowKeywords": [
+      {
+        "keyword": "无法参与涩谷事变",
+        "skip": "shibuya"
+      },
+      {
+        "keyword": "不能参加涩谷事变",
+        "skip": "shibuya"
+      },
+      {
+        "keyword": "不能参加死灭回游",
+        "skip": "cullingGame"
+      }
+    ],
+    "onlyDeathEndsFlow": true
+  },
+  "deferredTriggerWheels": [
+    {
+      "wheelId": 139,
+      "title": "轮空一人是谁？",
+      "reason": "原始 .pwh 中存在；当前仍缺少可靠触发词，先在调试原始转盘库完整展示。"
+    }
+  ]
+}

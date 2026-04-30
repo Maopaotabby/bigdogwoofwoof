@@ -1,0 +1,793 @@
+{
+  "schema": "jjk-character-cards",
+  "version": "0.1.3-candidate",
+  "status": "APPROVED_FOR_PROTOTYPE",
+  "approvedByUserAt": "2026-04-27",
+  "scope": "named-character calibration anchors for instant combat profile",
+  "notes": [
+    "Cards use user-approved balance anchors from the current conversation.",
+    "officialGrade and powerTier are separated; specialGrade1 is administrative/off-system grade-1-equivalent, not a strength tier above grade1.",
+    "The field talent is displayed and interpreted as 悟性.",
+    "2026-04-27 user correction: Miguel (Volume 0, Black Rope) is treated as special-grade combat tier while remaining identified as a curse user."
+  ],
+  "cards": [
+    {
+      "characterId": "gojo_satoru_shinjuku",
+      "displayName": "五条悟（新宿决战）",
+      "stage": "shinjuku",
+      "baseStats": {
+        "cursedEnergy": "S",
+        "control": "SSS",
+        "efficiency": "SSS",
+        "body": "S",
+        "martial": "SSS",
+        "talent": "SS"
+      },
+      "innateTraits": ["六眼", "无下限"],
+      "techniquePower": "SSS",
+      "domainProfile": "顶级领域：无量空处",
+      "officialGrade": "特级",
+      "powerTier": "canonCeiling",
+      "notes": "六眼锁定咒力操纵与效率 SSS；强度核心不是咒力总量 EX。"
+    },
+    {
+      "characterId": "sukuna_heian_or_shinjuku",
+      "displayName": "两面宿傩（平安/新宿决战基准）",
+      "stage": "heianToShinjuku",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "SSS",
+        "efficiency": "S",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "SSS"
+      },
+      "innateTraits": ["双面四臂", "善用束缚"],
+      "externalResource": "新宿决战十影资源：魔虚罗、嵌合兽顎吐；魔虚罗适应无下限后提供世界斩参照。",
+      "techniquePower": "SS",
+      "domainProfile": "开放领域：伏魔御厨子",
+      "officialGrade": "特级咒物/诅咒之王",
+      "powerTier": "canonCeiling",
+      "notes": "御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。"
+    },
+    {
+      "characterId": "yuji_itadori_after68",
+      "displayName": "虎天帝 / 虎杖悠仁（68年后）",
+      "stage": "after68",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "EX-",
+        "efficiency": "SSS",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "EX-"
+      },
+      "innateTraits": ["半人半咒", "不老/咒物沉淀", "随意黑闪", "EX锚点"],
+      "techniquePower": "SS",
+      "domainProfile": "高阶反领域/领域对策",
+      "officialGrade": "不适用",
+      "powerTier": "postCanonException",
+      "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。"
+    },
+    {
+      "characterId": "takaba_fumihiko_culling",
+      "displayName": "高羽史彦（死灭回游）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "B",
+        "control": "B",
+        "efficiency": "B",
+        "body": "B",
+        "martial": "C",
+        "talent": "A"
+      },
+      "innateTraits": [],
+      "techniquePower": "EX-",
+      "officialGrade": "未评级",
+      "powerTier": "haxException",
+      "notes": "超人术式极强，但杀意、理解和稳定性限制其即时胜率。"
+    },
+    {
+      "characterId": "toji_fushiguro_hidden_inventory",
+      "displayName": "伏黑甚尔（怀玉，完整咒具）",
+      "stage": "hiddenInventory",
+      "baseStats": {
+        "cursedEnergy": "E-",
+        "control": "E-",
+        "efficiency": "E-",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "SS"
+      },
+      "innateTraits": ["零咒力天与暴君型天与咒缚"],
+      "loadout": ["天逆鉾", "万里锁", "释魂刀", "武器库咒灵"],
+      "officialGrade": "无",
+      "powerTier": "topTierPhysical",
+      "notes": "完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。"
+    },
+    {
+      "characterId": "toji_fushiguro_shibuya_revenant",
+      "displayName": "伏黑甚尔（涩谷通灵）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "E-",
+        "control": "E-",
+        "efficiency": "E-",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "S"
+      },
+      "innateTraits": ["零咒力天与暴君型天与咒缚"],
+      "loadout": ["游云"],
+      "officialGrade": "无",
+      "powerTier": "topTierPhysical",
+      "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。"
+    },
+    {
+      "characterId": "maki_zenin_culling",
+      "displayName": "禅院真希（死灭回游完成后）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "E-",
+        "control": "E-",
+        "efficiency": "E-",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "SS"
+      },
+      "innateTraits": ["零咒力天与暴君型天与咒缚"],
+      "loadout": ["释魂刀"],
+      "officialGrade": "无",
+      "powerTier": "topTierPhysical",
+      "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。"
+    },
+    {
+      "characterId": "yuta_okkotsu_volume0_true_rika",
+      "displayName": "乙骨忧太（0卷，真里香）",
+      "stage": "volume0",
+      "baseStats": {
+        "cursedEnergy": "EX-",
+        "control": "A",
+        "efficiency": "A",
+        "body": "B",
+        "martial": "B",
+        "talent": "SSS"
+      },
+      "externalResource": "真里香",
+      "advancedTechniques": ["反转术式外放"],
+      "officialGrade": "特级",
+      "powerTier": "specialGrade",
+      "notes": "通过相互诅咒形成近乎无限咒力来源；0卷后真里香成佛，资源形态下降。"
+    },
+    {
+      "characterId": "geto_suguru_volume0",
+      "displayName": "夏油杰（0卷）",
+      "stage": "volume0",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SS",
+        "efficiency": "SS",
+        "body": "S",
+        "martial": "SSS",
+        "talent": "SS"
+      },
+      "techniquePower": "SSS",
+      "officialGrade": "特级",
+      "powerTier": "specialGrade",
+      "notes": "咒灵操术库存不直接消耗自身咒力；若百鬼夜行不兵分两路，可能正面击败0卷乙骨与真里香组合。"
+    },
+    {
+      "characterId": "kashimo_hajime_ancient",
+      "displayName": "鹿紫云一（400年前）",
+      "stage": "ancient400",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "SS",
+        "martial": "SS",
+        "talent": "SS"
+      },
+      "domainProfile": "无领域",
+      "innateTraits": ["电荷咒力"],
+      "techniquePower": "SSS",
+      "officialGrade": "特级古代术师",
+      "visibleGrade": "specialGrade",
+      "powerTier": "topTier",
+      "notes": "400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。"
+    },
+    {
+      "characterId": "hakari_kinji_jackpot",
+      "displayName": "秤金次（中奖状态）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "SS",
+        "body": "SS",
+        "martial": "SS",
+        "talent": "S"
+      },
+      "externalResource": "坐杀搏徒中奖",
+      "techniquePower": "SS",
+      "domainProfile": "坐杀搏徒领域",
+      "officialGrade": "停学/未正式评级",
+      "powerTier": "topTierSustain",
+      "notes": "中奖状态以续航和不死性建立强者地位。"
+    },
+    {
+      "characterId": "uraume_shinjuku",
+      "displayName": "里梅（新宿）",
+      "stage": "shinjuku",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "S",
+        "martial": "S",
+        "talent": "SS"
+      },
+      "techniquePower": "SSS",
+      "officialGrade": "无",
+      "powerTier": "topTierMinus",
+      "notes": "与秤金次长期相持，不能按低一级强者处理。"
+    },
+    {
+      "characterId": "dabra_modulo",
+      "displayName": "达布拉（Modulo）",
+      "stage": "modulo",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "SSS",
+        "efficiency": "S",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "SSS"
+      },
+      "techniquePower": "SSS",
+      "officialGrade": "不适用",
+      "powerTier": "postCanonCeiling",
+      "notes": "基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。"
+    },
+    {
+      "characterId": "maru_modulo",
+      "displayName": "马鲁（Modulo）",
+      "stage": "modulo",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "S",
+        "efficiency": "A",
+        "body": "B",
+        "martial": "B",
+        "talent": "SS"
+      },
+      "techniquePower": "SSS",
+      "officialGrade": "不适用",
+      "powerTier": "supportHax",
+      "notes": "单体战斗力不应过高；强点在混沌与调和的规则干涉和辅助价值。"
+    },
+    {
+      "characterId": "okkotsu_tsurugi_modulo",
+      "displayName": "乙骨真剑（Modulo）",
+      "stage": "modulo",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "S",
+        "martial": "SS",
+        "talent": "SS"
+      },
+      "loadout": ["焰柳", "乙骨戒指/里香资源", "释魂刀（阶段性）"],
+      "externalResource": "乙骨戒指/里香资源",
+      "officialGrade": "不适用",
+      "powerTier": "newGenerationTop",
+      "notes": "这里的真剑是乙骨真剑，不是克罗斯。"
+    },
+    {
+      "characterId": "cross_modulo",
+      "displayName": "克罗斯（Modulo）",
+      "stage": "modulo",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "A",
+        "body": "B",
+        "martial": "B",
+        "talent": "A"
+      },
+      "officialGrade": "不适用",
+      "powerTier": "civilianOrSupport",
+      "notes": "克罗斯是马鲁的双胞胎兄弟，不是乙骨真剑。"
+    },
+    {
+      "characterId": "rika_orimoto_volume0_full",
+      "displayName": "祈本里香（0卷，完全显现）",
+      "stage": "volume0",
+      "baseStats": {
+        "cursedEnergy": "EX-",
+        "control": "B",
+        "efficiency": "A",
+        "body": "SS",
+        "martial": "B",
+        "talent": "A"
+      },
+      "innateTraits": ["咒灵之躯", "特级过咒怨灵"],
+      "techniquePower": "SS",
+      "officialGrade": "特级过咒怨灵",
+      "powerTier": "specialGradeCurse",
+      "notes": "0卷完全显现的真里香锚点；作为独立咒灵卡时不叠加乙骨的术师操作。"
+    },
+    {
+      "characterId": "jogo_shibuya",
+      "displayName": "漏瑚（涩谷）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "S",
+        "martial": "A",
+        "talent": "S"
+      },
+      "innateTraits": ["咒灵之躯", "灾害咒灵"],
+      "techniquePower": "SSS",
+      "domainProfile": "领域展开：盖棺铁围山",
+      "officialGrade": "特级咒灵",
+      "powerTier": "disasterCurse",
+      "notes": "高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。"
+    },
+    {
+      "characterId": "mahito_shibuya",
+      "displayName": "真人（涩谷）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "S",
+        "body": "A",
+        "martial": "A",
+        "talent": "SS"
+      },
+      "innateTraits": ["咒灵之躯", "灾害咒灵", "无为转变", "灵魂干涉"],
+      "techniquePower": "SSS",
+      "domainProfile": "领域展开：自闭圆顿裹",
+      "officialGrade": "特级咒灵",
+      "powerTier": "disasterCurse",
+      "notes": "灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。"
+    },
+    {
+      "characterId": "hanami_exchange_event",
+      "displayName": "花御（京都交流会）",
+      "stage": "mainStart",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "S",
+        "body": "SS",
+        "martial": "A",
+        "talent": "A"
+      },
+      "innateTraits": ["咒灵之躯", "灾害咒灵"],
+      "techniquePower": "SS",
+      "officialGrade": "特级咒灵",
+      "powerTier": "disasterCurse",
+      "notes": "耐久和范围压制较强；领域未完整展示，按灾害咒灵但非顶级领域锚点处理。"
+    },
+    {
+      "characterId": "dagon_shibuya_domain",
+      "displayName": "陀艮（涩谷，领域展开）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "A",
+        "body": "SS",
+        "martial": "A",
+        "talent": "A"
+      },
+      "innateTraits": ["咒灵之躯", "灾害咒灵"],
+      "techniquePower": "SS",
+      "domainProfile": "领域展开：荡蕴平线",
+      "officialGrade": "特级咒灵",
+      "powerTier": "disasterCurse",
+      "notes": "领域展开和式神海量压制是主要胜路；领域被破或遇到零咒力肉体系会明显降档。"
+    },
+    {
+      "characterId": "naoya_cursed_spirit_sakurajima",
+      "displayName": "禅院直哉（咒灵，樱岛）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "S",
+        "body": "SSS",
+        "martial": "SS",
+        "talent": "S"
+      },
+      "innateTraits": ["咒灵之躯", "投射咒法"],
+      "techniquePower": "SS",
+      "domainProfile": "领域展开：时胞月宫殿",
+      "officialGrade": "特级咒灵",
+      "powerTier": "topTierMinus",
+      "notes": "速度和领域展开是核心；作为咒灵之躯存在正能量与零咒力对策风险。"
+    },
+    {
+      "characterId": "smallpox_deity_shibuya",
+      "displayName": "疱疮神（涩谷）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "S",
+        "control": "A",
+        "efficiency": "A",
+        "body": "A",
+        "martial": "C",
+        "talent": "B"
+      },
+      "innateTraits": ["咒灵之躯", "疾病咒灵"],
+      "techniquePower": "S",
+      "domainProfile": "领域展开：墓",
+      "officialGrade": "特级疾病咒灵",
+      "powerTier": "cursedSpiritSpecial",
+      "notes": "规则明确但正面综合战力不按灾害咒灵处理；领域展开对无对策者威胁较高。"
+    },
+    {
+      "characterId": "choso_shibuya_culling",
+      "displayName": "胀相（涩谷/死灭）",
+      "stage": "shibuyaToCulling",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "A",
+        "body": "S",
+        "martial": "SS",
+        "talent": "S"
+      },
+      "innateTraits": ["咒胎九相图", "赤血操术"],
+      "techniquePower": "S",
+      "officialGrade": "特级咒物受肉体",
+      "visibleGrade": "grade1",
+      "powerTier": "grade1Plus",
+      "notes": "按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。"
+    },
+    {
+      "characterId": "kenjaku_geto_body",
+      "displayName": "羂索（夏油身体）",
+      "stage": "shibuyaToCulling",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SSS",
+        "efficiency": "SS",
+        "body": "S",
+        "martial": "SSS",
+        "talent": "SSS"
+      },
+      "innateTraits": ["夺舍", "咒灵操术", "反重力机构", "领域展开"],
+      "externalResource": "夏油杰身体与咒灵操术库存",
+      "techniquePower": "SSS",
+      "domainProfile": "开放领域：胎藏遍野",
+      "officialGrade": "不适用",
+      "powerTier": "specialGrade",
+      "notes": "经验、术式库存、反重力机构和领域展开构成综合强者；不是单纯输出天花板。"
+    },
+    {
+      "characterId": "yuki_tsukumo_culling",
+      "displayName": "九十九由基（死灭前后）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "SS"
+      },
+      "innateTraits": ["星之怒", "凰轮", "领域展开"],
+      "techniquePower": "SSS",
+      "domainProfile": "领域展开：未公开",
+      "officialGrade": "特级",
+      "powerTier": "specialGrade",
+      "notes": "高质量近战与质量增幅术式；领域存在但细节未公开，按特级强者锚点处理。"
+    },
+    {
+      "characterId": "yuta_okkotsu_shinjuku",
+      "displayName": "乙骨忧太（新宿决战）",
+      "stage": "shinjuku",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "S",
+        "martial": "SS",
+        "talent": "SSS"
+      },
+      "externalResource": "里香资源",
+      "advancedTechniques": ["反转术式外放"],
+      "techniquePower": "SSS",
+      "domainProfile": "领域展开：真赝相爱",
+      "officialGrade": "特级",
+      "powerTier": "specialGrade",
+      "notes": "正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。"
+    },
+    {
+      "characterId": "yuji_itadori_shinjuku",
+      "displayName": "虎杖悠仁（新宿决战）",
+      "stage": "shinjuku",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "S",
+        "efficiency": "SS",
+        "body": "SSS",
+        "martial": "SSS",
+        "talent": "SS"
+      },
+      "innateTraits": ["半人半咒", "黑闪连锁", "灵魂打击"],
+      "techniquePower": "SS",
+      "domainProfile": "简易领域/反领域对策",
+      "officialGrade": "不适用",
+      "powerTier": "topTier",
+      "notes": "新宿后段的灵魂打击和黑闪连锁锚点；不是68年后EX状态。"
+    },
+    {
+      "characterId": "megumi_fushiguro_culling",
+      "displayName": "伏黑惠（死灭回游）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "B",
+        "body": "B",
+        "martial": "B",
+        "talent": "SS"
+      },
+      "innateTraits": ["十种影法术"],
+      "techniquePower": "SS",
+      "domainProfile": "未完成领域：嵌合暗翳庭",
+      "officialGrade": "二级",
+      "powerTier": "grade1Plus",
+      "notes": "未完成领域与十影潜力很高；按潜力型强者，不默认兑现完整适应资源。"
+    },
+    {
+      "characterId": "higuruma_hiromi_culling",
+      "displayName": "日车宽见（死灭回游/新宿）",
+      "stage": "cullingGameToShinjuku",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "A",
+        "body": "B",
+        "martial": "B",
+        "talent": "SSS"
+      },
+      "innateTraits": ["规则类（日车）", "日车领域", "领域展开"],
+      "techniquePower": "SSS",
+      "domainProfile": "领域展开：诛伏赐死",
+      "officialGrade": "特级相当",
+      "visibleGrade": "specialGrade",
+      "powerTier": "haxException",
+      "notes": "规则审判和没收带来特级级别的高扰动；基础肉搏不是传统特级天花板。"
+    },
+    {
+      "characterId": "yorozu_heian_vessel",
+      "displayName": "万（平安/受肉）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "SS",
+        "martial": "SS",
+        "talent": "SS"
+      },
+      "innateTraits": ["构筑术式", "领域展开"],
+      "techniquePower": "SSS",
+      "domainProfile": "领域展开：三重疾苦",
+      "officialGrade": "特级古代术师",
+      "visibleGrade": "specialGrade",
+      "powerTier": "topTier",
+      "notes": "构筑术式高上限，完全球体与领域展开构成主要胜路。"
+    },
+    {
+      "characterId": "uro_takako_sendai",
+      "displayName": "乌鹭亨子（仙台结界）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "SS",
+        "control": "SS",
+        "efficiency": "S",
+        "body": "A",
+        "martial": "A",
+        "talent": "SS"
+      },
+      "innateTraits": ["天空术式", "领域展开"],
+      "techniquePower": "SS",
+      "domainProfile": "领域展开：仙台三方领域",
+      "officialGrade": "古代术师",
+      "visibleGrade": "specialGrade",
+      "powerTier": "sendaiTop",
+      "notes": "空间扭曲和防御反击强；仙台三方领域参与者之一。"
+    },
+    {
+      "characterId": "ryu_ishigori_sendai",
+      "displayName": "石流龙（仙台结界）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "SSS",
+        "control": "S",
+        "efficiency": "A",
+        "body": "SS",
+        "martial": "SS",
+        "talent": "A"
+      },
+      "innateTraits": ["咒力大炮", "领域展开"],
+      "techniquePower": "SS",
+      "domainProfile": "领域展开：仙台三方领域",
+      "officialGrade": "古代术师",
+      "visibleGrade": "specialGrade",
+      "powerTier": "sendaiTop",
+      "notes": "咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。"
+    },
+    {
+      "characterId": "angel_hana_culling",
+      "displayName": "天使 / 来栖华（死灭回游）",
+      "stage": "cullingGame",
+      "baseStats": {
+        "cursedEnergy": "S",
+        "control": "S",
+        "efficiency": "S",
+        "body": "B",
+        "martial": "C",
+        "talent": "SS"
+      },
+      "innateTraits": ["天使", "术式消灭", "雅各布天梯"],
+      "techniquePower": "SSS",
+      "officialGrade": "古代术师受肉",
+      "powerTier": "supportHax",
+      "notes": "术式消灭和雅各布天梯对受肉/结界/术式体系有高扰动；正面单挑基础不按顶级肉搏处理。"
+    },
+    {
+      "characterId": "todo_aoi_shibuya",
+      "displayName": "东堂葵（涩谷）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "B",
+        "body": "SS",
+        "martial": "SS",
+        "talent": "S"
+      },
+      "innateTraits": ["不义游戏"],
+      "techniquePower": "A",
+      "officialGrade": "一级",
+      "powerTier": "grade1Plus",
+      "notes": "单体面板是一级强者，配合战中不义游戏价值远高于裸数值。"
+    },
+    {
+      "characterId": "nanami_kento_shibuya",
+      "displayName": "七海建人（涩谷）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "A",
+        "body": "A",
+        "martial": "SS",
+        "talent": "A"
+      },
+      "innateTraits": ["十划咒法"],
+      "techniquePower": "A",
+      "officialGrade": "一级",
+      "powerTier": "grade1",
+      "notes": "标准一级术师锚点；稳定、效率高，但不按特级候选处理。"
+    },
+    {
+      "characterId": "kusakabe_atsuya_shinjuku",
+      "displayName": "日下部笃也（新宿）",
+      "stage": "shinjuku",
+      "baseStats": {
+        "cursedEnergy": "B",
+        "control": "SS",
+        "efficiency": "A",
+        "body": "A",
+        "martial": "SS",
+        "talent": "S"
+      },
+      "innateTraits": ["简易领域", "新阴流"],
+      "techniquePower": "B",
+      "officialGrade": "一级",
+      "powerTier": "grade1Plus",
+      "notes": "无生得术式但新阴流和简易领域极稳；适合作为非术式型一级上位锚点。"
+    },
+    {
+      "characterId": "mei_mei_shibuya",
+      "displayName": "冥冥（涩谷）",
+      "stage": "shibuya",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "A",
+        "body": "A",
+        "martial": "S",
+        "talent": "A"
+      },
+      "innateTraits": ["黑鸟操术"],
+      "techniquePower": "A",
+      "officialGrade": "一级",
+      "powerTier": "grade1",
+      "notes": "黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。"
+    },
+    {
+      "characterId": "nobara_kugisaki_main_start",
+      "displayName": "钉崎野蔷薇（剧情开始）",
+      "stage": "mainStart",
+      "baseStats": {
+        "cursedEnergy": "B",
+        "control": "B",
+        "efficiency": "B",
+        "body": "C",
+        "martial": "B",
+        "talent": "A"
+      },
+      "innateTraits": ["刍灵咒法", "灵魂共鸣"],
+      "techniquePower": "A",
+      "officialGrade": "三级",
+      "powerTier": "grade2Plus",
+      "notes": "正面基础较低，但共鸣对特定条件目标有高价值。"
+    },
+    {
+      "characterId": "inumaki_toge_volume0",
+      "displayName": "狗卷棘（0卷）",
+      "stage": "volume0",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "B",
+        "efficiency": "B",
+        "body": "C",
+        "martial": "C",
+        "talent": "A"
+      },
+      "innateTraits": ["咒言"],
+      "techniquePower": "A",
+      "officialGrade": "二级",
+      "powerTier": "grade2Plus",
+      "notes": "咒言是强控制术式，但副作用和身体基础限制持续战。"
+    },
+    {
+      "characterId": "panda_volume0",
+      "displayName": "熊猫（0卷）",
+      "stage": "volume0",
+      "baseStats": {
+        "cursedEnergy": "C",
+        "control": "C",
+        "efficiency": "C",
+        "body": "SS",
+        "martial": "S",
+        "talent": "B"
+      },
+      "innateTraits": ["咒骸", "三核心"],
+      "techniquePower": "D",
+      "officialGrade": "二级",
+      "powerTier": "grade2Plus",
+      "notes": "咒骸肉体强于普通学生，术式侧不作为主要胜路。"
+    },
+    {
+      "characterId": "miguel_volume0",
+      "displayName": "米格尔（0卷，黑绳）",
+      "stage": "volume0",
+      "baseStats": {
+        "cursedEnergy": "S",
+        "control": "S",
+        "efficiency": "S",
+        "body": "SS",
+        "martial": "SSS",
+        "talent": "S"
+      },
+      "loadout": ["黑绳"],
+      "techniquePower": "B",
+      "officialGrade": "诅咒师",
+      "powerTier": "specialGrade",
+      "notes": "按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。"
+    }
+  ]
+}

@@ -1,0 +1,554 @@
+{
+  "schema": "jjk-wheel-option-effects",
+  "version": "0.1.0-candidate",
+  "status": "APPROVED_FOR_PROTOTYPE",
+  "scope": "strong-causal battle result pools and duel-safe AI term templates",
+  "sourceSupport": [
+    "user-20260427-strong-causal-label-confirmation",
+    "user-20260427-faction-outcome-weighting-confirmation",
+    "wheel_site/data/wheels.json",
+    "wheel_site/data/flow-v1-candidate.json"
+  ],
+  "notes": [
+    "Result tags are data labels for the runtime interpreter; old keyword rules remain fallback during migration.",
+    "W134/W135/W141 use factionContributionOnly weighting so faction-side contribution can affect hidden strength without generic positive/negative pool multipliers.",
+    "death means player-facing terminal result when the option text describes the player as the target of the lethal action."
+  ],
+  "allowedResultTags": [
+    "positive",
+    "negative",
+    "death",
+    "severeInjury",
+    "skipFlow",
+    "factionOutcome",
+    "neutralRecord",
+    "hiddenStrengthEligible",
+    "needsEvidence"
+  ],
+  "allowedEffectTypes": [
+    "battleResult",
+    "deathOutcome",
+    "factionOutcome",
+    "hiddenStrengthEligibility",
+    "playerContribution",
+    "setFlag",
+    "skipPeriod",
+    "storyBenefit",
+    "storyRisk",
+    "weightPolicy"
+  ],
+  "records": [
+    {
+      "wheelId": "W062",
+      "wheelTitle": "单挑宿傩结果",
+      "optionText": "战胜并终结诅咒之王",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "胜" },
+        { "type": "hiddenStrengthEligibility", "value": "directSukunaWin" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W062",
+      "wheelTitle": "单挑宿傩结果",
+      "optionText": "重创宿傩后被腰斩",
+      "resultTags": ["negative", "death", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "deathOutcome", "method": "腰斩" },
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "败" },
+        { "type": "hiddenStrengthEligibility", "value": "damagedSukunaBeforeDeath" },
+        { "type": "storyRisk", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W062",
+      "wheelTitle": "单挑宿傩结果",
+      "optionText": "重伤和高专众人再战",
+      "resultTags": ["negative", "severeInjury", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "未定" },
+        { "type": "setFlag", "flag": "canSecondRound", "value": true },
+        { "type": "hiddenStrengthEligibility", "value": "survivedSukunaSoloIntoTeamFight" },
+        { "type": "storyRisk", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W069",
+      "wheelTitle": "涩谷事变后状态",
+      "optionText": "重伤存活（不能参加死灭回游）",
+      "resultTags": ["negative", "severeInjury", "skipFlow"],
+      "effects": [
+        { "type": "skipPeriod", "value": "cullingGame" },
+        { "type": "storyRisk", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W069",
+      "wheelTitle": "涩谷事变后状态",
+      "optionText": "存活",
+      "resultTags": ["positive", "neutralRecord"],
+      "effects": [
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W069",
+      "wheelTitle": "涩谷事变后状态",
+      "optionText": "牺牲",
+      "resultTags": ["negative", "death"],
+      "effects": [
+        { "type": "deathOutcome", "method": "牺牲" },
+        { "type": "storyRisk", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W072",
+      "wheelTitle": "死灭回游结果",
+      "optionText": "存活",
+      "resultTags": ["positive", "neutralRecord"],
+      "effects": [
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W072",
+      "wheelTitle": "死灭回游结果",
+      "optionText": "死亡",
+      "resultTags": ["negative", "death"],
+      "effects": [
+        { "type": "deathOutcome", "method": "死亡" },
+        { "type": "storyRisk", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W093",
+      "wheelTitle": "交流会结果",
+      "optionText": "无伤大雅",
+      "resultTags": ["positive", "neutralRecord"],
+      "effects": [
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W093",
+      "wheelTitle": "交流会结果",
+      "optionText": "重伤（无法参与涩谷事变）",
+      "resultTags": ["negative", "severeInjury", "skipFlow"],
+      "effects": [
+        { "type": "skipPeriod", "value": "shibuya" },
+        { "type": "storyRisk", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W096",
+      "wheelTitle": "幼鱼与逆罚（高专方）",
+      "optionText": "原著结局，重伤",
+      "resultTags": ["negative", "severeInjury", "factionOutcome"],
+      "effects": [
+        { "type": "factionOutcome", "value": "mahitoCanonAdvantage", "perspective": "highSchool" },
+        { "type": "playerContribution", "value": "negative", "mode": "factionContext" },
+        { "type": "storyRisk", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W096",
+      "wheelTitle": "幼鱼与逆罚（高专方）",
+      "optionText": "原著结局，但真人被打濒临死亡",
+      "resultTags": ["positive", "severeInjury", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "factionOutcome", "value": "highSchoolDamagesMahito", "perspective": "highSchool" },
+        { "type": "playerContribution", "value": "positive", "mode": "factionContext" },
+        { "type": "hiddenStrengthEligibility", "value": "mahitoNearDeathContribution" },
+        { "type": "storyBenefit", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W096",
+      "wheelTitle": "幼鱼与逆罚（高专方）",
+      "optionText": "成功拯救顺平",
+      "resultTags": ["positive", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "factionOutcome", "value": "junpeiSaved", "perspective": "highSchool" },
+        { "type": "playerContribution", "value": "positive", "mode": "factionContext" },
+        { "type": "hiddenStrengthEligibility", "value": "junpeiSavedRoute" },
+        { "type": "storyBenefit", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W097",
+      "wheelTitle": "幼鱼与逆罚（真人方）",
+      "optionText": "原著结局，被无为转变",
+      "resultTags": ["negative", "death", "factionOutcome"],
+      "effects": [
+        { "type": "deathOutcome", "method": "无为转变" },
+        { "type": "factionOutcome", "value": "mahitoKillsPlayer", "perspective": "mahitoSide" },
+        { "type": "storyRisk", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W097",
+      "wheelTitle": "幼鱼与逆罚（真人方）",
+      "optionText": "原著结局，但至少你被拯救了",
+      "resultTags": ["positive", "factionOutcome"],
+      "effects": [
+        { "type": "factionOutcome", "value": "playerRescuedFromMahitoSide", "perspective": "player" },
+        { "type": "playerContribution", "value": "rescued", "mode": "factionContext" },
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W097",
+      "wheelTitle": "幼鱼与逆罚（真人方）",
+      "optionText": "原著结局，但你与真人同流合污",
+      "resultTags": ["negative", "factionOutcome"],
+      "effects": [
+        { "type": "factionOutcome", "value": "joinsMahito", "perspective": "mahitoSide" },
+        { "type": "setFlag", "flag": "faction", "value": "羂索方" },
+        { "type": "storyRisk", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W097",
+      "wheelTitle": "幼鱼与逆罚（真人方）",
+      "optionText": "中途突然醒悟成功拯救顺平且对真人进行四打一",
+      "resultTags": ["positive", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "factionOutcome", "value": "defectsAndSavesJunpei", "perspective": "highSchool" },
+        { "type": "playerContribution", "value": "positive", "mode": "factionContext" },
+        { "type": "hiddenStrengthEligibility", "value": "mahitoFourVsOneContribution" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W108",
+      "wheelTitle": "参战宿傩后（特级专属）",
+      "optionText": "不落下风二番战",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "未定" },
+        { "type": "setFlag", "flag": "canSecondRound", "value": true },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaNoDisadvantageIntoRoundTwo" },
+        { "type": "storyBenefit", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W108",
+      "wheelTitle": "参战宿傩后（特级专属）",
+      "optionText": "压制宿傩二番战",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "未定" },
+        { "type": "setFlag", "flag": "canSecondRound", "value": true },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaSuppressedIntoRoundTwo" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W108",
+      "wheelTitle": "参战宿傩后（特级专属）",
+      "optionText": "宿傩？借过一下",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "胜" },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaBypassedOrDefeated" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W108",
+      "wheelTitle": "参战宿傩后（特级专属）",
+      "optionText": "稍占下风二番战",
+      "resultTags": ["negative", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "未定" },
+        { "type": "setFlag", "flag": "canSecondRound", "value": true },
+        { "type": "hiddenStrengthEligibility", "value": "survivedSukunaDisadvantageIntoRoundTwo" },
+        { "type": "storyRisk", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W109",
+      "wheelTitle": "二番战（特级专属）",
+      "optionText": "贷款王发力了，不敌宿傩",
+      "resultTags": ["negative"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "败" },
+        { "type": "storyRisk", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W109",
+      "wheelTitle": "二番战（特级专属）",
+      "optionText": "战而胜之，终结诅咒之王",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "胜" },
+        { "type": "hiddenStrengthEligibility", "value": "secondRoundSukunaWin" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W109",
+      "wheelTitle": "二番战（特级专属）",
+      "optionText": "僵持不下，再战",
+      "resultTags": ["neutralRecord", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "未定" },
+        { "type": "setFlag", "flag": "canThirdRound", "value": true },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaStalemateIntoThirdRound" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W110",
+      "wheelTitle": "战胜宿傩后（特级专属）",
+      "optionText": "轻伤，问题不大",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "hiddenStrengthEligibility", "value": "sukunaWinLightInjury" },
+        { "type": "storyBenefit", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W110",
+      "wheelTitle": "战胜宿傩后（特级专属）",
+      "optionText": "重伤，实力大减",
+      "resultTags": ["negative", "severeInjury", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "hiddenStrengthEligibility", "value": "sukunaWinHeavyCost" },
+        { "type": "storyRisk", "value": 2 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W110",
+      "wheelTitle": "战胜宿傩后（特级专属）",
+      "optionText": "无伤，速通宿傩",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "hiddenStrengthEligibility", "value": "sukunaSpeedrunNoDamage" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W127",
+      "wheelTitle": "参加死灭结果（弱者专属）",
+      "optionText": "活着",
+      "resultTags": ["positive", "neutralRecord"],
+      "effects": [
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W127",
+      "wheelTitle": "参加死灭结果（弱者专属）",
+      "optionText": "死了",
+      "resultTags": ["negative", "death"],
+      "effects": [
+        { "type": "deathOutcome", "method": "死了" },
+        { "type": "storyRisk", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W131",
+      "wheelTitle": "第三回合（特级专属）",
+      "optionText": "重创宿傩后战死",
+      "resultTags": ["positive", "negative", "death", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "deathOutcome", "method": "战死" },
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "败" },
+        { "type": "playerContribution", "value": "positive", "mode": "sukunaDamageBeforeDeath" },
+        { "type": "hiddenStrengthEligibility", "value": "thirdRoundDamagedSukunaBeforeDeath" },
+        { "type": "storyRisk", "value": 3 },
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W131",
+      "wheelTitle": "第三回合（特级专属）",
+      "optionText": "大削宿傩后不敌败退",
+      "resultTags": ["negative", "severeInjury", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "败" },
+        { "type": "playerContribution", "value": "positive", "mode": "sukunaMajorNerfBeforeRetreat" },
+        { "type": "hiddenStrengthEligibility", "value": "thirdRoundMajorSukunaNerf" },
+        { "type": "storyRisk", "value": 2 },
+        { "type": "storyBenefit", "value": 1 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W131",
+      "wheelTitle": "第三回合（特级专属）",
+      "optionText": "击败宿傩",
+      "resultTags": ["positive", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "battleResult", "target": "sukunaBattleResult", "value": "胜" },
+        { "type": "hiddenStrengthEligibility", "value": "thirdRoundSukunaDefeat" },
+        { "type": "storyBenefit", "value": 3 }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W134",
+      "wheelTitle": "决战影响（一胜以上专属）",
+      "optionText": "帮助宿傩战胜高专",
+      "resultTags": ["positive", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "sukunaWin", "perspective": "sukunaSide" },
+        { "type": "playerContribution", "value": "positive", "mode": "sukunaSideContribution" },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaSideHighSchoolDefeatContribution" }
+      ],
+      "evidenceStatus": "confirmed",
+      "activationStatus": "deferredByFlow"
+    },
+    {
+      "wheelId": "W134",
+      "wheelTitle": "决战影响（一胜以上专属）",
+      "optionText": "高专死伤惨重艰难取胜",
+      "resultTags": ["negative", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "highSchoolCostlyWin", "perspective": "sukunaSide" },
+        { "type": "playerContribution", "value": "costlyPositive", "mode": "sukunaSideMadeHighSchoolPay" },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaSideCostlyLossContribution" }
+      ],
+      "evidenceStatus": "confirmed",
+      "activationStatus": "deferredByFlow"
+    },
+    {
+      "wheelId": "W135",
+      "wheelTitle": "车轮战结果",
+      "optionText": "五条悟出手秒了",
+      "resultTags": ["negative", "death", "factionOutcome"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "deathOutcome", "method": "秒了" },
+        { "type": "factionOutcome", "value": "highSchoolWin", "perspective": "hostileThirdParty" },
+        { "type": "playerContribution", "value": "negative", "mode": "instantlyDefeatedByGojo" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W135",
+      "wheelTitle": "车轮战结果",
+      "optionText": "重创五条后战败",
+      "resultTags": ["negative", "severeInjury", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "highSchoolCostlyWin", "perspective": "hostileThirdParty" },
+        { "type": "playerContribution", "value": "positive", "mode": "gojoHeavilyDamagedBeforeLoss" },
+        { "type": "hiddenStrengthEligibility", "value": "gojoHeavilyDamagedBeforeLoss" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W135",
+      "wheelTitle": "车轮战结果",
+      "optionText": "击杀五条后战败",
+      "resultTags": ["negative", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "highSchoolCostlyWinGojoKilled", "perspective": "hostileThirdParty" },
+        { "type": "playerContribution", "value": "positive", "mode": "gojoKilledBeforeLoss" },
+        { "type": "hiddenStrengthEligibility", "value": "gojoKilledBeforeLoss" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W135",
+      "wheelTitle": "车轮战结果",
+      "optionText": "战胜高专",
+      "resultTags": ["positive", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "highSchoolDefeated", "perspective": "hostileThirdParty" },
+        { "type": "playerContribution", "value": "positive", "mode": "defeatedHighSchool" },
+        { "type": "hiddenStrengthEligibility", "value": "defeatedHighSchoolWheelBattle" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W135",
+      "wheelTitle": "车轮战结果",
+      "optionText": "削弱五条后战败",
+      "resultTags": ["negative", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "highSchoolCostlyWinGojoWeakened", "perspective": "hostileThirdParty" },
+        { "type": "playerContribution", "value": "contextual", "mode": "gojoWeakenedBeforeLoss" },
+        { "type": "hiddenStrengthEligibility", "value": "gojoWeakenedBeforeLoss" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W141",
+      "wheelTitle": "战斗结果（宿傩方·宿傩战败）",
+      "optionText": "收菜时间（高专败）",
+      "resultTags": ["positive", "factionOutcome", "hiddenStrengthEligible"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "sukunaSideCounterWin", "perspective": "sukunaSide" },
+        { "type": "playerContribution", "value": "positive", "mode": "afterSukunaDefeatCounterWin" },
+        { "type": "hiddenStrengthEligibility", "value": "sukunaSideAfterDefeatCounterWin" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W141",
+      "wheelTitle": "战斗结果（宿傩方·宿傩战败）",
+      "optionText": "黑闪吃饱饱（高专胜）",
+      "resultTags": ["negative", "death", "factionOutcome"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "deathOutcome", "method": "黑闪吃饱饱" },
+        { "type": "factionOutcome", "value": "highSchoolWin", "perspective": "sukunaSide" },
+        { "type": "playerContribution", "value": "negative", "mode": "defeatedByHighSchoolBlackFlash" }
+      ],
+      "evidenceStatus": "confirmed"
+    },
+    {
+      "wheelId": "W141",
+      "wheelTitle": "战斗结果（宿傩方·宿傩战败）",
+      "optionText": "跑路了（没打过跑了）",
+      "resultTags": ["negative", "neutralRecord", "factionOutcome"],
+      "effects": [
+        { "type": "weightPolicy", "value": "factionContributionOnly" },
+        { "type": "factionOutcome", "value": "highSchoolWinPlayerRetreat", "perspective": "sukunaSide" },
+        { "type": "playerContribution", "value": "negative", "mode": "retreatAfterSukunaDefeat" },
+        { "type": "setFlag", "flag": "retreatAfterSukunaDefeat", "value": true }
+      ],
+      "evidenceStatus": "confirmed"
+    }
+  ]
+}

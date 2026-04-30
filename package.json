@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "private": true,
+  "description": "Static GitHub Pages site. The package file only tells Node to parse .js files as ESM for local syntax checks."
+}

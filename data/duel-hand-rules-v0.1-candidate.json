@@ -1,0 +1,28 @@
+{
+  "schema": "jjk-duel-hand-rules",
+  "version": "0.1.0",
+  "status": "CANDIDATE",
+  "hand": {
+    "defaultChoiceCount": 5,
+    "minChoiceCount": 3,
+    "maxChoiceCount": 6,
+    "selectionMode": "multi_action_ap_beta",
+    "allowMultipleSelectionsPerTurn": true,
+    "maxSelectionsPerTurn": 3,
+    "disableSelectedCandidate": true,
+    "requireManualResolve": true
+  },
+  "ap": {
+    "basePerTurn": 2,
+    "maxPerTurn": 3,
+    "carryOver": false
+  },
+  "cardLikeDisplay": {
+    "enabled": true,
+    "showApCost": true,
+    "showCeCost": true,
+    "showRisk": true,
+    "showTags": true
+  },
+  "notes": "This is not a full deck/hand/discard system. It only upgrades existing duel actions into hand-like candidates."
+}

@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "status": "CANDIDATE",
+  "schema": "jjk-duel-beta-copy",
+  "title": "术式手札 Beta 反馈",
+  "summary": "当前手札 / AP / card template 仍为 CANDIDATE beta，用于记录试玩反馈与复现信息，不代表最终平衡版。",
+  "buttons": {
+    "export": "导出本场反馈",
+    "copy": "复制反馈 JSON"
+  },
+  "notePlaceholder": "可选：记录这一回合哪里难懂、哪张手札不可读、或 CPU 行动是否突兀。",
+  "publicHints": [
+    "反馈包包含本场版本、回合、角色、资源、手札候选、已选手札、领域 / 审判 / jackpot 状态与日志摘要。",
+    "反馈包只用于复现与体验反馈，不参与战斗结算。",
+    "当前规则仍为 CANDIDATE / Beta。"
+  ]
+}

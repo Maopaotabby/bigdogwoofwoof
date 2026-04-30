@@ -1,0 +1,136 @@
+{
+  "version": "0.1.1",
+  "status": "CANDIDATE",
+  "defaultMode": "local_fallback",
+  "providers": [
+    {
+      "providerId": "openai",
+      "label": "OpenAI",
+      "modes": ["openai_byok_direct", "user_proxy_endpoint"],
+      "endpointType": "responses",
+      "baseUrl": "https://api.openai.com",
+      "defaultPath": "/v1/responses",
+      "defaultModel": "gpt-5-mini",
+      "modelPresets": ["gpt-5-mini", "gpt-5.1-mini", "gpt-4.1-mini"],
+      "allowCustomModel": true,
+      "securityWarningRequired": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "providerId": "deepseek",
+      "label": "DeepSeek",
+      "modes": ["deepseek_byok_direct", "user_proxy_endpoint"],
+      "endpointType": "chat_completions",
+      "baseUrl": "https://api.deepseek.com",
+      "defaultPath": "/chat/completions",
+      "defaultModel": "deepseek-chat",
+      "modelPresets": ["deepseek-chat", "deepseek-reasoner", "deepseek-v4-flash", "deepseek-v4-pro"],
+      "allowCustomModel": true,
+      "securityWarningRequired": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "providerId": "openai_compatible",
+      "label": "自定义 OpenAI-compatible Provider",
+      "modes": ["openai_compatible_byok_direct", "user_proxy_endpoint"],
+      "endpointType": "chat_completions",
+      "baseUrl": "",
+      "defaultPath": "/chat/completions",
+      "defaultModel": "",
+      "modelPresets": [],
+      "allowCustomBaseUrl": true,
+      "allowCustomPath": true,
+      "allowCustomModel": true,
+      "securityWarningRequired": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "providerId": "user_proxy",
+      "label": "玩家自托管 Proxy Endpoint（推荐）",
+      "modes": ["user_proxy_endpoint"],
+      "endpointType": "proxy",
+      "securityWarningRequired": true,
+      "status": "CANDIDATE"
+    }
+  ],
+  "modes": {
+    "off": {
+      "enabled": true,
+      "label": "关闭 AI"
+    },
+    "local_fallback": {
+      "enabled": true,
+      "label": "本地叙事 fallback"
+    },
+    "openai_byok_direct": {
+      "enabled": true,
+      "label": "玩家自带 OpenAI API Key（实验性）",
+      "providerId": "openai",
+      "securityWarningRequired": true,
+      "defaultStorage": "sessionStorage",
+      "allowLocalStorage": true
+    },
+    "deepseek_byok_direct": {
+      "enabled": true,
+      "label": "玩家自带 DeepSeek API Key（实验性）",
+      "providerId": "deepseek",
+      "securityWarningRequired": true,
+      "defaultStorage": "sessionStorage",
+      "allowLocalStorage": true
+    },
+    "openai_compatible_byok_direct": {
+      "enabled": true,
+      "label": "自定义 OpenAI-compatible Provider（实验性）",
+      "providerId": "openai_compatible",
+      "securityWarningRequired": true,
+      "defaultStorage": "sessionStorage",
+      "allowLocalStorage": true
+    },
+    "user_proxy_endpoint": {
+      "enabled": true,
+      "label": "玩家自托管 Proxy Endpoint（推荐）",
+      "providerId": "user_proxy",
+      "securityWarningRequired": true
+    }
+  },
+  "defaultModel": "gpt-5-mini",
+  "openAiResponsesEndpoint": "https://api.openai.com/v1/responses",
+  "tokenBudget": {
+    "maxPromptTokens": 6000,
+    "maxOutputTokens": 700,
+    "recentLogLimit": 12,
+    "maxCardSummary": 10,
+    "maxActionSummary": 10,
+    "maxDomainSummary": 6,
+    "maxFeedbackLogEntries": 30
+  },
+  "maxPromptTokens": 6000,
+  "maxOutputTokens": 700,
+  "temperature": 0.7,
+  "recentLogLimit": 12,
+  "maxCardSummary": 10,
+  "maxActionSummary": 10,
+  "maxDomainSummary": 6,
+  "maxFeedbackLogEntries": 30,
+  "promptCache": {
+    "enabled": true,
+    "staticPrefixFirst": true,
+    "promptCacheKeyPrefix": "jjk-wheel-v1"
+  },
+  "storage": {
+    "defaultKeyStorage": "sessionStorage",
+    "allowLocalStorage": true,
+    "neverExportSecrets": true
+  },
+  "proxyProtocol": {
+    "method": "POST",
+    "bodyShape": "{ providerId, endpointType, payload, siteVersion, promptTemplateId }",
+    "responseShape": "{ text, usage?, raw? }"
+  },
+  "privacy": {
+    "neverExportApiKey": true,
+    "neverLogApiKey": true,
+    "neverPutApiKeyInUrl": true,
+    "siteOwnerDoesNotPayPlayerTokens": true
+  }
+}

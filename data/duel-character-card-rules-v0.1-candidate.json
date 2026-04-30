@@ -1,0 +1,290 @@
+{
+  "schema": "jjk-duel-character-card-rules",
+  "version": "0.1.0",
+  "status": "CANDIDATE",
+  "description": "Character eligibility and weighting governance for duel hand candidates. This file does not define combat effects, AP/CE costs, or win conditions.",
+  "notes": [
+    "Eligibility filter runs before character weighting.",
+    "Illegal cards should not enter the final hand candidate pool.",
+    "This is not a deck/draw/discard system.",
+    "Rules are CANDIDATE and preserve existing action effects."
+  ],
+  "defaults": {
+    "enabled": true,
+    "baseWeight": 1,
+    "tagBoost": 1.75,
+    "tagPenalty": -1.1,
+    "archetypeBoost": 2.25,
+    "exclusiveBoost": 2.5,
+    "minimumWeight": 0.05
+  },
+  "archetypes": {
+    "zero_ce_heavenly_restriction": {
+      "label": "零咒力 / 天与咒缚 / 咒具体术",
+      "profilePatch": {
+        "hasCe": false,
+        "ceLimited": true,
+        "hasInnateTechnique": false,
+        "hasDomainAccess": false,
+        "isZeroCe": true,
+        "usesCursedTools": true
+      },
+      "allowTags": ["零咒力", "zero_ce", "体术", "physical", "咒具", "cursed_tool", "突入", "必中规避", "结界", "领域应对", "求生", "防御", "manual_attack", "domain_survival"],
+      "denyTags": ["宿傩", "五条", "日车", "秤", "伏黑", "真人", "乙骨", "咒灵", "sukuna", "gojo", "trial_owner", "jackpot_owner", "limitless", "shrine", "slash", "normal_ce_required", "咒力强化", "咒力", "术式", "领域展开", "无下限", "苍", "赫", "无量空处", "解", "捌", "伏魔御厨子", "审判", "jackpot"],
+      "denyCardTypes": ["domain", "rule_trial", "jackpot"],
+      "forceAllowSourceActionIds": ["defensive_frame", "residue_reading", "zero_ce_domain_bypass", "domain_survival_guard", "zero_ce_entry", "sure_hit_bypass_counter", "cursed_tool_combo", "barrier_boundary_break"],
+      "weightBoostTags": ["零咒力", "zero_ce", "咒具", "cursed_tool", "体术", "physical", "必中规避", "结界", "突入", "防御"],
+      "weightPenaltyTags": ["咒力", "术式", "领域", "审判", "jackpot"]
+    },
+    "sukuna_slash": {
+      "label": "宿傩 / 御厨子 / 斩击",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true
+      },
+      "allowTags": ["宿傩", "解", "捌", "斩击", "伏魔御厨子", "开放领域", "领域压制", "sukuna", "slash", "shrine", "open_domain"],
+      "weightBoostTags": ["宿傩", "解", "捌", "斩击", "伏魔御厨子", "开放领域", "领域压制"]
+    },
+    "gojo_limitless": {
+      "label": "五条 / 无下限 / 六眼",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true
+      },
+      "allowTags": ["五条", "无下限", "六眼", "苍", "赫", "无量空处", "gojo", "limitless", "infinity", "blue", "red", "unlimited_void"],
+      "weightBoostTags": ["五条", "无下限", "六眼", "苍", "赫", "无量空处"]
+    },
+    "higuruma_trial_owner": {
+      "label": "日车 / 审判 / 没收",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true
+      },
+      "allowTags": ["日车", "审判", "证据", "罪状", "判决", "没收", "trial", "evidence", "verdict", "confiscation"],
+      "weightBoostTags": ["日车", "审判", "证据", "罪状", "判决", "没收"]
+    },
+    "hakari_jackpot_owner": {
+      "label": "秤 / 坐杀搏徒 / 中奖",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true
+      },
+      "allowTags": ["秤", "坐杀搏徒", "jackpot", "演出", "中奖", "期待度", "概率", "循环", "sustain"],
+      "weightBoostTags": ["秤", "坐杀搏徒", "jackpot", "演出", "中奖", "期待度", "概率", "稳定"]
+    },
+    "yuji_soul_melee": {
+      "label": "虎杖 / 体术 / 灵魂打击",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": false
+      },
+      "allowTags": ["虎杖", "itadori", "体术", "连击", "爆发", "延迟", "窗口", "灵魂打击", "半人半咒", "black_flash_window"],
+      "weightBoostTags": ["虎杖", "体术", "连击", "爆发", "延迟", "窗口", "灵魂打击"]
+    },
+    "ten_shadows": {
+      "label": "伏黑 / 十种影法术 / 式神",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true
+      },
+      "allowTags": ["伏黑", "十种影法术", "式神", "影", "未完成领域", "shikigami", "shadow", "incomplete_domain"],
+      "weightBoostTags": ["伏黑", "式神", "影", "未完成领域"]
+    },
+    "mahito_soul_transfiguration": {
+      "label": "真人 / 灵魂 / 无为转变",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true,
+        "isCurse": true
+      },
+      "allowTags": ["真人", "灵魂", "无为转变", "改造人", "躯体", "咒灵", "soul", "transfiguration", "curse"],
+      "weightBoostTags": ["真人", "灵魂", "无为转变", "改造人", "咒灵"]
+    },
+    "okkotsu_rika_copy": {
+      "label": "乙骨 / 里香 / 复制候选",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": true
+      },
+      "allowTags": ["乙骨", "里香", "复制", "候选", "反转术式", "咒力储备", "rika", "copy_candidate", "reverse_output"],
+      "weightBoostTags": ["乙骨", "里香", "复制", "反转术式", "咒力储备"]
+    },
+    "curse_spirit_general": {
+      "label": "咒灵通用",
+      "profilePatch": {
+        "isCurse": true
+      },
+      "denyTags": ["日车", "人类辩护", "咒具连击", "咒具", "cursed_tool"],
+      "weightBoostTags": ["咒灵", "瘴气", "残秽", "再生", "领域本能"]
+    }
+  },
+  "characters": {
+    "maki_zenin_culling": {
+      "aliases": ["maki", "zenin_maki", "禅院真希", "真希"],
+      "archetypes": ["zero_ce_heavenly_restriction"],
+      "profilePatch": {
+        "hasCe": false,
+        "ceLimited": true,
+        "hasInnateTechnique": false,
+        "hasDomainAccess": false,
+        "isZeroCe": true,
+        "usesCursedTools": true
+      },
+      "forceDenySourceActionIds": ["ce_reinforcement", "ce_compression", "technique_interference", "forced_output", "domain_expand", "domain_clash", "dismantle_pressure", "cleave_adaptation", "shrine_slash_pressure", "open_domain_pressure", "infinity_guard", "lapse_blue_pressure", "reversal_red_burst", "unlimited_void_suppression", "present_evidence", "press_charge", "advance_trial", "request_verdict", "press_contradiction", "lock_charge", "organize_evidence_chain", "enforce_confiscation", "advance_jackpot", "claim_jackpot", "accelerate_reach", "stabilize_probability", "risky_reach_loop", "jackpot_pressure"],
+      "forceAllowTags": ["零咒力", "咒具", "体术", "必中规避"]
+    },
+    "toji_fushiguro_hidden_inventory": {
+      "aliases": ["toji", "fushiguro_toji", "伏黑甚尔", "甚尔"],
+      "archetypes": ["zero_ce_heavenly_restriction"],
+      "profilePatch": {
+        "hasCe": false,
+        "ceLimited": true,
+        "hasInnateTechnique": false,
+        "hasDomainAccess": false,
+        "isZeroCe": true,
+        "usesCursedTools": true
+      },
+      "forceAllowTags": ["零咒力", "咒具", "体术", "必中规避"]
+    },
+    "toji_fushiguro_shibuya_revenant": {
+      "aliases": ["toji_shibuya", "toji", "fushiguro_toji", "伏黑甚尔（涩谷）", "伏黑甚尔", "甚尔"],
+      "archetypes": ["zero_ce_heavenly_restriction"],
+      "profilePatch": {
+        "hasCe": false,
+        "ceLimited": true,
+        "hasInnateTechnique": false,
+        "hasDomainAccess": false,
+        "isZeroCe": true,
+        "usesCursedTools": true
+      },
+      "forceAllowTags": ["零咒力", "咒具", "体术", "必中规避"]
+    },
+    "sukuna_heian_or_shinjuku": {
+      "aliases": ["sukuna", "两面宿傩", "宿傩"],
+      "archetypes": ["sukuna_slash"],
+      "techniqueFamilies": ["sukuna_slash", "shrine", "open_domain"],
+      "forceAllowTags": ["宿傩", "斩击", "伏魔御厨子", "开放领域"]
+    },
+    "gojo_satoru_shinjuku": {
+      "aliases": ["gojo", "五条悟", "五条"],
+      "archetypes": ["gojo_limitless"],
+      "techniqueFamilies": ["limitless", "six_eyes", "unlimited_void"],
+      "forceAllowTags": ["五条", "无下限", "苍", "赫", "无量空处"]
+    },
+    "higuruma_hiromi_culling": {
+      "aliases": ["higuruma", "日车宽见", "日车"],
+      "archetypes": ["higuruma_trial_owner"],
+      "techniqueFamilies": ["rule_trial", "judgment", "confiscation"],
+      "forceAllowTags": ["日车", "审判", "证据", "判决", "没收"]
+    },
+    "hakari_kinji_jackpot": {
+      "aliases": ["hakari", "秤金次", "秤"],
+      "archetypes": ["hakari_jackpot_owner"],
+      "techniqueFamilies": ["jackpot_rule", "probability", "pachinko"],
+      "forceAllowTags": ["秤", "jackpot", "演出", "中奖"]
+    },
+    "megumi_fushiguro_culling": {
+      "aliases": ["megumi", "伏黑惠", "伏黑"],
+      "archetypes": ["ten_shadows"],
+      "techniqueFamilies": ["ten_shadows", "shikigami", "incomplete_domain"],
+      "forceAllowTags": ["伏黑", "式神", "影", "未完成领域"]
+    },
+    "mahito_shibuya": {
+      "aliases": ["mahito", "真人"],
+      "archetypes": ["mahito_soul_transfiguration", "curse_spirit_general"],
+      "techniqueFamilies": ["soul_transfiguration", "self_embodiment"],
+      "forceAllowTags": ["真人", "灵魂", "改造人", "咒灵"]
+    },
+    "yuta_okkotsu_shinjuku": {
+      "aliases": ["yuta", "乙骨忧太", "乙骨"],
+      "archetypes": ["okkotsu_rika_copy"],
+      "techniqueFamilies": ["rika", "copy_candidate", "reverse_output"],
+      "forceAllowTags": ["乙骨", "里香", "复制", "反转术式"]
+    },
+    "yuta_okkotsu_volume0_true_rika": {
+      "aliases": ["yuta_volume0", "0卷乙骨"],
+      "archetypes": ["okkotsu_rika_copy"],
+      "techniqueFamilies": ["rika", "copy_candidate", "reverse_output"],
+      "forceAllowTags": ["乙骨", "里香", "复制", "反转术式"]
+    },
+    "yuji_itadori_shinjuku": {
+      "aliases": ["yuji", "itadori", "虎杖悠仁", "虎杖", "新宿虎杖"],
+      "archetypes": ["yuji_soul_melee"],
+      "techniqueFamilies": ["soul_melee", "black_flash_window", "bloodline_sukuna_trace"],
+      "forceAllowTags": ["虎杖", "体术", "连击", "爆发", "延迟", "窗口", "灵魂打击"]
+    },
+    "yuji_itadori_after68": {
+      "aliases": ["yuji_after68", "itadori_after68", "虎天帝", "68年后虎杖", "虎杖悠仁（68年后）"],
+      "archetypes": ["yuji_soul_melee"],
+      "techniqueFamilies": ["soul_melee", "black_flash_window", "post_canon_exception"],
+      "forceAllowTags": ["虎杖", "体术", "连击", "爆发", "延迟", "窗口", "灵魂打击"]
+    }
+  },
+  "sourceActionRules": {
+    "ce_reinforcement": { "tags": ["咒力", "normal_ce_required"], "requiresCe": true, "forbiddenArchetypes": ["zero_ce_heavenly_restriction"] },
+    "ce_compression": { "tags": ["咒力", "normal_ce_required"], "requiresCe": true, "forbiddenArchetypes": ["zero_ce_heavenly_restriction"] },
+    "technique_interference": { "tags": ["术式", "normal_ce_required"], "requiresCe": true, "requiresInnateTechnique": true, "forbiddenArchetypes": ["zero_ce_heavenly_restriction"] },
+    "forced_output": { "tags": ["术式", "咒力", "normal_ce_required"], "requiresCe": true, "requiresInnateTechnique": true, "forbiddenArchetypes": ["zero_ce_heavenly_restriction"] },
+    "domain_expand": { "tags": ["领域展开", "domain_activation"], "requiresDomainAccess": true, "forbiddenArchetypes": ["zero_ce_heavenly_restriction"] },
+    "domain_compress": { "tags": ["领域", "domain_maintenance"], "requiresDomainAccess": true },
+    "domain_force_sustain": { "tags": ["领域", "domain_maintenance"], "requiresDomainAccess": true },
+    "domain_release": { "tags": ["领域", "domain_maintenance"], "requiresDomainAccess": true },
+    "domain_clash": { "tags": ["领域对抗", "domain_activation"], "requiresDomainAccess": true, "forbiddenArchetypes": ["zero_ce_heavenly_restriction"] },
+    "zero_ce_domain_bypass": { "tags": ["零咒力", "必中规避", "anti_domain_bypass"], "requiresZeroCe": true, "exclusiveToArchetypes": ["zero_ce_heavenly_restriction"] },
+    "domain_survival_guard": { "tags": ["领域应对", "求生", "domain_survival"] },
+    "divergent_fist_delay": { "tags": ["虎杖", "体术", "延迟"], "exclusiveToArchetypes": ["yuji_soul_melee"] },
+    "melee_chain_pressure": { "tags": ["虎杖", "体术", "连击"], "exclusiveToArchetypes": ["yuji_soul_melee"] },
+    "ce_burst_strike": { "tags": ["虎杖", "咒力", "爆发"], "exclusiveToArchetypes": ["yuji_soul_melee"], "requiresCe": true },
+    "impact_timing_window": { "tags": ["虎杖", "窗口", "爆发"], "exclusiveToArchetypes": ["yuji_soul_melee"] },
+    "dismantle_pressure": { "tags": ["宿傩", "解", "斩击", "sukuna", "slash"], "exclusiveToArchetypes": ["sukuna_slash"] },
+    "cleave_adaptation": { "tags": ["宿傩", "捌", "斩击", "sukuna", "slash"], "exclusiveToArchetypes": ["sukuna_slash"] },
+    "shrine_slash_pressure": { "tags": ["宿傩", "伏魔御厨子", "领域压制", "sukuna", "shrine"], "exclusiveToArchetypes": ["sukuna_slash"] },
+    "open_domain_pressure": { "tags": ["宿傩", "开放领域", "sukuna", "open_domain"], "exclusiveToArchetypes": ["sukuna_slash"], "requiresDomainAccess": true },
+    "infinity_guard": { "tags": ["五条", "无下限", "limitless", "infinity"], "exclusiveToArchetypes": ["gojo_limitless"] },
+    "lapse_blue_pressure": { "tags": ["五条", "苍", "limitless", "blue"], "exclusiveToArchetypes": ["gojo_limitless"] },
+    "reversal_red_burst": { "tags": ["五条", "赫", "limitless", "red"], "exclusiveToArchetypes": ["gojo_limitless"] },
+    "unlimited_void_suppression": { "tags": ["五条", "无量空处", "unlimited_void"], "exclusiveToArchetypes": ["gojo_limitless"], "requiresDomainAccess": true },
+    "press_contradiction": { "tags": ["日车", "审判", "证据"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "lock_charge": { "tags": ["日车", "审判", "罪状"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "organize_evidence_chain": { "tags": ["日车", "审判", "证据链"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "enforce_confiscation": { "tags": ["日车", "审判", "没收"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "present_evidence": { "tags": ["日车", "审判", "证据"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "press_charge": { "tags": ["日车", "审判", "指控"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "advance_trial": { "tags": ["日车", "审判"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "request_verdict": { "tags": ["日车", "审判", "判决"], "exclusiveToArchetypes": ["higuruma_trial_owner"] },
+    "accelerate_reach": { "tags": ["秤", "jackpot", "演出"], "exclusiveToArchetypes": ["hakari_jackpot_owner"] },
+    "stabilize_probability": { "tags": ["秤", "jackpot", "期待度"], "exclusiveToArchetypes": ["hakari_jackpot_owner"] },
+    "risky_reach_loop": { "tags": ["秤", "jackpot", "再演出"], "exclusiveToArchetypes": ["hakari_jackpot_owner"] },
+    "jackpot_pressure": { "tags": ["秤", "jackpot", "中奖"], "exclusiveToArchetypes": ["hakari_jackpot_owner"] },
+    "advance_jackpot": { "tags": ["秤", "jackpot", "演出"], "exclusiveToArchetypes": ["hakari_jackpot_owner"] },
+    "claim_jackpot": { "tags": ["秤", "jackpot", "中奖"], "exclusiveToArchetypes": ["hakari_jackpot_owner"] },
+    "shikigami_intercept": { "tags": ["伏黑", "式神"], "exclusiveToArchetypes": ["ten_shadows"] },
+    "shadow_storage": { "tags": ["伏黑", "影"], "exclusiveToArchetypes": ["ten_shadows"] },
+    "shadow_terrain_pressure": { "tags": ["伏黑", "影"], "exclusiveToArchetypes": ["ten_shadows"] },
+    "incomplete_domain_shadow_support": { "tags": ["伏黑", "影", "未完成领域"], "exclusiveToArchetypes": ["ten_shadows"] },
+    "soul_touch_pressure": { "tags": ["真人", "灵魂"], "exclusiveToArchetypes": ["mahito_soul_transfiguration"] },
+    "body_morph_guard": { "tags": ["真人", "躯体"], "exclusiveToArchetypes": ["mahito_soul_transfiguration"] },
+    "transfigured_swarm": { "tags": ["真人", "改造人"], "exclusiveToArchetypes": ["mahito_soul_transfiguration"] },
+    "self_embodiment_pressure": { "tags": ["真人", "领域", "灵魂"], "exclusiveToArchetypes": ["mahito_soul_transfiguration"], "requiresDomainAccess": true },
+    "rika_assist": { "tags": ["乙骨", "里香"], "exclusiveToArchetypes": ["okkotsu_rika_copy"] },
+    "reverse_output_support": { "tags": ["乙骨", "反转术式"], "exclusiveToArchetypes": ["okkotsu_rika_copy"] },
+    "copy_stock_candidate": { "tags": ["乙骨", "复制"], "exclusiveToArchetypes": ["okkotsu_rika_copy"] },
+    "ce_reserve_release": { "tags": ["乙骨", "咒力储备"], "exclusiveToArchetypes": ["okkotsu_rika_copy"] },
+    "zero_ce_entry": { "tags": ["零咒力", "体术", "突入"], "requiresZeroCe": true, "exclusiveToArchetypes": ["zero_ce_heavenly_restriction"] },
+    "sure_hit_bypass_counter": { "tags": ["零咒力", "必中规避", "反击"], "requiresZeroCe": true, "exclusiveToArchetypes": ["zero_ce_heavenly_restriction"] },
+    "cursed_tool_combo": { "tags": ["咒具", "体术", "零咒力"], "requiresCursedTool": true, "exclusiveToArchetypes": ["zero_ce_heavenly_restriction"] },
+    "barrier_boundary_break": { "tags": ["零咒力", "结界", "突破"], "requiresZeroCe": true, "exclusiveToArchetypes": ["zero_ce_heavenly_restriction"] },
+    "curse_miasma": { "tags": ["咒灵", "瘴气"], "exclusiveToArchetypes": ["curse_spirit_general", "mahito_soul_transfiguration"] },
+    "residue_distortion": { "tags": ["咒灵", "残秽"], "exclusiveToArchetypes": ["curse_spirit_general", "mahito_soul_transfiguration"] },
+    "domain_instinct_resistance": { "tags": ["咒灵", "领域本能"], "exclusiveToArchetypes": ["curse_spirit_general", "mahito_soul_transfiguration"] },
+    "curse_regen_candidate": { "tags": ["咒灵", "再生"], "exclusiveToArchetypes": ["curse_spirit_general", "mahito_soul_transfiguration"] }
+  }
+}
