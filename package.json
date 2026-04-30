@@ -2,6 +2,9 @@
   "type": "module",
   "private": true,
   "description": "Static GitHub Pages site. The package file also defines the Cloudflare Worker AI SDK dependency.",
+  "scripts": {
+    "start:lighthouse": "node server/lighthouse-server.js"
+  },
   "dependencies": {
     "openai": "^6.9.1"
   }

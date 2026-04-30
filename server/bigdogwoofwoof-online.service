@@ -1,0 +1,16 @@
+[Unit]
+Description=Bigdogwoofwoof online battle backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/bigdogwoofwoof
+EnvironmentFile=/opt/bigdogwoofwoof/.env
+ExecStart=/usr/bin/npm run start:lighthouse
+Restart=always
+RestartSec=3
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
