@@ -490,11 +490,13 @@ async function handleOperation(env, body) {
     if (!["preparing", "reviewing"].includes(room.phase)) return json({ ok: false, error: "只有准备阶段或复盘阶段可以踢出玩家。" }, 409);
     const target = normalizeSide(payload.targetSide || "right");
     if (target === "left") return json({ ok: false, error: "不能踢出房主。" }, 409);
+    const targetPlayerId = room.players[target]?.playerId || "";
+    if (!targetPlayerId) return json({ ok: false, error: "该位置当前没有可踢出的玩家。" }, 409);
     room.players[target] = emptyPlayer(target);
     room.readyState.rightCharacterLocked = false;
     room.turnState.actions.right = [];
     room.turnState.locks.right = false;
-    appendLog(room, "player_kicked", "房主已踢出右方玩家。");
+    appendLog(room, "player_kicked", "房主已踢出右方玩家。", { targetSide: target, targetPlayerId });
     const saved = await writeRoom(env, room);
     return json({ ok: true, room: snapshot(saved, side), side });
   }

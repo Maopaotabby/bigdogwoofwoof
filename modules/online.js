@@ -565,12 +565,14 @@ function kickPlayer(roomId, targetSide = "right", options = {}) {
   if (!["preparing", "reviewing"].includes(room.phase)) throw new Error("只有准备阶段或复盘阶段可以踢出玩家。");
   const side = normalizeSide(targetSide);
   if (side === "left") throw new Error("不能踢出房主。");
+  const targetPlayerId = room.players[side]?.playerId || "";
+  if (!targetPlayerId) throw new Error("该位置当前没有可踢出的玩家。");
   room.players[side] = createEmptyPlayer(side);
   room.readyState.rightCharacterLocked = false;
   room.turnState.actions.right = [];
   room.turnState.locks.right = false;
   room.phase = "preparing";
-  appendLog(room, "player_kicked", "右方玩家已被房主移出房间。");
+  appendLog(room, "player_kicked", "右方玩家已被房主移出房间。", { targetSide: side, targetPlayerId });
   return Promise.resolve(snapshot(writeLocalRoom(room), requester));
 }
 
@@ -819,6 +821,12 @@ function handleRemovedFromRoom(room = {}) {
   if (normalizeRoomId(room.roomId) !== normalizeRoomId(uiState.roomId)) return false;
   if (getPlayerSide(room, uiState.playerId)) return false;
   if (room.phase === "ended") return false;
+  if (!wasCurrentPlayerKicked(room)) {
+    clearRemembered();
+    stopPolling();
+    render({});
+    return true;
+  }
   if (removalNoticeShown) return true;
   removalNoticeShown = true;
   clearRemembered();
@@ -832,6 +840,14 @@ function handleRemovedFromRoom(room = {}) {
     }
   }, 80);
   return true;
+}
+
+function wasCurrentPlayerKicked(room = {}) {
+  return (Array.isArray(room.logs) ? room.logs : []).some((entry) => (
+    entry?.type === "player_kicked" &&
+    entry?.targetPlayerId &&
+    entry.targetPlayerId === uiState.playerId
+  ));
 }
 
 function maybeEnterBattleView(room = {}, side = "") {
