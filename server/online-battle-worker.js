@@ -7,6 +7,16 @@ const DEFAULT_AI_TIMEOUT_MS = 18000;
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const memoryRooms = new Map();
 
+function logAiEvent(level, event, detail = {}) {
+  const payload = redactSecrets({
+    event,
+    at: new Date().toISOString(),
+    ...detail
+  });
+  const logger = level === "error" ? console.error : console.log;
+  logger("[jjk-online-ai]", JSON.stringify(payload));
+}
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -34,6 +44,12 @@ function otherSide(side) {
 function normalizePhase(value) {
   const text = String(value || "").trim();
   return PHASES.has(text) ? text : "preparing";
+}
+
+function normalizeAiProvider(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (["openai", "chatgpt", "gpt"].includes(text)) return "openai";
+  return "ark";
 }
 
 function nowMs() {
@@ -154,6 +170,12 @@ function createBattleSeedState(room) {
   };
 }
 
+function normalizeAiSettings(value) {
+  return {
+    provider: normalizeAiProvider(value?.provider || value?.aiProvider || "ark")
+  };
+}
+
 function normalizeRoom(room) {
   if (!room || typeof room !== "object") return null;
   const normalized = {
@@ -166,6 +188,7 @@ function normalizeRoom(room) {
     revision: Math.max(1, Number(room.revision) || 1),
     ownerPlayerId: String(room.ownerPlayerId || room.players?.left?.playerId || "").slice(0, 120),
     round: Math.max(1, Number(room.round) || 1),
+    aiSettings: normalizeAiSettings(room.aiSettings || { provider: room.aiProvider }),
     players: {
       left: { ...emptyPlayer("left"), ...(room.players?.left || {}), side: "left", role: "owner" },
       right: { ...emptyPlayer("right"), ...(room.players?.right || {}), side: "right", role: "guest" }
@@ -347,31 +370,61 @@ function parseAiText(value) {
 }
 
 async function resolveTurnWithAi(env, room) {
-  const model = env.AI_MODEL || "doubao-seed-2-0-mini-260215";
-  const baseURL = env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
+  const provider = normalizeAiProvider(room.aiSettings?.provider || env.ONLINE_AI_PROVIDER || "ark");
+  const usingOpenAi = provider === "openai";
+  const model = usingOpenAi
+    ? env.OPENAI_MODEL || env.CHATGPT_MODEL || "gpt-5-mini"
+    : env.ARK_AI_MODEL || env.AI_MODEL || "doubao-seed-2-0-mini-260215";
+  const baseURL = usingOpenAi
+    ? env.OPENAI_BASE_URL || "https://api.openai.com/v1"
+    : env.ARK_AI_BASE_URL || env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
   const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000);
-  const apiKey = String(env.AI_API_KEY || "").trim();
+  const apiKey = String(usingOpenAi
+    ? env.OPENAI_API_KEY || env.CHATGPT_API_KEY || ""
+    : env.ARK_AI_API_KEY || env.AI_API_KEY || "").trim();
   if (!apiKey) {
+    logAiEvent("info", "fallback_no_api_key", { roomId: room.roomId, round: room.round, provider });
     return {
       source: "local_fallback",
-      summary: `第 ${room.round} 回合已接收双方锁定行动；服务器未配置 AI_API_KEY，已使用占位结算。`,
+      provider,
+      summary: `第 ${room.round} 回合已接收双方锁定行动；服务器未配置 ${usingOpenAi ? "OPENAI_API_KEY" : "ARK_AI_API_KEY / AI_API_KEY"}，已使用占位结算。`,
       actions: redactSecrets(room.turnState.actions)
     };
   }
   const client = new OpenAI({ apiKey, baseURL });
   const startedAt = nowMs();
-  const completion = await withTimeout(client.chat.completions.create({
+  const maxTokens = Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700)));
+  const completionOptions = {
     model,
     messages: buildAiPrompt(room),
-    temperature: Number(env.AI_TEMPERATURE || 0.4),
-    max_tokens: Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700))),
     response_format: { type: "json_object" }
-  }), timeoutMs, `AI 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
+  };
+  if (usingOpenAi) {
+    completionOptions.max_completion_tokens = maxTokens;
+  } else {
+    completionOptions.temperature = Number(env.AI_TEMPERATURE || 0.4);
+    completionOptions.max_tokens = maxTokens;
+  }
+  const completion = await withTimeout(client.chat.completions.create(completionOptions), timeoutMs, `AI 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
   const text = completion.choices?.[0]?.message?.content || "";
   const parsed = parseAiText(text) || { summary: `第 ${room.round} 回合 AI 已返回，但内容为空。`, winnerHint: "undecided" };
+  logAiEvent("info", "ai_response", {
+    roomId: room.roomId,
+    round: room.round,
+    provider,
+    baseURL,
+    model,
+    durationMs: nowMs() - startedAt,
+    timeoutMs,
+    summary: parsed.summary,
+    leftEffect: parsed.leftEffect,
+    rightEffect: parsed.rightEffect,
+    winnerHint: parsed.winnerHint,
+    usage: completion.usage || null
+  });
   return {
     source: "server_ai",
-    provider: "openai_compatible",
+    provider,
     model,
     summary: parsed.summary,
     leftEffect: parsed.leftEffect,
@@ -389,6 +442,7 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
   room.phase = "turn_resolving";
   room.turnState.aiStatus = "resolving";
   const beforeRound = room.round;
+  appendLog(room, "ai_resolve_started", `第 ${beforeRound} 回合 AI 结算已开始。`, { turn: beforeRound });
   try {
     const result = await resolveTurnWithAi(env, room);
     room.turnState.result = result;
@@ -398,6 +452,11 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
     appendLog(room, "turn_resolved", result.summary || `第 ${beforeRound} 回合已结算。`, { turn: beforeRound, aiSource: result.source });
   } catch (error) {
     const summary = `第 ${beforeRound} 回合 AI 结算失败，已保留双方行动并进入下一回合。原因：${String(error?.message || error).slice(0, 160)}`;
+    logAiEvent("error", "ai_error", {
+      roomId: room.roomId,
+      round: beforeRound,
+      error: String(error?.message || error).slice(0, 500)
+    });
     room.turnState.result = { source: "ai_error_fallback", summary, actions: redactSecrets(room.turnState.actions) };
     room.turnState.aiStatus = "ai_error_fallback";
     room.reviewState.lastAiDebug = { source: "ai_error_fallback", error: String(error?.message || error).slice(0, 200) };
@@ -411,7 +470,24 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
   return room;
 }
 
-async function handleOperation(env, body) {
+async function resolvePersistedTurnIfReady(env, roomId, viewerSide = "left") {
+  const room = await readRoom(env, roomId);
+  if (!room || !hasBothLockedActions(room)) return null;
+  await resolveTurnIfReady(env, room, viewerSide);
+  return writeRoom(env, room, { preservePlayers: true });
+}
+
+function queueTurnResolution(ctx, env, roomId, viewerSide) {
+  const task = resolvePersistedTurnIfReady(env, roomId, viewerSide).catch((error) => {
+    logAiEvent("error", "ai_background_task_error", {
+      roomId,
+      error: String(error?.message || error).slice(0, 500)
+    });
+  });
+  if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(task);
+}
+
+async function handleOperation(env, body, ctx) {
   const requestId = requestIdFrom(body);
   if (body.protocol !== PROTOCOL) return json({ ok: false, error: "协议不匹配。", requestId }, 400);
   const operation = String(body.operation || "");
@@ -429,6 +505,10 @@ async function handleOperation(env, body) {
     aiProvider: env.AI_PROVIDER || "openai_compatible",
     aiBaseURL: env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
     aiModel: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
+    availableAiProviders: {
+      ark: Boolean(String(env.ARK_AI_API_KEY || env.AI_API_KEY || "").trim()),
+      openai: Boolean(String(env.OPENAI_API_KEY || env.CHATGPT_API_KEY || "").trim())
+    },
     aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000)
   });
 
@@ -522,9 +602,12 @@ async function handleOperation(env, body) {
     applyPhaseTransition(room);
     let saved = await writeRoom(env, room, { preservePlayers: true, preserveTurnLocks: true });
     const shouldResolve = hasBothLockedActions(saved);
-    if (hasBothLockedActions(saved)) {
-      await resolveTurnIfReady(env, saved, side);
-      saved = await writeRoom(env, saved, { preservePlayers: true });
+    if (shouldResolve) {
+      saved.phase = "turn_resolving";
+      saved.turnState.aiStatus = "queued";
+      appendLog(saved, "ai_resolve_queued", `第 ${saved.round} 回合双方已锁定，AI 结算已进入后台队列。`, { turn: saved.round });
+      saved = await writeRoom(env, saved, { preservePlayers: true, preserveTurnLocks: true });
+      queueTurnResolution(ctx, env, saved.roomId, side);
     }
     return json({
       ok: true,
@@ -625,7 +708,7 @@ async function handleOperation(env, body) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return json({ ok: true });
     if (request.method !== "POST") return json({ ok: false, error: "Only POST is supported." }, 405);
     let body;
@@ -635,7 +718,7 @@ export default {
       return json({ ok: false, error: "JSON 请求无效。" }, 400);
     }
     try {
-      return await handleOperation(env, body);
+      return await handleOperation(env, body, ctx);
     } catch (error) {
       return json({
         ok: false,
