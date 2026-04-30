@@ -356,7 +356,7 @@ async function handleOperation(env, body) {
     room.players.left.playerId = room.players.left.playerId || playerId;
     room.players.left.connected = true;
     room.players.left.lastSeenAt = nowMs();
-    appendLog(room, "room_created", "房间已创建。");
+    appendLog(room, "room_created", "房间已创建。", { side: "left", playerId: room.players.left.playerId });
     const saved = await writeRoom(env, room);
     return json({ ok: true, room: snapshot(saved, "left"), side: "left" });
   }
@@ -380,13 +380,14 @@ async function handleOperation(env, body) {
     if (existing) {
       room.players[existing].connected = true;
       room.players[existing].lastSeenAt = nowMs();
+      appendLog(room, "player_reconnected", `${existing === "left" ? "左方" : "右方"}玩家已重新连接。`, { side: existing, playerId });
       const saved = await writeRoom(env, room);
       return json({ ok: true, room: snapshot(saved, existing), side: existing });
     }
     if (room.players.right.playerId) return json({ ok: false, error: "房间已满。" }, 409);
     room.players.right = { ...emptyPlayer("right"), ...(payload.player || {}), side: "right", role: "guest", playerId, connected: true, lastSeenAt: nowMs() };
     room.phase = "preparing";
-    appendLog(room, "player_joined", "右方玩家已加入房间。");
+    appendLog(room, "player_joined", "右方玩家已加入房间。", { side: "right", playerId });
     const saved = await writeRoom(env, room);
     return json({ ok: true, room: snapshot(saved, "right"), side: "right" });
   }

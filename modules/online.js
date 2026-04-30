@@ -415,13 +415,14 @@ function joinRoom(roomId, options = {}) {
   if (existingSide) {
     room.players[existingSide].connected = true;
     room.players[existingSide].lastSeenAt = nowMs();
+    appendLog(room, "player_reconnected", `${existingSide === "left" ? "左方" : "右方"}玩家已重新连接。`, { side: existingSide, playerId });
     const saved = writeLocalRoom(room);
     remember(saved.roomId, playerId, existingSide, settings);
     return Promise.resolve(snapshot(saved, existingSide));
   }
   if (room.players.right.playerId) return Promise.reject(new Error("房间已满。"));
   room.players.right = makePlayer("right", { ...options, playerId });
-  appendLog(room, "player_joined", "加入者已进入房间。");
+  appendLog(room, "player_joined", "加入者已进入房间。", { side: "right", playerId });
   const saved = writeLocalRoom(room);
   remember(saved.roomId, playerId, "right", settings);
   return Promise.resolve(snapshot(saved, "right"));
@@ -843,11 +844,13 @@ function handleRemovedFromRoom(room = {}) {
 }
 
 function wasCurrentPlayerKicked(room = {}) {
-  return (Array.isArray(room.logs) ? room.logs : []).some((entry) => (
-    entry?.type === "player_kicked" &&
-    entry?.targetPlayerId &&
-    entry.targetPlayerId === uiState.playerId
-  ));
+  const logs = Array.isArray(room.logs) ? room.logs : [];
+  for (let index = logs.length - 1; index >= 0; index -= 1) {
+    const entry = logs[index];
+    if (entry?.type === "player_kicked" && entry?.targetPlayerId === uiState.playerId) return true;
+    if (["player_joined", "player_reconnected", "room_created"].includes(entry?.type) && entry?.playerId === uiState.playerId) return false;
+  }
+  return false;
 }
 
 function maybeEnterBattleView(room = {}, side = "") {
