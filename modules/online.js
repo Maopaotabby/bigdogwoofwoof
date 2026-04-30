@@ -1129,6 +1129,42 @@ function getUiElements() {
   };
 }
 
+function getOnlineCharacterCards() {
+  const characterApi = globalThis.JJKCharacter;
+  if (typeof characterApi?.getDuelCharacterCards === "function") {
+    try {
+      return characterApi.getDuelCharacterCards() || [];
+    } catch (error) {
+      return [];
+    }
+  }
+  if (typeof globalThis.getDuelCharacterCards === "function") {
+    try {
+      return globalThis.getDuelCharacterCards() || [];
+    } catch (error) {
+      return [];
+    }
+  }
+  return [];
+}
+
+function getOnlineCharacterOptionLabel(card) {
+  const name = String(card?.displayName || card?.name || card?.characterId || card?.id || "未命名角色").trim();
+  const grade = String(card?.officialGrade || card?.visibleGrade || card?.powerTier || "").trim();
+  const custom = card?.customDuel ? "自定义" : "官方";
+  return [name, grade, custom].filter(Boolean).join(" · ");
+}
+
+function buildOnlineCharacterOptions(cards = []) {
+  return cards
+    .filter((card) => card?.characterId || card?.id)
+    .map((card) => {
+      const id = String(card.characterId || card.id || "").slice(0, 120);
+      return `<option value="${escapeHtml(id)}">${escapeHtml(getOnlineCharacterOptionLabel(card))}</option>`;
+    })
+    .join("");
+}
+
 function getSelectedOnlineCharacterId(side) {
   if (typeof document === "undefined") return "";
   syncOnlineCharacterSelects();
@@ -1141,24 +1177,37 @@ function getSelectedOnlineCharacterId(side) {
 
 function syncOnlineCharacterSelects(els = getUiElements()) {
   if (typeof document === "undefined") return;
-  const left = document.querySelector("#duelLeftSelect");
-  const right = document.querySelector("#duelRightSelect");
-  const syncOne = (target, source, fallback) => {
-    if (!target || !source) return;
+  const cards = getOnlineCharacterCards();
+  const options = buildOnlineCharacterOptions(cards);
+  const leftFallback = String(document.querySelector("#duelLeftSelect")?.value || cards[0]?.characterId || cards[0]?.id || "");
+  const rightFallback = String(document.querySelector("#duelRightSelect")?.value || cards[1]?.characterId || cards[1]?.id || leftFallback || "");
+  const syncOne = (target, fallback) => {
+    if (!target) return;
     const current = target.value || fallback || "";
-    target.innerHTML = source.innerHTML;
-    if (current && [...target.options].some((option) => option.value === current)) target.value = current;
+    if (target.dataset.optionSignature !== options) {
+      target.innerHTML = options || `<option value="">暂无可用角色</option>`;
+      target.dataset.optionSignature = options;
+    }
+    if (current && [...target.options].some((option) => option.value === current)) {
+      target.value = current;
+    } else if (target.options.length) {
+      target.value = target.options[0].value || "";
+    }
   };
-  syncOne(els?.createCharacter, left, left?.value);
-  syncOne(els?.joinCharacter, right, right?.value || left?.value);
+  syncOne(els?.createCharacter, leftFallback);
+  syncOne(els?.joinCharacter, rightFallback);
 }
 
 function getOnlineCharacterName(characterId) {
-  if (typeof document === "undefined") return "";
   const id = String(characterId || "");
-  const option = [...document.querySelectorAll("#duelLeftSelect option, #duelRightSelect option")]
-    .find((item) => item.value === id);
-  return option?.textContent?.trim() || id || "等待选择";
+  const card = getOnlineCharacterCards().find((item) => item?.characterId === id || item?.id === id);
+  if (card) return String(card.displayName || card.name || id);
+  if (typeof document !== "undefined") {
+    const option = [...document.querySelectorAll("#onlineCreateCharacterSelect option, #onlineJoinCharacterSelect option, #duelLeftSelect option, #duelRightSelect option")]
+      .find((item) => item.value === id);
+    if (option?.textContent?.trim()) return option.textContent.trim();
+  }
+  return id || "等待选择";
 }
 
 function getOnlineResourceText(snapshot, side) {
@@ -1426,6 +1475,10 @@ async function initializeOnlineUi() {
   setTimeout(() => syncOnlineCharacterSelects(els), 0);
   setTimeout(() => syncOnlineCharacterSelects(els), 1000);
   document.addEventListener("jjk-battle-page-state", () => syncOnlineCharacterSelects(els));
+  document.addEventListener("jjk-duel-character-pool-changed", () => {
+    syncOnlineCharacterSelects(els);
+    refreshOnlineUiFromState();
+  });
   [els.createCharacter, els.joinCharacter].forEach((select) => {
     select?.addEventListener("focus", () => syncOnlineCharacterSelects(els));
   });

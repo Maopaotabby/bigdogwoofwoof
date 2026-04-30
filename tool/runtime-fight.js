@@ -27,6 +27,17 @@ function addCustomDuelCharacter() {
     els.duelRightSelect.value = card.characterId;
   }
   renderDuelMode();
+  notifyDuelCharacterPoolChanged();
+}
+
+function notifyDuelCharacterPoolChanged() {
+  if (typeof document === "undefined") return;
+  document.dispatchEvent(new CustomEvent("jjk-duel-character-pool-changed", {
+    detail: {
+      customCount: state.customDuelCards.length,
+      totalCount: getDuelCharacterCards().length
+    }
+  }));
 }
 
 function readCustomDuelForm() {
@@ -507,6 +518,7 @@ function removeCustomDuelCharacter(characterId) {
   state.duelBattle = null;
   renderDuelCustomList();
   renderDuelMode();
+  notifyDuelCharacterPoolChanged();
 }
 
 function clearCustomDuelCharacters() {
@@ -518,6 +530,7 @@ function clearCustomDuelCharacters() {
   renderDuelCustomList();
   renderPendingCustomDuelHandList();
   renderDuelMode();
+  notifyDuelCharacterPoolChanged();
 }
 
 function addDuelSpecialTerm() {
