@@ -408,10 +408,9 @@
       conditionLines: [],
       riskLines: []
     };
-    var apCost = Number(baseView?.apCost ?? template?.apCost ?? action?.apCost ?? 1);
     var ceCost = Number(baseView?.ceCost ?? baseView?.costCe ?? 0);
     var numericPreview = buildDuelCardNumericPreview(actionOrCandidate, baseView?.actor || baseView?.characterCardProfile || actionOrCandidate?.characterCardProfile || {});
-    addPreviewLine(preview.resourceLines, "消耗：AP legacy " + formatPlainNumber(apCost || 0) + "，咒力 " + formatPlainNumber(ceCost || numericPreview.cost?.finalCost || 0) + "。");
+    addPreviewLine(preview.resourceLines, "消耗：咒力 " + formatPlainNumber(ceCost || numericPreview.cost?.finalCost || 0) + "。");
     (numericPreview.lines || []).forEach(function addNumericLine(line) {
       addPreviewLine(preview.combatLines, line);
     });

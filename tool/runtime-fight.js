@@ -2680,11 +2680,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   const selectedEntries = getDuelSelectedHandActions(battle, actorSide);
   const selectedIds = new Set(selectedEntries.map((entry) => entry.actionId || entry.id));
   const selectedOrderMap = new Map(selectedEntries.map((entry, index) => [entry.actionId || entry.id, index + 1]));
-  const apState = getDuelApState(battle, actorSide);
-  const apLimit = apState?.base || apState?.max || 2;
-  const apCurrent = Number(apState?.current ?? apLimit);
   const maxSelections = getDuelHandRules().hand?.maxSelectionsPerTurn || 1;
-  const selectedTotalAp = selectedEntries.reduce((total, entry) => total + Number(entry?.apCost || 0), 0);
   const selectedTotalCe = selectedEntries.reduce((total, entry) => total + Number(entry?.ceCost || 0), 0);
   const actorCe = Number(actor?.ce || 0);
   const actorMaxCe = Number(actor?.maxCe || 0);
@@ -2726,9 +2722,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
           <span class="duel-chip">R${escapeHtml(battle.round + 1)}</span>
           <span class="duel-chip">当前咒力：${escapeHtml(formatNumber(actorCe))} / ${escapeHtml(formatNumber(actorMaxCe))}</span>
           <span class="duel-chip">已选 CE：${escapeHtml(formatNumber(selectedTotalCe))}，预计剩余：${escapeHtml(formatNumber(projectedCe))}</span>
-          <span class="duel-chip">AP legacy：${escapeHtml(formatNumber(apCurrent))} / ${escapeHtml(formatNumber(apLimit))}</span>
           <span class="duel-chip">已选择手札：${escapeHtml(formatNumber(selectedEntries.length))} / ${escapeHtml(formatNumber(maxSelections))}</span>
-          <span class="duel-chip">旧 AP 记号：${escapeHtml(formatNumber(selectedTotalAp))}</span>
         </div>
       </div>
       <p class="duel-hand-pool-hint">${escapeHtml(getDuelHandPoolInfluenceText(battle))}</p>
@@ -3244,7 +3238,7 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
         ? "未选择手札时不会推进战斗。"
         : !selectedCount
           ? "当前没有选择手札；将以 0 咒力待机行动推进回合，避免流程卡死。"
-        : "将按顺序结算已选手札；普通出牌以咒力预算为主，AP 仅保留为 legacy 显示。";
+        : "将按顺序结算已选手札；普通出牌以咒力预算为主。";
   return `
     <div class="duel-auto-stage">
       <div class="duel-current-choice">

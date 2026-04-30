@@ -376,6 +376,15 @@ body.debug-mode .debug-entry-panel.debug-only {
     var(--paper);
   box-shadow: 0 1px 0 rgba(255, 253, 247, 0.75), 0 10px 22px rgba(53, 45, 32, 0.08);
   backdrop-filter: blur(10px);
+  transition: opacity 160ms ease, transform 180ms ease, box-shadow 180ms ease;
+  will-change: opacity, transform;
+}
+
+body.mobile-topbar-hidden .topbar {
+  opacity: 0;
+  transform: translateY(calc(-100% - 10px));
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .topbar h1 {
@@ -4054,8 +4063,6 @@ body.debug-mode .debug-toggle {
 
   .topbar {
     gap: 10px;
-    transition: opacity 160ms ease, transform 180ms ease, box-shadow 180ms ease;
-    will-change: opacity, transform;
   }
 
   .topbar h1 {
@@ -4115,13 +4122,6 @@ body.debug-mode .debug-toggle {
   .ai-free-actions {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  body.mobile-topbar-hidden .topbar {
-    opacity: 0;
-    transform: translateY(calc(-100% - 10px));
-    pointer-events: none;
-    box-shadow: none;
   }
 
   .tabs {

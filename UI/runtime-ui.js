@@ -1,32 +1,21 @@
 //--移动端顶栏与调试入口UI--//
 function initializeMobileTopbarBehavior() {
-  if (!els.topbar || typeof window.matchMedia !== "function") return;
+  if (!els.topbar) return;
 
-  const media = window.matchMedia(MOBILE_TOPBAR_QUERY);
   const syncForViewport = () => {
     state.lastMobileScrollY = getWindowScrollY();
-    if (!media.matches || state.lastMobileScrollY <= getMobileTopbarHideAfter()) {
+    if (state.lastMobileScrollY <= getMobileTopbarHideAfter()) {
       setMobileTopbarHidden(false);
     }
   };
 
-  window.addEventListener("scroll", () => updateMobileTopbarOnScroll(media), { passive: true });
-  if (typeof media.addEventListener === "function") {
-    media.addEventListener("change", syncForViewport);
-  } else if (typeof media.addListener === "function") {
-    media.addListener(syncForViewport);
-  }
+  window.addEventListener("scroll", updateMobileTopbarOnScroll, { passive: true });
+  window.addEventListener("resize", syncForViewport, { passive: true });
   syncForViewport();
 }
 
-function updateMobileTopbarOnScroll(media) {
+function updateMobileTopbarOnScroll() {
   const currentY = getWindowScrollY();
-  if (!media.matches) {
-    state.lastMobileScrollY = currentY;
-    setMobileTopbarHidden(false);
-    return;
-  }
-
   const hideAfter = getMobileTopbarHideAfter();
   if (currentY <= hideAfter) {
     state.lastMobileScrollY = currentY;
