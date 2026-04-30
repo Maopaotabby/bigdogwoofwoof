@@ -215,8 +215,42 @@ async function readRoom(env, roomId) {
   return room ? normalizeRoom(room) : null;
 }
 
-async function writeRoom(env, room) {
+function mergePreservedRoomState(base, current, options = {}) {
+  if (!current) return base;
+  if (options.preservePlayers) {
+    for (const side of ["left", "right"]) {
+      if (!base.players[side]?.playerId && current.players[side]?.playerId) {
+        base.players[side] = { ...current.players[side] };
+      }
+    }
+  }
+  if (options.preserveCharacterLocks) {
+    for (const side of ["left", "right"]) {
+      if (current.players[side]?.characterLocked || current.readyState?.[`${side}CharacterLocked`]) {
+        base.players[side].characterLocked = true;
+        base.readyState[`${side}CharacterLocked`] = true;
+      }
+    }
+    applyPhaseTransition(base);
+  }
+  if (options.preserveTurnLocks) {
+    for (const side of ["left", "right"]) {
+      if (current.turnState?.locks?.[side] && !base.turnState?.locks?.[side]) {
+        base.turnState.actions[side] = current.turnState.actions?.[side] || [];
+        base.turnState.locks[side] = true;
+        base.players[side].actionLocked = true;
+      }
+    }
+    applyPhaseTransition(base);
+  }
+  return base;
+}
+
+async function writeRoom(env, room, options = {}) {
   const safe = redactSecrets(normalizeRoom(room));
+  if (options.preservePlayers || options.preserveCharacterLocks || options.preserveTurnLocks) {
+    mergePreservedRoomState(safe, await readRoom(env, safe.roomId), options);
+  }
   safe.revision += 1;
   safe.updatedAt = nowMs();
   const payload = JSON.stringify(safe);
@@ -367,10 +401,7 @@ async function handleOperation(env, body) {
   if (operation === "getRoom") {
     const side = getPlayerSide(room, playerId) || requestedSide;
     if (side && room.players[side]?.playerId === playerId) {
-      room.players[side].connected = true;
-      room.players[side].lastSeenAt = nowMs();
-      const saved = await writeRoom(env, room);
-      return json({ ok: true, room: snapshot(saved, side), side });
+      return json({ ok: true, room: snapshot(room, side), side });
     }
     return json({ ok: true, room: snapshot(room, ""), side: "" });
   }
@@ -417,7 +448,7 @@ async function handleOperation(env, body) {
     room.readyState[`${side}CharacterLocked`] = true;
     appendLog(room, "character_locked", `${side === "left" ? "左方" : "右方"}已锁定角色。`, { side });
     applyPhaseTransition(room);
-    const saved = await writeRoom(env, room);
+    const saved = await writeRoom(env, room, { preservePlayers: true, preserveCharacterLocks: true });
     return json({ ok: true, room: snapshot(saved, side), side });
   }
 
@@ -439,7 +470,7 @@ async function handleOperation(env, body) {
     appendLog(room, "turn_locked", `${side === "left" ? "左方" : "右方"}已锁定第 ${room.round} 回合行动。`, { side, turn: room.round });
     applyPhaseTransition(room);
     if (room.phase === "turn_resolving") await resolveTurnIfReady(env, room, side);
-    const saved = await writeRoom(env, room);
+    const saved = await writeRoom(env, room, { preservePlayers: true, preserveTurnLocks: room.phase === "turn_selecting" });
     return json({ ok: true, room: snapshot(saved, side), side });
   }
 
