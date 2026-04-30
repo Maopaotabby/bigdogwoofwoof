@@ -3,7 +3,7 @@ import OpenAI from "openai";
 const PROTOCOL = "jjk_online_battle_v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
-const DEFAULT_AI_TIMEOUT_MS = 18000;
+const DEFAULT_AI_TIMEOUT_MS = 30000;
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const memoryRooms = new Map();
 
@@ -358,6 +358,13 @@ function buildAiPrompt(room) {
   ];
 }
 
+function compactAiMessages(messages = []) {
+  return (Array.isArray(messages) ? messages : []).map((message) => ({
+    role: String(message?.role || ""),
+    content: String(message?.content || "").slice(0, 3000)
+  }));
+}
+
 function parseAiText(value) {
   const text = String(value || "").trim();
   if (!text) return null;
@@ -379,10 +386,21 @@ async function resolveTurnWithAi(env, room) {
   const baseURL = env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
   const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000);
   const apiKey = String(env.AI_API_KEY || "").trim();
+  const aiMessages = buildAiPrompt(room);
+  const aiRequestPreview = {
+    provider: "openai_compatible",
+    model,
+    baseURL,
+    timeoutMs,
+    temperature: Number(env.AI_TEMPERATURE || 0.4),
+    maxTokens: Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700))),
+    messages: compactAiMessages(redactSecrets(aiMessages))
+  };
   if (!apiKey) {
     return {
       source: "local_fallback",
       summary: `第 ${room.round} 回合已接收双方锁定行动；服务器未配置 AI_API_KEY，已使用占位结算。`,
+      aiRequestPreview,
       actions: redactSecrets(room.turnState.actions)
     };
   }
@@ -390,9 +408,9 @@ async function resolveTurnWithAi(env, room) {
   const startedAt = nowMs();
   const completion = await withTimeout(client.chat.completions.create({
     model,
-    messages: buildAiPrompt(room),
-    temperature: Number(env.AI_TEMPERATURE || 0.4),
-    max_tokens: Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700))),
+    messages: aiMessages,
+    temperature: aiRequestPreview.temperature,
+    max_tokens: aiRequestPreview.maxTokens,
     response_format: { type: "json_object" }
   }), timeoutMs, `AI 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
   const text = completion.choices?.[0]?.message?.content || "";
@@ -405,6 +423,7 @@ async function resolveTurnWithAi(env, room) {
     leftEffect: parsed.leftEffect,
     rightEffect: parsed.rightEffect,
     winnerHint: parsed.winnerHint,
+    aiRequestPreview,
     responseTextPreview: String(text || "").slice(0, 1200),
     durationMs: nowMs() - startedAt,
     timeoutMs,
@@ -428,6 +447,7 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
       model: result.model || "",
       durationMs: result.durationMs || 0,
       timeoutMs: result.timeoutMs || 0,
+      aiRequestPreview: result.aiRequestPreview || null,
       responseTextPreview: result.responseTextPreview || ""
     };
     appendLog(room, "turn_resolved", result.summary || `第 ${beforeRound} 回合已结算。`, { turn: beforeRound, aiSource: result.source });
@@ -435,6 +455,7 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
     const errorMessage = String(error?.message || error).slice(0, 200);
     const timeout = isTimeoutError(error);
     const result = buildLocalTurnFallback(room, errorMessage);
+    const aiMessages = buildAiPrompt(room);
     result.source = timeout ? "local_fallback_timeout" : "local_fallback_error";
     result.timeout = timeout;
     result.error = errorMessage;
@@ -446,6 +467,11 @@ async function resolveTurnIfReady(env, room, viewerSide = "left") {
       error: errorMessage,
       timedOut: timeout,
       timeoutMs: error?.timeoutMs || 0,
+      aiRequestPreview: {
+        model: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
+        timeoutMs: error?.timeoutMs || clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000),
+        messages: compactAiMessages(redactSecrets(aiMessages))
+      },
       fallback: "local_turn_placeholder"
     };
     appendLog(room, "turn_resolved", result.summary, { turn: beforeRound, aiSource: result.source, timedOut: timeout });

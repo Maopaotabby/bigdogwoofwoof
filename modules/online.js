@@ -1,4 +1,4 @@
-const APP_BUILD_VERSION = "20260430-online-rewrite-v1";
+const APP_BUILD_VERSION = "20260430-ai-debug-payload-timeout-v1";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
@@ -8,7 +8,7 @@ const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
 const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
 const DEBUG_LOG_STORAGE_KEY = "jjk-online-battle-debug-log-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const REMOTE_OPERATION_TIMEOUT_MS = 30000;
+const REMOTE_OPERATION_TIMEOUT_MS = 35000;
 const ONLINE_DEBUG_LIMIT = 60;
 const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const LOCAL_DEFAULT_ENDPOINT = "";
@@ -66,11 +66,11 @@ function maskId(value) {
 
 function compactDebug(value) {
   if (value == null) return "";
-  if (typeof value === "string") return value.slice(0, 360);
+  if (typeof value === "string") return value.slice(0, 2000);
   try {
-    return JSON.stringify(redactSecrets(value)).slice(0, 720);
+    return JSON.stringify(redactSecrets(value)).slice(0, 3000);
   } catch {
-    return String(value).slice(0, 360);
+    return String(value).slice(0, 2000);
   }
 }
 
@@ -844,6 +844,25 @@ async function remoteOperation(operation, request = {}, options = {}) {
   }
   pushDebugEvent({ level: "ok", operation, message: `请求完成 ${response.status}`, detail: responseDebug });
   const aiDebug = data?.debug?.lastAiDebug || null;
+  if (aiDebug?.aiRequestPreview) {
+    pushDebugEvent({
+      level: "ai",
+      operation,
+      message: "AI 请求内容",
+      detail: aiDebug.aiRequestPreview
+    });
+  } else if (operation === "lockTurn" && data?.debug?.triggeredResolve === false) {
+    pushDebugEvent({
+      level: "info",
+      operation,
+      message: "未发送 AI 请求：双方尚未都锁定行动",
+      detail: {
+        roomId: data?.debug?.roomId || body.roomId || "",
+        round: data?.debug?.roundAfter || data?.debug?.roundBefore || "",
+        locks: data?.debug?.locks || null
+      }
+    });
+  }
   if (aiDebug?.responseTextPreview) {
     pushDebugEvent({
       level: "ai",
