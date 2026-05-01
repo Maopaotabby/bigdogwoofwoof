@@ -309,6 +309,13 @@ function readCustomDuelHandForm() {
     domainLoadDelta: domainLoad,
     weightDeltas: buildCustomHandWeightDeltas(cardType, damage, block)
   };
+  const accuracyProfile = cardType === "attack" || cardType === "basic"
+    ? "melee"
+    : cardType === "curse_tool"
+      ? "weapon"
+      : cardType === "technique" || cardType === "ce_burst" || cardType === "special"
+        ? "technique_projectile"
+        : "none";
   if (block > 0) effects.incomingHpScale = Math.max(0.35, Number((1 - Math.min(block, 80) / 160).toFixed(3)));
   return {
     id: draftId,
@@ -328,6 +335,9 @@ function readCustomDuelHandForm() {
     durationRounds: 1,
     damageType: inferCustomHandDamageType(cardType),
     scalingProfile: inferCustomHandScalingProfile(cardType),
+    accuracyProfile,
+    evasionAllowed: damage > 0 && accuracyProfile !== "none",
+    onMiss: { damageScale: accuracyProfile === "technique_projectile" ? 0.12 : 0, ceDamageScale: accuracyProfile === "technique_projectile" ? 0.2 : 0, stabilityScale: accuracyProfile === "technique_projectile" ? 0.2 : 0, keepCard: false },
     rarity: "special",
     weight: 1,
     allowedContexts: ["normal", "domain", "trial_allowed"],
@@ -2197,6 +2207,10 @@ function appendDuelActionLog(action, actor, opponent, result, battle = state.due
   if (result.opponentDomainLoad) parts.push(`${opponent.name} 领域负荷 ${formatSignedDuelDelta(result.opponentDomainLoad)}`);
   if (result.domainActivated) parts.push("领域进入维持状态");
   if (result.domainReleased) parts.push("主动解除领域，未触发领域崩解");
+  if (result.evasion?.evaded) {
+    parts.push(`Miss! ${opponent.name} 完成闪避（命中率 ${formatPercent(result.evasion.hitRate)}，判定 ${formatPercent(result.evasion.roll)}）`);
+  }
+  if (result.instantKillOnHit) parts.push("处刑人之剑命中，死刑判决兑现为一击必杀");
   if (result.blackFlashTriggered) {
     parts.push(result.blackFlashLabel === "极限打击窗口"
       ? "【极限打击窗口】触发！对手体势剧烈崩坏。"
@@ -2332,6 +2346,90 @@ function duelRandom(battle, label = "duel") {
   return value;
 }
 
+function getDuelMartialScoreForEvasion(resource) {
+  const profile = resource?.characterCardProfile || {};
+  const raw = profile.raw || {};
+  const axes = profile.axes || {};
+  return Math.max(0, Number(raw.martialScore ?? raw.bodyScore ?? axes.body ?? 0) || 0);
+}
+
+function getDuelHitRateFromMartialDiff(diff) {
+  const rounded = Math.round(Number(diff || 0));
+  if (rounded >= 4) return 0.96;
+  if (rounded === 3) return 0.92;
+  if (rounded === 2) return 0.86;
+  if (rounded === 1) return 0.78;
+  if (rounded === 0) return 0.68;
+  if (rounded === -1) return 0.55;
+  if (rounded === -2) return 0.4;
+  if (rounded === -3) return 0.25;
+  if (rounded === -4) return 0.12;
+  return 0.05;
+}
+
+function normalizeDuelRate(value, fallback = 0) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.abs(number) > 1 ? number / 100 : number;
+}
+
+function getDuelEvasionProfileConfig(profile) {
+  const configs = {
+    melee: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
+    weapon: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
+    execution_sword: { hitBonus: 0.12, min: 0.05, max: 0.95, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
+    technique_projectile: { hitBonus: 0.08, min: 0.08, max: 0.95, damageScaleOnMiss: 0.12, ceScaleOnMiss: 0.2 },
+    technique_area: { hitBonus: 0.23, min: 0.18, max: 0.95, damageScaleOnMiss: 0.38, ceScaleOnMiss: 0.45 }
+  };
+  return configs[profile] || null;
+}
+
+function getDuelEventAccuracyProfile(kind) {
+  if (kind === "initiative" || kind === "melee" || kind === "finisher") return "melee";
+  if (kind === "technique" || kind === "backfire") return "technique_projectile";
+  return "none";
+}
+
+function resolveDuelEvasionCheck({ battle, actor, opponent, profile, label = "evasion", hitRateModifier = 0, damage = 0 }) {
+  const config = getDuelEvasionProfileConfig(profile);
+  if (!battle || !actor || !opponent || !config || Number(damage || 0) <= 0) {
+    return { checked: false, evaded: false, profile: profile || "none", hitRate: 1, roll: 0 };
+  }
+  const attackerMartial = getDuelMartialScoreForEvasion(actor);
+  const defenderMartial = getDuelMartialScoreForEvasion(opponent);
+  const martialDiff = attackerMartial - defenderMartial;
+  const hitRate = clamp(
+    getDuelHitRateFromMartialDiff(martialDiff) + Number(config.hitBonus || 0) + normalizeDuelRate(hitRateModifier, 0),
+    Number(config.min || 0.05),
+    Number(config.max || 0.96)
+  );
+  const roll = duelRandom(battle, `evasion:${label}`);
+  return {
+    checked: true,
+    evaded: roll > hitRate,
+    profile,
+    hitRate: Number(hitRate.toFixed(4)),
+    roll: Number(roll.toFixed(4)),
+    attackerMartial: Number(attackerMartial.toFixed(2)),
+    defenderMartial: Number(defenderMartial.toFixed(2)),
+    martialDiff: Number(martialDiff.toFixed(2)),
+    damageScaleOnMiss: Number(config.damageScaleOnMiss || 0),
+    ceScaleOnMiss: Number(config.ceScaleOnMiss || 0)
+  };
+}
+
+function showDuelFloatingCombatText(battle, text, type = "miss", side = "") {
+  const now = Date.now();
+  if (!battle) return;
+  battle.floatingCombatText = {
+    text: text || "Miss!",
+    type,
+    side,
+    createdAt: now,
+    expiresAt: now + 1000
+  };
+}
+
 function buildDuelReplayKey(battle) {
   const operations = (battle?.operations || []).join(",");
   return `${DUEL_SYSTEM_VERSION}:${battle?.battleId || "duel"}:${battle?.seed || "seed"}:${battle?.left?.id || "left"}>${battle?.right?.id || "right"}:${operations}`;
@@ -2430,7 +2528,7 @@ function applyDuelEventResourceDelta(event, actor, opponent, battle = state.duel
     const completion = DUEL_DOMAIN_COMPLETION_LABELS[barrierModifiers.domainCompletion] || barrierModifiers.domainCompletion || "未知";
     domainDamageText = `领域形态：${shape}，完成度：${completion}。领域伤害拆分：必中 ${formatNumber(sureHitDamage)}、领域压制 ${formatNumber(domainPressureDamage)}、手动攻击/环境 ${formatNumber(manualAttackDamage)}。`;
   }
-  const targetCeDamage = Number(config.targetCeDamage || 0) * outputScale * Number(opponentActionContext.incomingCeScale || 1);
+  let targetCeDamage = Number(config.targetCeDamage || 0) * outputScale * Number(opponentActionContext.incomingCeScale || 1);
   const actorHpRecoil = Number(config.actorHpRecoil || 0) * (kind === "finisher" ? clamp(1.15 - actor.stability, 0.25, 0.9) : 1);
   const jackpotDefense = getDuelStatusEffectValue(opponent, "jackpotStateCandidate");
   if (jackpotDefense > 0 && targetHpDamage > 0) {
@@ -2439,6 +2537,30 @@ function applyDuelEventResourceDelta(event, actor, opponent, battle = state.duel
   const verdictDefenseShake = getDuelStatusEffectValue(opponent, "defenseShakenByVerdict");
   if (verdictDefenseShake > 0 && targetHpDamage > 0) {
     targetHpDamage *= 1 + verdictDefenseShake * 0.12;
+  }
+  const evasionResult = resolveDuelEvasionCheck({
+    battle,
+    actor,
+    opponent,
+    profile: getDuelEventAccuracyProfile(kind),
+    label: event.label || kind,
+    damage: targetHpDamage
+  });
+  if (evasionResult.evaded) {
+    showDuelFloatingCombatText(battle, "Miss!", "miss", opponentSide);
+    battle.evasionLog ||= [];
+    battle.evasionLog.unshift({
+      round: Number(battle.round || 0) + 1,
+      eventKind: kind,
+      eventLabel: event.label || kind,
+      actorSide,
+      opponentSide,
+      hitRate: evasionResult.hitRate,
+      roll: evasionResult.roll,
+      profile: evasionResult.profile
+    });
+    targetHpDamage = Math.max(0, targetHpDamage * Number(evasionResult.damageScaleOnMiss || 0));
+    targetCeDamage = Math.max(0, targetCeDamage * Number(evasionResult.ceScaleOnMiss || 0));
   }
   opponent.hp -= targetHpDamage;
   opponent.ce -= targetCeDamage;
@@ -2481,13 +2603,14 @@ function applyDuelEventResourceDelta(event, actor, opponent, battle = state.duel
   const trialText = trialViolenceScale < 1 ? "审判规则限制了本次暴力输出。" : "";
   const jackpotText = jackpotDefense > 0 ? "jackpot 状态候选降低了承伤。" : "";
   const executionText = executionStateCandidate > 0 ? "处刑状态候选提高了本次收束压迫。" : "";
-  const detail = `${getDuelResourceSideLabel(actorSide)}${actor.name} 咒力 ${formatSignedDuelDelta(delta.actorCe)}；${getDuelResourceSideLabel(opponentSide)}${opponent.name} 体势 ${formatSignedDuelDelta(delta.opponentHp)}、咒力 ${formatSignedDuelDelta(delta.opponentCe)}。${domainDamageText}${imbalanceText}${trialText}${jackpotText}${executionText}`;
+  const evasionText = evasionResult.evaded ? `Miss! ${opponent.name} 完成闪避（命中率 ${formatPercent(evasionResult.hitRate)}，判定 ${formatPercent(evasionResult.roll)}）。` : "";
+  const detail = `${getDuelResourceSideLabel(actorSide)}${actor.name} 咒力 ${formatSignedDuelDelta(delta.actorCe)}；${getDuelResourceSideLabel(opponentSide)}${opponent.name} 体势 ${formatSignedDuelDelta(delta.opponentHp)}、咒力 ${formatSignedDuelDelta(delta.opponentCe)}。${domainDamageText}${imbalanceText}${trialText}${jackpotText}${executionText}${evasionText}`;
   recordDuelResourceChange(battle, {
     side: actorSide,
     title: `${event.label}资源结算`,
     detail,
     type: kind === "domain" ? "domain" : "resource",
-    delta
+    delta: { ...delta, evasion: evasionResult.checked ? evasionResult : undefined }
   });
   return delta;
 }
@@ -3331,6 +3454,7 @@ function renderDuelBattlePanel(left, right, baseRate) {
   els.duelStartBtn.disabled = battle.autoRunning;
   els.duelBattle.innerHTML = `
     <div class="duel-battle-stage">
+      ${renderDuelFloatingCombatText(battle)}
       <div class="duel-battle-head">
         <div>
           <span class="badge">${escapeHtml(roundBadge)}</span>
@@ -3362,6 +3486,18 @@ function renderDuelBattlePanel(left, right, baseRate) {
     </div>
   `;
   bindDuelBattleControls();
+}
+
+function renderDuelFloatingCombatText(battle) {
+  const entry = battle?.floatingCombatText || null;
+  if (!entry?.text) return "";
+  if (Number(entry.expiresAt || 0) && Number(entry.expiresAt || 0) < Date.now()) {
+    delete battle.floatingCombatText;
+    return "";
+  }
+  const type = String(entry.type || "miss").replace(/[^a-z0-9_-]+/gi, "");
+  const side = String(entry.side || "").replace(/[^a-z0-9_-]+/gi, "");
+  return `<div class="duel-floating-combat-text ${escapeHtml(type)} ${escapeHtml(side)}" role="status" aria-live="polite">${escapeHtml(entry.text)}</div>`;
 }
 
 function renderDuelAutoPanel(battle, leftTactic, rightTactic) {

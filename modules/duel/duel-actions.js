@@ -995,12 +995,158 @@
     }
   }
 
-  function applyHutianBlackFlashEffect(effects, actor, opponent) {
+  function getDuelMartialScoreForEvasion(resource) {
+    var profile = resource?.characterCardProfile || {};
+    var raw = profile.raw || {};
+    var axes = profile.axes || {};
+    return Math.max(0, Number(raw.martialScore ?? raw.bodyScore ?? axes.body ?? 0) || 0);
+  }
+
+  function getDuelHitRateFromMartialDiff(diff) {
+    var rounded = Math.round(Number(diff || 0));
+    if (rounded >= 4) return 0.96;
+    if (rounded === 3) return 0.92;
+    if (rounded === 2) return 0.86;
+    if (rounded === 1) return 0.78;
+    if (rounded === 0) return 0.68;
+    if (rounded === -1) return 0.55;
+    if (rounded === -2) return 0.4;
+    if (rounded === -3) return 0.25;
+    if (rounded === -4) return 0.12;
+    return 0.05;
+  }
+
+  function normalizeRate(value, fallback) {
+    var number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    if (Math.abs(number) > 1) return number / 100;
+    return number;
+  }
+
+  function inferDuelAccuracyProfile(action) {
+    var cardType = String(action?.cardType || action?.type || "").toLowerCase();
+    var damageType = String(action?.damageType || "").toLowerCase();
+    var scalingProfile = String(action?.scalingProfile || "").toLowerCase();
+    var text = [
+      action?.id,
+      action?.label,
+      action?.name,
+      action?.description,
+      action?.effectSummary,
+      cardType,
+      damageType,
+      scalingProfile,
+      [].concat(action?.tags || []).join(" ")
+    ].filter(Boolean).join(" ").toLowerCase();
+    if (action?.evasionAllowed === false || action?.domainSpecific || action?.effects?.activateDomain || action?.effects?.releaseDomain) return "none";
+    if (action?.accuracyProfile) return String(action.accuracyProfile);
+    if (action?.executionSword || action?.instantKillOnHit) return "execution_sword";
+    if (/范围|area|aoe|environment|swarm|散射|爆破|地形|环境/.test(text)) return "technique_area";
+    if (/咒具|cursed_tool|weapon|刀|剑|斩|slash/.test(text) || cardType === "curse_tool" || damageType === "cursed_tool") return "weapon";
+    if (/近身|体术|拳|踢|melee|strike|physical|black_flash/.test(text) || cardType === "attack" || cardType === "basic") return "melee";
+    if (cardType === "technique" || cardType === "ce_burst" || cardType === "special" || cardType === "soul_pressure") return "technique_projectile";
+    return "melee";
+  }
+
+  function getDuelAccuracyProfileConfig(profile) {
+    var key = String(profile || "none");
+    var configs = {
+      melee: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
+      weapon: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
+      execution_sword: { hitBonus: 0.12, min: 0.05, max: 0.95, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
+      technique_projectile: { hitBonus: 0.08, min: 0.08, max: 0.95, damageScaleOnMiss: 0.12, ceScaleOnMiss: 0.2, stabilityScaleOnMiss: 0.2 },
+      technique_area: { hitBonus: 0.23, min: 0.18, max: 0.95, damageScaleOnMiss: 0.38, ceScaleOnMiss: 0.45, stabilityScaleOnMiss: 0.45 }
+    };
+    return configs[key] || null;
+  }
+
+  function rollDuelEvasionRandom(battle, label) {
+    var value = typeof battle?.rng === "function" ? battle.rng() : Math.random();
+    if (battle) {
+      battle.randomLog ||= [];
+      battle.randomLog.push({
+        round: Number(battle.round || 0) + 1,
+        label: label || "evasion",
+        value: Number(value.toFixed(8))
+      });
+    }
+    return value;
+  }
+
+  function showDuelFloatingCombatText(battle, text, type, side) {
+    var now = Date.now();
+    if (!battle) return;
+    battle.floatingCombatText = {
+      text: text || "Miss!",
+      type: type || "miss",
+      side: side || "",
+      createdAt: now,
+      expiresAt: now + 1000
+    };
+  }
+
+  function resolveDuelActionEvasion(action, actor, opponent, battle, options) {
+    var profile = inferDuelAccuracyProfile(action);
+    var config = getDuelAccuracyProfileConfig(profile);
+    var attackerMartial;
+    var defenderMartial;
+    var diff;
+    var baseRate;
+    var hitRate;
+    var roll;
+    var onMiss = action?.onMiss || {};
+    if (!config || !action || !actor || !opponent || !battle) {
+      return { checked: false, evaded: false, profile: profile || "none", hitRate: 1, roll: 0 };
+    }
+    if (options?.damage <= 0 && !action.instantKillOnHit && !action.effects?.instantKillOnHit) {
+      return { checked: false, evaded: false, profile: profile, hitRate: 1, roll: 0 };
+    }
+    attackerMartial = getDuelMartialScoreForEvasion(actor);
+    defenderMartial = getDuelMartialScoreForEvasion(opponent);
+    diff = attackerMartial - defenderMartial;
+    baseRate = normalizeRate(action.baseHitRate ?? action.accuracyBaseRate, getDuelHitRateFromMartialDiff(diff));
+    hitRate = clamp(
+      baseRate +
+      Number(config.hitBonus || 0) +
+      normalizeRate(action.hitRateModifier ?? action.accuracyModifier ?? action.effects?.hitRateModifier, 0),
+      Number(config.min || 0.05),
+      Number(config.max || 0.96)
+    );
+    roll = rollDuelEvasionRandom(battle, "evasion:" + (action.id || action.label || profile));
+    return {
+      checked: true,
+      evaded: roll > hitRate,
+      profile: profile,
+      hitRate: Number(hitRate.toFixed(4)),
+      roll: Number(roll.toFixed(4)),
+      attackerMartial: Number(attackerMartial.toFixed(2)),
+      defenderMartial: Number(defenderMartial.toFixed(2)),
+      martialDiff: Number(diff.toFixed(2)),
+      damageScaleOnMiss: normalizeRate(onMiss.damageScale, config.damageScaleOnMiss),
+      ceScaleOnMiss: normalizeRate(onMiss.ceDamageScale, config.ceScaleOnMiss),
+      stabilityScaleOnMiss: normalizeRate(onMiss.stabilityScale, config.stabilityScaleOnMiss),
+      keepCardOnMiss: Boolean(onMiss.keepCard || action.executionSword || action.retainedPermanent || action.noRefresh)
+    };
+  }
+
+  function applyHutianBlackFlashEffect(effects, actor, opponent, options) {
     var stacks = getHutianBlackFlashStacks(actor);
     var baseRatio = Number(effects.hutianBlackFlashBaseHpRatio || 0.03) + stacks * Number(effects.hutianBlackFlashGrowthPerHit || 0.005);
     var baseDamage = Math.max(0, Number(actor?.hp || 0) * baseRatio);
     var exponent = Number(effects.hutianBlackFlashDamageExponent || 2.5);
     var directDamage = Math.max(0, Math.round(Math.pow(baseDamage, exponent)));
+    if (options?.previewOnly) {
+      return {
+        directDamage: directDamage,
+        baseDamage: Number(baseDamage.toFixed(4)),
+        baseRatio: Number(baseRatio.toFixed(4)),
+        stacksBefore: stacks,
+        stacksAfter: stacks + 1,
+        hpHeal: 0,
+        ceHeal: 0,
+        previewOnly: true
+      };
+    }
     if (directDamage > 0) opponent.hp -= directDamage;
     var hpHeal = Math.max(0, Number(actor?.hp || 0) * Number(effects.hutianBlackFlashHpHealCurrentRatio || 0.08));
     var ceHeal = Math.max(0, Number(actor?.ce || 0) * Number(effects.hutianBlackFlashCeHealCurrentRatio || 0.04));
@@ -1110,16 +1256,47 @@
     var directDamage = Math.max(0, Math.round(Number(numericPreview?.finalDamage || 0) * (action.risk === "high" || action.risk === "critical" ? 0.58 : 0.45)));
     var stabilityShock = Math.max(0, Number(numericPreview?.base?.baseStabilityDamage || 0) / 100);
     var hutianBlackFlashResult = null;
+    var evasionResult = null;
+    var blackFlashStatus = null;
+    var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
-      hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent);
+      hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
       directDamage = hutianBlackFlashResult.directDamage;
     }
     if (blackFlashWindow) {
       directDamage = Math.max(directDamage + 10, Math.round(Number(numericPreview?.finalDamage || 8) * 0.9));
       stabilityShock += 0.085;
-      opponent.statusEffects.push({ id: "blackFlashShock", label: actor?.characterCardProfile?.isZeroCe ? "极限打击冲击" : "黑闪冲击", rounds: 1, value: 1 });
+      blackFlashStatus = { id: "blackFlashShock", label: actor?.characterCardProfile?.isZeroCe ? "极限打击冲击" : "黑闪冲击", rounds: 1, value: 1 };
     }
-    if (!effects.hutianBlackFlash && directDamage > 0) opponent.hp -= directDamage;
+    evasionResult = resolveDuelActionEvasion(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
+    if (evasionResult?.evaded) {
+      showDuelFloatingCombatText(battle, "Miss!", "miss", opponentSide);
+      battle.evasionLog ||= [];
+      battle.evasionLog.unshift({
+        round: Number(battle.round || 0) + 1,
+        actionId: action.id || "",
+        actionLabel: action.label || action.id || "",
+        actorSide: side,
+        opponentSide: opponentSide,
+        hitRate: evasionResult.hitRate,
+        roll: evasionResult.roll,
+        profile: evasionResult.profile
+      });
+      directDamage = Math.max(0, Math.round(directDamage * Number(evasionResult.damageScaleOnMiss || 0)));
+      stabilityShock = Math.max(0, Number(stabilityShock || 0) * Number(evasionResult.stabilityScaleOnMiss || 0));
+      instantKillOnHit = false;
+      if (hutianBlackFlashResult) hutianBlackFlashResult.evaded = true;
+    }
+    if (!evasionResult?.evaded && instantKillOnHit) {
+      directDamage = Math.max(directDamage, Math.ceil(Number(opponent.hp || 0)));
+      opponent.hp = 0;
+    } else if (!evasionResult?.evaded && effects.hutianBlackFlash) {
+      hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent);
+      directDamage = hutianBlackFlashResult.directDamage;
+    } else if (!effects.hutianBlackFlash && directDamage > 0) {
+      opponent.hp -= directDamage;
+    }
+    if (!evasionResult?.evaded && blackFlashStatus) opponent.statusEffects.push(blackFlashStatus);
     if (stabilityShock > 0) {
       opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
     }
@@ -1152,8 +1329,10 @@
       domainActivated: !before.actorDomainActive && Boolean(actor.domain?.active),
       domainReleased: before.actorDomainActive && !actor.domain?.active,
       directDamage: directDamage,
-      blackFlashTriggered: Boolean(blackFlashWindow || effects.hutianBlackFlash),
-      blackFlashLabel: effects.hutianBlackFlash ? "黑闪！" : (blackFlashWindow ? (actor?.characterCardProfile?.isZeroCe ? "极限打击窗口" : "黑闪") : ""),
+      instantKillOnHit: Boolean(!evasionResult?.evaded && (action.instantKillOnHit || effects.instantKillOnHit)),
+      evasion: evasionResult?.checked ? evasionResult : undefined,
+      blackFlashTriggered: Boolean(!evasionResult?.evaded && (blackFlashWindow || effects.hutianBlackFlash)),
+      blackFlashLabel: !evasionResult?.evaded && effects.hutianBlackFlash ? "黑闪！" : (!evasionResult?.evaded && blackFlashWindow ? (actor?.characterCardProfile?.isZeroCe ? "极限打击窗口" : "黑闪") : ""),
       hutianBlackFlash: hutianBlackFlashResult || undefined,
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {

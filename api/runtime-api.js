@@ -1707,6 +1707,7 @@ function normalizeDuelAiDomainScript(rawScript) {
 function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
   const source = Array.isArray(rawHands) ? rawHands : [];
   const allowedTypes = new Set(["attack", "technique", "ce_burst", "defense", "domain", "support", "resource", "counter", "rule", "soul_pressure"]);
+  const allowedAccuracyProfiles = new Set(["melee", "weapon", "technique_projectile", "technique_area", "unavoidable", "none"]);
   const riskMap = { extreme: "critical", critical: "critical", high: "high", medium: "medium", low: "low" };
   const seen = new Set();
   const forbiddenDomainNames = getDuelForbiddenDomainHandNames(context);
@@ -1731,6 +1732,18 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
       const domainLoadDelta = clamp(Math.round(Number(hand.domainLoadDelta ?? hand.domainLoad ?? 0) || 0), 0, 999);
       let summary = normalizeCustomDuelText(hand.summary || hand.description || `${name}：AI 生成特殊手札。`);
       const tags = Array.isArray(hand.tags) ? hand.tags.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(hand.tags || "");
+      const rawAccuracyProfile = normalizeCustomDuelText(hand.accuracyProfile || "").toLowerCase();
+      const inferredAccuracyProfile = cardType === "attack"
+        ? "melee"
+        : cardType === "ce_burst" || cardType === "soul_pressure"
+          ? "technique_projectile"
+          : cardType === "technique"
+            ? "technique_projectile"
+            : "none";
+      const accuracyProfile = allowedAccuracyProfiles.has(rawAccuracyProfile) ? rawAccuracyProfile : inferredAccuracyProfile;
+      const evasionAllowed = hand.evasionAllowed === false || ["defense", "support", "resource", "domain", "rule"].includes(cardType) ? false : accuracyProfile !== "none" && accuracyProfile !== "unavoidable";
+      const hitRateModifier = clamp(Number(hand.hitRateModifier ?? hand.accuracyModifier ?? 0) || 0, -0.45, 0.45);
+      const missDamageScale = clamp(Number(hand.onMiss?.damageScale ?? hand.missDamageScale ?? (accuracyProfile === "technique_area" ? 0.38 : accuracyProfile === "technique_projectile" ? 0.12 : 0)) || 0, 0, 0.75);
       const hasExecutableEffect = damage > 0
         || block > 0
         || stabilityDelta !== 0
@@ -1773,6 +1786,10 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
         durationRounds: 1,
         damageType: typeof inferCustomHandDamageType === "function" ? inferCustomHandDamageType(cardType) : (cardType === "defense" ? "none" : "technique"),
         scalingProfile: typeof inferCustomHandScalingProfile === "function" ? inferCustomHandScalingProfile(cardType) : "balanced",
+        accuracyProfile,
+        evasionAllowed,
+        hitRateModifier,
+        onMiss: { damageScale: missDamageScale, ceDamageScale: missDamageScale, stabilityScale: missDamageScale, keepCard: false },
         rarity: "special",
         weight: 1,
         allowedContexts: ["normal", "domain", "trial_allowed"],
