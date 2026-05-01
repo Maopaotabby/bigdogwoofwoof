@@ -853,6 +853,8 @@
       "baseDamage": 0,
       "durationRounds": 1,
       "baseCeCost": 40,
+      "weight": 30,
+      "selectionWeight": 30,
       "costType": "flat_ce",
       "damageType": "black_flash",
       "scalingProfile": "hutian_black_flash_current_hp_power",

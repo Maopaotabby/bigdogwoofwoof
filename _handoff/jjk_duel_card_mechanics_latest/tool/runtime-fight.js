@@ -2000,6 +2000,10 @@ function unselectDuelHandCandidate(actionOrId, actor = state.duelBattle?.resourc
   return callDuelHandImplementation("unselectDuelHandCandidate", [actionOrId, actor, opponent, duelState, options], globalThis.JJKDuelHand?.unselectDuelHandCandidate);
 }
 
+function discardDuelHandCandidate(actionOrId, actor = state.duelBattle?.resourceState?.p1, duelState = state.duelBattle, options = {}) {
+  return callDuelHandImplementation("discardDuelHandCandidate", [actionOrId, actor, duelState, options], globalThis.JJKDuelHand?.discardDuelHandCandidate);
+}
+
 function applyDuelSelectedHandActions(actor, opponent, duelState = state.duelBattle, options = {}) {
   return callDuelHandImplementation("applyDuelSelectedHandActions", [actor, opponent, duelState, options], globalThis.JJKDuelHand?.applyDuelSelectedHandActions);
 }
@@ -2705,6 +2709,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   const sideHandState = battle.handState?.[actorSide] || {};
   const maxHandSize = handRules.hand?.maxHandSize || 8;
   const drawPerTurn = handRules.hand?.drawPerTurn || 5;
+  const pendingDiscardCount = Math.max(0, Number(sideHandState.pendingDiscardCount || 0));
   const maxDomainHandSize = handRules.domainHand?.enabled === false ? 0 : Number(handRules.domainHand?.maxHandSize || 3);
   const selectedTotalCe = selectedEntries.reduce((total, entry) => total + Number(entry?.ceCost || 0), 0);
   const actorCe = Number(actor?.ce || 0);
@@ -2720,7 +2725,9 @@ function renderDuelActionChoices(battle = state.duelBattle) {
       `).join("")}
     </ol>
   ` : `<p class="duel-selected-hand-empty">尚未选择本回合手札</p>`;
-  const selectionHint = onlineLocked
+  const selectionHint = pendingDiscardCount > 0
+    ? `手牌超过上限，请先弃置 ${formatNumber(pendingDiscardCount)} 张。弃牌范围包含原有手牌与本轮新增手牌。`
+    : onlineLocked
     ? "联机行动已锁定；等待对方锁定或结算。"
     : onlineMode
       ? (!selectedEntries.length
@@ -2747,14 +2754,16 @@ function renderDuelActionChoices(battle = state.duelBattle) {
           <span class="duel-chip">R${escapeHtml(battle.round + 1)}</span>
           <span class="duel-chip">当前咒力：${escapeHtml(formatNumber(actorCe))} / ${escapeHtml(formatNumber(actorMaxCe))}</span>
           <span class="duel-chip">已选 CE：${escapeHtml(formatNumber(selectedTotalCe))}，预计剩余：${escapeHtml(formatNumber(projectedCe))}</span>
-          <span class="duel-chip">普通手牌：${escapeHtml(formatNumber(choices.length))} / ${escapeHtml(formatNumber(maxHandSize))}</span>
+          <span class="duel-chip${pendingDiscardCount > 0 ? " warning" : ""}">普通手牌：${escapeHtml(formatNumber(choices.length))} / ${escapeHtml(formatNumber(maxHandSize))}</span>
           <span class="duel-chip">领域操控：${escapeHtml(formatNumber(domainChoices.length))} / ${escapeHtml(formatNumber(maxDomainHandSize))}</span>
           <span class="duel-chip">每回合补牌：${escapeHtml(formatNumber(drawPerTurn))}</span>
           <span class="duel-chip">已选择手札：${escapeHtml(formatNumber(selectedEntries.length))} / ${escapeHtml(formatNumber(maxSelections))}</span>
         </div>
       </div>
       <p class="duel-hand-pool-hint">${escapeHtml(getDuelHandPoolInfluenceText(battle))}</p>
-      ${sideHandState.lastDiscarded?.length ? `<p class="duel-action-message">手牌溢出，已从剩余手牌与新增手牌中弃置：${escapeHtml(sideHandState.lastDiscarded.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
+      ${pendingDiscardCount > 0 ? `<p class="duel-action-warning">手牌溢出：请在下方手牌中选择 ${escapeHtml(formatNumber(pendingDiscardCount))} 张弃置，弃到 ${escapeHtml(formatNumber(maxHandSize))} 张或更少后才能出牌。</p>` : ""}
+      ${sideHandState.lastInjected?.length ? `<p class="duel-action-message">本轮额外加入手牌：${escapeHtml(sideHandState.lastInjected.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
+      ${sideHandState.lastDiscarded?.length ? `<p class="duel-action-message">已弃置：${escapeHtml(sideHandState.lastDiscarded.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
       ${warning ? `<p class="duel-action-warning">${escapeHtml(warning)}</p>` : ""}
       ${battle.actionUiMessage ? `<p class="duel-action-message">${escapeHtml(battle.actionUiMessage)}</p>` : ""}
       <div class="duel-action-toolbar">
@@ -2769,7 +2778,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
         </div>
       </div>
       <div class="duel-action-choices duel-hand-choices">
-        ${choices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap)).join("")}
+        ${choices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, { discardMode: pendingDiscardCount > 0 })).join("")}
       </div>
       ${maxDomainHandSize ? `
         <div class="duel-domain-hand-head">
@@ -3032,11 +3041,12 @@ function renderDuelDeveloperDetails(view = {}, debug = {}) {
   `;
 }
 
-function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, selectedOrderMap = new Map()) {
+function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, selectedOrderMap = new Map(), options = {}) {
   const { actor, opponent } = getDuelSideResources(battle);
   const view = getDuelHandCardViewModel(action, actor, opponent, battle);
   const onlineLocked = isOnlineDuelModeActive() && state.duelModeState.localLocked;
   const selected = Boolean(selectedIds?.has(view.actionId || view.id));
+  const discardMode = Boolean(options.discardMode);
   const selectedOrder = selectedOrderMap?.get(view.actionId || view.id) || 0;
   const tags = Array.isArray(view.uiTags) && view.uiTags.length ? view.uiTags.filter(Boolean) : (Array.isArray(view.tags) ? view.tags.filter(Boolean) : []);
   const visibleTags = tags.slice(0, 4);
@@ -3052,6 +3062,8 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
   const availabilityText = view.availabilityMessage || view.unavailableReason || "不可用";
   const statusText = onlineLocked
     ? "状态：已锁定，等待联机同步"
+    : discardMode
+      ? "状态：请先完成弃牌"
     : selected
       ? "状态：已选择，本回合将执行"
       : (view.available ? `风险：${riskText}` : availabilityText);
@@ -3059,7 +3071,7 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
   const readablePreview = getDuelReadableEffectPreview(view, action);
   return `
     <article class="duel-hand-card${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
-      <button class="duel-action-choice duel-hand-main${selected ? " active" : ""}" data-duel-action="${escapeHtml(view.actionId)}" type="button" ${onlineLocked || selected || !view.available ? "disabled" : ""}>
+      <button class="duel-action-choice duel-hand-main${selected ? " active" : ""}" data-duel-action="${escapeHtml(view.actionId)}" type="button" ${onlineLocked || discardMode || selected || !view.available ? "disabled" : ""}>
         <span class="duel-action-title">${escapeHtml(titleText)}</span>
         ${subtitleText ? `<span class="duel-action-subtitle">${escapeHtml(subtitleText)}</span>` : ""}
         ${selected ? `<span class="duel-selected-order-badge">第 ${escapeHtml(formatNumber(selectedOrder))} 手</span>` : ""}
@@ -3072,6 +3084,7 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
         <span class="duel-action-tags" title="${escapeHtml(fullTagText)}">标签：${escapeHtml(tagText + tagSuffix)}</span>
         <em class="duel-action-status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</em>
       </button>
+      ${discardMode ? `<button class="secondary mini duel-hand-discard-btn" data-duel-discard="${escapeHtml(view.actionId)}" type="button">弃置</button>` : ""}
       <details class="duel-hand-detail">
         <summary>卡牌详情</summary>
         <div class="duel-card-detail-grid">
@@ -3257,12 +3270,15 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
   const progress = safetyRoundCap ? clamp((battle.round / safetyRoundCap) * 100, 0, 100) : 0;
   const actorSide = getDuelControlledSide(battle);
   const selectedCount = getDuelSelectedHandActions(battle, actorSide).length;
+  const pendingDiscardCount = Math.max(0, Number(battle.handState?.[actorSide]?.pendingDiscardCount || 0));
   const apState = getDuelApState(battle, actorSide);
   const onlineMode = isOnlineDuelModeActive();
   const needsAction = false;
   const onlineLocked = onlineMode && state.duelModeState.localLocked;
   const buttonText = onlineLocked
     ? "已锁定，等待对手"
+    : pendingDiscardCount > 0
+      ? `先弃牌 ${formatNumber(pendingDiscardCount)} 张`
     : onlineMode
       ? (selectedCount ? "锁定行动" : "锁定待机")
       : battle.autoRunning
@@ -3270,6 +3286,8 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
     : (selectedCount ? "执行回合" : "待机过回合");
   const resolveHint = onlineLocked
     ? "联机行动已锁定；等待对方锁定后结算。"
+    : pendingDiscardCount > 0
+      ? "手牌超过上限；必须先从现有手牌和新增手牌中弃牌。"
     : onlineMode
       ? (selectedCount
         ? "锁定后会提交到新版联机回合状态，不会触发单人结算。"
@@ -3298,7 +3316,7 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
         <div class="duel-auto-empty">${onlineMode ? "选择联机手札后，点击锁定行动等待对方。" : "选择术式手札后，点击执行回合推进战斗阶段。"}</div>
       `}
       <p class="duel-action-hint">${escapeHtml(resolveHint)}</p>
-      <button class="primary" id="${onlineMode ? "duelOnlineLockFromHandBtn" : "duelAutoRunBtn"}" type="button" ${battle.autoRunning || battle.resolved || needsAction || onlineLocked ? "disabled" : ""} title="${escapeHtml(resolveHint)}">
+      <button class="primary" id="${onlineMode ? "duelOnlineLockFromHandBtn" : "duelAutoRunBtn"}" type="button" ${battle.autoRunning || battle.resolved || needsAction || onlineLocked || pendingDiscardCount > 0 ? "disabled" : ""} title="${escapeHtml(resolveHint)}">
         ${escapeHtml(buttonText)}
       </button>
     </div>
@@ -3361,6 +3379,20 @@ function bindDuelBattleControls() {
   });
   els.duelBattle.querySelectorAll("[data-duel-action]").forEach((button) => {
     button.addEventListener("click", () => selectDuelAction(button.dataset.duelAction || ""));
+  });
+  els.duelBattle.querySelectorAll("[data-duel-discard]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const { actorSide, actor } = getDuelSideResources(state.duelBattle);
+      const result = discardDuelHandCandidate(button.dataset.duelDiscard || "", actor, state.duelBattle, { side: actorSide });
+      if (state.duelBattle) {
+        state.duelBattle.actionUiMessage = result.discarded
+          ? (result.pendingDiscardCount > 0 ? `已弃置，仍需弃牌 ${formatNumber(result.pendingDiscardCount)} 张。` : "弃牌完成，可以选择手札。")
+          : (result.reason || "弃牌失败");
+        state.duelBattle.actionChoices = state.duelBattle.handState?.[actorSide]?.cards || state.duelBattle.actionChoices || [];
+      }
+      updateDuelResourceReplayKey(state.duelBattle);
+      renderDuelMode();
+    });
   });
   els.duelBattle.querySelector("[data-duel-feedback-export]")?.addEventListener("click", () => {
     exportDuelBetaFeedbackPackage({ copy: false });

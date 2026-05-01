@@ -16,6 +16,7 @@
     "canSelectDuelHandCandidate",
     "selectDuelHandCandidate",
     "unselectDuelHandCandidate",
+    "discardDuelHandCandidate",
     "applyDuelSelectedHandActions",
     "resolveDuelHandTurn",
     "clearDuelSelectedHandActions",
@@ -542,12 +543,14 @@
       forceAllowSourceActionIds.push(...asList(archetype.forceAllowSourceActionIds));
       forceDenySourceActionIds.push(...asList(archetype.forceDenySourceActionIds));
     });
-    denyTags.push(...asList(entry?.rules?.denyTags));
-    denyCardTypes.push(...asList(entry?.rules?.denyCardTypes));
-    weightBoostTags.push(...asList(entry?.rules?.weightBoostTags), ...asList(entry?.rules?.forceAllowTags));
-    weightPenaltyTags.push(...asList(entry?.rules?.weightPenaltyTags));
-    forceAllowSourceActionIds.push(...asList(entry?.rules?.forceAllowSourceActionIds));
-    forceDenySourceActionIds.push(...asList(entry?.rules?.forceDenySourceActionIds));
+    var characterRules = entry?.rules || {};
+    var characterRulePatch = characterRules.rules || {};
+    denyTags.push(...asList(characterRules.denyTags), ...asList(characterRulePatch.denyTags));
+    denyCardTypes.push(...asList(characterRules.denyCardTypes), ...asList(characterRulePatch.denyCardTypes));
+    weightBoostTags.push(...asList(characterRules.weightBoostTags), ...asList(characterRules.forceAllowTags), ...asList(characterRulePatch.weightBoostTags), ...asList(characterRulePatch.forceAllowTags));
+    weightPenaltyTags.push(...asList(characterRules.weightPenaltyTags), ...asList(characterRulePatch.weightPenaltyTags));
+    forceAllowSourceActionIds.push(...asList(characterRules.forceAllowSourceActionIds), ...asList(characterRulePatch.forceAllowSourceActionIds));
+    forceDenySourceActionIds.push(...asList(characterRules.forceDenySourceActionIds), ...asList(characterRulePatch.forceDenySourceActionIds));
     return {
       entry: entry,
       denyTags: uniqueList(denyTags),
@@ -820,6 +823,41 @@
     return removed;
   }
 
+  function updatePersistentHandOverflow(hand, maxHandSize) {
+    if (!hand) return 0;
+    var overflow = Math.max(0, (hand.cards || []).length - Number(maxHandSize || hand.maxHandSize || 8));
+    hand.pendingDiscardCount = overflow;
+    hand.overflowDiscardRequired = overflow > 0;
+    return overflow;
+  }
+
+  function discardDuelHandCandidate(actionOrId, actor, duelState, options) {
+    var battle = getBattle(duelState);
+    if (!battle || !actor) return { discarded: false, reason: "战斗资源缺失" };
+    var rules = options?.rules || getDuelHandRules();
+    var side = getActorSide(actor, options);
+    var hand = getPersistentHandState(battle, side, rules);
+    var id = typeof actionOrId === "string" ? actionOrId : getActionId(actionOrId);
+    if (!id) return { discarded: false, reason: "手札不存在" };
+    var index = (hand.cards || []).findIndex(function findCard(card) {
+      return getActionId(card) === id;
+    });
+    if (index < 0) return { discarded: false, reason: "手札不在当前手牌中" };
+    var removed = hand.cards.splice(index, 1)[0];
+    var round = getTurnNumber(battle);
+    var summary = {
+      actionId: getActionId(removed),
+      label: removed?.label || removed?.id || getActionId(removed),
+      discardedRound: round,
+      reason: "manualOverflowDiscard"
+    };
+    hand.lastDiscarded = [summary];
+    hand.discardPile = (hand.discardPile || []).concat(summary);
+    updatePersistentHandOverflow(hand, getMaxHandSize(rules));
+    invalidateDuelHandCandidateCache(battle);
+    return { discarded: true, reason: "", card: removed, side: side, pendingDiscardCount: hand.pendingDiscardCount };
+  }
+
   function reconcilePersistentHandCards(hand, fullCandidates, actor, opponent, battle, rules) {
     var byId = Object.create(null);
     (fullCandidates || []).forEach(function indexCandidate(candidate) {
@@ -835,10 +873,11 @@
     });
   }
 
-  function getRandomHandInjectionsForActor(actor, rules) {
-    var profile = buildDuelCharacterCardProfile(actor, { rules: rules });
-    var entry = getCharacterRuleEntry({ id: profile.characterId, name: profile.displayName }, rules);
-    return asList(entry?.rules?.randomHandInjections);
+  function getRandomHandInjectionsForActor(actor) {
+    var characterRules = getDuelCharacterCardRules();
+    var profile = buildDuelCharacterCardProfile(actor, { rules: characterRules });
+    var entry = getCharacterRuleEntry({ id: profile.characterId, name: profile.displayName }, characterRules);
+    return asList(entry?.rules?.randomHandInjections).concat(asList(entry?.rules?.rules?.randomHandInjections));
   }
 
   function rollRandomHandInjection(injection, actor, battle, round) {
@@ -849,7 +888,7 @@
   }
 
   function injectRandomHandCards(hand, fullCandidates, actor, battle, rules, round) {
-    var injections = getRandomHandInjectionsForActor(actor, rules);
+    var injections = getRandomHandInjectionsForActor(actor);
     if (!injections.length) return [];
     var byId = Object.create(null);
     (fullCandidates || []).forEach(function indexCandidate(candidate) {
@@ -887,7 +926,7 @@
     var drawPerTurn = getDrawPerTurn(rules);
     reconcilePersistentHandCards(hand, rankedCandidates, actor, opponent, battle, rules);
     if (Number(hand.round || 0) === round) {
-      hand.cards = (hand.cards || []).slice(0, maxHandSize);
+      updatePersistentHandOverflow(hand, maxHandSize);
       return hand.cards;
     }
 
@@ -904,20 +943,10 @@
     }).concat(drawn);
     var injected = injectRandomHandCards(hand, options?.fullCandidates || rankedCandidates, actor, battle, rules, round);
 
-    var discarded = [];
     if (hand.cards.length > maxHandSize) {
-      var keep = hand.cards
-        .map(function addIndex(card, index) { return { card: card, index: index, score: getCandidateSortScore(card) }; })
-        .sort(function sortKeep(a, b) {
-          if (b.score !== a.score) return b.score - a.score;
-          return a.index - b.index;
-        })
-        .slice(0, maxHandSize);
-      var keepIndexes = new Set(keep.map(function pickIndex(entry) { return entry.index; }));
-      discarded = hand.cards.filter(function isDiscarded(_card, index) {
-        return !keepIndexes.has(index);
-      });
-      hand.cards = keep.sort(function restoreOrder(a, b) { return a.index - b.index; }).map(function unwrap(entry) { return entry.card; });
+      updatePersistentHandOverflow(hand, maxHandSize);
+    } else {
+      updatePersistentHandOverflow(hand, maxHandSize);
     }
 
     hand.round = round;
@@ -927,18 +956,8 @@
     hand.lastInjected = injected.map(function summarize(card) {
       return { actionId: getActionId(card), label: card.label || card.id || getActionId(card), chance: card.randomHandInjectionChance || "" };
     });
-    hand.lastDiscarded = discarded.map(function summarize(card) {
-      return { actionId: getActionId(card), label: card.label || card.id || getActionId(card) };
-    });
-    hand.discardPile = (hand.discardPile || []).concat(discarded.map(function markDiscard(card) {
-      return {
-        actionId: getActionId(card),
-        label: card.label || card.id || getActionId(card),
-        discardedRound: round,
-        reason: "handOverflow"
-      };
-    }));
-    return hand.cards.slice(0, maxHandSize);
+    if (!hand.overflowDiscardRequired) hand.lastDiscarded = [];
+    return hand.cards;
   }
 
   function clamp(value, min, max) {
@@ -1691,6 +1710,10 @@
     var action = candidate?.action || candidate;
     if (!action?.id) return { ok: false, reason: "手札不存在" };
     var selected = getDuelSelectedHandActions(battle, side);
+    var hand = getPersistentHandState(battle, side, options?.rules);
+    if (Number(hand?.pendingDiscardCount || 0) > 0) {
+      return { ok: false, reason: "手牌超过上限，请先弃牌", action: action };
+    }
     if (selected.some(function alreadySelected(entry) {
       return getActionId(entry) === action.id;
     })) {
@@ -2014,6 +2037,7 @@
     canSelectDuelHandCandidate: canSelectDuelHandCandidate,
     selectDuelHandCandidate: selectDuelHandCandidate,
     unselectDuelHandCandidate: unselectDuelHandCandidate,
+    discardDuelHandCandidate: discardDuelHandCandidate,
     applyDuelSelectedHandActions: applyDuelSelectedHandActions,
     resolveDuelHandTurn: resolveDuelHandTurn,
     clearDuelSelectedHandActions: clearDuelSelectedHandActions,

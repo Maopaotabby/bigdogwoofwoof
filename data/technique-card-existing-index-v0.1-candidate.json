@@ -2,7 +2,7 @@
   "schema": "jjk-technique-card-existing-index",
   "version": "0.1.0-candidate",
   "status": "CANDIDATE",
-  "generatedAt": "2026-05-01T04:58:14.744Z",
+  "generatedAt": "2026-05-01T05:13:40.006Z",
   "generator": "scripts/build-technique-card-index.js",
   "sourceFiles": [
     "data/duel-card-templates-v0.1-candidate.json",
