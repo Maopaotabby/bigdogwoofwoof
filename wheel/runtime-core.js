@@ -17,6 +17,7 @@ const state = {
   duelResourceRules: null,
   duelActionRules: null,
   techniqueHandRules: null,
+  techniqueFeatureHandCandidates: null,
   duelCharacterCardRules: null,
   duelCardTemplateRules: null,
   duelCardCopyRules: null,
@@ -254,7 +255,7 @@ const els = {
 
 const DEBUG_ACCESS_CODE = "258079";
 const DEBUG_SUMMON_SEQUENCE = "258079";
-const APP_BUILD_VERSION = "20260430-tencent-usage-east8-v1";
+const APP_BUILD_VERSION = "20260501-feature-hands-v06-bind-v1";
 const MOBILE_TOPBAR_QUERY = "(max-width: 640px)";
 const MOBILE_TOPBAR_SCROLL_DELTA = 8;
 const MOBILE_TOPBAR_MIN_HIDE_AFTER = 72;
@@ -943,7 +944,7 @@ async function loadCharacterCards() {
 
 //--启动与事件绑定--//
 async function init() {
-  const [wheels, flow, strength, characterCards, mechanisms, calibrationBattles, optionEffects, duelResourceRules, duelActionRules, handRulesCandidate, duelCharacterCardRules, duelCardTemplateRules, duelCardCopyRules, duelMechanicRules, duelEndRules, duelBetaCopy, duelDomainProfiles, duelTrialTargetRules, aiProviderRules, aiPromptTemplates, cardPrompt] = await Promise.all([
+  const [wheels, flow, strength, characterCards, mechanisms, calibrationBattles, optionEffects, duelResourceRules, duelActionRules, handRulesCandidate, techniqueFeatureHandCandidates, duelCharacterCardRules, duelCardTemplateRules, duelCardCopyRules, duelMechanicRules, duelEndRules, duelBetaCopy, duelDomainProfiles, duelTrialTargetRules, aiProviderRules, aiPromptTemplates, cardPrompt] = await Promise.all([
     fetch(`./data/wheels.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/flow-v1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/strength-v0.2-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
@@ -954,6 +955,7 @@ async function init() {
     fetch(`./data/duel-resource-rules-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/duel-action-templates-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/duel-hand-rules-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
+    fetch(`./data/technique-feature-hand-drafts-v0.6-runtime-import-candidates.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/duel-character-card-rules-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/duel-card-templates-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/duel-card-copy-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
@@ -977,6 +979,7 @@ async function init() {
   state.duelResourceRules = duelResourceRules;
   state.duelActionRules = duelActionRules;
   state.techniqueHandRules = handRulesCandidate;
+  state.techniqueFeatureHandCandidates = techniqueFeatureHandCandidates;
   state.duelCharacterCardRules = duelCharacterCardRules;
   state.duelCardTemplateRules = duelCardTemplateRules;
   state.duelCardCopyRules = duelCardCopyRules;

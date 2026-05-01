@@ -428,7 +428,10 @@
       .concat(asList(source?.loadout))
       .concat(asList(source?.flags))
       .concat(asList(source?.traits))
+      .concat(asList(source?.techniqueFamilies))
+      .concat(asList(customCard?.techniqueFamilies))
       .concat(asList(entry?.rules?.forceAllowTags))
+      .concat(asList(entry?.rules?.techniqueFamilies))
       .concat(archetypes));
     var specialHandTags = uniqueList([]
       .concat(asList(source?.specialHandTags))
@@ -442,7 +445,12 @@
       source?.characterId,
       source?.name,
       source?.displayName,
+      source?.technique,
+      source?.techniqueName,
       source?.domainProfile,
+      customCard?.technique,
+      customCard?.techniqueName,
+      customCard?.techniqueText,
       customCard?.domainProfile,
       sourceDomainScript?.domainName,
       source?.techniqueText,
@@ -464,8 +472,12 @@
       isCurse: /咒灵|curse_spirit|cursed_spirit|disaster_curse|low_grade_curse/i.test(text),
       isIncarnated: /受肉|incarnated/i.test(text),
       usesCursedTools: /咒具|cursed_tool|释魂刀|天逆|游云|黑绳|万里锁/i.test(text),
-      techniqueFamilies: uniqueList(asList(entry?.rules?.techniqueFamilies).concat(traits.filter(function keepFamily(tag) {
-        return ["sukuna", "shrine", "slash", "limitless", "gojo", "trial", "judgment", "jackpot", "yuji", "itadori", "black_flash_window", "ten_shadows", "shikigami", "shadow", "mahito", "soul", "okkotsu", "rika", "copy_candidate"].includes(tag);
+      techniqueFamilies: uniqueList([]
+        .concat(asList(entry?.rules?.techniqueFamilies))
+        .concat(asList(source?.techniqueFamilies))
+        .concat(asList(customCard?.techniqueFamilies))
+        .concat(traits.filter(function keepFamily(tag) {
+        return /^[a-z][a-z0-9_]{2,}$/i.test(String(tag || "")) || ["宿傩", "伏魔御厨子", "五条", "无下限", "六眼", "十种影法术", "赤血操术", "咒灵操术", "无为转变", "十划咒法", "咒言", "不义游戏", "黑鸟操术", "投射咒法", "构筑术式", "刍灵咒法", "星之怒", "冰凝咒法", "坐杀搏徒", "超人", "模仿", "天空术式", "龙髓炮", "反重力机构", "幻兽琥珀"].includes(tag);
       }))),
       ruleId: entry?.id || ""
     };
@@ -704,6 +716,7 @@
     var action = getActionFromEntry(candidate);
     var id = getActionId(candidate);
     var cardType = String(getCandidateCardType(candidate) || "").toLowerCase();
+    if (action?.techniqueFeatureHand && action?.normalHandOnly && !action?.effects?.activateDomain) return false;
     var text = [
       id,
       cardType,
