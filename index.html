@@ -998,6 +998,7 @@
           <div class="panel notes-panel">
             <h2>更新日志</h2>
               <ul>
+          <li>2.0-hotfix（腾讯统计 / 东八区）：腾讯云入口计入全站使用统计，统计请求携带 Asia/Shanghai / UTC+8 换日参数。</li>
           <li>2.0-hotfix（单人 / 联机待机过回合）：允许未选择手札时执行或锁定 0 咒力待机行动，解决咒力归零或无可用手札时无法过回合的问题；双方锁定后仍由本地规则引擎同步结算。</li>
           <li>2.0-hotfix（联机结算去 AI 裁判）：双方锁定行动后不再请求 AI 裁判，服务器只保留 1 秒锁定反馈并交由本地规则引擎快速进入下一回合；AI 功能保留到对战结束后的“AI生成对战过程”。</li>
           <li>2.0（联机模式开放）：联机模式默认使用官方联机服务器；首次进入联机页会弹出简体中文使用说明，说明创建 / 加入房间、锁定角色、选择手札、锁定行动、自动结算和高级后端网络配置。</li>
@@ -1091,6 +1092,6 @@
       </main>
     </div>
 
-  <script type="module" src="./modules/main.js?v=20260430-single-pass-turn-v1&esm=7"></script>
+  <script type="module" src="./modules/main.js?v=20260430-tencent-usage-east8-v1&esm=7"></script>
 </body>
 </html>

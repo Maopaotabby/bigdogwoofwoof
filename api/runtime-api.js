@@ -1986,6 +1986,7 @@ async function requestFallbackUsageStats(workerError) {
 }
 
 async function requestWorkerUsageStats(options = {}) {
+  const timeMeta = buildUsageCounterTimeMeta();
   const response = await fetchUsageStatsWithTimeout(buildWorkerUsageStatsUrl(), {
     method: options.increment ? "POST" : "GET",
     cache: "no-store",
@@ -1994,6 +1995,9 @@ async function requestWorkerUsageStats(options = {}) {
       site: GLOBAL_USAGE_COUNTER.domain,
       url: GLOBAL_USAGE_COUNTER.canonicalUrl,
       label: GLOBAL_USAGE_COUNTER.label,
+      timezone: timeMeta.timezone,
+      utcOffsetMinutes: timeMeta.utcOffsetMinutes,
+      dayKey: timeMeta.dayKey,
       increment: true
     }) : undefined
   });
@@ -2081,7 +2085,10 @@ function markGlobalUsageStatsUnavailable(error) {
 function shouldSyncGlobalUsageCounter() {
   const hostname = window.location.hostname;
   if (!hostname) return false;
-  return hostname === "maopaotabby.github.io";
+  const allowedHosts = Array.isArray(GLOBAL_USAGE_COUNTER.allowedHosts)
+    ? GLOBAL_USAGE_COUNTER.allowedHosts
+    : ["maopaotabby.github.io"];
+  return allowedHosts.includes(hostname);
 }
 
 function buildHitsCounterUrl() {
@@ -2092,9 +2099,26 @@ function buildHitsCounterUrl() {
 }
 
 function buildWorkerUsageStatsUrl() {
+  const timeMeta = buildUsageCounterTimeMeta();
   const url = new URL(GLOBAL_USAGE_COUNTER.endpoint);
   url.searchParams.set("site", GLOBAL_USAGE_COUNTER.domain);
+  url.searchParams.set("timezone", timeMeta.timezone);
+  url.searchParams.set("utcOffsetMinutes", String(timeMeta.utcOffsetMinutes));
+  url.searchParams.set("dayKey", timeMeta.dayKey);
   return url.toString();
+}
+
+function buildUsageCounterTimeMeta(date = new Date()) {
+  const timezone = GLOBAL_USAGE_COUNTER.timezone || "Asia/Shanghai";
+  const utcOffsetMinutes = Number.isFinite(Number(GLOBAL_USAGE_COUNTER.utcOffsetMinutes))
+    ? Number(GLOBAL_USAGE_COUNTER.utcOffsetMinutes)
+    : 480;
+  const shifted = new Date(date.getTime() + utcOffsetMinutes * 60 * 1000);
+  return {
+    timezone,
+    utcOffsetMinutes,
+    dayKey: shifted.toISOString().slice(0, 10)
+  };
 }
 
 function parseUsageNumber(value) {

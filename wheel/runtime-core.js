@@ -253,7 +253,7 @@ const els = {
 
 const DEBUG_ACCESS_CODE = "258079";
 const DEBUG_SUMMON_SEQUENCE = "258079";
-const APP_BUILD_VERSION = "20260428-v1.390A-combat-core-rationalization-pass";
+const APP_BUILD_VERSION = "20260430-tencent-usage-east8-v1";
 const MOBILE_TOPBAR_QUERY = "(max-width: 640px)";
 const MOBILE_TOPBAR_SCROLL_DELTA = 8;
 const MOBILE_TOPBAR_MIN_HIDE_AFTER = 72;
@@ -410,6 +410,9 @@ const GLOBAL_USAGE_COUNTER = {
   fallbackProvider: "hitscounter.dev",
   fallbackEndpoint: "https://hitscounter.dev/api/hit",
   requestTimeoutMs: 12000,
+  allowedHosts: ["maopaotabby.github.io", "119.91.224.223"],
+  timezone: "Asia/Shanghai",
+  utcOffsetMinutes: 480,
   label: "open"
 };
 
