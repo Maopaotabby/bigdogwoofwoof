@@ -52,5 +52,43 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "okkotsu-authentic-mutual-love",
+    "language": "json-rule-v1",
+    "domainName": "真赝相爱",
+    "scriptType": "technique_buff",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "sure_hit"
+    ],
+    "effectSummary": "真赝相爱抽象为复制术式与里香增幅的领域压制：造成伤害、削弱稳定度，并提升后续终结权重。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 0,
+      "damage": 28,
+      "nextRoundDamage": 8,
+      "opponentStabilityDelta": -12,
+      "opponentCeDamage": 8,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": false,
+      "forceTrialHands": false
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake"
+  }
 }

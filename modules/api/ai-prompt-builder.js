@@ -14,8 +14,25 @@
   var defaultProviderRules = Object.freeze({
     version: "0.1.1",
     status: "CANDIDATE",
-    defaultMode: "local_fallback",
+    defaultMode: "openai_compatible_byok_direct",
+    defaultProviderId: "ark_ai",
     providers: Object.freeze([
+      Object.freeze({
+        providerId: "ark_ai",
+        label: "ArkAI / 火山方舟",
+        modes: Object.freeze(["openai_compatible_byok_direct", "user_proxy_endpoint"]),
+        endpointType: "chat_completions",
+        baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
+        defaultPath: "/chat/completions",
+        defaultModel: "doubao-seed-2-0-mini-260215",
+        defaultApiKey: "09d6d696-dc76-4d99-a912-b15bec17c869",
+        modelPresets: Object.freeze(["doubao-seed-2-0-mini-260215"]),
+        allowCustomBaseUrl: false,
+        allowCustomPath: false,
+        allowCustomModel: true,
+        securityWarningRequired: true,
+        status: "CANDIDATE"
+      }),
       Object.freeze({
         providerId: "openai",
         label: "OpenAI",
@@ -71,14 +88,14 @@
       local_fallback: Object.freeze({ enabled: true, label: "本地叙事 fallback" }),
       openai_byok_direct: Object.freeze({ enabled: true, label: "玩家自带 OpenAI API Key（实验性）", providerId: "openai", defaultStorage: "sessionStorage", allowLocalStorage: true }),
       deepseek_byok_direct: Object.freeze({ enabled: true, label: "玩家自带 DeepSeek API Key（实验性）", providerId: "deepseek", defaultStorage: "sessionStorage", allowLocalStorage: true }),
-      openai_compatible_byok_direct: Object.freeze({ enabled: true, label: "自定义 OpenAI-compatible Provider（实验性）", providerId: "openai_compatible", defaultStorage: "sessionStorage", allowLocalStorage: true }),
+      openai_compatible_byok_direct: Object.freeze({ enabled: true, label: "ArkAI / OpenAI-compatible Provider（实验性）", providerId: "ark_ai", defaultStorage: "sessionStorage", allowLocalStorage: true }),
       user_proxy_endpoint: Object.freeze({ enabled: true, label: "玩家自托管 Proxy Endpoint（推荐）", providerId: "user_proxy" })
     }),
-    defaultModel: "gpt-5-mini",
+    defaultModel: "doubao-seed-2-0-mini-260215",
     openAiResponsesEndpoint: "https://api.openai.com/v1/responses",
     tokenBudget: Object.freeze({
       maxPromptTokens: 6000,
-      maxOutputTokens: 700,
+      maxOutputTokens: 1800,
       recentLogLimit: 12,
       maxCardSummary: 10,
       maxActionSummary: 10,
@@ -86,7 +103,7 @@
       maxFeedbackLogEntries: 30
     }),
     maxPromptTokens: 6000,
-    maxOutputTokens: 700,
+    maxOutputTokens: 1800,
     temperature: 0.7,
     recentLogLimit: 12,
     maxCardSummary: 10,
@@ -155,6 +172,14 @@
 
   function inferProviderIdForMode(mode, rules) {
     var normalized = normalizeAiMode(mode, rules || assets.providerRules);
+    var providerRules = rules || assets.providerRules || defaultProviderRules;
+    var defaultProviderId = String(providerRules?.defaultProviderId || "").trim();
+    var providers = providerRules?.providers || [];
+    if (defaultProviderId && providers.some(function hasDefaultProvider(provider) {
+      return provider?.providerId === defaultProviderId && (!Array.isArray(provider.modes) || provider.modes.indexOf(normalized) !== -1);
+    })) {
+      return defaultProviderId;
+    }
     if (normalized === "openai_byok_direct") return "openai";
     if (normalized === "deepseek_byok_direct") return "deepseek";
     if (normalized === "openai_compatible_byok_direct") return "openai_compatible";
@@ -174,6 +199,7 @@
       baseUrl: String(source.baseUrl || "").replace(/\/+$/, ""),
       defaultPath: String(source.defaultPath || ""),
       defaultModel: String(source.defaultModel || ""),
+      defaultApiKey: String(source.defaultApiKey || ""),
       modelPresets: Array.isArray(source.modelPresets) ? source.modelPresets.map(String).filter(Boolean) : [],
       allowCustomBaseUrl: Boolean(source.allowCustomBaseUrl),
       allowCustomPath: Boolean(source.allowCustomPath),
@@ -187,6 +213,7 @@
     var input = providerRules && typeof providerRules === "object" ? providerRules : {};
     var next = Object.assign({}, cloneJson(defaultProviderRules), cloneJson(input));
     next.defaultMode = normalizeAiMode(next.defaultMode, defaultProviderRules);
+    next.defaultProviderId = String(next.defaultProviderId || defaultProviderRules.defaultProviderId || "").trim();
     next.providers = (Array.isArray(input.providers) ? input.providers : defaultProviderRules.providers)
       .map(normalizeProviderConfig)
       .filter(Boolean);
@@ -294,8 +321,11 @@
 
   function getAiProviderConfig(providerIdOrMode) {
     var text = String(providerIdOrMode || "").trim();
-    var providerId = inferProviderIdForMode(text, assets.providerRules) || text;
     var providers = assets.providerRules.providers || [];
+    for (var exactIndex = 0; exactIndex < providers.length; exactIndex += 1) {
+      if (providers[exactIndex].providerId === text) return cloneJson(providers[exactIndex]);
+    }
+    var providerId = inferProviderIdForMode(text, assets.providerRules) || text;
     for (var index = 0; index < providers.length; index += 1) {
       if (providers[index].providerId === providerId) return cloneJson(providers[index]);
     }

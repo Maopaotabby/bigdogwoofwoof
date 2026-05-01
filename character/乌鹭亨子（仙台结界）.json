@@ -49,5 +49,43 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "uro-sendai-three-way",
+    "language": "json-rule-v1",
+    "domainName": "仙台三方领域",
+    "scriptType": "placeholder_damage",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "placeholder"
+    ],
+    "effectSummary": "仙台三方领域原资料缺少稳定规则，暂抽象为天空术式领域占位伤害。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 10,
+      "damage": 0,
+      "nextRoundDamage": 0,
+      "opponentStabilityDelta": 0,
+      "opponentCeDamage": 0,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": false,
+      "forceTrialHands": false
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake"
+  }
 }

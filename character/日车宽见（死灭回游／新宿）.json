@@ -54,5 +54,44 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "higuruma-deadly-sentencing",
+    "language": "json-rule-v1",
+    "domainName": "诛伏赐死",
+    "scriptType": "rule_trial_execution",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "rule_trial"
+    ],
+    "effectSummary": "诛伏赐死抽象为审判规则：进入审判/辩驳候选，强制对局转向审判标签；死刑判决实际成立后才把处刑人之剑加入日车手牌。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 0,
+      "damage": 0,
+      "nextRoundDamage": 0,
+      "opponentStabilityDelta": -8,
+      "opponentCeDamage": 0,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": false,
+      "forceTrialHands": true
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake",
+    "barrierType": "rule_barrier"
+  }
 }

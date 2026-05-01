@@ -52,5 +52,45 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "megumi-chimera-shadow-garden",
+    "language": "json-rule-v1",
+    "domainName": "嵌合暗翳庭",
+    "scriptType": "auto_attack",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "shikigami_auto_attack"
+    ],
+    "effectSummary": "嵌合暗翳庭为未完成领域，抽象为影与式神的数量压制，伤害较低但持续扰乱稳定度。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 0,
+      "damage": 16,
+      "nextRoundDamage": 10,
+      "opponentStabilityDelta": -10,
+      "opponentCeDamage": 0,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": false,
+      "forceTrialHands": false
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake",
+    "barrierType": "incomplete_barrier",
+    "domainCompletion": "incomplete"
+  }
 }

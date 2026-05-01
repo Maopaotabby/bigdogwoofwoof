@@ -12,6 +12,7 @@ function addCustomDuelCharacter() {
     state.customDuelCards.push(card);
   }
   state.pendingCustomDuelHandCards = [];
+  state.pendingCustomDuelDomainScript = null;
   state.duelBattle = null;
   renderDuelCustomList();
   renderPendingCustomDuelHandList();
@@ -72,6 +73,7 @@ function readCustomDuelForm() {
     manualCombatScore: parseOptionalDuelNumber(els.duelCustomCombatScore?.value, 0, 12),
     manualCombatUnit: parseOptionalDuelNumber(els.duelCustomCombatUnit?.value, 1, 99999999),
     customHandCards: (state.pendingCustomDuelHandCards || []).map((card) => ({ ...card })),
+    domainScript: state.pendingCustomDuelDomainScript ? { ...state.pendingCustomDuelDomainScript } : null,
     stats
   };
 }
@@ -90,7 +92,7 @@ function buildCustomDuelCard(form, existingId = "") {
   };
   const traits = Array.from(new Set([form.technique, ...form.traits, ...selectedMechanisms].filter(Boolean)));
   const loadout = Array.from(new Set([...(form.tools || []), ...selectedToolTags].filter(Boolean)));
-  const customHandCards = normalizeCustomDuelHandCardsForCharacter(form.customHandCards, id, specialHandTag);
+  const customHandCards = normalizeCustomDuelHandCardsForCharacter(form.customHandCards, id, specialHandTag, form.domain, form.domainScript);
   const hp = duelRankValue(form.stats.body);
   const mp = duelRankValue(form.stats.cursedEnergy);
   return {
@@ -122,6 +124,7 @@ function buildCustomDuelCard(form, existingId = "") {
     techniqueDescription: "无",
     techniquePower: form.techniquePower || "无",
     domainProfile: form.domain || "无",
+    domainScript: form.domainScript || null,
     visibleGrade: DUEL_GRADE_OPTIONS.some((item) => item.value === form.visibleGrade) ? form.visibleGrade : "grade2",
     officialGrade: gradeLabel(form.visibleGrade),
     powerTier: form.visibleGrade === "specialGrade" ? "specialGrade" : "custom",
@@ -152,8 +155,12 @@ function buildCustomDuelCardAxes(stats = {}, techniquePower = "B", domain = "", 
   return { "咒术": jujutsu, "肉体": body, "悟性": insight, "构筑": build };
 }
 
-function normalizeCustomDuelHandCardsForCharacter(cards = [], characterId = "", specialHandTag = "") {
-  return (cards || []).map((card, index) => {
+function normalizeCustomDuelHandCardsForCharacter(cards = [], characterId = "", specialHandTag = "", domainProfile = "", domainScript = null) {
+  const forbiddenDomainNames = getCustomDuelDomainHandNames(domainProfile, domainScript);
+  return (cards || [])
+    .filter((card) => !isCustomDuelDomainNameHand(card, forbiddenDomainNames))
+    .filter((card) => !isCustomDuelRuleSubphaseOnlyHand(card, domainScript))
+    .map((card, index) => {
     const id = card.id || `custom_action_${String(characterId || "custom").replace(/[^\w-]+/g, "_")}_${index + 1}`;
     const tags = Array.from(new Set([...(card.tags || []), "自定义", "特殊手札", specialHandTag].filter(Boolean)));
     return {
@@ -170,6 +177,43 @@ function normalizeCustomDuelHandCardsForCharacter(cards = [], characterId = "", 
       tags
     };
   });
+}
+
+function getCustomDuelDomainHandNames(domainProfile = "", domainScript = null) {
+  const names = new Set();
+  splitCustomDuelList(domainProfile || "").forEach((part) => {
+    const cleaned = part.replace(/^(领域展开|开放领域|顶级领域|未完成领域|领域)[:：]?/, "").trim();
+    if (cleaned && !/无明确领域|无领域|没有领域|不具备领域|未知|未公开/.test(cleaned)) names.add(cleaned);
+  });
+  const scriptName = normalizeCustomDuelText(domainScript?.domainName || "");
+  if (scriptName && !/无明确领域|无领域|没有领域|不具备领域|未知|未公开/.test(scriptName)) names.add(scriptName);
+  return names;
+}
+
+function isCustomDuelDomainNameHand(card = {}, forbiddenDomainNames = new Set()) {
+  const name = normalizeCustomDuelText(card.name || card.label || "");
+  const cardType = normalizeCustomDuelText(card.cardType || card.type || "");
+  if (!name) return false;
+  if (/^(领域展开|展开领域|domain expansion)$/i.test(name)) return true;
+  if (/^(领域展开|展开领域)[·:：\-\s]/i.test(name)) return true;
+  if (forbiddenDomainNames.has(name)) return true;
+  if (cardType === "domain" && forbiddenDomainNames.size && Array.from(forbiddenDomainNames).some((domainName) => name.includes(domainName) || domainName.includes(name))) return true;
+  return false;
+}
+
+function isCustomDuelRuleSubphaseOnlyHand(card = {}, domainScript = null) {
+  const name = normalizeCustomDuelText(card.name || card.label || "");
+  const text = [
+    name,
+    card.id,
+    card.sourceActionId,
+    card.description,
+    card.effectSummary,
+    ...(card.tags || [])
+  ].filter(Boolean).join(" ");
+  if (/处刑人之剑|死刑判决|请求判决|证据提出|指控推进|辩护|审判牌|trial-replacement|request_verdict|present_evidence|press_charge|advance_trial|rule_pressure|challenge_evidence|deny_charge|delay_trial/i.test(text)) return true;
+  if ((domainScript?.scriptType === "rule_trial_execution" || (domainScript?.effectTags || []).includes("rule_trial")) && /审判|裁判|判决|证据|指控|没收|死刑|处刑/.test(text)) return true;
+  return false;
 }
 
 function normalizeCustomDuelText(value) {
@@ -443,6 +487,7 @@ function editCustomDuelCharacter(characterId) {
   if (els.duelCustomCombatScore) els.duelCustomCombatScore.value = card.debugManualCombatScore ?? "";
   if (els.duelCustomCombatUnit) els.duelCustomCombatUnit.value = card.debugManualCombatUnit ?? "";
   state.pendingCustomDuelHandCards = (card.customHandCards || []).map((item) => ({ ...item }));
+  state.pendingCustomDuelDomainScript = card.domainScript ? { ...card.domainScript } : null;
   renderPendingCustomDuelHandList();
   syncCustomDuelEditMode();
   els.duelCustomName?.focus();
@@ -513,6 +558,7 @@ function removeCustomDuelCharacter(characterId) {
   if (state.customDuelEditId === characterId) {
     state.customDuelEditId = "";
     state.pendingCustomDuelHandCards = [];
+    state.pendingCustomDuelDomainScript = null;
     renderPendingCustomDuelHandList();
   }
   state.duelBattle = null;
@@ -526,6 +572,7 @@ function clearCustomDuelCharacters() {
   state.customDuelCards = [];
   state.customDuelEditId = "";
   state.pendingCustomDuelHandCards = [];
+  state.pendingCustomDuelDomainScript = null;
   state.duelBattle = null;
   renderDuelCustomList();
   renderPendingCustomDuelHandList();
@@ -1275,6 +1322,7 @@ function startDuelBattle(options = {}) {
   };
   battle.mode = mode;
   battle.onlineRoomId = options.snapshot?.roomId || "";
+  battle.onlineBattleSeed = options.snapshot?.battleSeed || "";
   battle.onlinePlayerSide = options.snapshot ? (state.duelModeState.playerSide || "left") : "";
   battle.resourceState = initializeDuelResourceState(battle);
   battle.resourceLog = battle.resourceState.resourceLog;
@@ -2718,6 +2766,8 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   const lastSelected = selectedEntries[selectedEntries.length - 1];
   const onlineMode = isOnlineDuelModeActive();
   const onlineLocked = onlineMode && state.duelModeState.localLocked;
+  const lockEntry = battle.handLockMessages?.[actorSide];
+  const handLockMessage = lockEntry && Number(lockEntry.round || 0) === battle.round + 1 ? String(lockEntry.message || "") : "";
   const selectedOrder = selectedEntries.length ? `
     <ol class="duel-selected-hand-list">
       ${selectedEntries.map((entry, index) => `
@@ -2766,6 +2816,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
       ${sideHandState.lastDiscarded?.length ? `<p class="duel-action-message">已弃置：${escapeHtml(sideHandState.lastDiscarded.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
       ${warning ? `<p class="duel-action-warning">${escapeHtml(warning)}</p>` : ""}
       ${battle.actionUiMessage ? `<p class="duel-action-message">${escapeHtml(battle.actionUiMessage)}</p>` : ""}
+      ${handLockMessage ? `<div class="duel-hand-lock-message">${escapeHtml(handLockMessage)}</div>` : ""}
       <div class="duel-action-toolbar">
         <div class="duel-selected-hand-summary">
           <strong>已选择手札</strong>
@@ -2778,7 +2829,9 @@ function renderDuelActionChoices(battle = state.duelBattle) {
         </div>
       </div>
       <div class="duel-action-choices duel-hand-choices">
-        ${choices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, { discardMode: pendingDiscardCount > 0 })).join("")}
+        ${choices.length
+          ? choices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, { discardMode: pendingDiscardCount > 0 })).join("")
+          : (handLockMessage ? `<p class="duel-selected-hand-empty">${escapeHtml(handLockMessage)}</p>` : "")}
       </div>
       ${maxDomainHandSize ? `
         <div class="duel-domain-hand-head">
@@ -3041,6 +3094,26 @@ function renderDuelDeveloperDetails(view = {}, debug = {}) {
   `;
 }
 
+function getDuelCardNumericBrief(view = {}) {
+  const preview = view.numericPreview || view.finalPreview || {};
+  const base = preview.base || {};
+  const finalDamage = Number(preview.finalDamage || 0);
+  const finalBlock = Number(preview.finalBlock || 0);
+  const finalCost = Number(preview.cost?.finalCost ?? view.previewCeCost?.finalCost ?? view.ceCost ?? 0);
+  const baseDamage = Number(base.baseDamage || 0);
+  const baseBlock = Math.max(Number(base.baseBlock || 0), Number(base.baseShield || 0));
+  const modifiers = [];
+  if (baseDamage > 0 && finalDamage > 0) modifiers.push(finalDamage / baseDamage);
+  if (baseBlock > 0 && finalBlock > 0) modifiers.push(finalBlock / baseBlock);
+  const modifier = modifiers.length
+    ? modifiers.reduce((total, value) => total + value, 0) / modifiers.length
+    : null;
+  const modifierText = modifier
+    ? `x${formatNumber(Number(modifier.toFixed(2)))}（浮动 x${formatNumber(Number((modifier * 0.92).toFixed(2)))}~x${formatNumber(Number((modifier * 1.08).toFixed(2)))})`
+    : "特殊效果";
+  return `攻 ${formatNumber(finalDamage)}｜防 ${formatNumber(finalBlock)}｜消耗 AP ${formatNumber(view.apCost || 0)} / CE ${formatNumber(finalCost)}｜数值修正 ${modifierText}`;
+}
+
 function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, selectedOrderMap = new Map(), options = {}) {
   const { actor, opponent } = getDuelSideResources(battle);
   const view = getDuelHandCardViewModel(action, actor, opponent, battle);
@@ -3069,6 +3142,7 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
       : (view.available ? `风险：${riskText}` : availabilityText);
   const statusClass = selected ? "selected" : (view.available ? "available" : "blocked");
   const readablePreview = getDuelReadableEffectPreview(view, action);
+  const numericBrief = getDuelCardNumericBrief(view);
   return `
     <article class="duel-hand-card${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
       <button class="duel-action-choice duel-hand-main${selected ? " active" : ""}" data-duel-action="${escapeHtml(view.actionId)}" type="button" ${onlineLocked || discardMode || selected || !view.available ? "disabled" : ""}>
@@ -3080,6 +3154,7 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
           <i class="duel-action-risk">风险：${escapeHtml(riskText)}</i>
         </span>
         <span class="duel-action-cost">AP ${escapeHtml(formatNumber(view.apCost))}｜咒力 ${escapeHtml(formatNumber(view.ceCost || 0))}</span>
+        <span class="duel-action-numeric-brief">${escapeHtml(numericBrief)}</span>
         <span class="duel-action-effect">效果：${escapeHtml(shortEffectText)}</span>
         <span class="duel-action-tags" title="${escapeHtml(fullTagText)}">标签：${escapeHtml(tagText + tagSuffix)}</span>
         <em class="duel-action-status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</em>
@@ -3466,13 +3541,13 @@ function renderDuelBattleResult(battle) {
   const resultDetail = isDraw
     ? `第 ${formatNumber(battle.endingRound || battle.round)} 回合：战斗没有被旧回合数胜率开奖收束。结束原因：${endReasonLabel}。当前结算倾向 ${formatPercent(battle.finalRate)} 仅作局势参考。`
     : `第 ${formatNumber(battle.endingRound || battle.round)} 回合：${loser.name} 体势被压到无法继续战斗。胜者：${winner.name}。结束原因：${endReasonLabel}。当前结算倾向 ${formatPercent(battle.finalRate)} 仅作局势参考。`;
-  const aiMarkup = isDuelAiAssistEnabled() ? `
+  const aiMarkup = `
     <div class="duel-ai-battle">
       <button class="secondary" id="duelAiBattleTextBtn" type="button" ${battle.aiNarrativeLoading ? "disabled" : ""}>${battle.aiNarrativeLoading ? "生成中..." : "AI生成对战过程"}</button>
       ${battle.aiNarrativeError ? `<p class="error-text">${escapeHtml(battle.aiNarrativeError)}</p>` : ""}
       ${battle.aiNarrative ? `<p>${escapeHtml(battle.aiNarrative)}</p>` : ""}
     </div>
-  ` : "";
+  `;
   return `
     <div class="duel-result">
       <span>结算结果</span>
@@ -3486,7 +3561,6 @@ function renderDuelBattleResult(battle) {
 async function generateDuelBattleNarrative() {
   const battle = state.duelBattle;
   if (!battle || !battle.resolved || battle.aiNarrativeLoading) return;
-  if (!isDuelAiAssistEnabled()) return;
 
   battle.aiNarrativeLoading = true;
   battle.aiNarrativeError = "";
@@ -3868,6 +3942,7 @@ function getDuelRoundFactors(profile, opponent, tactic, battle, side) {
   const actionWeight = actionContext.weightDeltas || {};
   const residueReading = getDuelStatusEffectValue(resource, "residueReading");
   const domainActionSuppression = getDuelStatusEffectValue(resource, "domainActionSuppression");
+  const domainScriptNoCard = getDuelStatusEffectValue(resource, "domainScriptNoCard");
   const techniqueConfiscated = getDuelStatusEffectValue(resource, "techniqueConfiscated");
   const curseTechniqueBound = getDuelStatusEffectValue(resource, "curseTechniqueBound");
   const incarnatedSuppressed = getDuelStatusEffectValue(resource, "incarnatedSuppressed") + getDuelStatusEffectValue(resource, "incarnatedStabilityDown");
@@ -3881,13 +3956,13 @@ function getDuelRoundFactors(profile, opponent, tactic, battle, side) {
   const soulTouchPressure = getDuelStatusEffectValue(resource, "soulTouchPressure");
   const shikigamiAutoAttack = getDuelStatusEffectValue(resource, "shikigamiAutoAttack");
   const jackpotCycleCandidate = getDuelStatusEffectValue(resource, "jackpotCycleCandidate");
-  const domainProfilePenalty = domainActionSuppression * 0.75 + techniqueConfiscated * 1.25 + curseTechniqueBound * 1.05 + incarnatedSuppressed * 0.55 + summonSuppressed * 0.65 + toolLocked * 0.55 + trialRulePressure * 0.45 + exorcismOrderCandidate * 0.75;
+  const domainProfilePenalty = domainActionSuppression * 0.75 + domainScriptNoCard * 2.4 + techniqueConfiscated * 1.25 + curseTechniqueBound * 1.05 + incarnatedSuppressed * 0.55 + summonSuppressed * 0.65 + toolLocked * 0.55 + trialRulePressure * 0.45 + exorcismOrderCandidate * 0.75;
   const domainPressurePenalty = openSlashPressure * 0.55 + soulTouchPressure * 0.5 + shikigamiAutoAttack * 0.45 + summonSuppressed * 0.25 + toolLocked * 0.18;
   return {
     power: clamp(unitRatio * 2.1, -3.2, 4.2),
     jujutsu: clamp((profile.axes.jujutsu - 5) * 0.75, -1.5, 3.2),
     body: clamp((profile.axes.body - 5) * 0.72, -1.5, 3.2),
-    initiative: tactic.initiative + clamp(profile.axes.insight - 6, -1, 2) * 0.22 + comeback - domainActionSuppression * 0.45 - domainPressurePenalty * 0.2 + Number(actionWeight.initiative || 0),
+    initiative: tactic.initiative + clamp(profile.axes.insight - 6, -1, 2) * 0.22 + comeback - domainActionSuppression * 0.45 - domainScriptNoCard * 1.6 - domainPressurePenalty * 0.2 + Number(actionWeight.initiative || 0),
     technique: tactic.technique + clamp(profile.axes.build - 1.5, -0.8, 2.4) + profile.disruptionScore * 0.08 - imbalancePenalty - domainProfilePenalty + executionStateCandidate * 0.35 + Number(actionWeight.technique || 0),
     melee: tactic.melee + clamp(profile.axes.body - opponent.axes.body, -2.4, 2.4) * 0.35 + executionStateCandidate * 0.45 + jackpotStateCandidate * 0.25 + Number(actionWeight.melee || 0),
     domain: tactic.domain + (domainAccess ? 2.6 : -1.4) + clamp(profile.axes.jujutsu - opponent.axes.jujutsu, -2, 2) * 0.35 - imbalancePenalty - domainProfilePenalty * 0.85 + Number(actionWeight.domain || 0),
@@ -4179,6 +4254,9 @@ function evaluateDuelCharacterCard(card) {
     externalResource: card.externalResource || "",
     techniqueText: formatDuelTechniqueText(card),
     domainProfile: card.domainProfile || "",
+    domainScript: card.domainScript || null,
+    customDuel: Boolean(card.customDuel),
+    characterCardProfile: card,
     flags: Array.from(new Set([...(technique.tags || []), ...(loadout.tags || []), ...(mechanismImpact.tags || []), ...(external.tags || []), ...(domain.tags || [])])),
     notes: card.notes || ""
   };

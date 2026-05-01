@@ -3,14 +3,50 @@ function getAiPromptBuilder() {
   return globalThis.JJKAiPromptBuilder || globalThis.JJKAiPromptApi || null;
 }
 
-function registerAiPromptAssets(providerRules, promptTemplates) {
+function mergeCardPromptIntoPromptTemplates(promptTemplates, cardPrompt) {
+  if (!cardPrompt || typeof cardPrompt !== "object") return promptTemplates;
+  const templateId = String(cardPrompt.templateId || "duel_character_assist").trim();
+  const systemPrompt = Array.isArray(cardPrompt.systemPrompt) ? cardPrompt.systemPrompt.map(String).filter(Boolean) : [];
+  if (!templateId || !systemPrompt.length) return promptTemplates;
+  const next = JSON.parse(JSON.stringify(promptTemplates || {}));
+  next.templates = next.templates && typeof next.templates === "object" ? next.templates : {};
+  const existing = next.templates[templateId] || {};
+  next.templates[templateId] = {
+    ...existing,
+    label: existing.label || "斗蛐蛐角色卡辅助",
+    staticPrefix: [
+      ...systemPrompt,
+      ...(Array.isArray(cardPrompt.specialHandRules) ? ["特殊手札制作规则：", ...cardPrompt.specialHandRules] : []),
+      ...(Array.isArray(cardPrompt.domainRules) ? ["特殊领域制作规则：", ...cardPrompt.domainRules] : []),
+      ...(cardPrompt.returnFormat ? ["返回 JSON 结构：", JSON.stringify(cardPrompt.returnFormat)] : []),
+      ...(Array.isArray(cardPrompt.hardConstraints) ? ["返回格式硬约束：", ...cardPrompt.hardConstraints] : [])
+    ],
+    dynamicSections: Array.from(new Set([
+      ...((Array.isArray(existing.dynamicSections) ? existing.dynamicSections : [])),
+      "description",
+      "draft",
+      "allowedRanks",
+      "allowedGrades",
+      "allowedStages",
+      "generatedTermTemplates",
+      "customSpecialTerms",
+      "mechanismHints",
+      "cardPrompt"
+    ])),
+    maxOutputChars: Math.max(Number(existing.maxOutputChars || 0), 3200)
+  };
+  return next;
+}
+
+function registerAiPromptAssets(providerRules, promptTemplates, cardPrompt = null) {
   const builder = getAiPromptBuilder();
+  const mergedPromptTemplates = mergeCardPromptIntoPromptTemplates(promptTemplates, cardPrompt);
   if (!builder || typeof builder.registerPromptAssets !== "function") {
-    return { providerRules, promptTemplates, loadedAt: "", buildVersion: APP_BUILD_VERSION };
+    return { providerRules, promptTemplates: mergedPromptTemplates, loadedAt: "", buildVersion: APP_BUILD_VERSION };
   }
   return builder.registerPromptAssets({
     providerRules,
-    promptTemplates,
+    promptTemplates: mergedPromptTemplates,
     buildVersion: APP_BUILD_VERSION
   });
 }
@@ -68,12 +104,18 @@ function getAiProviderConfig(providerIdOrMode) {
   const builder = getAiPromptBuilder();
   if (builder?.getAiProviderConfig) return builder.getAiProviderConfig(providerIdOrMode);
   const text = String(providerIdOrMode || "").trim();
+  const exact = getAiProviderList().find((provider) => provider.providerId === text);
+  if (exact) return exact;
   const providerId = inferAiProviderIdForMode(text) || text;
   return getAiProviderList().find((provider) => provider.providerId === providerId) || null;
 }
 
 function inferAiProviderIdForMode(mode) {
   const normalized = normalizeAiProviderMode(mode);
+  const defaultProviderId = String(state.aiProviderRules?.defaultProviderId || "").trim();
+  if (defaultProviderId && getAiProviderList().some((provider) => provider.providerId === defaultProviderId && (!Array.isArray(provider.modes) || provider.modes.includes(normalized)))) {
+    return defaultProviderId;
+  }
   if (normalized === "openai_byok_direct") return "openai";
   if (normalized === "deepseek_byok_direct") return "deepseek";
   if (normalized === "openai_compatible_byok_direct") return "openai_compatible";
@@ -89,7 +131,7 @@ function getProviderModeForProviderId(providerId) {
   const id = String(providerId || "").trim();
   if (id === "openai") return "openai_byok_direct";
   if (id === "deepseek") return "deepseek_byok_direct";
-  if (id === "openai_compatible") return "openai_compatible_byok_direct";
+  if (id === "openai_compatible" || id === "ark_ai") return "openai_compatible_byok_direct";
   if (id === "user_proxy") return "user_proxy_endpoint";
   return getAiProviderMode();
 }
@@ -108,7 +150,7 @@ function initializeAiNarrativePanel() {
     els.aiProviderMode.value = getStoredAiProviderMode();
   }
   if (els.aiProviderIdInput) {
-    els.aiProviderIdInput.value = readSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, inferAiProviderIdForMode(getStoredAiProviderMode()) || "openai");
+    els.aiProviderIdInput.value = readSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, inferAiProviderIdForMode(getStoredAiProviderMode()) || state.aiProviderRules?.defaultProviderId || "ark_ai");
   }
   syncAiProviderForMode(false);
   if (els.aiProxyEndpointInput) {
@@ -131,7 +173,7 @@ function initializeAiNarrativePanel() {
     els.aiByokPersistLocal.checked = readSafeStorage(window.localStorage, AI_BYOK_PERSIST_LOCAL_STORAGE_KEY, "no") === "yes";
   }
   if (els.aiByokKeyInput) {
-    els.aiByokKeyInput.value = readAiByokKey() ? "••••••••••••" : "";
+    els.aiByokKeyInput.value = readAiByokKey() || activeProvider?.defaultApiKey ? "••••••••••••" : "";
   }
   updateAiProviderUi();
   updateAiNarrativeStatus(getAiEndpointModeHint());
@@ -211,8 +253,11 @@ function getAiProviderPath() {
 
 function syncAiProviderForMode(shouldUpdateModel = false) {
   const mode = getAiProviderMode();
-  const providerId = inferAiProviderIdForMode(mode);
-  if (els.aiProviderIdInput && providerId) els.aiProviderIdInput.value = providerId;
+  const currentProviderId = String(els.aiProviderIdInput?.value || "").trim();
+  const currentProvider = getAiProviderConfig(currentProviderId);
+  const currentSupportsMode = currentProvider && (!Array.isArray(currentProvider.modes) || currentProvider.modes.includes(mode));
+  const providerId = currentSupportsMode ? currentProviderId : inferAiProviderIdForMode(mode);
+  if (els.aiProviderIdInput && providerId && els.aiProviderIdInput.value !== providerId) els.aiProviderIdInput.value = providerId;
   const provider = getAiProviderConfig(providerId || mode);
   if (els.aiBaseUrlInput && provider?.baseUrl && mode !== "openai_compatible_byok_direct") {
     els.aiBaseUrlInput.value = provider.baseUrl;
@@ -279,7 +324,7 @@ function clearAllAiProviderSettings() {
   clearAiByokKey();
   clearAiProxyEndpoint();
   if (els.aiProviderMode) els.aiProviderMode.value = getAiDefaultProviderMode();
-  if (els.aiProviderIdInput) els.aiProviderIdInput.value = inferAiProviderIdForMode(getAiProviderMode()) || "openai";
+  if (els.aiProviderIdInput) els.aiProviderIdInput.value = inferAiProviderIdForMode(getAiProviderMode()) || state.aiProviderRules?.defaultProviderId || "ark_ai";
   if (els.aiModelInput) els.aiModelInput.value = getAiProviderDefaultModel();
   if (els.aiOutputTokenInput) els.aiOutputTokenInput.value = String(getAiProviderMaxOutputTokens());
   updateAiProviderUi();
@@ -320,7 +365,7 @@ function getAiProviderSettings() {
     maxPromptTokens: Number(state.aiProviderRules?.maxPromptTokens || state.aiProviderRules?.tokenBudget?.maxPromptTokens || 6000),
     proxyEndpoint: normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, "")),
     byokPersistLocal: Boolean(els.aiByokPersistLocal?.checked),
-    apiKey: getDirectAiModes().includes(aiMode) ? readAiByokKey() : ""
+    apiKey: getDirectAiModes().includes(aiMode) ? (readAiByokKey() || provider?.defaultApiKey || state.aiProviderRules?.defaultApiKey || "") : ""
   };
 }
 
@@ -339,7 +384,9 @@ function updateAiProviderUi() {
   const isCompatible = mode === "openai_compatible_byok_direct";
   if (els.aiProviderWarning) {
     const warning = isDirect
-      ? "安全提示：官方不建议在浏览器中暴露 API Key。此模式仅适合个人本地使用。Key 只保存在你的浏览器中，不会上传到本站服务器。请自行承担泄露与调用费用风险。"
+      ? (provider?.defaultApiKey
+        ? "安全提示：当前版本内置了默认 Provider API Key，仅适合本地或私有测试；公开部署会暴露调用额度。"
+        : "安全提示：官方不建议在浏览器中暴露 API Key。此模式仅适合个人本地使用。Key 只保存在你的浏览器中，不会上传到本站服务器。请自行承担泄露与调用费用风险。")
       : mode === "user_proxy_endpoint"
         ? "推荐模式：请填写你自己部署的 Proxy Endpoint。网站只发送 prompt payload，真实 API key 应保存在你的 proxy。"
         : "当前不会调用远程 AI，也不会消耗任何 API token。";
@@ -358,11 +405,11 @@ function updateAiProviderUi() {
     els.aiProviderIdInput.value = providerId;
   }
   if (els.aiBaseUrlInput) {
-    els.aiBaseUrlInput.disabled = !isCompatible;
+    els.aiBaseUrlInput.disabled = !isCompatible || provider?.allowCustomBaseUrl === false;
     els.aiBaseUrlInput.placeholder = isCompatible ? "https://your-compatible-provider.example/v1" : (provider?.baseUrl || "");
   }
   if (els.aiPathInput) {
-    els.aiPathInput.disabled = !isCompatible;
+    els.aiPathInput.disabled = !isCompatible || provider?.allowCustomPath === false;
     els.aiPathInput.placeholder = provider?.defaultPath || "/chat/completions";
   }
   if (els.aiFallbackStatus) {
@@ -702,7 +749,12 @@ function getAiEndpointModeHint() {
   if (providerMode === "local_fallback") return "当前为本地 fallback：不调用 API，也不消耗 token。";
   if (providerMode === "openai_byok_direct") return "当前为玩家自带 OpenAI API Key（实验性）：请确认 key 只保存在本机。";
   if (providerMode === "deepseek_byok_direct") return "当前为玩家自带 DeepSeek API Key（实验性）：DeepSeek 可选，key 只保存在本机。";
-  if (providerMode === "openai_compatible_byok_direct") return "当前为自定义 OpenAI-compatible Provider：请确认 Base URL、Path、Model 和 key 均来自你信任的服务。";
+  if (providerMode === "openai_compatible_byok_direct") {
+    const provider = getAiProviderConfig(getAiProviderId() || providerMode);
+    return provider?.providerId === "ark_ai"
+      ? "当前为 ArkAI / 火山方舟 OpenAI-compatible 调用：请在 AI 设置中填写 Ark API Key，模型使用 Ark endpoint/model ID。"
+      : "当前为自定义 OpenAI-compatible Provider：请确认 Base URL、Path、Model 和 key 均来自你信任的服务。";
+  }
   if (providerMode === "user_proxy_endpoint") return "当前为玩家自托管 Proxy Endpoint（推荐）：网站只发送 prompt payload。";
   return "当前 AI 模式未识别，已回退到本地 fallback。";
 }
@@ -1135,6 +1187,7 @@ function buildDuelCharacterAssistPayload(description, draft) {
     allowedStages: DUEL_STAGE_OPTIONS,
     generatedTermTemplates: getDuelGeneratedTermTemplatesForAi(),
     customSpecialTerms: getDuelSpecialTermsForAi(),
+    cardPrompt: state.cardPrompt || null,
     mechanismHints: {
       cursedTools: (state.mechanisms?.cursedTools || []).slice(0, 18).map((item) => item.displayName || item.id),
       mechanisms: (state.mechanisms?.mechanisms || []).slice(0, 28).map((item) => item.displayName || item.id)
@@ -1174,7 +1227,7 @@ async function requestDuelAiAssistWithFallback(payload) {
 }
 
 async function requestDuelAiAssist(endpoint, payload) {
-  const templateId = payload?.mode === "characterBuild" ? "duel_analysis" : "battle_narration";
+  const templateId = payload?.mode === "characterBuild" ? "duel_character_assist" : "battle_narration";
   if (endpoint) {
     return requestUserProxyAiPayload(endpoint, buildAiPromptPayload(templateId, payload), {
       promptTemplateId: templateId,
@@ -1185,14 +1238,54 @@ async function requestDuelAiAssist(endpoint, payload) {
     timeoutMs: AI_REQUEST_TIMEOUT_MS,
     localFallbackText: buildLocalAiFallbackText(templateId, payload)
   });
+  const parsedData = payload?.mode === "characterBuild" ? parseDuelAiStructuredJson(data) : data;
   if (payload?.mode === "battleNarrative" && !data.battleText && (data.text || data.markdown)) {
     data.battleText = data.text || data.markdown;
   }
-  if (payload?.mode === "characterBuild" && !data.suggestion && !data.cardSuggestion) {
+  if (payload?.mode === "characterBuild" && !parsedData.suggestion && !parsedData.cardSuggestion) {
     const fallback = buildLocalDuelAssistFallback(payload, [data.fallbackReason || "AI did not return structured suggestion"]);
     if (fallback) return fallback;
   }
-  return data;
+  return parsedData;
+}
+
+function parseDuelAiStructuredJson(data) {
+  if (!data || typeof data !== "object") return {};
+  if (data.suggestion || data.cardSuggestion) return data;
+  const text = String(data.text || data.markdown || "").trim();
+  if (!text) return data;
+  const cleaned = text
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  const candidates = [cleaned];
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) candidates.push(cleaned.slice(firstBrace, lastBrace + 1));
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      return {
+        ...data,
+        ...parsed,
+        text: data.text,
+        markdown: data.markdown
+      };
+    } catch (error) {
+      // try next candidate
+    }
+  }
+  try {
+    const parsed = JSON.parse(cleaned);
+    return {
+      ...data,
+      ...parsed,
+      text: data.text,
+      markdown: data.markdown
+    };
+  } catch (error) {
+    return data;
+  }
 }
 
 function buildLocalDuelAssistFallback(payload, failures = []) {
@@ -1229,6 +1322,7 @@ function buildLocalDuelCharacterAssist(payload, failures = []) {
     externalResource: draft.externalResource || inferLocalDuelExternalResource(sourceText),
     notes: mergeLocalDuelNotes(draft.notes, failures),
     generatedTerms: inferLocalDuelGeneratedTerms(sourceText),
+    specialHands: [],
     baseStats: inferLocalDuelBaseStats(sourceText, draft.stats || {})
   };
 
@@ -1476,6 +1570,12 @@ function normalizeDuelAiSuggestion(raw, externalGeneratedTerms = []) {
   if (!raw || typeof raw !== "object") return null;
   const baseStats = raw.baseStats && typeof raw.baseStats === "object" ? raw.baseStats : {};
   const generatedTerms = normalizeDuelGeneratedTerms(raw.generatedTerms || raw.mechanicDefinitions || externalGeneratedTerms);
+  const domainScript = normalizeDuelAiDomainScript(raw.domainScript || raw.domainEffectScript || raw.domain?.script || null);
+  const domain = normalizeCustomDuelText(raw.domainProfile || raw.domain || domainScript?.domainName || "");
+  const specialHands = normalizeDuelAiSpecialHands(raw.specialHands || raw.specialHandCards || raw.cards || [], {
+    domain,
+    domainScript
+  });
   const normalizedStats = {};
   for (const key of Object.keys(DUEL_DEFAULT_CUSTOM_STATS)) {
     normalizedStats[key] = DUEL_RANKS.includes(baseStats[key]) ? baseStats[key] : (DUEL_DEFAULT_CUSTOM_STATS[key] || "B");
@@ -1488,14 +1588,251 @@ function normalizeDuelAiSuggestion(raw, externalGeneratedTerms = []) {
     stage: getValidDuelStage(raw.stage || ""),
     techniquePower,
     technique: normalizeCustomDuelText(raw.technique || raw.techniqueName || ""),
-    domain: normalizeCustomDuelText(raw.domainProfile || raw.domain || ""),
+    domain,
     tools: Array.isArray(raw.loadout) ? raw.loadout.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(raw.tools || ""),
     traits: Array.isArray(raw.innateTraits) ? raw.innateTraits.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(raw.traits || ""),
     externalResource: normalizeCustomDuelText(raw.externalResource || ""),
     notes: normalizeCustomDuelText(raw.notes || ""),
+    domainScript,
     generatedTerms,
+    specialHands,
     stats: normalizedStats
   };
+}
+
+function normalizeDuelAiDomainScript(rawScript) {
+  if (!rawScript || typeof rawScript !== "object") return null;
+  const allowedScriptTypes = new Set(["sure_hit", "auto_attack", "self_buff", "technique_buff", "soul_pressure", "hard_control", "rule_trial_execution", "jackpot_rule", "placeholder_damage"]);
+  const scriptTypeAliases = {
+    rule_trial: "rule_trial_execution",
+    trial: "rule_trial_execution",
+    judgment: "rule_trial_execution",
+    jackpot: "jackpot_rule",
+    probability_loop: "jackpot_rule",
+    control: "hard_control",
+    placeholder: "placeholder_damage"
+  };
+  const requestedType = normalizeCustomDuelText(rawScript.scriptType || rawScript.type || "placeholder_damage").slice(0, 50);
+  const scriptType = allowedScriptTypes.has(requestedType) ? requestedType : (scriptTypeAliases[requestedType] || "placeholder_damage");
+  const effects = rawScript.effects && typeof rawScript.effects === "object" ? rawScript.effects : {};
+  const fallback = rawScript.fallback && typeof rawScript.fallback === "object" ? rawScript.fallback : {};
+  const rawTags = Array.isArray(rawScript.effectTags || rawScript.tags)
+    ? (rawScript.effectTags || rawScript.tags).map(normalizeCustomDuelText).filter(Boolean).slice(0, 12)
+    : splitCustomDuelList(rawScript.effectTags || rawScript.tags || "");
+  const tagAliases = {
+    surehit: "sure_hit",
+    sure_hit: "sure_hit",
+    information_overload: "information_overload",
+    unlimited_void: "information_overload",
+    slash_auto_attack: "slash_auto_attack",
+    malevolent_shrine: "slash_auto_attack",
+    soul_touch: "soul_touch",
+    soul_pressure: "soul_touch",
+    shikigami_auto_attack: "shikigami_auto_attack",
+    summon_auto_attack: "shikigami_auto_attack",
+    rule_trial: "rule_trial",
+    judgment: "rule_trial",
+    trial: "rule_trial",
+    jackpot_rule: "jackpot_rule",
+    jackpot: "jackpot_rule",
+    placeholder: "placeholder"
+  };
+  const allowedTags = new Set(["sure_hit", "information_overload", "slash_auto_attack", "soul_touch", "shikigami_auto_attack", "rule_trial", "jackpot_rule", "placeholder"]);
+  const tags = rawTags.map((tag) => tagAliases[tag] || tag).filter((tag) => allowedTags.has(tag));
+  if (scriptType === "rule_trial_execution") tags.push("rule_trial");
+  if (scriptType === "jackpot_rule") tags.push("jackpot_rule");
+  if (scriptType === "placeholder_damage" && !tags.length) tags.push("placeholder");
+  if ((scriptType === "sure_hit" || scriptType === "hard_control") && !tags.length) tags.push("sure_hit");
+  if (scriptType === "soul_pressure" && !tags.length) tags.push("soul_touch");
+  const blockedBy = Array.from(new Set([
+    ...(Array.isArray(rawScript.blockedBy) ? rawScript.blockedBy.map(normalizeCustomDuelText).filter(Boolean) : []),
+    "domain_clash",
+    "simple_domain_guard",
+    "hollow_wicker_basket_guard",
+    "falling_blossom_emotion",
+    "zero_ce_domain_bypass"
+  ]));
+  const harmfulStability = Number(effects.opponentStabilityDelta || 0);
+  const normalizedStabilityDelta = harmfulStability > 0 ? -harmfulStability : harmfulStability;
+  const normalizedEffects = {
+    damage: clamp(Math.round(Number(effects.damage || 0) || 0), 0, 120),
+    nextRoundDamage: clamp(Math.round(Number(effects.nextRoundDamage || 0) || 0), 0, 120),
+    skipOpponentNextCard: Boolean(effects.skipOpponentNextCard),
+    opponentStabilityDelta: clamp(Math.round(normalizedStabilityDelta || 0), -100, 0),
+    opponentCeDamage: clamp(Math.round(Number(effects.opponentCeDamage || 0) || 0), 0, 120),
+    grantExecutionSword: Boolean(effects.grantExecutionSword),
+    forceTrialHands: Boolean(effects.forceTrialHands),
+    placeholderDamage: clamp(Math.round(Number(effects.placeholderDamage || 0) || 0), 0, 120)
+  };
+  if (scriptType === "rule_trial_execution" || tags.includes("rule_trial")) {
+    normalizedEffects.forceTrialHands = true;
+    normalizedEffects.grantExecutionSword = false;
+    normalizedEffects.damage = 0;
+    normalizedEffects.nextRoundDamage = 0;
+    normalizedEffects.skipOpponentNextCard = false;
+  }
+  if (scriptType === "jackpot_rule" || tags.includes("jackpot_rule")) {
+    normalizedEffects.damage = 0;
+    normalizedEffects.nextRoundDamage = 0;
+    normalizedEffects.skipOpponentNextCard = false;
+    normalizedEffects.forceTrialHands = false;
+    normalizedEffects.grantExecutionSword = false;
+  }
+  if (!normalizedEffects.damage && !normalizedEffects.nextRoundDamage && !normalizedEffects.opponentCeDamage && !normalizedEffects.opponentStabilityDelta && !normalizedEffects.skipOpponentNextCard && !normalizedEffects.forceTrialHands && !normalizedEffects.placeholderDamage && scriptType === "placeholder_damage") {
+    normalizedEffects.placeholderDamage = clamp(Math.round(Number(fallback.damage ?? 10) || 10), 0, 120);
+  }
+  const barrierType = normalizeCustomDuelText(rawScript.barrierType || "").slice(0, 40);
+  const domainCompletion = normalizeCustomDuelText(rawScript.domainCompletion || "").slice(0, 40);
+  return {
+    id: normalizeCustomDuelText(rawScript.id || `custom-domain-${Date.now().toString(36)}`).toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "custom-domain-script",
+    language: "json-rule-v1",
+    domainName: normalizeCustomDuelText(rawScript.domainName || rawScript.name || "").slice(0, 40),
+    scriptType,
+    activation: "onDomainResolved",
+    blockedBy,
+    barrierType,
+    domainCompletion,
+    effectTags: Array.from(new Set(tags)).slice(0, 8),
+    effectSummary: normalizeCustomDuelLongText(rawScript.effectSummary || rawScript.summary || "").slice(0, 360),
+    effects: normalizedEffects,
+    fallback: {
+      strategy: normalizeCustomDuelText(fallback.strategy || "placeholder_plus_10_damage"),
+      damage: clamp(Math.round(Number(fallback.damage ?? 10) || 10), 0, 120),
+      reason: normalizeCustomDuelLongText(fallback.reason || "领域效果无法完整脚本化时，降级为固定候选伤害。").slice(0, 220)
+    },
+    source: normalizeCustomDuelText(rawScript.source || "ai")
+  };
+}
+
+function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
+  const source = Array.isArray(rawHands) ? rawHands : [];
+  const allowedTypes = new Set(["attack", "technique", "ce_burst", "defense", "domain", "support", "resource", "counter", "rule", "soul_pressure"]);
+  const riskMap = { extreme: "critical", critical: "critical", high: "high", medium: "medium", low: "low" };
+  const seen = new Set();
+  const forbiddenDomainNames = getDuelForbiddenDomainHandNames(context);
+  return source
+    .map((hand, index) => {
+      if (!hand || typeof hand !== "object") return null;
+      const name = normalizeCustomDuelText(hand.name || hand.label || "").slice(0, 40);
+      if (!name) return null;
+      const type = normalizeCustomDuelText(hand.type || hand.cardType || "technique");
+      const cardType = allowedTypes.has(type) ? type : "technique";
+      const idSource = normalizeCustomDuelText(hand.id || `ai-special-hand-${index + 1}`).toLowerCase();
+      const id = idSource.replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `ai-special-hand-${index + 1}`;
+      if (seen.has(id)) return null;
+      seen.add(id);
+      if (isDuelAiDomainNameHand(name, cardType, forbiddenDomainNames, hand)) return null;
+      if (isDuelAiRuleSubphaseOnlyHand(name, hand, context)) return null;
+      const apCost = clamp(Math.round(Number(hand.apCost ?? hand.ap ?? 1) || 1), 0, 9);
+      const ceCost = clamp(Math.round(Number(hand.ceCost ?? hand.cost ?? 10) || 10), 0, 999);
+      const damage = clamp(Math.round(Number(hand.damage ?? hand.baseDamage ?? 0) || 0), 0, 999);
+      const block = clamp(Math.round(Number(hand.block ?? hand.baseBlock ?? 0) || 0), 0, 999);
+      const stabilityDelta = clamp(Math.round(Number(hand.stabilityDelta ?? hand.stability ?? 0) || 0), -100, 100);
+      const domainLoadDelta = clamp(Math.round(Number(hand.domainLoadDelta ?? hand.domainLoad ?? 0) || 0), 0, 999);
+      let summary = normalizeCustomDuelText(hand.summary || hand.description || `${name}：AI 生成特殊手札。`);
+      const tags = Array.isArray(hand.tags) ? hand.tags.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(hand.tags || "");
+      const hasExecutableEffect = damage > 0
+        || block > 0
+        || stabilityDelta !== 0
+        || domainLoadDelta > 0
+        || ["domain", "support", "resource", "counter", "rule", "soul_pressure"].includes(cardType)
+        || tags.some((tag) => /domain|领域|control|stun|trial|judgment|buff|debuff|counter|resource|soul|必中|审判|压制|回复|反制/i.test(tag));
+      if (!hasExecutableEffect) return null;
+      let normalizedDamage = damage;
+      let normalizedBlock = block;
+      let normalizedStabilityDelta = stabilityDelta;
+      let normalizedDomainLoadDelta = domainLoadDelta;
+      if (!normalizedDamage && !normalizedBlock && !normalizedStabilityDelta && !normalizedDomainLoadDelta) {
+        if (["defense", "counter"].includes(cardType)) {
+          normalizedBlock = 8;
+        } else if (["domain", "rule", "support", "resource"].includes(cardType)) {
+          normalizedStabilityDelta = cardType === "support" || cardType === "resource" ? 8 : -8;
+          normalizedDomainLoadDelta = cardType === "domain" ? 8 : 0;
+        } else {
+          normalizedDamage = 8;
+        }
+      }
+      if (!/攻|damage|伤害|防|block|消耗|CE|AP|修正|基础/.test(summary)) {
+        summary += ` 攻=${normalizedDamage}，防=${normalizedBlock}，AP=${apCost}，CE=${ceCost}；数值由角色基础数值、术式强度、风险和效果类型交给本地公式修正。`;
+      }
+      return {
+        id,
+        label: name,
+        name,
+        description: summary,
+        cardType,
+        apCost,
+        baseCeCost: ceCost,
+        ceCost,
+        costType: "flat",
+        cost: { flatCe: ceCost, minCe: ceCost },
+        baseDamage: normalizedDamage,
+        baseBlock: normalizedBlock,
+        baseStabilityRestore: Math.max(0, normalizedStabilityDelta),
+        baseDomainLoadDelta: normalizedDomainLoadDelta,
+        durationRounds: 1,
+        damageType: typeof inferCustomHandDamageType === "function" ? inferCustomHandDamageType(cardType) : (cardType === "defense" ? "none" : "technique"),
+        scalingProfile: typeof inferCustomHandScalingProfile === "function" ? inferCustomHandScalingProfile(cardType) : "balanced",
+        rarity: "special",
+        weight: 1,
+        allowedContexts: ["normal", "domain", "trial_allowed"],
+        effects: {
+          stabilityDelta: Number((normalizedStabilityDelta / 100).toFixed(4)),
+          domainLoadDelta: normalizedDomainLoadDelta,
+          weightDeltas: typeof buildCustomHandWeightDeltas === "function" ? buildCustomHandWeightDeltas(cardType, normalizedDamage, normalizedBlock) : {}
+        },
+        effectSummary: summary,
+        risk: riskMap[String(hand.risk || "medium").trim()] || "medium",
+        tags: Array.from(new Set(["自定义", "特殊手札", "AI生成", ...tags].filter(Boolean))),
+        logTemplate: summary,
+        source: normalizeCustomDuelText(hand.source || "ai")
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function getDuelForbiddenDomainHandNames(context = {}) {
+  const names = new Set();
+  const collect = (value) => {
+    splitCustomDuelList(value || "").forEach((part) => {
+      const cleaned = part.replace(/^(领域展开|开放领域|顶级领域|未完成领域|领域)[:：]?/, "").trim();
+      if (cleaned && !/无明确领域|无领域|没有领域|不具备领域|未知|未公开/.test(cleaned)) names.add(cleaned);
+    });
+  };
+  collect(context.domain);
+  collect(context.domainScript?.domainName);
+  return names;
+}
+
+function isDuelAiDomainNameHand(name, cardType, forbiddenNames, rawHand = {}) {
+  const text = [
+    name,
+    rawHand.summary,
+    rawHand.description,
+    ...(Array.isArray(rawHand.tags) ? rawHand.tags : splitCustomDuelList(rawHand.tags || ""))
+  ].filter(Boolean).join(" ");
+  if (/^(领域展开|展开领域|domain expansion)$/i.test(name)) return true;
+  if (/^(领域展开|展开领域)[·:：\-\s]/i.test(name)) return true;
+  if (/领域展开本体|领域本体|展开完整领域/.test(text)) return true;
+  if (forbiddenNames.has(name)) return true;
+  if (cardType === "domain" && /领域名|领域本体|领域展开本体|domainProfile|domainScript/i.test(text)) return true;
+  if (cardType === "domain" && forbiddenNames.size && Array.from(forbiddenNames).some((domainName) => name.includes(domainName) || domainName.includes(name))) return true;
+  return false;
+}
+
+function isDuelAiRuleSubphaseOnlyHand(name, rawHand = {}, context = {}) {
+  const domainScript = context.domainScript || {};
+  const text = [
+    name,
+    rawHand.summary,
+    rawHand.description,
+    rawHand.id,
+    ...(Array.isArray(rawHand.tags) ? rawHand.tags : splitCustomDuelList(rawHand.tags || ""))
+  ].filter(Boolean).join(" ");
+  if (/处刑人之剑|死刑判决|请求判决|证据提出|指控推进|辩护|审判牌|trial-replacement|request_verdict|present_evidence|press_charge|advance_trial|rule_pressure|challenge_evidence|deny_charge|delay_trial/i.test(text)) return true;
+  if ((domainScript.scriptType === "rule_trial_execution" || (domainScript.effectTags || []).includes("rule_trial")) && /审判|裁判|判决|证据|指控|没收|死刑|处刑/.test(text)) return true;
+  return false;
 }
 
 function normalizeDuelGeneratedTerms(rawTerms = []) {

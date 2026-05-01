@@ -563,13 +563,81 @@
     return "领域形态信息不足，按通用候选规则处理。";
   }
 
+  function normalizeDomainScriptNumber(value, fallback) {
+    var number = Math.round(Number(value ?? fallback ?? 0) || 0);
+    return clampValue(number, -999, 999);
+  }
+
+  function getSourceDomainScript(profile, card) {
+    var sourceId = profile?.characterId || profile?.profileId || profile?.id || card?.characterId || "";
+    var customCard = (dependencies.state?.customDuelCards || []).find(function findCustomCard(item) {
+      return item?.characterId === sourceId || item?.id === sourceId;
+    }) || null;
+    return profile?.domainScript || card?.domainScript || customCard?.domainScript || null;
+  }
+
+  function inferCustomDomainName(profile, script) {
+    var domainText = String(profile?.domainProfile || "");
+    var match = domainText.match(/(?:领域展开|开放领域|顶级领域|未完成领域)[:：]?([^、，。；;]+)/);
+    if (script?.domainName) return script.domainName;
+    if (match?.[1]) return match[1].trim();
+    return domainText && !/无明确领域|无领域|没有领域|不具备领域/.test(domainText) ? domainText.slice(0, 24) : "自定义领域";
+  }
+
+  function buildDomainProfileFromScript(profile, card, script) {
+    var domainName = inferCustomDomainName(profile, script);
+    var effectTags = Array.isArray(script?.effectTags) ? script.effectTags : [];
+    return {
+      id: script?.id || String(profile?.characterId || profile?.id || domainName || "custom-domain").replace(/[^\w-]+/g, "_"),
+      ownerId: profile?.characterId || profile?.profileId || profile?.id || card?.characterId || "",
+      ownerName: profile?.displayName || profile?.name || card?.displayName || card?.name || "自定义角色",
+      domainName,
+      domainClass: script?.scriptType === "rule_trial_execution" || effectTags.includes("rule_trial") || effectTags.includes("rule_based")
+        ? "rule_trial"
+        : (script?.scriptType === "jackpot_rule" || effectTags.includes("jackpot_rule") ? "jackpot_rule" : "sure_hit"),
+      barrierType: script?.barrierType || "",
+      domainCompletion: script?.domainCompletion || "",
+      effectTags,
+      resourceRules: {
+        domainLoadBase: Number(script?.resourceRules?.domainLoadBase ?? 14),
+        stabilityPressure: Number(script?.resourceRules?.stabilityPressure ?? 0.04)
+      },
+      domainScript: script,
+      source: script?.source || "character-json"
+    };
+  }
+
+  function buildFallbackDomainScriptFromText(profile) {
+    var text = String(profile?.domainProfile || "");
+    if (!/领域展开|开放领域|顶级领域|未完成领域|domain/i.test(text) || /无明确领域|无领域|没有领域|不具备领域/.test(text)) return null;
+    return {
+      id: String(profile?.characterId || profile?.id || "custom-domain-placeholder").replace(/[^\w-]+/g, "_"),
+      language: "json-rule-v1",
+      domainName: inferCustomDomainName(profile, null),
+      scriptType: "placeholder_damage",
+      activation: "onDomainResolved",
+      blockedBy: ["domain_clash", "simple_domain_guard", "hollow_wicker_basket_guard", "falling_blossom_emotion", "zero_ce_domain_bypass"],
+      effectTags: ["placeholder"],
+      effectSummary: "自定义角色有领域描述但没有领域脚本，暂按占位符策略造成 +10 候选伤害。",
+      effects: { placeholderDamage: 10 },
+      fallback: { strategy: "placeholder_plus_10_damage", damage: 10, reason: "缺少可执行领域脚本，使用通用占位符。" },
+      source: "domain-text-fallback"
+    };
+  }
+
   function getDuelDomainProfileForCharacter(profile, card, duelState) {
     var profiles;
     var texts;
+    var sourceScript;
+    var matchedProfile;
 
     void duelState;
 
-    if (!profile || profile.customDuel) return null;
+    if (!profile) return null;
+    sourceScript = getSourceDomainScript(profile, card);
+    if (!sourceScript && profile.customDuel) sourceScript = buildFallbackDomainScriptFromText(profile);
+    if (profile.customDuel && sourceScript) return buildDomainProfileFromScript(profile, card, sourceScript);
+    if (profile.customDuel) return null;
     profiles = getDuelDomainProfiles().profiles || [];
     texts = [
       profile.id,
@@ -583,12 +651,128 @@
       ...(profile.innateTraits || []),
       ...(profile.advancedTechniques || [])
     ].filter(Boolean).join(" ");
-    return profiles.find(function matchesProfile(item) {
+    matchedProfile = profiles.find(function matchesProfile(item) {
       if (item.ownerId && (item.ownerId === profile.id || item.ownerId === card?.characterId)) return true;
       return [item.ownerName, item.domainName].filter(Boolean).every(function hasKeyword(keyword) {
         return texts.includes(keyword);
       });
     }) || null;
+    if (matchedProfile && sourceScript) {
+      return {
+        ...matchedProfile,
+        domainScript: sourceScript,
+        effectTags: Array.from(new Set([...(matchedProfile.effectTags || []), ...(sourceScript.effectTags || [])]))
+      };
+    }
+    if (sourceScript) return buildDomainProfileFromScript(profile, card, sourceScript);
+    return matchedProfile;
+  }
+
+  function isDuelDomainCurrentlyEffective(resource) {
+    var domain = resource?.domain;
+    if (!domain || !domain.active) return false;
+    if (Number(domain.threshold || 0) > 0 && Number(domain.load || 0) >= Number(domain.threshold || 0)) return false;
+    return true;
+  }
+
+  function getDuelDomainSpecialEffectGate(profile, actor, opponent, battle, response) {
+    if (!profile || !actor || !opponent || !battle) {
+      return { effective: false, reason: "缺少领域脚本结算上下文。", blockType: "invalid" };
+    }
+    if (!isDuelDomainCurrentlyEffective(actor)) {
+      return { effective: false, reason: actor.name + " 的领域未处于稳定展开状态，特殊领域效果不生效。", blockType: "actor_domain_inactive" };
+    }
+    if (isDuelDomainCurrentlyEffective(opponent)) {
+      return { effective: false, reason: opponent.name + " 已展开领域形成领域对抗，" + (profile.domainName || "领域") + "的对敌特殊效果不命中。", blockType: "opponent_domain_active" };
+    }
+    if (response?.effective) {
+      return {
+        effective: false,
+        reason: opponent.name + " 的" + (response.label || "领域应对") + "阻止了" + (profile.domainName || "领域") + "的完整特殊效果；" + (response.detail || "领域应对削弱专属领域完整展开。"),
+        blockType: "domain_response"
+      };
+    }
+    return { effective: true, reason: "对方没有展开领域，也没有有效反领域手段，特殊领域效果命中。", blockType: "" };
+  }
+
+  function applyDuelDomainScriptEffect(profile, actor, opponent, battle, response, gate) {
+    var script = profile?.domainScript;
+    var effects = script?.effects || {};
+    var fallback = script?.fallback || {};
+    var damage;
+    var nextRoundDamage;
+    var ceDamage;
+    var stabilityDelta;
+
+    if (!script || !actor || !opponent || !battle) return;
+    gate = gate || getDuelDomainSpecialEffectGate(profile, actor, opponent, battle, response);
+    if (!gate.effective) {
+      appendDuelDomainProfileLog(battle, {
+        side: actor.side,
+        title: (profile.domainName || "领域") + "脚本被反制",
+        type: "response",
+        detail: gate.reason + " 本回合只保留领域展开本身的通用压力。"
+      });
+      return;
+    }
+    damage = Math.max(0, normalizeDomainScriptNumber(effects.damage, 0));
+    nextRoundDamage = Math.max(0, normalizeDomainScriptNumber(effects.nextRoundDamage, 0));
+    ceDamage = Math.max(0, normalizeDomainScriptNumber(effects.opponentCeDamage, 0));
+    stabilityDelta = normalizeDomainScriptNumber(effects.opponentStabilityDelta, 0);
+    if (!damage && !nextRoundDamage && !ceDamage && !stabilityDelta && !effects.skipOpponentNextCard && !effects.grantExecutionSword && !effects.forceTrialHands) {
+      damage = Math.max(0, normalizeDomainScriptNumber(effects.placeholderDamage, fallback.damage ?? 10));
+    }
+    if (damage) opponent.hp = Number(clampValue(Number(opponent.hp || 0) - damage, 0, Number(opponent.maxHp || opponent.hp || 0)).toFixed(2));
+    if (ceDamage) opponent.ce = Number(clampValue(Number(opponent.ce || 0) - ceDamage, 0, Number(opponent.maxCe || opponent.ce || 0)).toFixed(2));
+    if (stabilityDelta) opponent.stability = Number(clampValue(Number(opponent.stability || 0) + stabilityDelta / 100, 0, 1).toFixed(4));
+    if (nextRoundDamage) {
+      addOrRefreshDuelStatusEffect(opponent, {
+        id: "domainScriptPendingDamage",
+        label: "领域后续伤害",
+        rounds: 2,
+        value: nextRoundDamage,
+        triggerRound: Number(battle.round || 0) + 2,
+        sourceDomainName: profile.domainName || ""
+      });
+    }
+    if (effects.skipOpponentNextCard) {
+      addOrRefreshDuelStatusEffect(opponent, {
+        id: "domainScriptNoCard",
+        label: "领域封锁手札",
+        rounds: 2,
+        value: 1,
+        triggerRound: Number(battle.round || 0) + 2,
+        sourceDomainName: profile.domainName || ""
+      });
+    }
+    if (effects.grantExecutionSword && profile.domainClass !== "rule_trial") {
+      addOrRefreshDuelStatusEffect(actor, {
+        id: "executionSwordCandidate",
+        label: "处刑人之剑候选",
+        rounds: 2,
+        value: 1
+      });
+    }
+    if (effects.forceTrialHands) {
+      addOrRefreshDuelStatusEffect(opponent, {
+        id: "trialForcedHandSet",
+        label: "审判手札改写",
+        rounds: 1,
+        value: 1
+      });
+    }
+    appendDuelDomainProfileLog(battle, {
+      side: actor.side,
+      title: (profile.domainName || "领域") + "脚本结算",
+      type: profile.domainClass === "rule_trial" ? "subphase" : "domain",
+      detail: script.effectSummary || fallback.reason || (actor.name + " 的领域脚本按候选规则结算。"),
+      delta: {
+        targetHpDamage: damage,
+        pendingTargetHpDamage: nextRoundDamage,
+        targetCeDamage: ceDamage,
+        targetStabilityDelta: stabilityDelta
+      }
+    });
   }
 
   function resolveDuelDomainProfileActivations(battle, pairs) {
@@ -625,6 +809,7 @@
     var trialContext;
     var trialSubPhase;
     var clampResource;
+    var specialGate;
 
     context = context || {};
     if (!battle?.resourceState || !actor || !opponent) return null;
@@ -640,6 +825,7 @@
     barrierModifiers = getDuelDomainBarrierModifiers(profile, actor, opponent, battle);
     barrierSummary = getDuelDomainBarrierSummary(profile);
     response = requireDependency("getDuelDomainProfileResponseImpact")(context.responseAction, profile);
+    specialGate = getDuelDomainSpecialEffectGate(profile, actor, opponent, battle, response);
     responseScale = response.effective ? response.scale : 1;
     resourceRules = profile.resourceRules || {};
     loadBase = Number(resourceRules.domainLoadBase || 0) * responseScale * Number(barrierModifiers.domainLoadScale || 1);
@@ -660,7 +846,10 @@
       barrierModifiers: barrierModifiers,
       effectTags: profile.effectTags || [],
       profile: profile,
-      weakened: Boolean(response.effective),
+      weakened: !specialGate.effective,
+      specialEffectEffective: Boolean(specialGate.effective),
+      specialEffectBlockType: specialGate.blockType || "",
+      specialEffectBlockReason: specialGate.reason || "",
       responseActionId: response.actionId || "",
       responseLabel: response.label || "",
       responseDetail: response.detail || "",
@@ -676,9 +865,9 @@
       })
       : null;
 
-    if (profile.domainClass === "rule_trial" && !response.effective) {
+    if (profile.domainClass === "rule_trial" && specialGate.effective) {
       requireDependency("createDuelTrialSubPhase")(profile, actor, opponent, battle);
-    } else if (profile.domainClass === "rule_trial") {
+    } else if (profile.domainClass === "rule_trial" && response.effective) {
       trialSubPhase = requireDependency("createDuelTrialSubPhase")(profile, actor, opponent, battle, {
         trialTargetProfile: trialContext?.trialTargetProfile,
         responseEffective: true,
@@ -702,9 +891,16 @@
           ? opponent.name + " 的" + (response.label || "领域应对") + "削弱了" + profile.domainName + "，但审判对象上下文仍保留：" + trialSubPhase.targetLabel + " / " + trialSubPhase.eligibilityLabel + "；" + response.detail
           : opponent.name + " 的" + (response.label || "领域应对") + "阻止了" + profile.domainName + "完整进入审判程序，规则压力只以削弱状态残留。"
       });
-    } else if (profile.domainClass === "jackpot_rule" && !response.effective) {
+    } else if (profile.domainClass === "rule_trial") {
+      appendDuelDomainProfileLog(battle, {
+        side: actor.side,
+        title: "审判规则未命中",
+        type: "response",
+        detail: specialGate.reason || (profile.domainName + "未满足完整生效条件，审判子阶段不启动。")
+      });
+    } else if (profile.domainClass === "jackpot_rule" && specialGate.effective) {
       requireDependency("createDuelJackpotSubPhase")(profile, actor, opponent, battle);
-    } else if (profile.domainClass === "jackpot_rule") {
+    } else if (profile.domainClass === "jackpot_rule" && response.effective) {
       addOrRefreshDuelStatusEffect(actor, {
         id: "jackpotCycleCandidate",
         label: "坐杀搏徒循环候选",
@@ -717,46 +913,55 @@
         type: "subphase",
         detail: opponent.name + " 的" + (response.label || "领域应对") + "削弱了坐杀搏徒完整规则循环，jackpot 只保留低强度候选收益。"
       });
+    } else if (profile.domainClass === "jackpot_rule") {
+      appendDuelDomainProfileLog(battle, {
+        side: actor.side,
+        title: "坐杀搏徒未进入循环",
+        type: "subphase",
+        detail: specialGate.reason || "坐杀搏徒未满足完整生效条件，jackpot 子阶段不启动。"
+      });
     }
 
-    if (profile.effectTags?.includes("information_overload")) {
+    applyDuelDomainScriptEffect(profile, actor, opponent, battle, response, specialGate);
+
+    if (specialGate.effective && profile.effectTags?.includes("information_overload")) {
       addOrRefreshDuelStatusEffect(opponent, {
         id: "domainActionSuppression",
         label: "信息过载压制",
         rounds: 1,
-        value: response.effective ? 0.45 : 1
+        value: 1
       });
     }
-    if (profile.effectTags?.includes("slash_auto_attack")) {
+    if (specialGate.effective && profile.effectTags?.includes("slash_auto_attack")) {
       addOrRefreshDuelStatusEffect(opponent, {
         id: "openSlashPressure",
         label: "开放斩击压力",
         rounds: 2,
-        value: response.effective ? 0.55 : 1
+        value: 1
       });
     }
-    if (profile.effectTags?.includes("soul_touch")) {
+    if (specialGate.effective && profile.effectTags?.includes("soul_touch")) {
       addOrRefreshDuelStatusEffect(opponent, {
         id: "soulTouchPressure",
         label: "灵魂接触压力",
         rounds: 1,
-        value: response.effective ? 0.45 : 1
+        value: 1
       });
     }
-    if (profile.effectTags?.includes("shikigami_auto_attack")) {
+    if (specialGate.effective && profile.effectTags?.includes("shikigami_auto_attack")) {
       addOrRefreshDuelStatusEffect(opponent, {
         id: "shikigamiAutoAttack",
         label: "式神洪流压制",
         rounds: 2,
-        value: response.effective ? 0.5 : 1
+        value: 1
       });
     }
-    if (profile.effectTags?.includes("jackpot_rule") || profile.effectTags?.includes("probability_loop")) {
+    if (specialGate.effective && (profile.effectTags?.includes("jackpot_rule") || profile.effectTags?.includes("probability_loop"))) {
       addOrRefreshDuelStatusEffect(actor, {
         id: "jackpotCycleCandidate",
         label: "坐杀搏徒循环候选",
         rounds: 2,
-        value: response.effective ? 0.5 : 1
+        value: 1
       });
     }
     if (profile.barrierType === "incomplete_barrier" || profile.domainCompletion === "incomplete") {
@@ -775,7 +980,7 @@
       side: actor.side,
       title: profile.domainName + "展开",
       type: "domain",
-      detail: actor.name + " 展开" + profile.domainName + "，领域类型为" + (DUEL_DOMAIN_CLASS_LABELS[profile.domainClass] || profile.domainClass) + "，领域形态：" + barrierSummary.shape + "，完成度：" + barrierSummary.completion + "，反制风险：" + barrierSummary.risk + "。" + barrierSummary.hint + (response.effective ? opponent.name + " 以" + response.label + "削弱了专属领域完整展开；" + response.detail : "对方没有有效硬防线，专属领域效果完整进入战场。")
+      detail: actor.name + " 展开" + profile.domainName + "，领域类型为" + (DUEL_DOMAIN_CLASS_LABELS[profile.domainClass] || profile.domainClass) + "，领域形态：" + barrierSummary.shape + "，完成度：" + barrierSummary.completion + "，反制风险：" + barrierSummary.risk + "。" + barrierSummary.hint + (specialGate.effective ? "对方没有有效硬防线，专属领域效果完整进入战场。" : specialGate.reason)
     });
     return stateEntry;
   }

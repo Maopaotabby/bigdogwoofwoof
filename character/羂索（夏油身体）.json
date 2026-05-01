@@ -55,5 +55,44 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "kenjaku-womb-profusion",
+    "language": "json-rule-v1",
+    "domainName": "胎藏遍野",
+    "scriptType": "sure_hit",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "sure_hit"
+    ],
+    "effectSummary": "胎藏遍野抽象为开放领域的重力/术式压制：造成高额伤害并削弱咒力。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 0,
+      "damage": 30,
+      "nextRoundDamage": 12,
+      "opponentStabilityDelta": -12,
+      "opponentCeDamage": 10,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": false,
+      "forceTrialHands": false
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake",
+    "barrierType": "open_barrier"
+  }
 }

@@ -220,6 +220,34 @@ function createBattleSeedState(room) {
   };
 }
 
+function createFreshTurnState(round = 1) {
+  return { turnId: `turn_${Math.max(1, Number(round) || 1)}`, phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
+}
+
+function createFreshReviewState() {
+  return { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
+}
+
+function clearPlayerBattleSelection(player) {
+  if (!player) return;
+  player.characterId = "";
+  player.characterSnapshot = null;
+  player.characterLocked = false;
+  player.actionLocked = false;
+}
+
+function resetRoomToPreparingForNewGame(room) {
+  room.round = 1;
+  room.phase = "preparing";
+  room.battleState = null;
+  room.turnState = createFreshTurnState(1);
+  room.reviewState = createFreshReviewState();
+  room.readyState = { leftCharacterLocked: false, rightCharacterLocked: false };
+  clearPlayerBattleSelection(room.players?.left);
+  clearPlayerBattleSelection(room.players?.right);
+  return room;
+}
+
 function normalizeRoom(room) {
   if (!room || typeof room !== "object") return null;
   const normalized = {
@@ -669,28 +697,16 @@ async function handleOperation(env, body) {
 
   if (operation === "rematch") {
     if (!["reviewing", "turn_selecting"].includes(room.phase)) return json({ ok: false, error: "当前不能再来一把。" }, 409);
-    room.round = 1;
-    room.phase = "turn_selecting";
-    room.battleState = createBattleSeedState(room);
-    room.turnState = { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
-    room.reviewState = { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
-    appendLog(room, "rematch", "双方保留角色，再来一把。");
+    resetRoomToPreparingForNewGame(room);
+    appendLog(room, "rematch", "已清空上一局状态，回到准备阶段，请双方重新选人。", { side });
     const saved = await writeRoom(env, room);
     return json({ ok: true, room: snapshot(saved, side), side });
   }
 
   if (operation === "resetToPreparing") {
     if (side !== "left" && room.ownerPlayerId !== playerId) return json({ ok: false, error: "只有房主可以回到准备阶段。" }, 403);
-    room.phase = "preparing";
-    room.round = 1;
-    room.battleState = null;
-    room.turnState = { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
-    room.reviewState = { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
-    room.players.left.characterLocked = false;
-    room.players.right.characterLocked = false;
-    room.readyState.leftCharacterLocked = false;
-    room.readyState.rightCharacterLocked = false;
-    appendLog(room, "reset_prepare", "房主已将房间重置到准备阶段。");
+    resetRoomToPreparingForNewGame(room);
+    appendLog(room, "reset_prepare", "房主已清空上一局状态，回到准备阶段，请双方重新选人。");
     const saved = await writeRoom(env, room);
     return json({ ok: true, room: snapshot(saved, side), side });
   }

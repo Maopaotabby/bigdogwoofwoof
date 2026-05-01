@@ -55,16 +55,17 @@
               <span>AI 模式</span>
               <select id="aiProviderMode">
                 <option value="off">关闭 AI</option>
-                <option value="local_fallback" selected>本地 fallback</option>
+                <option value="local_fallback">本地 fallback</option>
                 <option value="openai_byok_direct">玩家自带 OpenAI API Key（实验性）</option>
                 <option value="deepseek_byok_direct">玩家自带 DeepSeek API Key（实验性）</option>
-                <option value="openai_compatible_byok_direct">自定义 OpenAI-compatible Provider（实验性）</option>
+                <option value="openai_compatible_byok_direct" selected>ArkAI / OpenAI-compatible Provider（实验性）</option>
                 <option value="user_proxy_endpoint">玩家自托管 Proxy Endpoint（推荐）</option>
               </select>
             </label>
             <label class="field">
               <span>Provider</span>
               <select id="aiProviderIdInput">
+                <option value="ark_ai" selected>ArkAI / 火山方舟</option>
                 <option value="openai">OpenAI</option>
                 <option value="deepseek">DeepSeek</option>
                 <option value="openai_compatible">自定义 OpenAI-compatible Provider</option>
@@ -73,8 +74,9 @@
             </label>
             <label class="field">
               <span>当前模型</span>
-              <input id="aiModelInput" type="text" value="gpt-5-mini" autocomplete="off" list="aiModelPresets">
+              <input id="aiModelInput" type="text" value="doubao-seed-2-0-mini-260215" autocomplete="off" list="aiModelPresets">
               <datalist id="aiModelPresets">
+                <option value="doubao-seed-2-0-mini-260215"></option>
                 <option value="gpt-5-mini"></option>
                 <option value="deepseek-chat"></option>
                 <option value="deepseek-reasoner"></option>
@@ -84,19 +86,19 @@
             </label>
             <label class="field">
               <span>最大输出 token</span>
-              <input id="aiOutputTokenInput" type="number" min="64" max="4000" step="50" value="700">
+              <input id="aiOutputTokenInput" type="number" min="64" max="4000" step="50" value="1800">
             </label>
-            <label class="field" data-ai-provider-panel="openai_compatible">
+            <label class="field" data-ai-provider-panel="ark_ai openai_compatible">
               <span>Base URL</span>
-              <input id="aiBaseUrlInput" type="url" placeholder="https://your-compatible-provider.example/v1">
+              <input id="aiBaseUrlInput" type="url" placeholder="https://ark.cn-beijing.volces.com/api/v3">
             </label>
-            <label class="field" data-ai-provider-panel="openai_compatible">
+            <label class="field" data-ai-provider-panel="ark_ai openai_compatible">
               <span>Path</span>
               <input id="aiPathInput" type="text" placeholder="/chat/completions">
             </label>
           </div>
           <p id="aiProviderWarning" class="muted">
-            当前默认使用本地 fallback，不调用远程 AI，也不消耗任何 API token。
+            当前默认使用 ArkAI / 火山方舟 OpenAI-compatible 调用方式；V2.2 测试包已内置默认 Key，仅适合本地或私有测试。
           </p>
           <div class="ai-mode-panel" data-ai-mode-panel="openai_byok_direct deepseek_byok_direct openai_compatible_byok_direct" hidden>
             <p class="error-text">
@@ -130,7 +132,7 @@
             </div>
           </div>
           <div class="ai-provider-meta">
-            <span id="aiPromptEstimate">估算 prompt token：待生成；最大输出 token：700</span>
+            <span id="aiPromptEstimate">估算 prompt token：待生成；最大输出 token：1800</span>
             <span id="aiCostNotice">玩家自行承担 API 费用；local fallback / off 不消耗 token。</span>
             <span id="aiFallbackStatus">本地 fallback：不调用 API，适合零成本使用。</span>
           </div>

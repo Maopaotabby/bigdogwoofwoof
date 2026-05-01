@@ -1,8 +1,25 @@
 {
   "version": "0.1.1",
   "status": "CANDIDATE",
-  "defaultMode": "local_fallback",
+  "defaultMode": "openai_compatible_byok_direct",
+  "defaultProviderId": "ark_ai",
   "providers": [
+    {
+      "providerId": "ark_ai",
+      "label": "ArkAI / 火山方舟",
+      "modes": ["openai_compatible_byok_direct", "user_proxy_endpoint"],
+      "endpointType": "chat_completions",
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+      "defaultPath": "/chat/completions",
+      "defaultModel": "doubao-seed-2-0-mini-260215",
+      "defaultApiKey": "09d6d696-dc76-4d99-a912-b15bec17c869",
+      "modelPresets": ["doubao-seed-2-0-mini-260215"],
+      "allowCustomBaseUrl": false,
+      "allowCustomPath": false,
+      "allowCustomModel": true,
+      "securityWarningRequired": true,
+      "status": "CANDIDATE"
+    },
     {
       "providerId": "openai",
       "label": "OpenAI",
@@ -80,8 +97,8 @@
     },
     "openai_compatible_byok_direct": {
       "enabled": true,
-      "label": "自定义 OpenAI-compatible Provider（实验性）",
-      "providerId": "openai_compatible",
+      "label": "ArkAI / OpenAI-compatible Provider（实验性）",
+      "providerId": "ark_ai",
       "securityWarningRequired": true,
       "defaultStorage": "sessionStorage",
       "allowLocalStorage": true
@@ -93,11 +110,11 @@
       "securityWarningRequired": true
     }
   },
-  "defaultModel": "gpt-5-mini",
+  "defaultModel": "doubao-seed-2-0-mini-260215",
   "openAiResponsesEndpoint": "https://api.openai.com/v1/responses",
   "tokenBudget": {
     "maxPromptTokens": 6000,
-    "maxOutputTokens": 700,
+    "maxOutputTokens": 1800,
     "recentLogLimit": 12,
     "maxCardSummary": 10,
     "maxActionSummary": 10,
@@ -105,7 +122,7 @@
     "maxFeedbackLogEntries": 30
   },
   "maxPromptTokens": 6000,
-  "maxOutputTokens": 700,
+  "maxOutputTokens": 1800,
   "temperature": 0.7,
   "recentLogLimit": 12,
   "maxCardSummary": 10,

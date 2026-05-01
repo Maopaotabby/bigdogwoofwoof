@@ -546,6 +546,25 @@
     jackpotHeal = jackpotState > 0 ? Number((actor.maxHp * 0.045 * jackpotState).toFixed(1)) : 0;
     if (jackpotHeal > 0) actor.hp = Math.min(actor.maxHp, Number(actor.hp || 0) + jackpotHeal);
     actor.statusEffects = (actor.statusEffects || [])
+      .filter(function resolveStrictDomainPendingDamage(effect) {
+        var damage;
+        var triggerRound;
+        var sourceDomainName;
+        if (effect.id !== "domainScriptPendingDamage") return true;
+        damage = Math.max(0, Number(effect.value || 0));
+        triggerRound = Number(effect.triggerRound || 0);
+        if (!damage || (triggerRound && triggerRound > Number(battle.round || 0))) return true;
+        actor.hp = Math.max(0, Number((Number(actor.hp || 0) - damage).toFixed(2)));
+        sourceDomainName = effect.sourceDomainName || "领域";
+        recordDuelResourceChange(battle, {
+          side: side,
+          title: "领域后续伤害",
+          detail: getDuelResourceSideLabel(side) + actor.name + " 受到「" + sourceDomainName + "」的后续领域效果，体势 -" + formatNumber(damage) + "；当前 " + formatNumber(actor.hp) + " / " + formatNumber(actor.maxHp) + "。",
+          type: "domain",
+          delta: { hp: -damage, domainPendingDamageResolved: true, sourceDomainName: sourceDomainName }
+        });
+        return false;
+      })
       .map(function (effect) {
         var copy = {};
         Object.keys(effect).forEach(function (key) {
@@ -556,7 +575,7 @@
       })
       .filter(function (effect) {
         return effect.rounds > 0;
-      });
+    });
     clampDuelResource(actor);
     actual = Number((actor.ce - before).toFixed(1));
     if (regenBlocked > 0) {

@@ -971,6 +971,187 @@
     return { jackpot: { jackpotGauge: Number((subPhase.jackpotGauge - Number(previous.jackpotGauge || 0)).toFixed(1)), jackpotReady: true, jackpotResolved: true, status: "jackpotStateCandidate" } };
   }
 
+  function getTrialCardActionId(card) {
+    return card?.actionId || card?.id || card?.sourceActionId || card?.action?.id || "";
+  }
+
+  function asArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function getTrialCardText(card) {
+    return [
+      getTrialCardActionId(card),
+      card?.label,
+      card?.name,
+      card?.displayName,
+      card?.cardType,
+      card?.domainClass,
+      card?.domainRole,
+      card?.damageType,
+      card?.sourceTechniqueFamily,
+      card?.mechanicId,
+      card?.description,
+      card?.effectSummary
+    ].concat(asArray(card?.tags), asArray(card?.allowedContexts)).filter(Boolean).join(" ");
+  }
+
+  function isTrialSubPhaseCard(card) {
+    var id = getTrialCardActionId(card);
+    var text = getTrialCardText(card);
+    if (card?.domainSpecific && card.domainClass === "rule_trial") return true;
+    if (["present_evidence", "press_charge", "advance_trial", "rule_pressure", "request_verdict", "defend", "challenge_evidence", "remain_silent", "deny_charge", "delay_trial", "curse_argument", "distort_residue", "curse_pressure", "instinctive_struggle", "curse_fluctuation", "flee_exorcism", "proxy_denial", "object_confiscation", "tool_function_lock", "wielder_liability", "controller_redirect", "summon_suppression"].includes(id)) return true;
+    return /rule_trial|rule_defense|trial_owner|trial_defender|审判|辩护|裁定|证据|指控/.test(text);
+  }
+
+  function isCursedToolHandCard(card) {
+    var text = getTrialCardText(card);
+    return /curse_tool|cursed_tool|咒具|释魂刀|天逆|游云|黑绳|万里锁/.test(text);
+  }
+
+  function isJujutsuRelatedHandCard(card) {
+    var text = getTrialCardText(card);
+    if (isTrialSubPhaseCard(card) || isCursedToolHandCard(card)) return false;
+    if (["technique", "ce_burst", "domain", "domain_response", "domain_maintenance", "soul_pressure", "rule_trial"].includes(card?.cardType)) return true;
+    return /technique|cursed_energy|curse_technique|术式|咒术|咒力|领域|必中|灵魂|式神|反转|苍|赫|茈|御厨子|无下限|十种影|无为转变/.test(text);
+  }
+
+  function removeTrialCardsFromHandState(duelBattle, side) {
+    var hand = duelBattle?.handState?.[side];
+    var domainHand = duelBattle?.domainHandState?.[side];
+    var removed = [];
+    var restored;
+    var seen;
+    if (hand && Array.isArray(hand.cards)) {
+      restored = Array.isArray(hand.preTrialCards) ? hand.preTrialCards.slice() : [];
+      hand.cards = hand.cards.filter(function keepCard(card) {
+        if (!isTrialSubPhaseCard(card)) return true;
+        removed.push({ actionId: getTrialCardActionId(card), label: card.label || card.name || getTrialCardActionId(card), reason: "trial-ended" });
+        return false;
+      });
+      if (restored.length) {
+        seen = new Set(hand.cards.map(getTrialCardActionId).filter(Boolean));
+        restored.forEach(function restoreCard(card) {
+          var id = getTrialCardActionId(card);
+          if (!id || seen.has(id)) return;
+          hand.cards.push({ ...(card || {}), handSource: card.handSource || "trial-restored", retained: true });
+          seen.add(id);
+        });
+      }
+      delete hand.preTrialCards;
+      delete hand.preTrialCardsRound;
+      if (removed.length) hand.lastDiscarded = (hand.lastDiscarded || []).concat(removed);
+      hand.pendingDiscardCount = 0;
+    }
+    if (domainHand && Array.isArray(domainHand.cards)) {
+      domainHand.cards = domainHand.cards.filter(function keepDomainCard(card) {
+        return !isTrialSubPhaseCard(card);
+      });
+      domainHand.lastRefreshed = domainHand.cards.map(function summarize(card) {
+        return { actionId: getTrialCardActionId(card), label: card.label || card.name || getTrialCardActionId(card) };
+      });
+    }
+    if (duelBattle?.selectedHandActions?.[side]) {
+      duelBattle.selectedHandActions[side] = duelBattle.selectedHandActions[side].filter(function keepSelected(entry) {
+        return !isTrialSubPhaseCard(entry?.action || entry);
+      });
+    }
+    return removed;
+  }
+
+  function closeTrialDomainAfterVerdict(duelBattle, subPhase, owner) {
+    if (owner?.domain) {
+      owner.domain.active = false;
+      owner.domain.turnsActive = 0;
+    }
+    if (duelBattle?.domainProfileStates && subPhase?.owner) delete duelBattle.domainProfileStates[subPhase.owner];
+    if (duelBattle && duelBattle.domainProfileState?.ownerSide === subPhase?.owner) duelBattle.domainProfileState = null;
+    removeTrialCardsFromHandState(duelBattle, subPhase?.owner);
+    removeTrialCardsFromHandState(duelBattle, subPhase?.defender);
+  }
+
+  function buildExecutionSwordHandCard(round) {
+    return {
+      id: "execution_sword",
+      actionId: "execution_sword",
+      sourceActionId: "execution_sword",
+      label: "处刑人之剑",
+      name: "处刑人之剑",
+      cardType: "technique",
+      apCost: 2,
+      costCe: 0,
+      ceCost: 0,
+      baseDamage: 140,
+      baseStabilityDamage: 80,
+      risk: "critical",
+      tags: ["日车", "处刑", "处刑人之剑", "术式", "死刑判决"],
+      description: "死刑判决后显现的处刑人之剑。以极高处刑伤害结算，命中判定仍交给本地战斗流程。",
+      effectSummary: "死刑判决成立后加入手牌，不会被普通刷新移除。",
+      effects: { outgoingScale: 1.45, weightDeltas: { finisher: 2.4, melee: 1.2 } },
+      executionSword: true,
+      noRefresh: true,
+      retainedPermanent: true,
+      retained: true,
+      handSource: "execution-sword-verdict",
+      drawnRound: Number(round || 0),
+      source: "deadly-sentencing-verdict",
+      status: "CANDIDATE"
+    };
+  }
+
+  function addExecutionSwordToHand(duelBattle, side) {
+    var hand;
+    var round;
+    if (!duelBattle || !side) return null;
+    duelBattle.handState ||= {};
+    hand = duelBattle.handState[side] ||= { cards: [], discardPile: [], round: 0, lastDrawn: [], lastInjected: [], lastDiscarded: [], maxHandSize: 8, drawPerTurn: 5 };
+    round = Number(duelBattle.round || 0) + 1;
+    hand.round = round;
+    hand.cards = (hand.cards || []).filter(function removeExisting(card) {
+      return getTrialCardActionId(card) !== "execution_sword";
+    });
+    var card = buildExecutionSwordHandCard(round);
+    hand.cards.unshift(card);
+    hand.lastInjected = [{ actionId: "execution_sword", label: "处刑人之剑", source: "death-verdict" }];
+    hand.pendingDiscardCount = 0;
+    hand.overflowDiscardRequired = false;
+    if (side === "left") {
+      duelBattle.handCandidates = [card].concat(duelBattle.handCandidates || []).filter(function keepUnique(candidate, index, list) {
+        var id = getTrialCardActionId(candidate);
+        return id && list.findIndex(function firstMatch(item) { return getTrialCardActionId(item) === id; }) === index;
+      });
+      delete duelBattle.handCandidateCache;
+    }
+    return card;
+  }
+
+  function confiscateVerdictHandCards(duelBattle, defenderSide) {
+    var hand = duelBattle?.handState?.[defenderSide];
+    var removed = [];
+    var targetKind = "none";
+    if (!hand || !Array.isArray(hand.cards)) return { removed: removed, targetKind: targetKind };
+    var sourceCards = Array.isArray(hand.preTrialCards) ? hand.preTrialCards : hand.cards;
+    var hasCursedTool = sourceCards.some(isCursedToolHandCard);
+    var predicate = hasCursedTool ? isCursedToolHandCard : isJujutsuRelatedHandCard;
+    targetKind = hasCursedTool ? "cursed_tool" : "jujutsu";
+    sourceCards = sourceCards.filter(function keepCard(card) {
+      if (!predicate(card)) return true;
+      removed.push({ actionId: getTrialCardActionId(card), label: card.label || card.name || getTrialCardActionId(card), reason: targetKind + "-confiscated" });
+      return false;
+    });
+    if (Array.isArray(hand.preTrialCards)) hand.preTrialCards = sourceCards;
+    else hand.cards = sourceCards;
+    hand.lastDiscarded = removed.slice();
+    hand.discardPile = (hand.discardPile || []).concat(removed);
+    if (duelBattle?.selectedHandActions?.[defenderSide]) {
+      var removedIds = new Set(removed.map(function getRemovedId(item) { return item.actionId; }).filter(Boolean));
+      duelBattle.selectedHandActions[defenderSide] = duelBattle.selectedHandActions[defenderSide].filter(function keepSelected(entry) {
+        return !removedIds.has(getTrialCardActionId(entry?.action || entry));
+      });
+    }
+    return { removed: removed, targetKind: targetKind };
+  }
+
   function resolveDuelTrialVerdict(action, actor, opponent, battle, before) {
     var duelBattle = getCurrentBattle(battle);
     var subPhase = duelBattle?.domainSubPhase;
@@ -987,6 +1168,8 @@
     var verdict;
     var detail;
     var verdictKey;
+    var confiscationResult;
+    var executionSwordCard;
     if (!subPhase) return null;
     owner = getResourcePair(duelBattle, subPhase.owner);
     defender = getResourcePair(duelBattle, subPhase.defender);
@@ -1013,12 +1196,12 @@
         addOrRefreshDuelStatusEffect(defender, { id: "controllerRedirectPressure", label: "操控链压力", rounds: 2, value: 1 });
         addOrRefreshDuelStatusEffect(defender, { id: "summonSuppressed", label: "召唤压制", rounds: 2, value: 1 });
       } else if (vocabulary === "incarnated") {
-        detail = "受肉体证据压力极高，日车获得" + verdict + "；第一版仅生成受肉体处刑状态候选。";
+        detail = "受肉体证据压力极高，死刑判决成立；日车获得处刑人之剑手札。";
         addOrRefreshDuelStatusEffect(owner, { id: "executionStateCandidate", label: verdict, rounds: 3, value: 1 });
         addOrRefreshDuelStatusEffect(defender, { id: "incarnatedSuppressed", label: "受肉意识压制", rounds: 2, value: 1 });
         addOrRefreshDuelStatusEffect(defender, { id: "defenseShakenByVerdict", label: "判决动摇", rounds: 2, value: 1 });
       } else {
-        detail = "证据压力极高，日车获得" + verdict + "；完整处刑剑机制仍为后续阶段。";
+        detail = "证据压力极高，死刑判决成立；日车获得处刑人之剑手札。";
         addOrRefreshDuelStatusEffect(owner, { id: "executionStateCandidate", label: verdict, rounds: 3, value: 1 });
         addOrRefreshDuelStatusEffect(defender, { id: "defenseShakenByVerdict", label: "判决动摇", rounds: 2, value: 1 });
       }
@@ -1045,6 +1228,8 @@
         detail = "判决倾向" + verdict + "，对手术式手法被压制数回合。";
         addOrRefreshDuelStatusEffect(defender, { id: "techniqueConfiscated", label: verdict, rounds: 3, value: 1 });
       }
+      confiscationResult = confiscateVerdictHandCards(duelBattle, subPhase.defender);
+      detail += " 手牌没收：" + (confiscationResult.targetKind === "cursed_tool" ? "检测到咒具标签，没收所有咒具手札" : "未检测到咒具标签，没收所有咒术相关手札") + "，共 " + formatNumberValue(confiscationResult.removed.length) + " 张。";
     } else if (adjustedPressure >= 2.3) {
       verdictKey = "light";
       verdict = getDuelTrialVerdictLabel(subPhase, "light", "轻判");
@@ -1079,6 +1264,11 @@
     subPhase.trialEndReason = "verdictResolved";
     subPhase.trialStatus = "resolved";
     updateDuelDomainTrialContext(duelBattle, { trialStatus: "resolved", trialEndReason: "verdictResolved", verdict: verdict, verdictKey: verdictKey });
+    closeTrialDomainAfterVerdict(duelBattle, subPhase, owner);
+    if (verdictKey === "execution") {
+      executionSwordCard = addExecutionSwordToHand(duelBattle, subPhase.owner);
+      if (executionSwordCard) detail += " 处刑人之剑已直接加入日车手牌，并标记为不会被普通刷新移除。";
+    }
     invalidateActionChoices(duelBattle);
     clampResource(owner);
     clampResource(defender);

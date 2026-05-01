@@ -48,35 +48,13 @@
   ],
   "standardEffectTags": [
     "sure_hit",
-    "rule_binding",
-    "trial_phase",
-    "evidence_system",
-    "verdict_resolution",
-    "confiscation_possible",
-    "execution_state_possible",
-    "jackpot_rule",
-    "probability_loop",
-    "resource_loop",
     "information_overload",
-    "action_suppression",
-    "cognition_lock",
-    "auto_attack",
-    "shikigami_auto_attack",
     "slash_auto_attack",
     "soul_touch",
-    "transformation_pressure",
-    "environment_pressure",
-    "open_domain",
-    "closed_barrier",
-    "incomplete_domain",
-    "domain_buff",
-    "domain_debuff",
-    "violence_restriction",
-    "sure_hit_component",
-    "manual_attack_component",
-    "sustained_damage",
-    "shadow_environment",
-    "unstable_domain"
+    "shikigami_auto_attack",
+    "rule_trial",
+    "jackpot_rule",
+    "placeholder"
   ],
   "profiles": [
     {
@@ -108,13 +86,7 @@
         }
       },
       "effectTags": [
-        "rule_binding",
-        "trial_phase",
-        "violence_restriction",
-        "evidence_system",
-        "verdict_resolution",
-        "confiscation_possible",
-        "execution_state_possible"
+        "rule_trial"
       ],
       "sureHit": {
         "enabled": false,
@@ -364,10 +336,7 @@
         }
       },
       "effectTags": [
-        "jackpot_rule",
-        "probability_loop",
-        "resource_loop",
-        "domain_buff"
+        "jackpot_rule"
       ],
       "sureHit": {
         "enabled": false,
@@ -537,11 +506,7 @@
       },
       "effectTags": [
         "sure_hit",
-        "information_overload",
-        "action_suppression",
-        "cognition_lock",
-        "domain_debuff",
-        "closed_barrier"
+        "information_overload"
       ],
       "sureHit": {
         "enabled": true,
@@ -626,12 +591,7 @@
       },
       "effectTags": [
         "sure_hit",
-        "open_domain",
-        "auto_attack",
-        "slash_auto_attack",
-        "sure_hit_component",
-        "manual_attack_component",
-        "environment_pressure"
+        "slash_auto_attack"
       ],
       "sureHit": {
         "enabled": true,
@@ -719,10 +679,7 @@
       },
       "effectTags": [
         "sure_hit",
-        "soul_touch",
-        "transformation_pressure",
-        "domain_debuff",
-        "closed_barrier"
+        "soul_touch"
       ],
       "sureHit": {
         "enabled": true,
@@ -808,11 +765,7 @@
       },
       "effectTags": [
         "sure_hit",
-        "auto_attack",
-        "shikigami_auto_attack",
-        "environment_pressure",
-        "sustained_damage",
-        "closed_barrier"
+        "shikigami_auto_attack"
       ],
       "sureHit": {
         "enabled": true,
@@ -897,12 +850,8 @@
         }
       },
       "effectTags": [
-        "incomplete_domain",
-        "environment_pressure",
         "shikigami_auto_attack",
-        "shadow_environment",
-        "domain_buff",
-        "unstable_domain"
+        "jackpot_rule"
       ],
       "sureHit": {
         "enabled": false,
@@ -993,11 +942,7 @@
         }
       },
       "effectTags": [
-        "sure_hit",
-        "closed_barrier",
-        "environment_pressure",
-        "sustained_damage",
-        "area_pressure"
+        "sure_hit"
       ],
       "sureHit": {
         "enabled": true,
@@ -1056,12 +1001,7 @@
         }
       },
       "effectTags": [
-        "sure_hit",
-        "closed_barrier",
-        "environment_pressure",
-        "areaControl",
-        "life_drain",
-        "domain_debuff"
+        "sure_hit"
       ],
       "sureHit": {
         "enabled": true,
@@ -1120,12 +1060,7 @@
         }
       },
       "effectTags": [
-        "sure_hit",
-        "closed_barrier",
-        "environment_pressure",
-        "auto_attack",
-        "sustained_damage",
-        "swarm_pressure"
+        "sure_hit"
       ],
       "sureHit": {
         "enabled": true,
@@ -1184,13 +1119,7 @@
         }
       },
       "effectTags": [
-        "sure_hit",
-        "closed_barrier",
-        "environment_pressure",
-        "rule_binding",
-        "forcedRemoval",
-        "spaceDisplacement",
-        "highDisruption"
+        "sure_hit"
       ],
       "sureHit": {
         "enabled": true,
@@ -1250,11 +1179,7 @@
       },
       "effectTags": [
         "sure_hit",
-        "closed_barrier",
-        "environment_pressure",
-        "rule_binding",
-        "execution_state_possible",
-        "sustained_damage"
+        "rule_trial"
       ],
       "sureHit": {
         "enabled": true,

@@ -1902,6 +1902,19 @@ body.debug-mode .duel-debug-panel.debug-only {
   font-weight: 900;
 }
 
+.duel-hand-lock-message {
+  margin: 0;
+  padding: 14px 16px;
+  border: 2px solid rgba(180, 35, 24, 0.32);
+  border-radius: 8px;
+  background: rgba(180, 35, 24, 0.1);
+  color: #7f1d1d;
+  font-size: 20px;
+  font-weight: 950;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .duel-hand-pool-hint {
   margin: 0;
   padding: 7px 10px;
@@ -2139,6 +2152,12 @@ body.debug-mode .duel-debug-panel.debug-only {
   border-radius: 999px;
   background: rgba(180, 35, 24, 0.08);
   color: var(--accent) !important;
+  overflow-wrap: anywhere;
+}
+
+.duel-action-numeric-brief {
+  color: #334155 !important;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 

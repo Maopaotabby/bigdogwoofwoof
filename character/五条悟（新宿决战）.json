@@ -53,5 +53,44 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "gojo-unlimited-void",
+    "language": "json-rule-v1",
+    "domainName": "无量空处",
+    "scriptType": "hard_control",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "information_overload",
+      "sure_hit"
+    ],
+    "effectSummary": "无量空处抽象为信息过载：造成高额直接伤害、压低稳定度，并让对手下一轮手札权重极低。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 0,
+      "damage": 35,
+      "nextRoundDamage": 0,
+      "opponentStabilityDelta": -24,
+      "opponentCeDamage": 0,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": true,
+      "forceTrialHands": false
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake"
+  }
 }

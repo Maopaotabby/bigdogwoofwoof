@@ -53,5 +53,43 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "domainScript": {
+    "id": "naoya-time-cell-moon-palace",
+    "language": "json-rule-v1",
+    "domainName": "时胞月宫殿",
+    "scriptType": "hard_control",
+    "activation": "onDomainResolved",
+    "blockedBy": [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard",
+      "falling_blossom_emotion",
+      "zero_ce_domain_bypass"
+    ],
+    "effectTags": [
+      "sure_hit"
+    ],
+    "effectSummary": "时胞月宫殿抽象为动作帧控制：造成伤害并显著压低下一轮行动主动权。",
+    "resourceRules": {
+      "domainLoadBase": 14,
+      "stabilityPressure": 0.04
+    },
+    "effects": {
+      "placeholderDamage": 0,
+      "damage": 24,
+      "nextRoundDamage": 0,
+      "opponentStabilityDelta": -12,
+      "opponentCeDamage": 0,
+      "grantExecutionSword": false,
+      "skipOpponentNextCard": true,
+      "forceTrialHands": false
+    },
+    "fallback": {
+      "strategy": "placeholder_plus_10_damage",
+      "damage": 10,
+      "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+    },
+    "source": "v2.3-domain-remake"
+  }
 }

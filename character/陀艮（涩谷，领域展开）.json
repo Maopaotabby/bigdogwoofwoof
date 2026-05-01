@@ -1,58 +1,97 @@
 {
-  "name": "陀艮（涩谷，领域展开）",
-  "hp": 7,
-  "mp": 7,
-  "四轴": {
-    "咒术": 6.27,
-    "肉体": 6.08,
-    "悟性": 5.16,
-    "构筑": 2.92
-  },
-  "特殊手札": [
-    "curse_spirit_general"
-  ],
-  "specialHandTags": [
-    "curse_spirit_general"
-  ],
-  "characterId": "dagon_shibuya_domain",
-  "displayName": "陀艮（涩谷，领域展开）",
-  "stage": "shibuya",
-  "baseStats": {
-    "cursedEnergy": "SS",
-    "control": "S",
-    "efficiency": "A",
-    "body": "SS",
-    "martial": "A",
-    "talent": "A",
-    "cursedTechnique": 6.27,
-    "physical": 6.08,
-    "perception": 5.16,
-    "construction": 2.92
-  },
-  "innateTraits": [
-    "咒灵之躯",
-    "灾害咒灵",
-    "潮灾式海 —— 陀艮"
-  ],
-  "techniquePower": "SS",
-  "domainProfile": "领域展开：荡蕴平线",
-  "officialGrade": "特级咒灵",
-  "powerTier": "disasterCurse",
-  "notes": "领域展开和式神海量压制是主要胜路；按海洋恐惧侧咒灵术式归类，领域被破或遇到零咒力肉体系会明显降档。",
-  "techniqueName": "潮灾式海 —— 陀艮",
-  "techniqueDescription": "海洋、潮汐与水域压迫恐惧凝聚成的咒灵术式，领域中以式神洪流和水域环境持续压制对手。",
-  "externalResource": "无",
-  "visibleGrade": "无",
-  "advancedTechniques": [
-    "无"
-  ],
-  "loadout": [
-    "无"
-  ],
-  "selectedMechanisms": [
-    "无"
-  ],
-  "selectedToolTags": [
-    "无"
-  ]
+    "name":  "陀艮（涩谷，领域展开）",
+    "hp":  7,
+    "mp":  7,
+    "四轴":  {
+               "咒术":  6.27,
+               "肉体":  6.08,
+               "悟性":  5.16,
+               "构筑":  2.92
+           },
+    "特殊手札":  [
+                 "curse_spirit_general"
+             ],
+    "specialHandTags":  [
+                            "curse_spirit_general"
+                        ],
+    "characterId":  "dagon_shibuya_domain",
+    "displayName":  "陀艮（涩谷，领域展开）",
+    "stage":  "shibuya",
+    "baseStats":  {
+                      "cursedEnergy":  "SS",
+                      "control":  "S",
+                      "efficiency":  "A",
+                      "body":  "SS",
+                      "martial":  "A",
+                      "talent":  "A",
+                      "cursedTechnique":  6.27,
+                      "physical":  6.08,
+                      "perception":  5.16,
+                      "construction":  2.92
+                  },
+    "innateTraits":  [
+                         "咒灵之躯",
+                         "灾害咒灵",
+                         "潮灾式海 —— 陀艮"
+                     ],
+    "techniquePower":  "SS",
+    "domainProfile":  "领域展开：荡蕴平线",
+    "officialGrade":  "特级咒灵",
+    "powerTier":  "disasterCurse",
+    "notes":  "领域展开和式神海量压制是主要胜路；按海洋恐惧侧咒灵术式归类，领域被破或遇到零咒力肉体系会明显降档。",
+    "techniqueName":  "潮灾式海 —— 陀艮",
+    "techniqueDescription":  "海洋、潮汐与水域压迫恐惧凝聚成的咒灵术式，领域中以式神洪流和水域环境持续压制对手。",
+    "externalResource":  "无",
+    "visibleGrade":  "无",
+    "advancedTechniques":  [
+                               "无"
+                           ],
+    "loadout":  [
+                    "无"
+                ],
+    "selectedMechanisms":  [
+                               "无"
+                           ],
+    "selectedToolTags":  [
+                             "无"
+                         ],
+    "domainScript":  {
+                         "id":  "dagon-horizon-skandha",
+                         "language":  "json-rule-v1",
+                         "domainName":  "荡蕴平线",
+                         "scriptType":  "auto_attack",
+                         "activation":  "onDomainResolved",
+                         "blockedBy":  [
+                                           "domain_clash",
+                                           "simple_domain_guard",
+                                           "hollow_wicker_basket_guard",
+                                           "falling_blossom_emotion",
+                                           "zero_ce_domain_bypass"
+                                       ],
+                         "effectTags":  [
+                                            "shikigami_auto_attack",
+                                            "sure_hit"
+                                        ],
+                         "effectSummary":  "荡蕴平线抽象为式神洪流必中：造成伤害并留下式神自动攻击压力。",
+                         "resourceRules":  {
+                                               "domainLoadBase":  14,
+                                               "stabilityPressure":  0.04
+                                           },
+                         "effects":  {
+                                         "placeholderDamage":  0,
+                                         "damage":  24,
+                                         "nextRoundDamage":  14,
+                                         "opponentStabilityDelta":  -10,
+                                         "opponentCeDamage":  0,
+                                         "grantExecutionSword":  false,
+                                         "skipOpponentNextCard":  false,
+                                         "forceTrialHands":  false
+                                     },
+                         "fallback":  {
+                                          "strategy":  "placeholder_plus_10_damage",
+                                          "damage":  10,
+                                          "reason":  "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+                                      },
+                         "source":  "v2.3-domain-remake"
+                     }
 }

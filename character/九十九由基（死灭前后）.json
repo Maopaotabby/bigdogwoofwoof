@@ -1,54 +1,96 @@
 {
-  "name": "九十九由基（死灭前后）",
-  "hp": 8,
-  "mp": 7,
-  "四轴": {
-    "咒术": 6.77,
-    "肉体": 8,
-    "悟性": 7.12,
-    "构筑": 3.31
-  },
-  "特殊手札": [],
-  "specialHandTags": [],
-  "characterId": "yuki_tsukumo_culling",
-  "displayName": "九十九由基（死灭前后）",
-  "stage": "cullingGame",
-  "baseStats": {
-    "cursedEnergy": "SS",
-    "control": "SS",
-    "efficiency": "S",
-    "body": "SSS",
-    "martial": "SSS",
-    "talent": "SS",
-    "cursedTechnique": 6.77,
-    "physical": 8,
-    "perception": 7.12,
-    "construction": 3.31
-  },
-  "innateTraits": [
-    "星之怒",
-    "凰轮",
-    "领域展开"
-  ],
-  "techniquePower": "SSS",
-  "domainProfile": "领域展开：未公开",
-  "officialGrade": "特级",
-  "powerTier": "specialGrade",
-  "notes": "高质量近战与质量增幅术式；领域存在但细节未公开，按特级强者锚点处理。",
-  "techniqueName": "无",
-  "techniqueDescription": "无",
-  "externalResource": "无",
-  "visibleGrade": "无",
-  "advancedTechniques": [
-    "无"
-  ],
-  "loadout": [
-    "无"
-  ],
-  "selectedMechanisms": [
-    "无"
-  ],
-  "selectedToolTags": [
-    "无"
-  ]
+    "name":  "九十九由基（死灭前后）",
+    "hp":  8,
+    "mp":  7,
+    "四轴":  {
+               "咒术":  6.77,
+               "肉体":  8,
+               "悟性":  7.12,
+               "构筑":  3.31
+           },
+    "特殊手札":  [
+
+             ],
+    "specialHandTags":  [
+
+                        ],
+    "characterId":  "yuki_tsukumo_culling",
+    "displayName":  "九十九由基（死灭前后）",
+    "stage":  "cullingGame",
+    "baseStats":  {
+                      "cursedEnergy":  "SS",
+                      "control":  "SS",
+                      "efficiency":  "S",
+                      "body":  "SSS",
+                      "martial":  "SSS",
+                      "talent":  "SS",
+                      "cursedTechnique":  6.77,
+                      "physical":  8,
+                      "perception":  7.12,
+                      "construction":  3.31
+                  },
+    "innateTraits":  [
+                         "星之怒",
+                         "凰轮",
+                         "领域展开"
+                     ],
+    "techniquePower":  "SSS",
+    "domainProfile":  "领域展开：未公开",
+    "officialGrade":  "特级",
+    "powerTier":  "specialGrade",
+    "notes":  "高质量近战与质量增幅术式；领域存在但细节未公开，按特级强者锚点处理。",
+    "techniqueName":  "无",
+    "techniqueDescription":  "无",
+    "externalResource":  "无",
+    "visibleGrade":  "无",
+    "advancedTechniques":  [
+                               "无"
+                           ],
+    "loadout":  [
+                    "无"
+                ],
+    "selectedMechanisms":  [
+                               "无"
+                           ],
+    "selectedToolTags":  [
+                             "无"
+                         ],
+    "domainScript":  {
+                         "id":  "tsukumo-unrevealed-domain",
+                         "language":  "json-rule-v1",
+                         "domainName":  "未公开领域",
+                         "scriptType":  "placeholder_damage",
+                         "activation":  "onDomainResolved",
+                         "blockedBy":  [
+                                           "domain_clash",
+                                           "simple_domain_guard",
+                                           "hollow_wicker_basket_guard",
+                                           "falling_blossom_emotion",
+                                           "zero_ce_domain_bypass"
+                                       ],
+                         "effectTags":  [
+                                            "placeholder"
+                                        ],
+                         "effectSummary":  "九十九由基领域未公开，按占位符策略只造成 +10 候选伤害。",
+                         "resourceRules":  {
+                                               "domainLoadBase":  14,
+                                               "stabilityPressure":  0.04
+                                           },
+                         "effects":  {
+                                         "placeholderDamage":  10,
+                                         "damage":  0,
+                                         "nextRoundDamage":  0,
+                                         "opponentStabilityDelta":  0,
+                                         "opponentCeDamage":  0,
+                                         "grantExecutionSword":  false,
+                                         "skipOpponentNextCard":  false,
+                                         "forceTrialHands":  false
+                                     },
+                         "fallback":  {
+                                          "strategy":  "placeholder_plus_10_damage",
+                                          "damage":  10,
+                                          "reason":  "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+                                      },
+                         "source":  "v2.3-domain-remake"
+                     }
 }

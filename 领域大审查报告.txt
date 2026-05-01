@@ -1,0 +1,84 @@
+V2.3B 全有领域角色大审查报告
+
+审查时间：2026-05-01
+
+审查范围：
+- character/*.json
+- data/character-cards-v0.1.json
+- data/duel-domain-profiles-v0.1-candidate.json
+- data/card_prompt.json
+- modules/duel/duel-domain-profile.js
+- modules/duel/duel-hand.js
+- modules/duel/duel-resource.js
+- modules/duel/duel-rule-subphase.js
+
+审查标准：
+1. 显示拥有领域的角色必须有 domainScript，或能进入已实现的规则子阶段。
+2. domainScript.language 必须为 json-rule-v1。
+3. domainScript.activation 必须为 onDomainResolved。
+4. domainScript.blockedBy 必须包含领域对抗和反领域手段。
+5. domainScript.effectTags 必须只使用核心标签。
+6. 有特殊效果的领域必须有实际执行路径，而不是只写描述。
+7. 聚合角色卡 data/character-cards-v0.1.json 与 character/*.json 不应在领域脚本上脱节。
+
+核心标签白名单：
+- sure_hit
+- information_overload
+- slash_auto_attack
+- soul_touch
+- shikigami_auto_attack
+- rule_trial
+- jackpot_rule
+- placeholder
+
+审查结果：
+
+已确认具备可执行领域脚本的角色：
+- 五条悟（新宿决战）：无量空处，information_overload + sure_hit。
+- 两面宿傩（平安/新宿决战基准）：伏魔御厨子，slash_auto_attack + sure_hit。
+- 日车宽见（死灭回游/新宿）：诛伏赐死，rule_trial。
+- 秤金次（中奖状态旧聚合卡）：坐杀搏徒，jackpot_rule。
+- 真人（涩谷）：自闭圆顿裹，soul_touch + sure_hit。
+- 陀艮（涩谷，领域展开）：荡蕴平线，shikigami_auto_attack + sure_hit。
+- 伏黑惠（死灭回游）：嵌合暗翳庭，shikigami_auto_attack。
+- 漏瑚（涩谷）：盖棺铁围山，sure_hit。
+- 乙骨忧太（新宿决战）：真赝相爱，sure_hit。
+- 羂索（夏油身体）：胎藏遍野，sure_hit。
+- 禅院直哉（咒灵，樱岛）：时胞月宫殿，sure_hit。
+- 万（平安/受肉）：三重疾苦，sure_hit。
+
+仍为占位符领域的角色：
+- 乌鹭亨子（仙台结界）：仙台三方领域，placeholder。
+- 石流龙（仙台结界）：仙台三方领域，placeholder。
+- 九十九由基（死灭前后）：未公开领域，placeholder。
+- 花御（京都交流会）：朶颐光海，placeholder。
+- 疱疮神（涩谷）：瘟柩三刻，placeholder。
+- 黑沐死（仙台结界）：黑蠊腐胎巢，placeholder。
+
+本轮修复：
+1. 将 character/*.json 的领域脚本同步到 data/character-cards-v0.1.json 的同名聚合角色卡。
+2. 为旧聚合卡“秤金次（中奖状态）”补充坐杀搏徒 jackpot_rule domainScript。
+3. 修复 card_prompt.json 中文编码污染。
+4. 将 jackpot_rule 加入 AI 自定义角色 prompt 的 scriptType 允许表。
+5. 将领域 profile 的散标签压缩为核心标签。
+6. 保持日车 rule_trial 和秤 jackpot_rule 的严格手牌替换流程。
+
+执行路径确认：
+- 普通领域脚本：domain_expand -> applyDuelDomainProfileOnActivation -> applyDuelDomainScriptEffect。
+- 下一轮伤害：domainScriptPendingDamage -> applyDuelRoundResourceRegen。
+- 下一轮手札封锁：domainScriptNoCard -> consumeDomainScriptNoCard -> 普通手札与领域牌区返回空。
+- 日车审判：rule_trial -> createDuelTrialSubPhase -> 严格审判手牌替换。
+- 秤抽奖：jackpot_rule -> createDuelJackpotSubPhase -> 严格 jackpot 手牌替换 -> applyDuelJackpotAction / resolveDuelJackpot。
+
+结论：
+- 当前已识别的有领域角色不存在缺失 domainScript 的问题。
+- 当前已识别的领域标签不存在白名单外标签。
+- 聚合数据入口和 character 文件入口已同步。
+- 占位符领域仍需后续按公式书逐个升级为具体脚本。
+2026-05-01 追加审查：全领域统一生效门槛
+- 结论：已修正。此前领域脚本只检查 response.effective，双方同时展开领域但没有显式 responseAction 时，仍可能使命中特殊效果。现在统一检查目标 active 领域、反领域手段、施术者领域 active/崩解状态。
+- 无量空处：已修正。目标已展开领域时不再触发 domainScriptNoCard，不没收手札；目标无领域且无抗领域手段时才会命中并在下一手札区显示锁定提示。
+- 诛伏赐死：已修正。目标有 active 领域或反领域手段时不启动完整审判子阶段，不强制替换为审判手札；只有完整命中时才进入审判相关手札流程。
+- 坐杀搏徒：已修正。目标领域对抗或抗领域手段成立时不启动完整 jackpot 子阶段。
+- 伏魔御厨子/荡蕴平线/自闭圆顿裹等自动攻击或压制类标签：已统一为门槛命中后才施加对应状态或后续伤害。
+- 手札数值：已追加 UI 简介与空白手札过滤；最终攻防显示来源于本地角色数值修正，而非把 AI/自定义基础值直接当最终值。

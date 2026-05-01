@@ -1198,6 +1198,7 @@ function applyCombatPowerImportToDuelForm(payload, options = {}) {
   setSelectedDuelDefinitionValues(els.duelCustomMechanisms, []);
   setSelectedDuelDefinitionValues(els.duelCustomToolTags, []);
   state.pendingCustomDuelHandCards = [];
+  state.pendingCustomDuelDomainScript = null;
   if (typeof renderPendingCustomDuelHandList === "function") renderPendingCustomDuelHandList();
   syncCustomDuelEditMode();
   state.duelBattle = null;

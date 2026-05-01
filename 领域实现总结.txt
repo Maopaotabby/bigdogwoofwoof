@@ -1,0 +1,157 @@
+V2.3B 领域脚本与子阶段实现总结
+
+更新时间：2026-05-01
+
+一、总体实现
+
+已完成：
+1. 角色 JSON / 自定义角色卡中的 domainScript 可被网页端读取，并在领域展开成功后由 duel-domain-profile.js 结算。
+2. 领域脚本统一为声明式 json-rule-v1，不执行 JavaScript、eval、函数体或任意源码。
+3. 领域脚本会检查领域对抗结果：对手展开领域或使用 domain_clash、simple_domain_guard、hollow_wicker_basket_guard、falling_blossom_emotion、zero_ce_domain_bypass 等反领域手段时，脚本不完整生效。
+4. nextRoundDamage 已改为严格下一轮结算：展开当轮只写入 domainScriptPendingDamage，下一轮资源结算时才扣除体势。
+5. skipOpponentNextCard 已改为严格手札封锁：触发轮会清空本轮普通手札与领域牌区候选，不再只是权重惩罚。
+6. 日车宽见的 rule_trial 子阶段已改为严格手牌替换：审判子阶段中双方普通手牌只保留审判/辩护相关手札，领域牌区清空。
+7. 秤金次的 jackpot 子阶段已改为严格手牌替换：坐杀搏徒子阶段中秤方普通手牌只保留推进演出、提高期待度、风险再演出、稳定循环、结算中奖等 jackpot 手札，领域牌区清空。
+8. 领域标签已压缩为核心 effectTags：sure_hit、information_overload、slash_auto_attack、soul_touch、shikigami_auto_attack、rule_trial、jackpot_rule、placeholder。
+
+二、核心标签与执行逻辑
+
+- sure_hit：通用必中/命中稳定标签；主要依赖 effects.damage、opponentStabilityDelta、opponentCeDamage 等数值结算，不单独制造特殊状态。
+- information_overload：无量空处式信息压制；展开后写入 domainActionSuppression，并可配合 skipOpponentNextCard 造成严格手札封锁。
+- slash_auto_attack：伏魔御厨子式自动斩击；展开后写入 openSlashPressure，并配合 nextRoundDamage 形成下一轮额外伤害。
+- soul_touch：真人式灵魂接触；展开后写入 soulTouchPressure，并配合 damage/stabilityDelta 抽象灵魂压力。
+- shikigami_auto_attack：式神/召唤物洪流；展开后写入 shikigamiAutoAttack，并配合 nextRoundDamage 抽象持续压制。
+- rule_trial：日车式审判子阶段；展开后创建 trial domainSubPhase，替换双方手牌为审判推进/辩护牌。
+- jackpot_rule：秤金次式概率循环；展开后创建 jackpot domainSubPhase，替换秤方手牌为 jackpot 推进/结算牌。
+- placeholder：资料不足或无法稳定脚本化时使用，占位为 placeholder_plus_10_damage。
+
+三、已实现领域脚本角色
+
+1. 五条悟（新宿决战）- 无量空处
+- 数据位置：character/五条悟（新宿决战）.json
+- 标签：information_overload、sure_hit
+- 脚本效果：damage 35，opponentStabilityDelta -24，skipOpponentNextCard true。
+- 实现逻辑：展开成功后立即造成高额体势伤害和稳定度下降；写入 domainActionSuppression；下一轮触发 domainScriptNoCard，严格清空对方普通手札与领域牌区候选。
+
+2. 两面宿傩（平安/新宿决战基准）- 伏魔御厨子
+- 数据位置：character/两面宿傩（平安／新宿决战基准）.json
+- 标签：slash_auto_attack、sure_hit
+- 脚本效果：damage 24，nextRoundDamage 28，opponentStabilityDelta -12。
+- 实现逻辑：展开成功后本轮造成斩击伤害和稳定度下降；写入 openSlashPressure；nextRoundDamage 作为 domainScriptPendingDamage 保存，下一轮资源结算时严格扣除额外体势。
+
+3. 日车宽见（死灭回游/新宿）- 诛伏赐死
+- 数据位置：character/日车宽见（死灭回游／新宿）.json
+- 标签：rule_trial
+- 脚本效果：opponentStabilityDelta -8，forceTrialHands true，grantExecutionSword false。
+- 实现逻辑：展开成功后创建 trial 子阶段；双方手牌严格替换为审判推进/辩护相关手札；没收判决会按咒具优先、否则咒术相关手札的顺序移除手牌；死刑判决实际成立后才把处刑人之剑加入日车手牌。
+
+4. 秤金次 - 坐杀搏徒
+- 数据位置：data/duel-domain-profiles-v0.1-candidate.json；旧中奖状态卡仍在 data/character-cards-v0.1.json，但 character/manifest.json 标记中奖状态不再作为独立角色卡使用。
+- 标签：jackpot_rule
+- 脚本效果：无直接伤害脚本；通过 createDuelJackpotSubPhase 创建 jackpot 子阶段。
+- 实现逻辑：展开后进入 jackpot 期待度循环；秤方手牌严格替换为推进演出、提高期待度、风险再演出、稳定循环、结算中奖等手札；期待度达到 100 或循环到第 3 轮后可结算中奖；中奖后写入 jackpotStateCandidate / jackpotCycleCandidate，带来咒力回流、体势恢复、承伤降低和续航权重提升。
+
+5. 真人（涩谷）- 自闭圆顿裹
+- 数据位置：character/真人（涩谷）.json
+- 标签：soul_touch、sure_hit
+- 脚本效果：damage 30，opponentStabilityDelta -22。
+- 实现逻辑：展开成功后造成中高体势伤害和大幅稳定度下降；写入 soulTouchPressure，用战斗权重和资源结算抽象灵魂接触压力。
+
+6. 陀艮（涩谷，领域展开）- 荡蕴平线
+- 数据位置：character/陀艮（涩谷，领域展开）.json
+- 标签：shikigami_auto_attack、sure_hit
+- 脚本效果：damage 24，nextRoundDamage 14，opponentStabilityDelta -10。
+- 实现逻辑：展开成功后造成式神洪流伤害；写入 shikigamiAutoAttack；下一轮通过 domainScriptPendingDamage 追加持续伤害。
+
+7. 伏黑惠（死灭回游）- 嵌合暗翳庭
+- 数据位置：character/伏黑惠（死灭回游）.json
+- 标签：shikigami_auto_attack
+- 脚本效果：damage 16，nextRoundDamage 10，opponentStabilityDelta -10。
+- 实现逻辑：按未完成领域处理，展开后造成较低直接伤害、稳定度下降和下一轮持续式神压力；未完成领域额外写入 incompleteDomainInstability。
+
+8. 漏瑚（涩谷）- 盖棺铁围山
+- 数据位置：character/漏瑚（涩谷）.json
+- 标签：sure_hit
+- 脚本效果：damage 32，opponentStabilityDelta -15。
+- 实现逻辑：高温必中领域抽象为高额体势伤害和稳定度下降。
+
+9. 乙骨忧太（新宿决战）- 真赝相爱
+- 数据位置：character/乙骨忧太（新宿决战）.json
+- 标签：sure_hit
+- 脚本效果：damage 28，nextRoundDamage 8，opponentStabilityDelta -12，opponentCeDamage 8。
+- 实现逻辑：复制术式/里香增幅抽象为即时伤害、咒力削弱、稳定度下降和下一轮小额压力。
+
+10. 羂索（夏油身体）- 胎藏遍野
+- 数据位置：character/羂索（夏油身体）.json
+- 标签：sure_hit
+- 脚本效果：damage 30，nextRoundDamage 12，opponentStabilityDelta -12，opponentCeDamage 10。
+- 实现逻辑：开放领域重力/术式压制抽象为即时伤害、咒力削弱和下一轮持续压力。
+
+11. 禅院直哉（咒灵，樱岛）- 时胞月宫殿
+- 数据位置：character/禅院直哉（咒灵，樱岛）.json
+- 标签：sure_hit
+- 脚本效果：damage 24，opponentStabilityDelta -12，skipOpponentNextCard true。
+- 实现逻辑：动作帧控制抽象为伤害、稳定度下降和下一轮严格手札封锁。
+
+12. 万（平安/受肉）- 三重疾苦
+- 数据位置：character/万（平安／受肉）.json
+- 标签：sure_hit
+- 脚本效果：damage 34，opponentStabilityDelta -10。
+- 实现逻辑：构筑术式与完全球体压力抽象为高额必中伤害和稳定度下降。
+
+四、占位符领域
+
+以下角色已有 domainScript，但暂按 placeholder_plus_10_damage 降级处理：
+- 乌鹭亨子：仙台三方领域。
+- 石流龙：仙台三方领域。
+- 九十九由基：未公开领域。
+- 花御：朶颐光海（项目候选）。
+- 疱疮神：瘟柩三刻（项目候选）。
+- 黑沐死：黑蠊腐胎巢（项目候选）。
+
+五、无领域或非完整领域脚本角色
+
+- 鹿紫云一等无领域角色不创建完整领域脚本。
+- 简易领域、弥虚葛笼、落花之情、零咒力必中规避等作为反领域手段，不作为角色完整领域脚本。
+- 秤金次的“中奖状态”不是独立角色卡的最终建模方向，应优先由坐杀搏徒 jackpot 子阶段产生。
+
+六、已知限制
+
+1. 日车宽见审判仍为候选规则系统：证据压力、辩护压力、没收、处刑状态已接入；处刑人之剑和没收手札流程已接近公式书逻辑，但未完整还原原作全部法律逻辑。
+2. 秤金次坐杀搏徒只抽象 jackpot 期待度、中奖候选、续航和承伤降低，没有完整还原全部动画演出概率表。
+3. 占位符领域仍需要后续根据公式书补充具体效果。
+4. sure_hit 本身是核心标签，不单独产生状态；具体伤害、咒力削弱和稳定度变化必须写在 domainScript.effects 中。
+
+七、全有领域角色大审查记录
+
+审查范围：
+- character/*.json 中所有显示拥有领域展开、开放领域、顶级领域、未完成领域或已含 domainScript 的角色。
+- data/character-cards-v0.1.json 中所有聚合角色卡的领域字段。
+- data/duel-domain-profiles-v0.1-candidate.json 中已命名领域 profile 的 effectTags。
+- data/card_prompt.json 中 AI 自定义角色领域生成规则。
+
+本轮发现并修复：
+1. character/*.json 中 17 个领域角色均已有 domainScript，未发现缺失脚本、缺失 effects、缺失 blockedBy 或非法 effectTags。
+2. data/character-cards-v0.1.json 的同名聚合角色卡原本没有同步 domainScript，已从 character/*.json 同步领域脚本，避免旧入口读取不到脚本。
+3. data/character-cards-v0.1.json 中旧的“秤金次（中奖状态）”仍存在；已补充 jackpot_rule 声明式 domainScript，并把 domainProfile 规范为“领域展开：坐杀搏徒”。同时保留 manifest 中“中奖状态不应作为独立最终建模方向”的说明。
+4. card_prompt.json 一度出现中文编码污染，已恢复为可读中文，并加入 jackpot_rule 到 scriptType 规则。
+5. duel-domain-profiles-v0.1-candidate.json 的 effectTags 已压缩到核心标签表，去除 probability_loop、resource_loop、domain_buff 等散标签。
+
+审查结论：
+- 目前所有被识别为“有领域”的内置角色，在 character/*.json 和 data/character-cards-v0.1.json 两条数据入口中都具备 domainScript 或 jackpot_rule 子阶段入口。
+- 领域脚本类型和标签已统一到白名单。
+- 仍未从占位符升级的角色见“四、占位符领域”。
+2026-05-01 V2.3B 追加：领域特殊效果统一命中门槛
+- 已完成：所有 domainScript 对敌特殊效果改为走统一判定：施术者领域必须 active 且未达到崩解阈值；目标不能有 active 领域；目标不能使用 domain_clash、simple_domain_guard、hollow_wicker_basket_guard、falling_blossom_emotion、zero_ce_domain_bypass 等抗领域手段。
+- 已完成：无量空处的信息过载、skipOpponentNextCard 没收手札、领域后续伤害、日车审判强制手札、处刑人之剑候选、伏魔御厨子后续斩击等脚本效果，只有在上述门槛满足时才施加。
+- 已完成：双方都展开领域时视为领域对抗状态，目标侧领域特殊效果不会被无量空处等脚本命中；只保留领域展开的通用压力和领域负荷。
+- 已完成：因领域脚本命中而被清空/没收手札时，手札区显示大字提示“由于本回合被XXXX效果命中，无法行动，请直接点击锁定。”
+- 已完成：手札 UI 增加攻、防、AP/CE 消耗、数值修正与浮动范围简介；手札候选池过滤无实际数值或状态效果的空白手札。
+- 已完成：card_prompt.json 已加入自定义角色 AI 规则：手札数值必须由角色 baseStats、术式强度、风险和效果类型抽象为基础值，最终攻防与消耗修正交给本地公式；领域脚本必须声明并遵守统一 blockedBy/目标领域 active 阻断逻辑。
+
+2026-05-01 V2.3B 追加：诛伏赐死审判结算重制
+- 已完成：日车宽见的领域展开不再直接授予处刑人之剑；处刑人之剑只在死刑判决实际成立后加入日车手牌。
+- 已完成：处刑人之剑作为判决生成手札直接进入当前手牌，标记 noRefresh / retainedPermanent / executionSword；普通手牌刷新、候选池重建和溢出检查不会把它当作可刷新弃置对象。
+- 已完成：审判子阶段开始时保存双方原手牌，审判期间严格替换为审判/辩护相关手札；审判结束后领域关闭，审判牌从普通手牌和领域牌区清除。
+- 已完成：没收判决成立时，先检查被告原手牌是否存在咒具标签手札；若存在，没收所有咒具手札；若不存在，没收所有咒术/术式/咒力/领域相关手札。
+- 已完成：审判完成后伏诛赐死领域结束，domainProfileState 清理，战斗回到普通流程；领域未展开或审判已结束时，残留审判牌会被自动剔除。

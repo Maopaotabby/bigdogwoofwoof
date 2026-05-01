@@ -528,7 +528,16 @@ function applyDuelAiSuggestion(suggestion) {
   }
   if (els.duelCustomResource) els.duelCustomResource.value = suggestion.externalResource;
   if (els.duelCustomNotes) els.duelCustomNotes.value = suggestion.notes;
+  state.pendingCustomDuelDomainScript = suggestion.domainScript ? { ...suggestion.domainScript } : null;
   addGeneratedDuelSpecialTerms(suggestion.generatedTerms || []);
+  if (Array.isArray(suggestion.specialHands) && suggestion.specialHands.length) {
+    state.pendingCustomDuelHandCards = [
+      ...(state.pendingCustomDuelHandCards || []),
+      ...suggestion.specialHands
+    ].slice(-12);
+    if (typeof renderPendingCustomDuelHandList === "function") renderPendingCustomDuelHandList();
+    if (typeof updateCustomDuelHandStatus === "function") updateCustomDuelHandStatus(`AI 已生成 ${suggestion.specialHands.length} 张特殊手札草案。`);
+  }
 }
 
 function updateDuelAiStatus(message, isError = false) {

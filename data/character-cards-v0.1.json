@@ -23,12 +23,54 @@
         "martial": "SSS",
         "talent": "SS"
       },
-      "innateTraits": ["六眼", "无下限"],
+      "innateTraits": [
+        "六眼",
+        "无下限"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "顶级领域：无量空处",
       "officialGrade": "特级",
       "powerTier": "canonCeiling",
-      "notes": "六眼锁定咒力操纵与效率 SSS；强度核心不是咒力总量 EX。"
+      "notes": "六眼锁定咒力操纵与效率 SSS；强度核心不是咒力总量 EX。",
+      "domainScript": {
+        "id": "gojo-unlimited-void",
+        "language": "json-rule-v1",
+        "domainName": "无量空处",
+        "scriptType": "hard_control",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "information_overload",
+          "sure_hit"
+        ],
+        "effectSummary": "无量空处抽象为信息过载：造成高额直接伤害、压低稳定度，并让对手下一轮手札权重极低。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 35,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": -24,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": true,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "sukuna_heian_or_shinjuku",
@@ -42,13 +84,56 @@
         "martial": "SSS",
         "talent": "SSS"
       },
-      "innateTraits": ["双面四臂", "善用束缚"],
+      "innateTraits": [
+        "双面四臂",
+        "善用束缚"
+      ],
       "externalResource": "新宿决战十影资源：魔虚罗、嵌合兽顎吐；魔虚罗适应无下限后提供世界斩参照。",
       "techniquePower": "SS",
       "domainProfile": "开放领域：伏魔御厨子",
       "officialGrade": "特级咒物/诅咒之王",
       "powerTier": "canonCeiling",
-      "notes": "御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。"
+      "notes": "御厨子不是特级术式中最高强度；宿傩强在基础数值、开放领域、战斗理解、善用束缚，以及新宿决战中以魔虚罗适应为参照兑现世界斩。",
+      "domainScript": {
+        "id": "sukuna-malevolent-shrine",
+        "language": "json-rule-v1",
+        "domainName": "伏魔御厨子",
+        "scriptType": "auto_attack",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "slash_auto_attack",
+          "sure_hit"
+        ],
+        "effectSummary": "伏魔御厨子抽象为开放领域自动斩击：本轮先给予切割伤害，并把下一回合持续斩击压力折算为额外伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 24,
+          "nextRoundDamage": 28,
+          "opponentStabilityDelta": -12,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake",
+        "barrierType": "open_barrier"
+      }
     },
     {
       "characterId": "yuji_itadori_after68",
@@ -62,7 +147,12 @@
         "martial": "SSS",
         "talent": "EX-"
       },
-      "innateTraits": ["半人半咒", "不老/咒物沉淀", "随意黑闪", "EX锚点"],
+      "innateTraits": [
+        "半人半咒",
+        "不老/咒物沉淀",
+        "随意黑闪",
+        "EX锚点"
+      ],
       "techniquePower": "SS",
       "domainProfile": "高阶反领域/领域对策",
       "officialGrade": "不适用",
@@ -99,8 +189,15 @@
         "martial": "SSS",
         "talent": "SS"
       },
-      "innateTraits": ["零咒力天与暴君型天与咒缚"],
-      "loadout": ["天逆鉾", "万里锁", "释魂刀", "武器库咒灵"],
+      "innateTraits": [
+        "零咒力天与暴君型天与咒缚"
+      ],
+      "loadout": [
+        "天逆鉾",
+        "万里锁",
+        "释魂刀",
+        "武器库咒灵"
+      ],
       "officialGrade": "无",
       "powerTier": "topTierPhysical",
       "notes": "完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。"
@@ -117,8 +214,12 @@
         "martial": "SSS",
         "talent": "S"
       },
-      "innateTraits": ["零咒力天与暴君型天与咒缚"],
-      "loadout": ["游云"],
+      "innateTraits": [
+        "零咒力天与暴君型天与咒缚"
+      ],
+      "loadout": [
+        "游云"
+      ],
       "officialGrade": "无",
       "powerTier": "topTierPhysical",
       "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。"
@@ -135,8 +236,12 @@
         "martial": "SSS",
         "talent": "SS"
       },
-      "innateTraits": ["零咒力天与暴君型天与咒缚"],
-      "loadout": ["释魂刀"],
+      "innateTraits": [
+        "零咒力天与暴君型天与咒缚"
+      ],
+      "loadout": [
+        "释魂刀"
+      ],
       "officialGrade": "无",
       "powerTier": "topTierPhysical",
       "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。"
@@ -154,7 +259,9 @@
         "talent": "SSS"
       },
       "externalResource": "真里香",
-      "advancedTechniques": ["反转术式外放"],
+      "advancedTechniques": [
+        "反转术式外放"
+      ],
       "officialGrade": "特级",
       "powerTier": "specialGrade",
       "notes": "通过相互诅咒形成近乎无限咒力来源；0卷后真里香成佛，资源形态下降。"
@@ -189,7 +296,9 @@
         "talent": "SS"
       },
       "domainProfile": "无领域",
-      "innateTraits": ["电荷咒力"],
+      "innateTraits": [
+        "电荷咒力"
+      ],
       "techniquePower": "SSS",
       "officialGrade": "特级古代术师",
       "visibleGrade": "specialGrade",
@@ -210,10 +319,50 @@
       },
       "externalResource": "坐杀搏徒中奖",
       "techniquePower": "SS",
-      "domainProfile": "坐杀搏徒领域",
+      "domainProfile": "领域展开：坐杀搏徒",
       "officialGrade": "停学/未正式评级",
       "powerTier": "topTierSustain",
-      "notes": "中奖状态以续航和不死性建立强者地位。"
+      "notes": "中奖状态以续航和不死性建立强者地位。",
+      "domainScript": {
+        "id": "hakari-idle-death-gamble",
+        "language": "json-rule-v1",
+        "domainName": "坐杀搏徒",
+        "scriptType": "jackpot_rule",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "jackpot_rule"
+        ],
+        "effectSummary": "坐杀搏徒抽象为 jackpot 规则子阶段：展开后进入期待度循环，手札替换为演出/概率/中奖结算相关手札，中奖后获得续航与承伤降低候选状态。",
+        "resourceRules": {
+          "domainLoadBase": 10,
+          "stabilityPressure": 0.025
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": 0,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "no_direct_damage_rule_subphase",
+          "damage": 0,
+          "reason": "坐杀搏徒不是直接伤害领域，由 jackpot_rule 子阶段和 jackpot 手札推进实现。"
+        },
+        "source": "v2.3B-domain-audit",
+        "barrierType": "rule_barrier",
+        "domainCompletion": "conditional"
+      }
     },
     {
       "characterId": "uraume_shinjuku",
@@ -278,7 +427,11 @@
         "martial": "SS",
         "talent": "SS"
       },
-      "loadout": ["焰柳", "乙骨戒指/里香资源", "释魂刀（阶段性）"],
+      "loadout": [
+        "焰柳",
+        "乙骨戒指/里香资源",
+        "释魂刀（阶段性）"
+      ],
       "externalResource": "乙骨戒指/里香资源",
       "officialGrade": "不适用",
       "powerTier": "newGenerationTop",
@@ -312,7 +465,10 @@
         "martial": "B",
         "talent": "A"
       },
-      "innateTraits": ["咒灵之躯", "特级过咒怨灵"],
+      "innateTraits": [
+        "咒灵之躯",
+        "特级过咒怨灵"
+      ],
       "techniquePower": "SS",
       "officialGrade": "特级过咒怨灵",
       "powerTier": "specialGradeCurse",
@@ -330,12 +486,53 @@
         "martial": "A",
         "talent": "S"
       },
-      "innateTraits": ["咒灵之躯", "灾害咒灵"],
+      "innateTraits": [
+        "咒灵之躯",
+        "灾害咒灵"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "领域展开：盖棺铁围山",
       "officialGrade": "特级咒灵",
       "powerTier": "disasterCurse",
-      "notes": "高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。"
+      "notes": "高输出灾害咒灵；拥有领域展开，正面火力很高但面对顶级反转/领域强者有机制劣势。",
+      "domainScript": {
+        "id": "jogo-coffin-iron-mountain",
+        "language": "json-rule-v1",
+        "domainName": "盖棺铁围山",
+        "scriptType": "sure_hit",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "sure_hit"
+        ],
+        "effectSummary": "盖棺铁围山抽象为高温必中火力：造成高额伤害并削弱对手稳定度。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 32,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": -15,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "mahito_shibuya",
@@ -349,12 +546,56 @@
         "martial": "A",
         "talent": "SS"
       },
-      "innateTraits": ["咒灵之躯", "灾害咒灵", "无为转变", "灵魂干涉"],
+      "innateTraits": [
+        "咒灵之躯",
+        "灾害咒灵",
+        "无为转变",
+        "灵魂干涉"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "领域展开：自闭圆顿裹",
       "officialGrade": "特级咒灵",
       "powerTier": "disasterCurse",
-      "notes": "灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。"
+      "notes": "灵魂干涉带来高扰动；拥有领域展开，但对能触及灵魂或构成天敌的对手不稳定。",
+      "domainScript": {
+        "id": "mahito-self-embodiment",
+        "language": "json-rule-v1",
+        "domainName": "自闭圆顿裹",
+        "scriptType": "soul_pressure",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "soul_touch",
+          "sure_hit"
+        ],
+        "effectSummary": "自闭圆顿裹抽象为灵魂接触必中：造成中高伤害并大幅压低稳定度。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 30,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": -22,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "hanami_exchange_event",
@@ -368,11 +609,53 @@
         "martial": "A",
         "talent": "A"
       },
-      "innateTraits": ["咒灵之躯", "灾害咒灵"],
+      "innateTraits": [
+        "咒灵之躯",
+        "灾害咒灵"
+      ],
       "techniquePower": "SS",
       "officialGrade": "特级咒灵",
       "powerTier": "disasterCurse",
-      "notes": "耐久和范围压制较强；领域未完整展示，按灾害咒灵但非顶级领域锚点处理。"
+      "notes": "耐久和范围压制较强；领域未完整展示，按灾害咒灵但非顶级领域锚点处理。",
+      "domainProfile": "领域展开：朶颐光海（项目候选）",
+      "domainScript": {
+        "id": "hanami-shining-sea",
+        "language": "json-rule-v1",
+        "domainName": "朶颐光海",
+        "scriptType": "placeholder_damage",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "placeholder"
+        ],
+        "effectSummary": "朶颐光海为项目候选资料，暂无完整公式，按占位符策略造成 +10 候选伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 10,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": 0,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "dagon_shibuya_domain",
@@ -386,12 +669,54 @@
         "martial": "A",
         "talent": "A"
       },
-      "innateTraits": ["咒灵之躯", "灾害咒灵"],
+      "innateTraits": [
+        "咒灵之躯",
+        "灾害咒灵"
+      ],
       "techniquePower": "SS",
       "domainProfile": "领域展开：荡蕴平线",
       "officialGrade": "特级咒灵",
       "powerTier": "disasterCurse",
-      "notes": "领域展开和式神海量压制是主要胜路；领域被破或遇到零咒力肉体系会明显降档。"
+      "notes": "领域展开和式神海量压制是主要胜路；领域被破或遇到零咒力肉体系会明显降档。",
+      "domainScript": {
+        "id": "dagon-horizon-skandha",
+        "language": "json-rule-v1",
+        "domainName": "荡蕴平线",
+        "scriptType": "auto_attack",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "shikigami_auto_attack",
+          "sure_hit"
+        ],
+        "effectSummary": "荡蕴平线抽象为式神洪流必中：造成伤害并留下式神自动攻击压力。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 24,
+          "nextRoundDamage": 14,
+          "opponentStabilityDelta": -10,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "naoya_cursed_spirit_sakurajima",
@@ -405,12 +730,53 @@
         "martial": "SS",
         "talent": "S"
       },
-      "innateTraits": ["咒灵之躯", "投射咒法"],
+      "innateTraits": [
+        "咒灵之躯",
+        "投射咒法"
+      ],
       "techniquePower": "SS",
       "domainProfile": "领域展开：时胞月宫殿",
       "officialGrade": "特级咒灵",
       "powerTier": "topTierMinus",
-      "notes": "速度和领域展开是核心；作为咒灵之躯存在正能量与零咒力对策风险。"
+      "notes": "速度和领域展开是核心；作为咒灵之躯存在正能量与零咒力对策风险。",
+      "domainScript": {
+        "id": "naoya-time-cell-moon-palace",
+        "language": "json-rule-v1",
+        "domainName": "时胞月宫殿",
+        "scriptType": "hard_control",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "sure_hit"
+        ],
+        "effectSummary": "时胞月宫殿抽象为动作帧控制：造成伤害并显著压低下一轮行动主动权。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 24,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": -12,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": true,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "smallpox_deity_shibuya",
@@ -424,12 +790,53 @@
         "martial": "C",
         "talent": "B"
       },
-      "innateTraits": ["咒灵之躯", "疾病咒灵"],
+      "innateTraits": [
+        "咒灵之躯",
+        "疾病咒灵"
+      ],
       "techniquePower": "S",
-      "domainProfile": "领域展开：墓",
+      "domainProfile": "领域展开：瘟柩三刻（项目候选）",
       "officialGrade": "特级疾病咒灵",
       "powerTier": "cursedSpiritSpecial",
-      "notes": "规则明确但正面综合战力不按灾害咒灵处理；领域展开对无对策者威胁较高。"
+      "notes": "规则明确但正面综合战力不按灾害咒灵处理；领域展开对无对策者威胁较高。",
+      "domainScript": {
+        "id": "smallpox-deity-graveyard-domain",
+        "language": "json-rule-v1",
+        "domainName": "瘟柩三刻",
+        "scriptType": "placeholder_damage",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "placeholder"
+        ],
+        "effectSummary": "瘟柩三刻为倒计时处刑型项目候选，暂按占位符策略造成 +10 候选伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 10,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": 0,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "choso_shibuya_culling",
@@ -443,7 +850,10 @@
         "martial": "SS",
         "talent": "S"
       },
-      "innateTraits": ["咒胎九相图", "赤血操术"],
+      "innateTraits": [
+        "咒胎九相图",
+        "赤血操术"
+      ],
       "techniquePower": "S",
       "officialGrade": "特级咒物受肉体",
       "visibleGrade": "grade1",
@@ -462,13 +872,57 @@
         "martial": "SSS",
         "talent": "SSS"
       },
-      "innateTraits": ["夺舍", "咒灵操术", "反重力机构", "领域展开"],
+      "innateTraits": [
+        "夺舍",
+        "咒灵操术",
+        "反重力机构",
+        "领域展开"
+      ],
       "externalResource": "夏油杰身体与咒灵操术库存",
       "techniquePower": "SSS",
       "domainProfile": "开放领域：胎藏遍野",
       "officialGrade": "不适用",
       "powerTier": "specialGrade",
-      "notes": "经验、术式库存、反重力机构和领域展开构成综合强者；不是单纯输出天花板。"
+      "notes": "经验、术式库存、反重力机构和领域展开构成综合强者；不是单纯输出天花板。",
+      "domainScript": {
+        "id": "kenjaku-womb-profusion",
+        "language": "json-rule-v1",
+        "domainName": "胎藏遍野",
+        "scriptType": "sure_hit",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "sure_hit"
+        ],
+        "effectSummary": "胎藏遍野抽象为开放领域的重力/术式压制：造成高额伤害并削弱咒力。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 30,
+          "nextRoundDamage": 12,
+          "opponentStabilityDelta": -12,
+          "opponentCeDamage": 10,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake",
+        "barrierType": "open_barrier"
+      }
     },
     {
       "characterId": "yuki_tsukumo_culling",
@@ -482,12 +936,54 @@
         "martial": "SSS",
         "talent": "SS"
       },
-      "innateTraits": ["星之怒", "凰轮", "领域展开"],
+      "innateTraits": [
+        "星之怒",
+        "凰轮",
+        "领域展开"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "领域展开：未公开",
       "officialGrade": "特级",
       "powerTier": "specialGrade",
-      "notes": "高质量近战与质量增幅术式；领域存在但细节未公开，按特级强者锚点处理。"
+      "notes": "高质量近战与质量增幅术式；领域存在但细节未公开，按特级强者锚点处理。",
+      "domainScript": {
+        "id": "tsukumo-unrevealed-domain",
+        "language": "json-rule-v1",
+        "domainName": "未公开领域",
+        "scriptType": "placeholder_damage",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "placeholder"
+        ],
+        "effectSummary": "九十九由基领域未公开，按占位符策略只造成 +10 候选伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 10,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": 0,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "yuta_okkotsu_shinjuku",
@@ -502,12 +998,52 @@
         "talent": "SSS"
       },
       "externalResource": "里香资源",
-      "advancedTechniques": ["反转术式外放"],
+      "advancedTechniques": [
+        "反转术式外放"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "领域展开：真赝相爱",
       "officialGrade": "特级",
       "powerTier": "specialGrade",
-      "notes": "正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。"
+      "notes": "正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。",
+      "domainScript": {
+        "id": "okkotsu-authentic-mutual-love",
+        "language": "json-rule-v1",
+        "domainName": "真赝相爱",
+        "scriptType": "technique_buff",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "sure_hit"
+        ],
+        "effectSummary": "真赝相爱抽象为复制术式与里香增幅的领域压制：造成伤害、削弱稳定度，并提升后续终结权重。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 28,
+          "nextRoundDamage": 8,
+          "opponentStabilityDelta": -12,
+          "opponentCeDamage": 8,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "yuji_itadori_shinjuku",
@@ -521,7 +1057,11 @@
         "martial": "SSS",
         "talent": "SS"
       },
-      "innateTraits": ["半人半咒", "黑闪连锁", "灵魂打击"],
+      "innateTraits": [
+        "半人半咒",
+        "黑闪连锁",
+        "灵魂打击"
+      ],
       "techniquePower": "SS",
       "domainProfile": "简易领域/反领域对策",
       "officialGrade": "不适用",
@@ -540,12 +1080,54 @@
         "martial": "B",
         "talent": "SS"
       },
-      "innateTraits": ["十种影法术"],
+      "innateTraits": [
+        "十种影法术"
+      ],
       "techniquePower": "SS",
       "domainProfile": "未完成领域：嵌合暗翳庭",
       "officialGrade": "二级",
       "powerTier": "grade1Plus",
-      "notes": "未完成领域与十影潜力很高；按潜力型强者，不默认兑现完整适应资源。"
+      "notes": "未完成领域与十影潜力很高；按潜力型强者，不默认兑现完整适应资源。",
+      "domainScript": {
+        "id": "megumi-chimera-shadow-garden",
+        "language": "json-rule-v1",
+        "domainName": "嵌合暗翳庭",
+        "scriptType": "auto_attack",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "shikigami_auto_attack"
+        ],
+        "effectSummary": "嵌合暗翳庭为未完成领域，抽象为影与式神的数量压制，伤害较低但持续扰乱稳定度。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 16,
+          "nextRoundDamage": 10,
+          "opponentStabilityDelta": -10,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake",
+        "barrierType": "incomplete_barrier",
+        "domainCompletion": "incomplete"
+      }
     },
     {
       "characterId": "higuruma_hiromi_culling",
@@ -559,13 +1141,56 @@
         "martial": "B",
         "talent": "SSS"
       },
-      "innateTraits": ["规则类（日车）", "日车领域", "领域展开"],
+      "innateTraits": [
+        "规则类（日车）",
+        "日车领域",
+        "领域展开"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "领域展开：诛伏赐死",
       "officialGrade": "特级相当",
       "visibleGrade": "specialGrade",
       "powerTier": "haxException",
-      "notes": "规则审判和没收带来特级级别的高扰动；基础肉搏不是传统特级天花板。"
+      "notes": "规则审判和没收带来特级级别的高扰动；基础肉搏不是传统特级天花板。",
+      "domainScript": {
+        "id": "higuruma-deadly-sentencing",
+        "language": "json-rule-v1",
+        "domainName": "诛伏赐死",
+        "scriptType": "rule_trial_execution",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "rule_trial"
+        ],
+        "effectSummary": "诛伏赐死抽象为审判规则：进入审判/辩驳候选，强制对局转向审判标签；死刑判决实际成立后才把处刑人之剑加入日车手牌。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": -8,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": true
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake",
+        "barrierType": "rule_barrier"
+      }
     },
     {
       "characterId": "yorozu_heian_vessel",
@@ -579,13 +1204,54 @@
         "martial": "SS",
         "talent": "SS"
       },
-      "innateTraits": ["构筑术式", "领域展开"],
+      "innateTraits": [
+        "构筑术式",
+        "领域展开"
+      ],
       "techniquePower": "SSS",
       "domainProfile": "领域展开：三重疾苦",
       "officialGrade": "特级古代术师",
       "visibleGrade": "specialGrade",
       "powerTier": "topTier",
-      "notes": "构筑术式高上限，完全球体与领域展开构成主要胜路。"
+      "notes": "构筑术式高上限，完全球体与领域展开构成主要胜路。",
+      "domainScript": {
+        "id": "yorozu-threefold-affliction",
+        "language": "json-rule-v1",
+        "domainName": "三重疾苦",
+        "scriptType": "sure_hit",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "sure_hit"
+        ],
+        "effectSummary": "三重疾苦抽象为构筑术式必中与完全球体压力：造成高额单次伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 0,
+          "damage": 34,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": -10,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "uro_takako_sendai",
@@ -599,13 +1265,54 @@
         "martial": "A",
         "talent": "SS"
       },
-      "innateTraits": ["天空术式", "领域展开"],
+      "innateTraits": [
+        "天空术式",
+        "领域展开"
+      ],
       "techniquePower": "SS",
       "domainProfile": "领域展开：仙台三方领域",
       "officialGrade": "古代术师",
       "visibleGrade": "specialGrade",
       "powerTier": "sendaiTop",
-      "notes": "空间扭曲和防御反击强；仙台三方领域参与者之一。"
+      "notes": "空间扭曲和防御反击强；仙台三方领域参与者之一。",
+      "domainScript": {
+        "id": "uro-sendai-three-way",
+        "language": "json-rule-v1",
+        "domainName": "仙台三方领域",
+        "scriptType": "placeholder_damage",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "placeholder"
+        ],
+        "effectSummary": "仙台三方领域原资料缺少稳定规则，暂抽象为天空术式领域占位伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 10,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": 0,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "ryu_ishigori_sendai",
@@ -619,13 +1326,54 @@
         "martial": "SS",
         "talent": "A"
       },
-      "innateTraits": ["咒力大炮", "领域展开"],
+      "innateTraits": [
+        "咒力大炮",
+        "领域展开"
+      ],
       "techniquePower": "SS",
       "domainProfile": "领域展开：仙台三方领域",
       "officialGrade": "古代术师",
       "visibleGrade": "specialGrade",
       "powerTier": "sendaiTop",
-      "notes": "咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。"
+      "notes": "咒力输出极高，正面火力和耐久强；技巧扰动低于规则型角色。",
+      "domainScript": {
+        "id": "ishigori-sendai-three-way",
+        "language": "json-rule-v1",
+        "domainName": "仙台三方领域",
+        "scriptType": "placeholder_damage",
+        "activation": "onDomainResolved",
+        "blockedBy": [
+          "domain_clash",
+          "simple_domain_guard",
+          "hollow_wicker_basket_guard",
+          "falling_blossom_emotion",
+          "zero_ce_domain_bypass"
+        ],
+        "effectTags": [
+          "placeholder"
+        ],
+        "effectSummary": "仙台三方领域原资料缺少稳定规则，暂抽象为领域炮击占位伤害。",
+        "resourceRules": {
+          "domainLoadBase": 14,
+          "stabilityPressure": 0.04
+        },
+        "effects": {
+          "placeholderDamage": 10,
+          "damage": 0,
+          "nextRoundDamage": 0,
+          "opponentStabilityDelta": 0,
+          "opponentCeDamage": 0,
+          "grantExecutionSword": false,
+          "skipOpponentNextCard": false,
+          "forceTrialHands": false
+        },
+        "fallback": {
+          "strategy": "placeholder_plus_10_damage",
+          "damage": 10,
+          "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
+        },
+        "source": "v2.3-domain-remake"
+      }
     },
     {
       "characterId": "angel_hana_culling",
@@ -639,7 +1387,11 @@
         "martial": "C",
         "talent": "SS"
       },
-      "innateTraits": ["天使", "术式消灭", "雅各布天梯"],
+      "innateTraits": [
+        "天使",
+        "术式消灭",
+        "雅各布天梯"
+      ],
       "techniquePower": "SSS",
       "officialGrade": "古代术师受肉",
       "powerTier": "supportHax",
@@ -657,7 +1409,9 @@
         "martial": "SS",
         "talent": "S"
       },
-      "innateTraits": ["不义游戏"],
+      "innateTraits": [
+        "不义游戏"
+      ],
       "techniquePower": "A",
       "officialGrade": "一级",
       "powerTier": "grade1Plus",
@@ -675,7 +1429,9 @@
         "martial": "SS",
         "talent": "A"
       },
-      "innateTraits": ["十划咒法"],
+      "innateTraits": [
+        "十划咒法"
+      ],
       "techniquePower": "A",
       "officialGrade": "一级",
       "powerTier": "grade1",
@@ -693,7 +1449,10 @@
         "martial": "SS",
         "talent": "S"
       },
-      "innateTraits": ["简易领域", "新阴流"],
+      "innateTraits": [
+        "简易领域",
+        "新阴流"
+      ],
       "techniquePower": "B",
       "officialGrade": "一级",
       "powerTier": "grade1Plus",
@@ -711,7 +1470,9 @@
         "martial": "S",
         "talent": "A"
       },
-      "innateTraits": ["黑鸟操术"],
+      "innateTraits": [
+        "黑鸟操术"
+      ],
       "techniquePower": "A",
       "officialGrade": "一级",
       "powerTier": "grade1",
@@ -729,7 +1490,10 @@
         "martial": "B",
         "talent": "A"
       },
-      "innateTraits": ["刍灵咒法", "灵魂共鸣"],
+      "innateTraits": [
+        "刍灵咒法",
+        "灵魂共鸣"
+      ],
       "techniquePower": "A",
       "officialGrade": "三级",
       "powerTier": "grade2Plus",
@@ -747,7 +1511,9 @@
         "martial": "C",
         "talent": "A"
       },
-      "innateTraits": ["咒言"],
+      "innateTraits": [
+        "咒言"
+      ],
       "techniquePower": "A",
       "officialGrade": "二级",
       "powerTier": "grade2Plus",
@@ -765,7 +1531,10 @@
         "martial": "S",
         "talent": "B"
       },
-      "innateTraits": ["咒骸", "三核心"],
+      "innateTraits": [
+        "咒骸",
+        "三核心"
+      ],
       "techniquePower": "D",
       "officialGrade": "二级",
       "powerTier": "grade2Plus",
@@ -783,7 +1552,9 @@
         "martial": "SSS",
         "talent": "S"
       },
-      "loadout": ["黑绳"],
+      "loadout": [
+        "黑绳"
+      ],
       "techniquePower": "B",
       "officialGrade": "诅咒师",
       "powerTier": "specialGrade",

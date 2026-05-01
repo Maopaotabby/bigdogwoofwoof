@@ -69,6 +69,7 @@ const state = {
   customDuelSeq: 0,
   customDuelEditId: "",
   pendingCustomDuelHandCards: [],
+  pendingCustomDuelDomainScript: null,
   customDuelHandSeq: 0,
   duelSpecialTerms: [],
   duelSpecialTermSeq: 0,
@@ -942,7 +943,7 @@ async function loadCharacterCards() {
 
 //--启动与事件绑定--//
 async function init() {
-  const [wheels, flow, strength, characterCards, mechanisms, calibrationBattles, optionEffects, duelResourceRules, duelActionRules, handRulesCandidate, duelCharacterCardRules, duelCardTemplateRules, duelCardCopyRules, duelMechanicRules, duelEndRules, duelBetaCopy, duelDomainProfiles, duelTrialTargetRules, aiProviderRules, aiPromptTemplates] = await Promise.all([
+  const [wheels, flow, strength, characterCards, mechanisms, calibrationBattles, optionEffects, duelResourceRules, duelActionRules, handRulesCandidate, duelCharacterCardRules, duelCardTemplateRules, duelCardCopyRules, duelMechanicRules, duelEndRules, duelBetaCopy, duelDomainProfiles, duelTrialTargetRules, aiProviderRules, aiPromptTemplates, cardPrompt] = await Promise.all([
     fetch(`./data/wheels.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/flow-v1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/strength-v0.2-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
@@ -962,7 +963,8 @@ async function init() {
     fetch(`./data/duel-domain-profiles-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/duel-trial-target-rules-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/ai-provider-rules-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
-    fetch(`./data/ai-prompt-templates-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json())
+    fetch(`./data/ai-prompt-templates-v0.1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
+    fetch(`./data/card_prompt.json?v=${APP_BUILD_VERSION}`).then((r) => r.json())
   ]);
 
   state.wheels = wheels;
@@ -985,7 +987,8 @@ async function init() {
   state.duelTrialTargetRules = duelTrialTargetRules;
   state.aiProviderRules = aiProviderRules;
   state.aiPromptTemplates = aiPromptTemplates;
-  state.aiPromptAssets = registerAiPromptAssets(aiProviderRules, aiPromptTemplates);
+  state.cardPrompt = cardPrompt;
+  state.aiPromptAssets = registerAiPromptAssets(aiProviderRules, aiPromptTemplates, cardPrompt);
   state.optionEffectIndex = buildOptionEffectIndex(optionEffects);
   state.wheelMap = new Map(wheels.wheels.map((wheel) => [String(wheel.dbId), wheel]));
 

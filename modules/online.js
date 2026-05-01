@@ -445,6 +445,34 @@ function createBattleSeedState(room) {
   };
 }
 
+function createFreshTurnState(round = 1) {
+  return { turnId: `turn_${Math.max(1, Number(round) || 1)}`, phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
+}
+
+function createFreshReviewState() {
+  return { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
+}
+
+function clearPlayerBattleSelection(player) {
+  if (!player) return;
+  player.characterId = "";
+  player.characterSnapshot = null;
+  player.characterLocked = false;
+  player.actionLocked = false;
+}
+
+function resetRoomToPreparingForNewGame(room) {
+  room.round = 1;
+  room.phase = "preparing";
+  room.battleState = null;
+  room.turnState = createFreshTurnState(1);
+  room.reviewState = createFreshReviewState();
+  room.readyState = { leftCharacterLocked: false, rightCharacterLocked: false };
+  clearPlayerBattleSelection(room.players?.left);
+  clearPlayerBattleSelection(room.players?.right);
+  return room;
+}
+
 function appendLog(room, type, message, patch = {}) {
   if (!room.logs?.some((entry) => entry.type === type && entry.message === message && entry.turn === patch.turn)) {
     room.logs = (room.logs || []).concat({ at: nowMs(), type, message, ...patch }).slice(-100);
@@ -665,14 +693,9 @@ function rematch(roomId, options = {}) {
   if (shouldUseRemote(settings)) return remoteOperation("rematch", { roomId, side: options.side || uiState.side }, settings);
   const room = requireLocalRoom(roomId);
   const actorSide = authorizeSide(room, options.side || uiState.side, options);
-  room.round = 1;
-  room.phase = "turn_selecting";
-  room.battleState = createBattleSeedState(room);
-  room.turnState = { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
-  room.reviewState = { winnerSide: "", summary: "", rematchVotes: {}, resetVotes: {} };
-  appendLog(room, "rematch", "双方保留角色，再来一把。");
+  resetRoomToPreparingForNewGame(room);
+  appendLog(room, "rematch", "已清空上一局状态，回到准备阶段，请双方重新选人。", { side: actorSide });
   const saved = writeLocalRoom(room);
-  enterBattleView(saved, actorSide);
   return Promise.resolve(snapshot(saved, actorSide));
 }
 
@@ -682,16 +705,8 @@ function resetToPreparing(roomId, options = {}) {
   const room = requireLocalRoom(roomId);
   const actorSide = authorizeSide(room, options.side || uiState.side, options);
   if (actorSide !== "left" && room.ownerPlayerId !== (options.playerId || uiState.playerId)) throw new Error("只有房主可以重回准备阶段。");
-  room.phase = "preparing";
-  room.readyState = { leftCharacterLocked: false, rightCharacterLocked: false };
-  room.players.left.characterLocked = false;
-  room.players.right.characterLocked = false;
-  room.players.left.actionLocked = false;
-  room.players.right.actionLocked = false;
-  room.turnState = { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false }, result: null, aiStatus: "" };
-  room.round = 1;
-  room.battleState = null;
-  appendLog(room, "reset_prepare", "房主将房间重置到准备阶段。");
+  resetRoomToPreparingForNewGame(room);
+  appendLog(room, "reset_prepare", "房主已清空上一局状态，回到准备阶段，请双方重新选人。");
   return Promise.resolve(snapshot(writeLocalRoom(room), actorSide));
 }
 
@@ -1275,7 +1290,10 @@ function enterBattleView(room, side) {
   const currentBattle = globalThis.JJKDuelRuntime?.getDuelBattle?.();
   const currentLeft = currentBattle?.left?.id || currentBattle?.left?.characterId || "";
   const currentRight = currentBattle?.right?.id || currentBattle?.right?.characterId || "";
-  if (typeof starter === "function" && currentBattle?.onlineRoomId === room.roomId && currentLeft === left && currentRight === right) return;
+  const currentSeed = currentBattle?.onlineBattleSeed || currentBattle?.seed || "";
+  const nextSeed = room.battleState?.battleSeed || "";
+  const canReuseCurrentBattle = currentBattle?.onlineRoomId === room.roomId && currentLeft === left && currentRight === right && !currentBattle?.resolved && !currentBattle?.battleEnded && (!nextSeed || currentSeed === nextSeed);
+  if (typeof starter === "function" && canReuseCurrentBattle) return;
   if (typeof starter === "function") {
     try {
       starter({ mode: "online", allowOnline: true, snapshot: { roomId: room.roomId, battleSeed: room.battleState?.battleSeed, players: room.players } });
