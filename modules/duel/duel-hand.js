@@ -796,6 +796,7 @@
       discardPile: [],
       round: 0,
       lastDrawn: [],
+      lastInjected: [],
       lastDiscarded: [],
       maxHandSize: getMaxHandSize(rules),
       drawPerTurn: getDrawPerTurn(rules)
@@ -834,6 +835,50 @@
     });
   }
 
+  function getRandomHandInjectionsForActor(actor, rules) {
+    var profile = buildDuelCharacterCardProfile(actor, { rules: rules });
+    var entry = getCharacterRuleEntry({ id: profile.characterId, name: profile.displayName }, rules);
+    return asList(entry?.rules?.randomHandInjections);
+  }
+
+  function rollRandomHandInjection(injection, actor, battle, round) {
+    var chance = Number(injection?.probability ?? injection?.chance ?? 0);
+    if (!Number.isFinite(chance) || chance <= 0) return false;
+    if (chance >= 1) return true;
+    return Math.random() < chance;
+  }
+
+  function injectRandomHandCards(hand, fullCandidates, actor, battle, rules, round) {
+    var injections = getRandomHandInjectionsForActor(actor, rules);
+    if (!injections.length) return [];
+    var byId = Object.create(null);
+    (fullCandidates || []).forEach(function indexCandidate(candidate) {
+      var id = getActionId(candidate);
+      if (id) byId[id] = candidate;
+    });
+    var existingIds = new Set((hand.cards || []).map(getActionId).filter(Boolean));
+    var injected = [];
+    injections.forEach(function maybeInject(injection) {
+      var id = injection?.sourceActionId || injection?.actionId || injection?.id || "";
+      if (!id || existingIds.has(id)) return;
+      if (!rollRandomHandInjection(injection, actor, battle, round)) return;
+      var candidate = byId[id];
+      if (!candidate) return;
+      var card = normalizePersistentHandCard({
+        ...(candidate || {}),
+        randomHandInjection: true,
+        randomHandInjectionChance: Number(injection.probability ?? injection.chance ?? 0),
+        characterWeight: Math.max(Number(candidate.characterWeight || candidate.selectionWeight || 0), Number(injection.weight || 99)),
+        selectionWeight: Math.max(Number(candidate.selectionWeight || candidate.characterWeight || 0), Number(injection.weight || 99)),
+        handSource: injection.handSource || "random-injection"
+      }, round, injection.handSource || "random-injection");
+      hand.cards.push(card);
+      existingIds.add(id);
+      injected.push(card);
+    });
+    return injected;
+  }
+
   function updatePersistentDuelHand(actor, opponent, battle, rankedCandidates, rules, options) {
     var side = getActorSide(actor, options);
     var hand = getPersistentHandState(battle, side, rules);
@@ -857,6 +902,7 @@
     hand.cards = (hand.cards || []).map(function markRetained(card) {
       return normalizePersistentHandCard(card, card.drawnRound || round, "retained");
     }).concat(drawn);
+    var injected = injectRandomHandCards(hand, options?.fullCandidates || rankedCandidates, actor, battle, rules, round);
 
     var discarded = [];
     if (hand.cards.length > maxHandSize) {
@@ -877,6 +923,9 @@
     hand.round = round;
     hand.lastDrawn = drawn.map(function summarize(card) {
       return { actionId: getActionId(card), label: card.label || card.id || getActionId(card) };
+    });
+    hand.lastInjected = injected.map(function summarize(card) {
+      return { actionId: getActionId(card), label: card.label || card.id || getActionId(card), chance: card.randomHandInjectionChance || "" };
     });
     hand.lastDiscarded = discarded.map(function summarize(card) {
       return { actionId: getActionId(card), label: card.label || card.id || getActionId(card) };
@@ -962,6 +1011,7 @@
         discardPile: [],
         round: 0,
         lastDrawn: [],
+        lastInjected: [],
         lastDiscarded: [],
         maxHandSize: getMaxHandSize(rules),
         drawPerTurn: getDrawPerTurn(rules)
@@ -1381,7 +1431,10 @@
       return !isDomainHandCandidate(action);
     });
     var candidates = rankDuelHandCandidatesByCharacter(splitPool.normal, actions, actor, opponent, battle, choiceCount, {});
-    var handCards = updatePersistentDuelHand(actor, opponent, battle, candidates, rules, { side: actor?.side || "left" });
+    var handCards = updatePersistentDuelHand(actor, opponent, battle, candidates, rules, {
+      side: actor?.side || "left",
+      fullCandidates: fullCandidates
+    });
     if (battle && actor?.side === "left") {
       battle.handCandidates = handCards;
       buildDuelHandCandidateCache(battle);

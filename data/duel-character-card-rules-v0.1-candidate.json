@@ -655,7 +655,17 @@
         "延迟",
         "窗口",
         "灵魂打击"
-      ]
+      ],
+      "rules": {
+        "randomHandInjections": [
+          {
+            "sourceActionId": "hutian_black_flash",
+            "probability": 0.1,
+            "handSource": "black_flash_round_proc",
+            "note": "普通虎杖的黑闪不进入常规卡组；每轮独立以 1/10 概率临时加入手牌。"
+          }
+        ]
+      }
     },
     "yuji_itadori_after68": {
       "aliases": [
