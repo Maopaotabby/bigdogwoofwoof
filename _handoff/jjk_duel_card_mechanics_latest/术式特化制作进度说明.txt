@@ -1,0 +1,422 @@
+咒术回战卡牌对战机制交接包说明
+生成日期：2026-04-30
+
+一、包内容范围
+
+本压缩包整理的是当前工作区内“咒术回战”卡牌对战模式的最新机制文件，重点覆盖：
+
+1. 卡牌数值计算机制
+   - 卡牌最终预览与执行数值
+   - 咒力消耗
+   - 伤害
+   - 格挡
+   - 领域压力
+   - 资源恢复与稳定性
+   - 手牌候选与行动模板
+
+2. 与基础数值产生关联的算法
+   - 角色基础数值到 raw score 的换算
+   - raw score 到 axes 的战斗评估
+   - axes 到 combatScore / disruptionScore 的综合评分
+   - 基础数值到卡牌模板 finalCost / finalDamage / finalBlock / domainPressure 的换算
+   - 特殊天赋、机制卡、术式关键词对数值的影响路径
+
+3. 卡牌文案
+   - 行动模板
+   - 卡牌模板
+   - 卡牌文案候选
+   - 机制模板
+   - 领域、手牌、终局与试炼目标规则
+
+4. 已有角色卡
+   - character 目录下的现有角色 JSON
+   - character/manifest.json
+   - 角色数据说明文本
+
+
+二、主要文件索引
+
+data/
+- duel-action-templates-v0.1-candidate.json：行动模板。
+- duel-card-templates-v0.1-candidate.json：卡牌模板。
+- duel-card-copy-v0.1-candidate.json：卡牌文案候选。
+- duel-mechanic-templates-v0.1-candidate.json：机制模板。
+- duel-character-card-rules-v0.1-candidate.json：角色卡规则。
+- duel-domain-profiles-v0.1-candidate.json：领域资料。
+- duel-resource-rules-v0.1-candidate.json：资源规则。
+- duel-hand-rules-v0.1-candidate.json：手牌规则。
+- duel-end-rules-v0.1-candidate.json：终局规则。
+- duel-trial-target-rules-v0.1-candidate.json：试炼目标规则。
+- mechanism-cards-v0.1.json：机制卡定义，包含 sixEyes 等机制。
+- character-cards-v0.1.json：角色卡候选数据。
+- calibration-battles-v0.1.json：校准战斗资料。
+- strength-v0.2-candidate.json：基础强度评估配置。
+- flow-v1-candidate.json：流程候选配置。
+- wheels.json：转盘配置，包含“特殊天赋是”七项。
+
+modules/duel/
+- duel-card-template.js：卡牌数值预览、倍率、消耗、伤害、格挡、领域压力计算。
+- duel-resource.js：HP、CE、咒力恢复、稳定性、领域负荷等资源计算。
+- duel-actions.js：行动执行。
+- duel-hand.js：手牌候选与可用性。
+- duel-domain-profile.js：领域资料运行时处理。
+- duel-domain-response.js：领域应对。
+- duel-end-condition.js：终局判断。
+- duel-feedback.js：对战反馈。
+- duel-rule-subphase.js：规则子阶段。
+
+tool/
+- runtime-fight.js：角色卡战斗评估函数与对战运行时核心。
+- runtime-tool.js：工具运行时辅助逻辑。
+
+wheel/
+- runtime-flow.js：人生转盘流程、条件判断、隐藏权重和特殊分支运行时逻辑。
+- runtime-core.js：人生转盘核心渲染与状态桥接。
+
+character/
+- 现有角色卡 JSON。
+- manifest.json。
+- 角色数据说明.txt。
+
+
+三、已完成事项
+
+1. 卡牌对战基础数值链路已建立
+
+已完成从角色基础数值到对战评分的链路：
+
+角色基础数值
+-> raw score
+-> active mechanisms
+-> axes
+-> combatScore / disruptionScore
+-> duelResource
+-> card preview / action result
+
+其中角色评估主要由 tool/runtime-fight.js 中的 evaluateDuelCharacterCard(card) 承担。
+
+2. 卡牌模板数值计算已建立
+
+modules/duel/duel-card-template.js 已负责：
+
+- finalCost：最终咒力消耗。
+- finalDamage：最终伤害。
+- finalBlock：最终格挡。
+- domainPressure：领域压力。
+- stats line：卡牌预览中的角色数值展示。
+
+卡牌不是直接读取一句文案决定强度，而是通过行动模板、角色 profile、资源状态、基础数值评级和 scalingProfile 共同计算。
+
+3. 资源系统已建立
+
+modules/duel/duel-resource.js 已负责：
+
+- maxHp
+- maxCe
+- currentHp
+- currentCe
+- ceRegen
+- stability
+- domainLoad
+- damageTakenMultiplier
+- ceCostMultiplier
+
+最新版本中，资源 actor 已保留 characterCardProfile，用于让卡牌模板读取角色原始基础数值和术式信息。
+
+4. EX- 档位已加入卡牌模板数值体系
+
+已在卡牌模板中加入 EX- 档位：
+
+- rankMultipliers["EX-"] = 4.25
+- efficiencyCostMultipliers["EX-"] = 0.45
+- rankScores["EX-"] = 10.2
+
+用途：给 SSS 与 EX 之间留出更细的强度层级，避免所有高位角色直接跳到 EX。
+
+5. “咒力最大输出”机制已加入
+
+已新增 ceMaxOutput / ceMaxOutputScore 作为卡牌模板内的派生数值。
+
+当前计算思路：
+
+ceMaxOutputScore =
+- 咒力量评分 * 0.45
+- 咒力操控评分 * 0.25
+- 咒力效率评分 * 0.10
+- 术式威力评分 * 0.20
+- 咒术轴超出咒力量部分的补正
+- 特殊关键词补正
+
+特殊关键词补正目前识别：
+
+- 石流
+- Granite Blast
+- 最大出力
+- 最大输出
+- 純愛砲 / 纯爱炮
+- 茈
+- 虚式
+- World Slash
+- 世界斩
+- 六眼
+- 无下限 / Limitless / 五条 / Gojo
+
+当前设计结果：
+
+- 六眼本身不会无条件把角色推到 EX 最大输出。
+- 六眼会提供轻量补正。
+- 六眼 + 无下限 / 五条语境会更容易达到 EX。
+- 石流、纯爱炮、虚式茈、世界斩等明确“输出型术式”会获得更明显的最大输出补正。
+
+6. “咒力最大输出”已接入卡牌伤害与领域压力
+
+已完成接入：
+
+- technique 类型卡牌：
+  同时参考 ceOutput、ceMaxOutput、ceControl、techniquePower。
+
+- ce_burst 类型卡牌：
+  更强依赖 ceMaxOutput，适合作为“最大输出爆发”类卡牌。
+
+- domainPressure：
+  在领域压力中加入 ceMaxOutput 的部分影响。
+
+7. 六眼专项审阅已开始并完成第一轮路径拆分
+
+已确认六眼目前存在三条影响路径：
+
+- 人生/构筑侧：computeAbilityBuildBonus 中六眼提供 abilityBuildBonus。
+- 机制卡侧：sixEyes 机制锁定 controlScore / efficiencyScore 最低 SSS / 8，并给即时战力轴补正。
+- 卡牌对战侧：通过 control、efficiency、resource、stability、ceCost、technique scaling、ceMaxOutput 等间接影响卡牌。
+
+当前结论：
+
+- 六眼不是“所有卡牌直接加固定伤害”的天赋。
+- 六眼更偏向降低咒力浪费、提高操控、提高术式兑现率、改善领域友好度。
+- 在卡牌中，六眼会表现为更低消耗、更高稳定性、更强术式效率。
+- 若搭配无下限、五条、虚式等关键词，会进一步强化最大输出相关卡牌。
+
+
+四、术式特化制作进度
+
+已完成：
+
+1. 基础卡牌对战数值框架。
+2. 行动模板、卡牌模板、卡牌文案候选的文件整理。
+3. 资源系统与卡牌消耗关联。
+4. 角色基础数值与卡牌公式关联。
+5. 机制卡 sixEyes 的路径确认。
+6. 特殊天赋来源确认，并已删除德斯昆特族血脉（牛头人杀意）。
+7. 六眼第一轮专项分析。
+8. EX- 档位加入。
+9. 咒力最大输出 ceMaxOutput / ceMaxOutputScore 加入。
+10. 咒力最大输出接入 technique、ce_burst、domainPressure。
+11. 已有角色卡与角色 manifest 整理进交接包。
+12. 希姆利亚星 / 塞姆利亚 / 德斯昆特分支已接入转盘流程。
+13. 虎杖版超级受肉体与星浆体的默认构筑数值加成已移除，只保留剧情/条件触发定位。
+14. 新增强度评定已完成重复审查并吸收非重复项。
+
+   重复 / 不作为独立项处理：
+   - 反转术式：已存在为通用高级机制，不作为普通生得术式新增。
+   - 可爱蜜糖：不作为独立术式，已并入“心身掌握”派生说明。
+
+   已加入 strength-v0.2-candidate.json 的强度 profile：
+   - 单独禁区：0.18 / B / support、outputBuff、ritualSetup、teamFight。
+   - 心身掌握：0.22 / A / support、restraint、hardControl、teamFight。
+   - 祈祷之歌：0.24 / A / selfBuff、debuff、bodyScaling、rhythm。
+   - 黑沐死蟑螂操控：0.32 / S / swarm、damageOverTime、curseBody、areaPressure、weakToRCT。
+   - 激震掌：0.12 / C / characterSkill、melee、internalDamage、bodyScaling；角色专属技能，不进普通术式池。
+   - 灵魂打击：0.30 / S / soulTargeting、antiIncarnation、melee、hardToHeal、yujiExclusive；虎杖专属机制，不进普通术式池。
+   - 照片操控：0.14 / C / conditional、mobility、imageManipulation、escape。
+   - 美美子玩偶术式：0.14 / C / conditional、voodoo、restraint、executionSetup。
+   - 伽尼萨障碍移除：0.46 / SS / conceptual、forcedRemoval、spaceDisplacement、highDisruption、counteredByOverwhelmingMass。
+   - 禅院长寿郎土掌术式：0.12 / C / earthControl、areaPressure、lowEvidence、zeninMinorTechnique。
+
+   已加入“生得术式”普通抽取池：
+   - 单独禁区
+   - 心身掌握
+   - 祈祷之歌
+   - 黑沐死蟑螂操控
+   - 照片操控
+   - 美美子玩偶术式
+   - 伽尼萨障碍移除
+   - 禅院长寿郎土掌术式
+
+   未加入普通抽取池：
+   - 反转术式：高级机制。
+   - 可爱蜜糖：心身掌握派生技。
+   - 激震掌：熊猫 / 大猩猩核心角色专属技能。
+   - 灵魂打击：虎杖悠仁角色专属机制。
+
+   重复检测结果：
+   - 生得术式池：65项，无重复。
+   - techniqueProfiles：67项，无重复。
+
+15. 角色卡候选扩展已处理。
+
+   用户请求新增38个对象；经现有角色卡重复检查：
+   - 日下部笃也：已有“日下部笃也（新宿）”，不重复新增。
+   - 玛鲁：已有“马鲁（Modulo）”，视为同对象，不重复新增。
+   - 克罗斯：已有“克罗斯（Modulo）”，不重复新增。
+   - 达布拉·卡拉巴：已有“达布拉（Modulo）”，不重复新增。
+
+   同步删除：
+   - 秤金次（中奖状态）
+     理由：中奖是通过领域获得的临时状态，不应作为独立角色卡；应由领域、卡牌、机制或状态标签模拟。
+
+   实际新增非重复候选角色卡34张，全部 status = CANDIDATE，且每张均包含：
+   characterId、displayName、stage、sourceLayer、techniqueName、techniqueDescription、baseStats、officialGrade、powerTier、specialHandTags、domainProfile、notes、status。
+
+   新增后 manifest 角色总数：75。
+   重复检查结果：
+   - characterId：无重复。
+   - file：无重复。
+   - name：无重复。
+   - 新增候选卡 baseStats 均只包含 cursedEnergy、control、efficiency、body、martial、talent 六项。
+
+16. 咒灵术式命名与领域归类已更新。
+
+   保留在普通生得术式轮盘中的流程入口：
+   - 自定义
+   - 穿越者当然是外挂（进入彩蛋池）
+
+   已按“最新术式名 —— 使用者”口径更新的咒灵术式：
+   - 无为转变 —— 真人
+   - 熔灾火藏 —— 漏瑚
+   - 咒植幻生 —— 花御
+   - 潮灾式海 —— 陀艮
+   - 腐蠊胎巢 —— 黑沐死
+   - 象神开障 —— 伽内什
+   - 瘟柩葬仪 —— 疱疮神
+
+   归类规则：
+   - 以上均归入咒灵术式口径。
+   - 漏瑚、花御、陀艮、黑沐死、伽内什、疱疮神按自然恐惧/疾病死亡恐惧/概念恐惧方向处理。
+   - 伽尼萨旧名保留为 alias，显示名采用“伽内什”。
+
+   已补齐或标注的6个咒灵领域 profile：
+   - 盖棺铁围山：熔灾火藏 —— 漏瑚
+   - 朶颐光海：咒植幻生 —— 花御
+   - 荡蕴平线：潮灾式海 —— 陀艮
+   - 黑蠊腐胎巢：腐蠊胎巢 —— 黑沐死
+   - 象尊开障：象神开障 —— 伽内什
+   - 瘟柩三刻：瘟柩葬仪 —— 疱疮神
+
+进行中 / 尚未完成：
+
+1. 特殊天赋条目已从七个调整为六个，尚未全部逐项审阅。
+   当前已完成六眼第一轮路径分析，并已确认虎杖版超级受肉体、星浆体的战斗系统边界。
+
+2. 待审阅常规战斗特殊天赋：
+   - 双面四臂
+   - 天与咒缚
+   - 半人半咒
+
+3. 已删除特殊天赋：
+
+   - 德斯昆特族血脉（牛头人杀意）
+     规则：从“特殊天赋是”转盘中删除，不再作为特殊天赋候选。
+
+4. 希姆利亚星 / 塞姆利亚 / 德斯昆特分支已完成：
+
+   - 穿越后时间点不是“68年后外传”时：
+     “希姆利亚星（自动变成希姆利亚星人）”在“穿越后的地点”中权重为0。
+
+   - 穿越后时间点是“68年后外传”时：
+     “希姆利亚星（自动变成希姆利亚星人）”权重提升为日本权重的80%。
+     当前日本基础权重为50，因此希姆利亚星实际权重为40。
+
+   - 抽中希姆利亚星后：
+     进入“穿越后的种族”转盘。
+     卡利亚 : 塞姆利亚人 = 1 : 9。
+
+   - 抽中卡利亚：
+     自动获得“不灭兽性”特殊天赋。
+     该天赋定位为异常生命持续性、实体咒灵性、异常捕食本能、咒灵关联、物种唯一性。
+
+   - 抽中塞姆利亚人：
+     进入“德斯昆特高阶血脉？”转盘。
+     当前采用保守默认权重：是 : 否 = 1 : 9，后续可由用户确认改权重。
+
+   - 德斯昆特高阶血脉为“是”：
+     自动获得“德斯昆特血脉：杀意具现适性”。
+     自动获得“第三眼与塞姆利亚咒能适性”。
+     自动锁定“光 / 具象化杀意”术式。
+     后续不再进行普通生得术式抽取。
+
+   - 德斯昆特高阶血脉为“否”：
+     自动获得“第三眼与塞姆利亚咒能适性”。
+     进入普通术式池随机抽取。
+     “混沌与调和”和“光 / 具象化杀意”的权重提升3倍。
+
+5. 已确认不提供默认战斗数值加成的特殊状态：
+
+   - 虎杖版超级受肉体（如已有则重抽）
+     定位：剧情/转盘触发型特殊状态。
+     规则：不作为常规战斗特殊天赋处理，不提供默认数值加成。
+     战斗影响：是否影响战斗系统，必须由后续剧情条件或专门机制决定。
+
+   - 星浆体
+     定位：剧情身份、世界线变量、天元/结界相关机制。
+     规则：不进入战斗系统，不提供默认战斗数值加成。
+
+6. 各术式的专属卡牌池尚未全部完成最终平衡。
+
+7. “最大输出”目前是机制层接入完成，仍需要后续用代表角色校准数值边界。
+
+8. 六眼 + 无下限、石流、乙骨纯爱炮、宿傩世界斩等强输出样本仍需要进一步做实战校准。
+
+9. 高级技巧池已加入“落花之情”。高级技巧多抽中的“领域展开”已改为动态概率：第 1 轮 0%，第 2 轮约 25%，之后每轮增加 10%，直到 100%，用于表达高级技巧数量越多越不应完全不会领域。
+
+10. 领域抽取流程已拆分为：
+   - 领域的完成度：未完成领域 / 完整领域 / 高阶领域应用 / 结界术天才。
+   - 领域形态：封闭领域 / 开放领域 / 自由切换状态；未完成领域跳过该页，并保留开放领域负面效果标签。
+   - 领域附带效果数量：默认无=0、1=1、2=2、3=3、4=4、5=0；未完成领域偏向无/1/2；高阶领域应用和结界术天才分别提高5个附带效果的权重。
+   - 领域主要效果：必中 / 自动攻击 / 增幅自身 / 增幅咒术类 / 打击灵魂类 / 强控类 / 规则类，1:1 抽取。
+   - 领域附带效果：按数量抽取，规则类不在附带效果池中。
+
+11. 领域模块化框架候选数据层已新增：
+   - domain-shapes-v0.1-candidate.json
+     记录领域完成度与领域形态，明确未完成领域属于完成度层，不再混入普通形态池。
+   - domain-effect-types-v0.1-candidate.json
+     记录必中、自动攻击、增幅自身、增幅咒术、灵魂打击、强控、规则类的接口和兼容规则。
+   - domain-counter-rules-v0.1-candidate.json
+     记录领域展开、简易领域、领域展延、弥虚葛笼、落花之情的反领域候选规则。
+   - domain-configs-v0.1-candidate.json
+     记录术式级领域潜力、基础值、倾向与候选领域名；不代表角色必然拥有领域。
+   - domain-card-templates-v0.1-candidate.json
+     记录领域展开卡、领域被动效果卡、领域内专属卡的通用接口。
+   说明：本轮改动的核心目的不是一次性完成所有领域实装，而是为后续大规模新增术式建立统一的数据接口、默认强度档位、效果兼容规则与卡牌生成入口。
+
+12. 手札系统已改为轻量持久手牌候选：
+   - 手牌上限：8。
+   - 每个新回合补 5 张候选手牌。
+   - 未使用手牌会保留到后续回合。
+   - 若剩余手牌 + 新增手牌超过 8，则从两者合并池中按低优先级/不可用优先自动弃牌直到不超过 8。
+   - 领域展开、领域维持、领域对抗、简易领域、弥虚葛笼、落花之情等领域操控类手札已从普通手牌池拆出。
+   - 领域操控手札拥有独立上限：3，不计入普通 8 张手牌限制。
+   - 领域操控手札每轮随机刷新；若角色具备明确/特色领域资料，会提高抽到领域展开、领域维持等特色领域手札的概率。
+   - 当前为自动弃牌候选实现，手动选择弃牌 UI 尚未完成。
+   - 手机和电脑端手牌卡片 UI 已压缩，以适配 8 张手牌显示。
+
+13. 灵魂机制目前处于候选接口与状态压力阶段，尚未作为正式 soulHp 独立资源接入战斗结算。已有内容包括 soul_damage schema、灵魂触碰/灵魂压力标签与状态，但还没有“默认 soulHp=100、归零败北”的正式资源条与死亡判定。
+
+14. 当前版本仍属于 candidate / prototype balance，不应视为最终平衡锁定版。
+
+
+五、注意事项
+
+1. AI 只负责生成候选卡、读取规则、填充文案和辅助平衡建议。
+2. HP、CE、伤害、消耗、胜负和领域压力应由本地公式计算，不应由 AI 自由决定。
+3. 特殊天赋不能只按文案理解，需要同时检查：
+   - wheels.json
+   - flow-v1-candidate.json
+   - mechanism-cards-v0.1.json
+   - runtime-flow.js
+   - runtime-fight.js
+   - modules/duel/*.js
+4. 虎杖版超级受肉体不作为常规战斗特殊天赋处理，仅作为剧情/转盘触发型特殊状态保留。
+5. 星浆体不进入战斗系统，仅作为剧情身份、世界线变量、天元/结界相关机制使用。
+6. 德斯昆特族血脉（牛头人杀意）已从特殊天赋中删除。
+7. 德斯昆特血脉不再作为普通特殊天赋抽取项，只能通过希姆利亚星 -> 塞姆利亚人 -> 德斯昆特高阶血脉分支获得。
+8. 本包只整理当前已存在和本轮已实现内容，不代表后续特殊天赋审阅已经完成。

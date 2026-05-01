@@ -1,0 +1,24 @@
+{
+  "characterId": "hanyu_culling_candidate",
+  "displayName": "羽生（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-死灭回游",
+  "techniqueName": "喷气头发",
+  "techniqueDescription": "以喷气背包状头发进行高速移动和撞击，偏机动奇袭。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "C"
+  },
+  "officialGrade": "觉醒泳者",
+  "powerTier": "grade4_mobility",
+  "specialHandTags": [
+    "mobility_low_output"
+  ],
+  "domainProfile": "无",
+  "notes": "低信息量但战斗方式稳定可确认。",
+  "status": "CANDIDATE"
+}

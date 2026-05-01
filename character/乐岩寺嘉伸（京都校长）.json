@@ -1,0 +1,24 @@
+{
+  "characterId": "gakuganji_yoshinobu_kyoto_candidate",
+  "displayName": "乐岩寺嘉伸（京都校长）",
+  "stage": "kyoto_school",
+  "sourceLayer": "原作本篇-京都校/高层线",
+  "techniqueName": "咒力音波",
+  "techniqueDescription": "通过电吉他放大咒力音波进行中距离攻击与压制，适合阵地输出。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "A",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "B"
+  },
+  "officialGrade": "一级术师",
+  "powerTier": "grade1_support",
+  "specialHandTags": [
+    "sound_cursed_energy"
+  ],
+  "domainProfile": "无",
+  "notes": "按校长级经验与音波输出锚定，非顶级正面战斗卡。",
+  "status": "CANDIDATE"
+}

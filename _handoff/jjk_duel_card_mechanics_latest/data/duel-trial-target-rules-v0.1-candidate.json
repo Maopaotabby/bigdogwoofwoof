@@ -1,0 +1,318 @@
+{
+  "schema": "jjk-duel-trial-target-rules",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "sourceLayer": ["site_1.386B_action_layer", "site_1.386C_domain_profile_layer", "prototype_balance"],
+  "scope": "candidate three-choice action templates for nonstandard trial targets in rule domains",
+  "notes": [
+    "This file is a data-layer extension for rule/trial domain target behavior only.",
+    "These actions are not cards, do not form a deck, and must not be treated as final canon rulings.",
+    "AI may narrate selected actions after local resolution, but AI must not invent trial rules, verdict outcomes, confiscation targets, or final penalties.",
+    "Each target class exposes exactly three candidate choices for the lightweight trial sub-phase."
+  ],
+  "choiceCount": 3,
+  "standardTargetClasses": [
+    "high_intelligence_curse",
+    "low_grade_curse",
+    "shikigami",
+    "cursed_tool"
+  ],
+  "targetTypes": {
+    "human": {
+      "status": "CANDIDATE",
+      "trialEligibility": "full",
+      "verdictVocabulary": "legal"
+    },
+    "curse_user": {
+      "status": "CANDIDATE",
+      "trialEligibility": "full",
+      "verdictVocabulary": "legal"
+    },
+    "incarnated": {
+      "status": "CANDIDATE",
+      "trialEligibility": "partial",
+      "verdictVocabulary": "incarnated"
+    },
+    "intelligent_curse": {
+      "status": "CANDIDATE",
+      "trialEligibility": "partial",
+      "verdictVocabulary": "exorcism"
+    },
+    "instinct_curse": {
+      "status": "CANDIDATE",
+      "trialEligibility": "exorcism_ruling",
+      "verdictVocabulary": "exorcism"
+    },
+    "shikigami": {
+      "status": "CANDIDATE",
+      "trialEligibility": "redirect_to_controller",
+      "verdictVocabulary": "controller"
+    },
+    "cursed_tool": {
+      "status": "CANDIDATE",
+      "trialEligibility": "object_confiscation",
+      "verdictVocabulary": "object"
+    },
+    "cursed_object": {
+      "status": "CANDIDATE",
+      "trialEligibility": "none",
+      "verdictVocabulary": "object"
+    },
+    "unknown": {
+      "status": "CANDIDATE",
+      "trialEligibility": "partial",
+      "verdictVocabulary": "legal"
+    }
+  },
+  "targetClassProfiles": [
+    {
+      "id": "high_intelligence_curse",
+      "label": "高智能咒灵",
+      "status": "CANDIDATE",
+      "appliesWhen": {
+        "targetTraitsAny": ["咒灵之躯", "灾害咒灵", "特级过咒怨灵", "灵魂干涉"],
+        "targetPowerTierAny": ["disasterCurse", "specialGradeCurse", "cursedSpiritSpecial", "topTierMinus"]
+      },
+      "trialInterpretation": "可理解审判规则并主动辩解、扭曲残秽或施压，但仍受咒灵之躯和正能量弱点限制。",
+      "choices": [
+        {
+          "id": "curse_argument",
+          "label": "咒灵抗辩",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "用语言、术式理解或自我认知反驳指控，降低证据压力。",
+          "cost": { "ceRatio": 0.028, "minCe": 6 },
+          "effects": {
+            "evidencePressureDelta": -0.9,
+            "defensePressureDelta": 1.1,
+            "selfIncriminationRiskDelta": -0.15,
+            "weightDeltas": { "counter": 0.45, "technique": 0.2 }
+          },
+          "risk": "low",
+          "logTemplate": "高智能咒灵以清晰意图和术式逻辑抗辩，证据压力下降，但审判规则仍持续压迫。"
+        },
+        {
+          "id": "distort_residue",
+          "label": "扭曲残秽",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "搅乱咒力残秽和现场因果，使证据链变得不稳定。",
+          "cost": { "ceRatio": 0.045, "minCe": 9 },
+          "effects": {
+            "evidencePressureDelta": -1.4,
+            "defensePressureDelta": 0.45,
+            "ownerDomainLoadDelta": 3,
+            "selfStatus": { "id": "residueDistortion", "label": "残秽扭曲", "rounds": 1, "value": 1 }
+          },
+          "risk": "medium",
+          "logTemplate": "咒灵主动扭曲残秽，审判证据链被扰乱，但领域负荷和异常痕迹同步上升。"
+        },
+        {
+          "id": "curse_pressure",
+          "label": "咒压顶撞",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "以咒力压迫顶撞审判子阶段，短期压低控诉推进但提高重判风险。",
+          "cost": { "ceRatio": 0.06, "minCe": 12 },
+          "effects": {
+            "evidencePressureDelta": -0.55,
+            "trialRoundDelta": -1,
+            "heavyVerdictRiskDelta": 0.45,
+            "opponentStabilityDelta": -0.012,
+            "weightDeltas": { "technique": 0.55, "finisher": 0.25 }
+          },
+          "risk": "high",
+          "logTemplate": "咒灵以咒压强行顶撞审判流程，控诉推进暂缓，但重判风险被明显推高。"
+        }
+      ]
+    },
+    {
+      "id": "low_grade_curse",
+      "label": "低级咒灵",
+      "status": "CANDIDATE",
+      "appliesWhen": {
+        "targetTraitsAny": ["咒灵之躯"],
+        "targetPowerTierAny": ["weak", "normal", "grade2Plus", "grade1"]
+      },
+      "trialInterpretation": "低级咒灵缺少稳定语言和规则理解，主要表现为本能挣扎、咒力波动或逃避祓除。",
+      "choices": [
+        {
+          "id": "instinctive_struggle",
+          "label": "本能挣扎",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "以本能抵抗审判压力，略微降低证据压力但容易暴露攻击意图。",
+          "cost": { "ceRatio": 0.018, "minCe": 2 },
+          "effects": {
+            "evidencePressureDelta": -0.35,
+            "defensePressureDelta": 0.35,
+            "selfIncriminationRiskDelta": 0.25,
+            "weightDeltas": { "melee": 0.25, "sustain": 0.25 }
+          },
+          "risk": "medium",
+          "logTemplate": "低级咒灵在审判压力下本能挣扎，短暂拖住流程，却更容易暴露敌意。"
+        },
+        {
+          "id": "curse_fluctuation",
+          "label": "咒力波动",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "不稳定咒力扰乱残秽读解，效果有限但成本较低。",
+          "cost": { "ceRatio": 0.014, "minCe": 1 },
+          "effects": {
+            "evidencePressureDelta": -0.55,
+            "ownerDomainLoadDelta": 1,
+            "stabilityDelta": -0.018,
+            "selfStatus": { "id": "curseFluctuation", "label": "咒力波动", "rounds": 1, "value": 1 }
+          },
+          "risk": "medium",
+          "logTemplate": "低级咒灵的咒力剧烈波动，残秽判断被扰乱，但自身稳定也继续下滑。"
+        },
+        {
+          "id": "flee_exorcism",
+          "label": "逃避祓除",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "优先逃离审判和祓除压力，牺牲反击权重换取生存窗口。",
+          "cost": { "ceRatio": 0.01, "minCe": 0 },
+          "effects": {
+            "trialRoundDelta": -1,
+            "defensePressureDelta": 0.6,
+            "weightDeltas": { "sustain": 0.65, "counter": -0.3, "finisher": -0.6 },
+            "selfStatus": { "id": "fleeingExorcism", "label": "逃避祓除", "rounds": 1, "value": 1 }
+          },
+          "risk": "low",
+          "logTemplate": "低级咒灵优先逃避祓除，审判节奏被拖慢，但几乎放弃有效反击。"
+        }
+      ]
+    },
+    {
+      "id": "shikigami",
+      "label": "式神",
+      "status": "CANDIDATE",
+      "appliesWhen": {
+        "targetTraitsAny": ["十种影法术", "式神", "shikigamiResource"],
+        "targetEffectTagsAny": ["shikigami_auto_attack"]
+      },
+      "trialInterpretation": "式神通常不作为完整人格被审判，候选处理应落到操作者指令、召唤维持或式神行动抑制。",
+      "choices": [
+        {
+          "id": "controller_redirect",
+          "label": "转向操作者",
+          "status": "CANDIDATE",
+          "role": "trial_control",
+          "description": "把审判焦点从式神行为转向操作者命令与维持责任。",
+          "cost": { "ceRatio": 0.025, "minCe": 5 },
+          "effects": {
+            "redirectTrialTarget": "controller",
+            "evidencePressureDelta": 0.65,
+            "defensePressureDelta": 0.35,
+            "opponentWeightDeltas": { "resource": -0.25, "technique": -0.2 }
+          },
+          "risk": "medium",
+          "logTemplate": "审判焦点从式神本体转向操作者命令，式神行为被视作术式资源的一部分。"
+        },
+        {
+          "id": "summon_suppression",
+          "label": "召唤压制",
+          "status": "CANDIDATE",
+          "role": "trial_control",
+          "description": "压低式神召唤、维持和自动攻击质量。",
+          "cost": { "ceRatio": 0.04, "minCe": 8 },
+          "effects": {
+            "opponentStatus": { "id": "summonSuppressed", "label": "召唤压制", "rounds": 1, "value": 1 },
+            "opponentWeightDeltas": { "resource": -0.6, "technique": -0.35, "domain": -0.25 },
+            "evidencePressureDelta": 0.25
+          },
+          "risk": "medium",
+          "logTemplate": "审判规则压低召唤维持，式神自动攻击和资源调度被短暂削弱。"
+        },
+        {
+          "id": "proxy_denial",
+          "label": "代理否认",
+          "status": "CANDIDATE",
+          "role": "defense",
+          "description": "主张式神只是术式代理，降低式神本体责任但不解除操作者风险。",
+          "cost": { "ceRatio": 0.018, "minCe": 4 },
+          "effects": {
+            "evidencePressureDelta": -0.45,
+            "defensePressureDelta": 0.8,
+            "redirectTrialTarget": "controller_possible",
+            "selfIncriminationRiskDelta": -0.1
+          },
+          "risk": "low",
+          "logTemplate": "式神侧以代理逻辑否认本体责任，审判压力下降，但操作者责任仍可能被追索。"
+        }
+      ]
+    },
+    {
+      "id": "cursed_tool",
+      "label": "咒具",
+      "status": "CANDIDATE",
+      "appliesWhen": {
+        "loadoutTierAny": ["signatureTool", "partialKit", "consumableKit", "scenarioTool"],
+        "targetTagsAny": ["techniqueNullification", "techniqueDisruption", "soulDamage", "physicalScaling", "confiscatable"]
+      },
+      "trialInterpretation": "咒具不按人格审判，候选处理应围绕持有者责任、物件没收、功能封锁或证据链归属。",
+      "choices": [
+        {
+          "id": "object_confiscation",
+          "label": "物件没收",
+          "status": "CANDIDATE",
+          "role": "trial_control",
+          "description": "把咒具列为可没收对象，削弱持有者构筑而非直接审判物件人格。",
+          "cost": { "ceRatio": 0.035, "minCe": 7 },
+          "effects": {
+            "requestConfiscationTarget": "cursed_tool",
+            "evidencePressureDelta": 0.8,
+            "opponentWeightDeltas": { "tool": -0.8, "finisher": -0.35 },
+            "opponentStatus": { "id": "toolConfiscationPressure", "label": "咒具没收压力", "rounds": 1, "value": 1 }
+          },
+          "risk": "medium",
+          "logTemplate": "审判将咒具列为没收候选，持有者构筑被压低，但是否没收仍需本地规则结算。"
+        },
+        {
+          "id": "wielder_liability",
+          "label": "持有者归责",
+          "status": "CANDIDATE",
+          "role": "trial_control",
+          "description": "将咒具造成的结果归入持有者行为链，推进审判证据。",
+          "cost": { "ceRatio": 0.03, "minCe": 6 },
+          "effects": {
+            "redirectTrialTarget": "wielder",
+            "evidencePressureDelta": 1.05,
+            "defensePressureDelta": -0.15,
+            "verdictProgress": 1
+          },
+          "risk": "medium",
+          "logTemplate": "咒具行为被归入持有者责任链，证据压力上升并推进判决准备。"
+        },
+        {
+          "id": "tool_function_lock",
+          "label": "功能封锁",
+          "status": "CANDIDATE",
+          "role": "trial_control",
+          "description": "短暂压低咒具的术式破坏、灵魂伤害或物理兑现质量。",
+          "cost": { "ceRatio": 0.045, "minCe": 9 },
+          "effects": {
+            "opponentStatus": { "id": "toolFunctionLocked", "label": "咒具功能封锁", "rounds": 1, "value": 1 },
+            "opponentWeightDeltas": { "tool": -0.95, "melee": -0.25, "finisher": -0.45 },
+            "ownerDomainLoadDelta": 2
+          },
+          "risk": "high",
+          "logTemplate": "审判规则短暂封锁咒具功能，武器兑现下降，但领域负荷随封锁上升。"
+        }
+      ]
+    }
+  ],
+  "validationRules": {
+    "statusMustRemain": "CANDIDATE",
+    "choicesPerTargetClass": 3,
+    "forbiddenUses": [
+      "final canon verdicts",
+      "full card deck generation",
+      "custom rule-domain creation",
+      "direct app.js behavior changes"
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "五条悟（新宿决战）",
+  "hp": 6,
+  "mp": 6,
+  "四轴": {
+    "咒术": 7,
+    "肉体": 6.92,
+    "悟性": 7.28,
+    "构筑": 3.3
+  },
+  "特殊手札": [
+    "gojo_limitless"
+  ],
+  "specialHandTags": [
+    "gojo_limitless"
+  ],
+  "characterId": "gojo_satoru_shinjuku",
+  "displayName": "五条悟（新宿决战）",
+  "stage": "shinjuku",
+  "baseStats": {
+    "cursedEnergy": "S",
+    "control": "SSS",
+    "efficiency": "SSS",
+    "body": "S",
+    "martial": "SSS",
+    "talent": "SS",
+    "cursedTechnique": 7,
+    "physical": 6.92,
+    "perception": 7.28,
+    "construction": 3.3
+  },
+  "innateTraits": [
+    "六眼",
+    "无下限"
+  ],
+  "techniquePower": "SSS",
+  "domainProfile": "顶级领域：无量空处",
+  "officialGrade": "特级",
+  "powerTier": "canonCeiling",
+  "notes": "六眼锁定咒力操纵与效率 SSS；强度核心不是咒力总量 EX。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

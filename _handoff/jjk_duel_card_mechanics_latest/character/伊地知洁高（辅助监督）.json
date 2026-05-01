@@ -1,0 +1,25 @@
+{
+  "characterId": "ijichi_kiyotaka_support_candidate",
+  "displayName": "伊地知洁高（辅助监督）",
+  "stage": "main_story",
+  "sourceLayer": "原作本篇-高专辅助监督",
+  "techniqueName": "辅助监督与帐",
+  "techniqueDescription": "负责帐、现场调度、情报交接与任务支援；正面战斗能力低，系统价值在部署和风险控制。",
+  "baseStats": {
+    "cursedEnergy": "D",
+    "control": "B",
+    "efficiency": "B",
+    "body": "D",
+    "martial": "D",
+    "talent": "B"
+  },
+  "officialGrade": "辅助监督",
+  "powerTier": "noncombat_support",
+  "specialHandTags": [
+    "assistant_supervisor",
+    "curtain_support"
+  ],
+  "domainProfile": "帐/辅助结界",
+  "notes": "非术式型角色，按稳定系统功能写入。",
+  "status": "CANDIDATE"
+}

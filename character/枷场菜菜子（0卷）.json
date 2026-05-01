@@ -1,0 +1,25 @@
+{
+  "characterId": "nanako_hasaba_volume0_candidate",
+  "displayName": "枷场菜菜子（0卷）",
+  "stage": "volume0",
+  "sourceLayer": "原作本篇-0卷/夏油一派",
+  "techniqueName": "照片操控",
+  "techniqueDescription": "通过手机照片影响被拍摄对象，可用于位移、回避或改变对象状态；条件限制和疲劳明显。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "B",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "B"
+  },
+  "officialGrade": "诅咒师",
+  "powerTier": "grade3_utility",
+  "specialHandTags": [
+    "image_manipulation",
+    "escape"
+  ],
+  "domainProfile": "无",
+  "notes": "与美美子协同由卡牌/机制模拟，不拆分双人状态。",
+  "status": "CANDIDATE"
+}

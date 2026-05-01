@@ -1,0 +1,24 @@
+{
+  "characterId": "remi_culling_candidate",
+  "displayName": "丽美（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-死灭回游",
+  "techniqueName": "蝎尾头发",
+  "techniqueDescription": "以头发形成蝎尾状刺击和牵制，战斗输出低，偏诱导、欺骗和局部偷袭。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "C"
+  },
+  "officialGrade": "觉醒泳者",
+  "powerTier": "grade4_trickster",
+  "specialHandTags": [
+    "low_output_trick"
+  ],
+  "domainProfile": "无",
+  "notes": "按低强度泳者处理。",
+  "status": "CANDIDATE"
+}

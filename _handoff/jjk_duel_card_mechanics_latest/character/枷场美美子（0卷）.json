@@ -1,0 +1,25 @@
+{
+  "characterId": "mimiko_hasaba_volume0_candidate",
+  "displayName": "枷场美美子（0卷）",
+  "stage": "volume0",
+  "sourceLayer": "原作本篇-0卷/夏油一派",
+  "techniqueName": "美美子玩偶术式",
+  "techniqueDescription": "通过玩偶和绳套把对玩偶造成的效果反映到目标身上，偏咒杀、束缚、处刑式攻击。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "B",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "B"
+  },
+  "officialGrade": "诅咒师",
+  "powerTier": "grade3_conditional",
+  "specialHandTags": [
+    "voodoo",
+    "execution_setup"
+  ],
+  "domainProfile": "无",
+  "notes": "条件型咒杀，不按双人协同状态拆分。",
+  "status": "CANDIDATE"
+}

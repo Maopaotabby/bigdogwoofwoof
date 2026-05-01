@@ -1,0 +1,24 @@
+{
+  "characterId": "haba_culling_candidate",
+  "displayName": "羽场（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-死灭回游",
+  "techniqueName": "直升机头发",
+  "techniqueDescription": "以直升机状头发飞行、切割和冲撞，偏机动压制。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "C"
+  },
+  "officialGrade": "觉醒泳者",
+  "powerTier": "grade4_mobility",
+  "specialHandTags": [
+    "mobility_low_output"
+  ],
+  "domainProfile": "无",
+  "notes": "低信息量但战斗方式稳定可确认。",
+  "status": "CANDIDATE"
+}

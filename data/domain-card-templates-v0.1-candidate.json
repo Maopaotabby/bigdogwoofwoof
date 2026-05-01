@@ -1,0 +1,241 @@
+{
+  "schema": "jjk-domain-card-templates",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "scope": "Reusable card interface templates for modular domain activation, passive domain effects, and domain-exclusive cards.",
+  "notes": [
+    "These templates describe interfaces and generation hints only.",
+    "They do not replace existing duel action resolution.",
+    "Domain cards should be generated from wheel results plus domainConfig, not hard-coded per technique.",
+    "AI may summarize generated cards but must not decide combat outcomes."
+  ],
+  "cardFamilies": [
+    {
+      "cardType": "domain_activation",
+      "displayName": "领域展开卡",
+      "purpose": "启动领域并挂载领域完成度、形态、主要效果和附带效果。",
+      "requiredFields": [
+        "cardType",
+        "domainName",
+        "domainCompletion",
+        "domainShape",
+        "ceCost",
+        "domainLoadDelta",
+        "duration",
+        "burnoutRisk",
+        "allowedEffectTypes"
+      ],
+      "optionalFields": [
+        "domainBasePower",
+        "domainControl",
+        "domainStability",
+        "domainThemeTags",
+        "activationTiming",
+        "canStartRuleSubphase"
+      ],
+      "template": {
+        "cardType": "domain_activation",
+        "domainName": "{{domainConfig.domainName}}",
+        "domainCompletion": "{{wheel.domainCompletion}}",
+        "domainShape": "{{wheel.domainShape}}",
+        "ceCost": "{{domainConfig.domainCost}}",
+        "domainLoadDelta": "{{domainConfig.domainLoad}}",
+        "duration": "{{domainConfig.defaultDuration}}",
+        "burnoutRisk": "{{domainConfig.burnoutRisk}}",
+        "allowedEffectTypes": "{{resolvedDomainEffects}}",
+        "status": "CANDIDATE"
+      }
+    },
+    {
+      "cardType": "domain_passive_effect",
+      "displayName": "领域附带效果卡",
+      "purpose": "领域启动后自动挂载，用于表达必中、自动攻击、增幅、灵魂打击、强控或规则子阶段。",
+      "requiredFields": [
+        "effectType",
+        "effectName",
+        "triggerTiming",
+        "scalingProfile",
+        "counteredBy",
+        "duration"
+      ],
+      "optionalFields": [
+        "baseDamage",
+        "damageMultiplier",
+        "soulDamage",
+        "controlPayload",
+        "selfBuffPayload",
+        "ruleBasedConfig",
+        "domainLoadPerRound"
+      ],
+      "templatesByEffectType": {
+        "sure_hit": {
+          "effectType": "sure_hit",
+          "effectName": "必中压制",
+          "triggerTiming": "on_domain_attack",
+          "scalingProfile": "domainBasePower + domainControl",
+          "counteredBy": [
+            "domain_expansion",
+            "simple_domain",
+            "domain_amplification",
+            "hollow_wicker_basket",
+            "falling_blossom_emotion"
+          ],
+          "duration": "{{domainDuration}}",
+          "effectSummary": "目标未成功反领域时，闪避判定失败；防御、减伤、抗性和反制仍正常结算。",
+          "status": "CANDIDATE"
+        },
+        "auto_attack": {
+          "effectType": "auto_attack",
+          "effectName": "领域自动攻击",
+          "triggerTiming": "round_end",
+          "scalingProfile": "domainBasePower + ceMaxOutput + techniquePower",
+          "counteredBy": [
+            "domain_expansion",
+            "simple_domain",
+            "domain_amplification",
+            "hollow_wicker_basket",
+            "falling_blossom_emotion"
+          ],
+          "duration": "{{domainDuration}}",
+          "baseDamage": "{{domainConfig.domainBasePower}}",
+          "status": "CANDIDATE"
+        },
+        "self_buff": {
+          "effectType": "self_buff",
+          "effectName": "领域自我增幅",
+          "triggerTiming": "round_start",
+          "scalingProfile": "domainStability + techniqueTheme",
+          "counteredBy": [],
+          "duration": "{{domainDuration}}",
+          "selfBuffPayload": {
+            "ceRegenMultiplier": "{{candidateByTechnique}}",
+            "hpRegen": "{{candidateByTechnique}}",
+            "maxPlayableCardsBonus": "{{candidateByTechnique}}"
+          },
+          "status": "CANDIDATE"
+        },
+        "technique_amp": {
+          "effectType": "technique_amp",
+          "effectName": "领域术式增幅",
+          "triggerTiming": "on_technique_card",
+          "scalingProfile": "domainPotential + domainCompletion",
+          "counteredBy": [
+            "domain_expansion",
+            "simple_domain",
+            "domain_amplification",
+            "hollow_wicker_basket"
+          ],
+          "duration": "{{domainDuration}}",
+          "damageMultiplier": "{{domainCompletionBand}}",
+          "effectSummary": "反领域成功时不完全移除，但应降低倍率或最大输出加成。",
+          "status": "CANDIDATE"
+        },
+        "soul_damage": {
+          "effectType": "soul_damage",
+          "effectName": "领域灵魂打击",
+          "triggerTiming": "on_domain_hit",
+          "scalingProfile": "domainBasePower + soulAffinity",
+          "counteredBy": [
+            "domain_expansion",
+            "simple_domain",
+            "domain_amplification",
+            "hollow_wicker_basket",
+            "falling_blossom_emotion"
+          ],
+          "duration": "{{domainDuration}}",
+          "soulDamage": "{{candidateByTechnique}}",
+          "status": "CANDIDATE"
+        },
+        "hard_control": {
+          "effectType": "hard_control",
+          "effectName": "领域强控",
+          "triggerTiming": "round_start",
+          "scalingProfile": "domainControl + techniqueTheme",
+          "counteredBy": [
+            "domain_expansion",
+            "simple_domain",
+            "domain_amplification",
+            "hollow_wicker_basket",
+            "falling_blossom_emotion"
+          ],
+          "duration": "{{domainDuration}}",
+          "controlPayload": {
+            "stunTurns": 0,
+            "maxPlayableCardsPenalty": "{{candidateByTechnique}}",
+            "cardTypeBan": []
+          },
+          "status": "CANDIDATE"
+        },
+        "rule_based": {
+          "effectType": "rule_based",
+          "effectName": "领域规则子阶段",
+          "triggerTiming": "on_domain_activation",
+          "scalingProfile": "domainControl + rulePriority",
+          "counteredBy": [
+            "preexisting_domain_expansion",
+            "preexisting_simple_domain",
+            "preexisting_domain_amplification",
+            "preexisting_hollow_wicker_basket",
+            "preexisting_falling_blossom_emotion"
+          ],
+          "duration": "{{ruleSubphaseDuration}}",
+          "ruleBasedConfig": {
+            "exclusiveWith": [
+              "sure_hit",
+              "auto_attack",
+              "technique_amp",
+              "soul_damage",
+              "hard_control"
+            ],
+            "allowedWith": [
+              "self_buff"
+            ],
+            "userChoiceRequired": true
+          },
+          "status": "CANDIDATE"
+        }
+      }
+    },
+    {
+      "cardType": "domain_exclusive",
+      "displayName": "领域内专属卡",
+      "purpose": "只在领域展开后可用，承载术式个性；不用于硬编码整套领域系统。",
+      "requiredFields": [
+        "cardType",
+        "requiresDomain",
+        "effect",
+        "ceCost",
+        "damage",
+        "scaling",
+        "tags"
+      ],
+      "template": {
+        "cardType": "domain_exclusive",
+        "requiresDomain": true,
+        "domainName": "{{domainConfig.domainName}}",
+        "effect": "{{techniqueSpecificDomainMove}}",
+        "ceCost": "{{candidateByTechnique}}",
+        "damage": "{{candidateByTechnique}}",
+        "scaling": [
+          "domainBasePower",
+          "techniquePower",
+          "ceMaxOutput"
+        ],
+        "tags": [
+          "domain",
+          "techniqueSpecific"
+        ],
+        "status": "CANDIDATE"
+      }
+    }
+  ],
+  "generationPipeline": [
+    "Read technique profile and domainConfig.",
+    "Check wheel result: character must have domain expansion before generating domain cards.",
+    "Apply domainCompletion, domainShape, domainMainEffect, and domainAttachedEffects from wheel results.",
+    "Run compatibility validation. If rule_based is kept, remove conflicting effects and keep only self_buff as compatible.",
+    "Generate one domain_activation card.",
+    "Generate one passive effect card for main effect and zero or more passive effect cards for attached effects.",
+    "Generate domain_exclusive cards only when the technique has authored domain-specific moves."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "七海建人（涩谷）",
+  "hp": 5,
+  "mp": 5,
+  "四轴": {
+    "咒术": 5,
+    "肉体": 5.92,
+    "悟性": 5.24,
+    "构筑": 1.92
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "nanami_kento_shibuya",
+  "displayName": "七海建人（涩谷）",
+  "stage": "shibuya",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "A",
+    "body": "A",
+    "martial": "SS",
+    "talent": "A",
+    "cursedTechnique": 5,
+    "physical": 5.92,
+    "perception": 5.24,
+    "construction": 1.92
+  },
+  "innateTraits": [
+    "十划咒法"
+  ],
+  "techniquePower": "A",
+  "officialGrade": "一级",
+  "powerTier": "grade1",
+  "notes": "标准一级术师锚点；稳定、效率高，但不按特级候选处理。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

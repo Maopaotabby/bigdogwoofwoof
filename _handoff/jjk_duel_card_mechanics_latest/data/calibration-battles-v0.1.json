@@ -1,0 +1,99 @@
+{
+  "schema": "jjk-calibration-battles",
+  "version": "0.1.1-candidate",
+  "status": "APPROVED_FOR_PROTOTYPE",
+  "approvedByUserAt": "2026-04-26",
+  "scope": "instant combat and outcome weight calibration",
+  "cases": [
+    {
+      "caseId": "CB001",
+      "claim": "五条悟与两面宿傩在正传时间线综合远超其他人。",
+      "expectedEffect": "canonCeiling 角色不能被普通特级池轻易覆盖；其他角色需靠相性、状态、多人战或剧情资源接近。"
+    },
+    {
+      "caseId": "CB002",
+      "claim": "宿傩咒力总量为 SSS，不是 EX-；虎天帝/68年后虎杖也不把咒力总量写成 EX，而是以操纵 EX- 与悟性 EX- 作为 EX 锚点。",
+      "expectedEffect": "宿傩强度来自 SSS 基础包、四臂、开放领域和战斗理解；虎天帝强度来自半人半咒灵、不老/咒物沉淀、随意黑闪和异常兑现能力。"
+    },
+    {
+      "caseId": "CB003",
+      "claim": "六眼锁定咒力操纵和咒力效率 SSS。",
+      "expectedEffect": "拥有六眼时即时战力计算应对 control/efficiency 设 SSS 下限。"
+    },
+    {
+      "caseId": "CB004",
+      "claim": "双面四臂锁定咒力总量、体质、体术水平 SSS。",
+      "expectedEffect": "拥有双面四臂时即时战力计算应对 cursedEnergy/body/martial 设 SSS 下限。"
+    },
+    {
+      "caseId": "CB005",
+      "claim": "甚尔通灵复活且意识不清时，仍可进入陀艮领域并用游云击杀陀艮。",
+      "expectedEffect": "领域不能作为自动胜利；零咒力天与咒缚免疫必中自动攻击，但仍受地形和手动攻击影响。"
+    },
+    {
+      "caseId": "CB006",
+      "claim": "简易领域和弥虚葛笼可以抵抗领域必中/自动攻击，但弥虚葛笼承受的战力减益更大。",
+      "expectedEffect": "antiDomain 标签应降低领域风险；largePenaltyInDomain 风险仍需显示。"
+    },
+    {
+      "caseId": "CB007",
+      "claim": "鹿紫云一是400年前最强，但没有领域。",
+      "expectedEffect": "无领域不应直接排除 topTier；领域是胜路之一，不是顶级强者的必要条件。"
+    },
+    {
+      "caseId": "CB008",
+      "claim": "特别一级不是一级上位，而是御三家等非高专体系的一级等效行政分类。",
+      "expectedEffect": "officialGrade 与 powerTier 分离；特别一级不能作为强度硬上位。"
+    },
+    {
+      "caseId": "CB009",
+      "claim": "0卷夏油若未将咒灵兵分两路，很可能正面击败当时乙骨与真里香组合。",
+      "expectedEffect": "咒灵操术库存和兵力分配应进入状态/资源修正，而非只看夏油自身咒力量。"
+    },
+    {
+      "caseId": "CB010",
+      "claim": "夏油使用咒灵操术时，咒灵本身不消耗夏油自己的咒力。",
+      "expectedEffect": "externalResourcePool 需要独立记录，不能全折算为自身咒力总量。"
+    },
+    {
+      "caseId": "CB011",
+      "claim": "里梅与秤金次基本不相上下。",
+      "expectedEffect": "里梅应落在 Hakari-adjacent 区间，不能被压成普通一级强者。"
+    },
+    {
+      "caseId": "CB012",
+      "claim": "高羽术式强度为 EX-，但战斗兑现受本人理解、杀意和稳定性限制。",
+      "expectedEffect": "realityWarp/hax 可以给高扰动胜路，但即时战力不能只按术式强度硬覆盖。"
+    },
+    {
+      "caseId": "CB013",
+      "claim": "达布拉术式强度高于宿傩，但宿傩的术式在特级里不算最强。",
+      "expectedEffect": "Dabra technique > Sukuna technique；Sukuna total profile remains canon ceiling due to base package and combat execution."
+    },
+    {
+      "caseId": "CB014",
+      "claim": "马鲁单体战斗力不应过高。",
+      "expectedEffect": "混沌与调和主要进入规则干涉/辅助胜路，不能把马鲁直接抬到高单挑战力。"
+    },
+    {
+      "caseId": "CB015",
+      "claim": "强度能决定直接冲突的基础胜算，但不能硬覆盖到场、阵营、关系、政治和结尾评价等池。",
+      "expectedEffect": "这些池只允许 lightReweightOnly。"
+    },
+    {
+      "caseId": "CB016",
+      "claim": "新宿决战宿傩拥有善用束缚的战斗特质，并曾使用十种影法术中的魔虚罗与嵌合兽；最终通过魔虚罗适应领悟的世界斩和束缚兑现击败稍有自负的五条悟。",
+      "expectedEffect": "宿傩术式本体仍不抬到最高档；十影资源、魔虚罗适应、世界斩和束缚作为决战资源包提升构筑/扰动，并与后续领域熔断、咒具没收等削弱状态分离记录。"
+    },
+    {
+      "caseId": "CB017",
+      "claim": "新宿削弱应包含领域熔断、反转输出下降、日车领域咒具没收/术式没收等动态状态。",
+      "expectedEffect": "即时战力需要支持 temporaryNerf 负向机制；宿傩入场阶段不能只是文案标签，还应改变后续宿傩战结果权重。"
+    },
+    {
+      "caseId": "CB018",
+      "claim": "68年后虎杖的 EX 锚点需要在对满血十影宿傩时体现为大优势，而不是被普通入场者的满血十影压制倍率吞掉。",
+      "expectedEffect": "after68 + EX锚点 + 随意黑闪/咒物沉淀/半人半咒路线对 fullTenShadows 阶段使用专门反制倍率，胜率校准目标进入 70% 以上。"
+    }
+  ]
+}

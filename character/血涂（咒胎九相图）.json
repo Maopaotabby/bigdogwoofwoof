@@ -1,0 +1,25 @@
+{
+  "characterId": "kechizu_origin_candidate",
+  "displayName": "血涂（咒胎九相图）",
+  "stage": "origin",
+  "sourceLayer": "原作本篇-咒胎九相图",
+  "techniqueName": "蚀烂术式",
+  "techniqueDescription": "以血液毒性、腐蚀和近身压迫造成持续伤害，正面技巧弱于坏相。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "B",
+    "martial": "C",
+    "talent": "C"
+  },
+  "officialGrade": "特级咒物受肉体",
+  "powerTier": "grade3_curse_womb",
+  "specialHandTags": [
+    "rot_technique",
+    "curse_womb"
+  ],
+  "domainProfile": "无",
+  "notes": "按较低稳定性受肉体处理。",
+  "status": "CANDIDATE"
+}

@@ -1,0 +1,111 @@
+{
+  "schema": "jjk-duel-resource-rules",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "sourceLayer": ["site_1.386", "worldview_lore", "prototype_balance"],
+  "scope": "cyber duel resource visualization layer",
+  "notes": [
+    "This file defines candidate gameplay formulas for the 1.386A cyber duel resource visualization layer.",
+    "Worldview and formula-book material supports splitting body endurance, cursed energy, control, domain pressure, residue, and technique burden, but does not provide final numeric game values.",
+    "All numeric weights in this file are prototype balance candidates and must not be treated as canon.",
+    "AI may narrate resource changes after local resolution, but AI must not write HP, CE, regen, stability, domain threshold, win rate, multiplier, or final outcome numbers."
+  ],
+  "labels": {
+    "hp": "体势",
+    "ce": "咒力",
+    "ceRegen": "咒力回流",
+    "stability": "咒力稳定",
+    "domainLoad": "领域负荷",
+    "residualLog": "残秽记录",
+    "domainMeltdown": "领域崩解 / 术式烧断"
+  },
+  "hp": {
+    "base": 118,
+    "bodyScale": 15.5,
+    "martialScale": 10.5,
+    "visibleGradeScale": 18,
+    "combatUnitScale": 0.012,
+    "zeroCeBodyBonus": 22,
+    "physicalTagBonus": 14,
+    "min": 80,
+    "max": 460
+  },
+  "ce": {
+    "base": 82,
+    "cursedEnergyScale": 20,
+    "techniqueScale": 9,
+    "visibleGradeScale": 22,
+    "jujutsuAxisScale": 7.5,
+    "zeroCeCap": 32,
+    "min": 36,
+    "max": 560
+  },
+  "regen": {
+    "baseRatio": 0.065,
+    "controlScale": 0.004,
+    "efficiencyScale": 0.006,
+    "talentScale": 0.002,
+    "efficiencyLockBonus": 0.012,
+    "minRatio": 0.035,
+    "maxRatio": 0.18
+  },
+  "stability": {
+    "base": 0.38,
+    "controlScale": 0.034,
+    "efficiencyScale": 0.028,
+    "talentScale": 0.018,
+    "topDomainBonus": 0.055,
+    "efficiencyLockBonus": 0.045,
+    "haxVolatilityPenalty": 0.055,
+    "min": 0.2,
+    "max": 0.96
+  },
+  "domain": {
+    "baseThreshold": 58,
+    "controlScale": 5.5,
+    "efficiencyScale": 4,
+    "talentScale": 3.2,
+    "visibleGradeScale": 7,
+    "topDomainBonus": 24,
+    "openDomainBonus": 32,
+    "customDomainBonus": 12,
+    "domainSustainBonus": 14,
+    "activationLoad": 16,
+    "eventLoad": 18,
+    "maintainLoad": 8,
+    "oppositionLoad": 10,
+    "lowCeLoad": 8,
+    "stabilityRelief": 9,
+    "meltdownCeLossRatio": 0.28,
+    "meltdownStabilityPenalty": 0.08
+  },
+  "statusEffects": {
+    "techniqueImbalance": {
+      "label": "术式失衡",
+      "rounds": 2,
+      "weightPenalty": 1.45,
+      "outputScale": 0.72,
+      "affectedEvents": ["technique", "domain", "finisher"]
+    },
+    "ceRegenBlocked": {
+      "label": "咒力回流断裂",
+      "rounds": 1,
+      "regenScale": 0
+    }
+  },
+  "events": {
+    "initiative": { "actorCeCost": 5, "targetHpDamage": 7, "targetCeDamage": 2 },
+    "technique": { "actorCeCost": 15, "targetHpDamage": 14, "targetCeDamage": 4 },
+    "melee": { "actorCeCost": 4, "actorHpRecoil": 2, "targetHpDamage": 13, "targetCeDamage": 1 },
+    "resource": { "actorCeCost": 9, "targetHpDamage": 10, "targetCeDamage": 8, "targetRegenInterference": 0.18 },
+    "domain": { "actorCeCost": 24, "targetHpDamage": 11, "targetCeDamage": 8 },
+    "counter": { "actorCeCost": 8, "targetHpDamage": 8, "targetCeDamage": 13, "domainLoadInterference": 12 },
+    "finisher": { "actorCeCost": 22, "actorHpRecoil": 4, "targetHpDamage": 21, "targetCeDamage": 6 },
+    "backfire": { "actorCeCost": 5, "targetHpDamage": 12, "targetCeDamage": 9 },
+    "neutral": { "actorCeCost": 0, "targetHpDamage": 0, "targetCeDamage": 0 }
+  },
+  "limits": {
+    "minHp": 0,
+    "minCe": 0
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "characterId": "ranta_zenin_perfect_preparation_candidate",
+  "displayName": "禅院兰太（禅院家）",
+  "stage": "perfect_preparation",
+  "sourceLayer": "原作本篇-禅院家/葦を啣む",
+  "techniqueName": "视线拘束",
+  "techniqueDescription": "通过视线限制目标行动，适合协同控制和短时间硬控。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "A",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "B"
+  },
+  "officialGrade": "禅院家术师",
+  "powerTier": "support_grade2",
+  "specialHandTags": [
+    "vision_restraint",
+    "team_support"
+  ],
+  "domainProfile": "无",
+  "notes": "控制价值高于单体输出。",
+  "status": "CANDIDATE"
+}

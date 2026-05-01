@@ -1,0 +1,25 @@
+{
+  "characterId": "hazeno_ki_culling_candidate",
+  "displayName": "黄栌折（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-死灭回游",
+  "techniqueName": "爆炸肉体",
+  "techniqueDescription": "将身体部位转化为爆炸物投掷，并通过反转术式恢复，适合中距离消耗和奇袭。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "B",
+    "talent": "B"
+  },
+  "officialGrade": "觉醒泳者",
+  "powerTier": "grade2_brawler",
+  "specialHandTags": [
+    "self_destructive_burst",
+    "rct_user"
+  ],
+  "domainProfile": "无",
+  "notes": "反转恢复作为机制标签，不拆分为有无恢复形态。",
+  "status": "CANDIDATE"
+}

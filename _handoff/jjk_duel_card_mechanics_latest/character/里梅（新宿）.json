@@ -1,0 +1,52 @@
+{
+  "name": "里梅（新宿）",
+  "hp": 6,
+  "mp": 7,
+  "四轴": {
+    "咒术": 6.77,
+    "肉体": 6,
+    "悟性": 6.88,
+    "构筑": 3.04
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "uraume_shinjuku",
+  "displayName": "里梅（新宿）",
+  "stage": "shinjuku",
+  "baseStats": {
+    "cursedEnergy": "SS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "S",
+    "martial": "S",
+    "talent": "SS",
+    "cursedTechnique": 6.77,
+    "physical": 6,
+    "perception": 6.88,
+    "construction": 3.04
+  },
+  "techniquePower": "SSS",
+  "officialGrade": "无",
+  "powerTier": "topTierMinus",
+  "notes": "与秤金次长期相持，不能按低一级强者处理。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

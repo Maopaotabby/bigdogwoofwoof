@@ -1,0 +1,25 @@
+{
+  "characterId": "naoya_zenin_human_perfect_preparation_candidate",
+  "displayName": "禅院直哉（人类）",
+  "stage": "perfect_preparation",
+  "sourceLayer": "原作本篇-禅院家/葦を啣む",
+  "techniqueName": "投射咒法",
+  "techniqueDescription": "以24帧规则高速突进、连击和冻结错误动作目标，近身压制强。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "A",
+    "body": "A",
+    "martial": "SS",
+    "talent": "A"
+  },
+  "officialGrade": "特别一级术师",
+  "powerTier": "specialGrade1",
+  "specialHandTags": [
+    "projection_sorcery",
+    "speed"
+  ],
+  "domainProfile": "无",
+  "notes": "与咒灵直哉为不同存在，但不再拆短时形态。",
+  "status": "CANDIDATE"
+}

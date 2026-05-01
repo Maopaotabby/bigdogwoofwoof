@@ -1,0 +1,361 @@
+{
+  "schema": "jjk-domain-configs",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "scope": "Technique-level domain configuration candidates. These profiles define potential and defaults; they do not grant domain expansion to a character by themselves.",
+  "notes": [
+    "A technique can have a domainConfig even when a specific character does not currently possess domain expansion.",
+    "Wheel results decide whether a character has domain expansion, completion, shape, main effect, and attached effects.",
+    "Technique strength limits domain base stats and effect quality.",
+    "Project-candidate domain names must not be treated as official names.",
+    "Unlisted techniques should use defaultPotentialConfigs until a named profile is authored."
+  ],
+  "defaultPotentialConfigs": {
+    "none": {
+      "domainPotential": "none",
+      "domainBasePower": 0,
+      "domainControl": 0,
+      "domainStability": 0,
+      "domainCost": 0,
+      "domainLoad": 0,
+      "burnoutRisk": 0,
+      "defaultDuration": 0,
+      "domainEffectQualityCap": "none"
+    },
+    "low": {
+      "domainPotential": "low",
+      "domainBasePower": 0.18,
+      "domainControl": 0.25,
+      "domainStability": 0.3,
+      "domainCost": 0.28,
+      "domainLoad": 0.36,
+      "burnoutRisk": 0.34,
+      "defaultDuration": 2,
+      "domainEffectQualityCap": "C-B"
+    },
+    "medium": {
+      "domainPotential": "medium",
+      "domainBasePower": 0.38,
+      "domainControl": 0.45,
+      "domainStability": 0.48,
+      "domainCost": 0.44,
+      "domainLoad": 0.5,
+      "burnoutRisk": 0.28,
+      "defaultDuration": 3,
+      "domainEffectQualityCap": "B-A"
+    },
+    "high": {
+      "domainPotential": "high",
+      "domainBasePower": 0.62,
+      "domainControl": 0.7,
+      "domainStability": 0.65,
+      "domainCost": 0.58,
+      "domainLoad": 0.62,
+      "burnoutRisk": 0.24,
+      "defaultDuration": 3,
+      "domainEffectQualityCap": "A-S"
+    },
+    "special": {
+      "domainPotential": "special",
+      "domainBasePower": 0.82,
+      "domainControl": 0.86,
+      "domainStability": 0.78,
+      "domainCost": 0.72,
+      "domainLoad": 0.76,
+      "burnoutRisk": 0.2,
+      "defaultDuration": 3,
+      "domainEffectQualityCap": "S-SS"
+    }
+  },
+  "domainConfigs": [
+    {
+      "techniqueKey": "limitless",
+      "techniqueName": "无下限术式",
+      "domainName": "无量空处",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "special",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "sure_hit",
+        "hard_control",
+        "technique_amp"
+      ],
+      "domainBasePower": 0.9,
+      "domainControl": 0.95,
+      "domainStability": 0.82,
+      "domainCost": 0.78,
+      "domainLoad": 0.82,
+      "burnoutRisk": 0.22,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "information_overload",
+        "cognition_lock",
+        "closed_barrier"
+      ]
+    },
+    {
+      "techniqueKey": "shrine",
+      "techniqueName": "御厨子",
+      "domainName": "伏魔御厨子",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "special",
+      "defaultDomainShape": "open_barrier",
+      "allowedDomainShapes": [
+        "open_barrier"
+      ],
+      "domainEffectBias": [
+        "sure_hit",
+        "auto_attack",
+        "technique_amp"
+      ],
+      "domainBasePower": 0.92,
+      "domainControl": 0.88,
+      "domainStability": 0.76,
+      "domainCost": 0.78,
+      "domainLoad": 0.86,
+      "burnoutRisk": 0.24,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "slash_auto_attack",
+        "open_domain",
+        "area_pressure"
+      ]
+    },
+    {
+      "techniqueKey": "idle_transfiguration",
+      "techniqueName": "无为转变 —— 真人",
+      "domainName": "自闭圆顿裹",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "special",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "sure_hit",
+        "soul_damage",
+        "hard_control"
+      ],
+      "domainBasePower": 0.84,
+      "domainControl": 0.84,
+      "domainStability": 0.7,
+      "domainCost": 0.66,
+      "domainLoad": 0.68,
+      "burnoutRisk": 0.25,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "soul_touch",
+        "transformation_pressure",
+        "closed_barrier"
+      ]
+    },
+    {
+      "techniqueKey": "disaster_flame",
+      "techniqueName": "熔灾火藏 —— 漏瑚",
+      "domainName": "盖棺铁围山",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "high",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "sure_hit",
+        "auto_attack",
+        "technique_amp"
+      ],
+      "domainBasePower": 0.76,
+      "domainControl": 0.68,
+      "domainStability": 0.66,
+      "domainCost": 0.62,
+      "domainLoad": 0.66,
+      "burnoutRisk": 0.27,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "fire",
+        "environment_pressure",
+        "heat_damage"
+      ]
+    },
+    {
+      "techniqueKey": "disaster_ocean",
+      "techniqueName": "潮灾式海 —— 陀艮",
+      "domainName": "荡蕴平线",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "high",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "sure_hit",
+        "auto_attack",
+        "hard_control"
+      ],
+      "domainBasePower": 0.7,
+      "domainControl": 0.64,
+      "domainStability": 0.68,
+      "domainCost": 0.58,
+      "domainLoad": 0.62,
+      "burnoutRisk": 0.26,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "shikigami_auto_attack",
+        "ocean",
+        "swarm_pressure"
+      ]
+    },
+    {
+      "techniqueKey": "ten_shadows",
+      "techniqueName": "十种影法术",
+      "domainName": "嵌合暗翳庭",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "high",
+      "defaultDomainShape": "incomplete_domain",
+      "allowedDomainShapes": [
+        "incomplete_domain",
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "technique_amp",
+        "self_buff",
+        "auto_attack"
+      ],
+      "domainBasePower": 0.58,
+      "domainControl": 0.62,
+      "domainStability": 0.46,
+      "domainCost": 0.54,
+      "domainLoad": 0.58,
+      "burnoutRisk": 0.3,
+      "defaultDuration": 2,
+      "domainThemeTags": [
+        "shadow_environment",
+        "shikigami",
+        "incomplete_domain"
+      ]
+    },
+    {
+      "techniqueKey": "deadly_sentencing",
+      "techniqueName": "诛伏赐死",
+      "domainName": "诛伏赐死",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "special",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "rule_based",
+        "self_buff"
+      ],
+      "domainBasePower": 0.52,
+      "domainControl": 0.82,
+      "domainStability": 0.72,
+      "domainCost": 0.52,
+      "domainLoad": 0.5,
+      "burnoutRisk": 0.2,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "rule_based",
+        "trial_phase",
+        "violence_restriction"
+      ]
+    },
+    {
+      "techniqueKey": "idle_death_gamble",
+      "techniqueName": "坐杀搏徒",
+      "domainName": "坐杀搏徒",
+      "domainNameSource": "official",
+      "domainNameConfirmed": true,
+      "domainPotential": "special",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "rule_based",
+        "self_buff"
+      ],
+      "domainBasePower": 0.48,
+      "domainControl": 0.78,
+      "domainStability": 0.7,
+      "domainCost": 0.44,
+      "domainLoad": 0.54,
+      "burnoutRisk": 0.18,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "rule_based",
+        "probability_loop",
+        "resource_loop"
+      ]
+    },
+    {
+      "techniqueKey": "blood_manipulation",
+      "techniqueName": "赤血操术",
+      "domainName": "赤脉胎河",
+      "domainNameSource": "project_candidate",
+      "domainNameConfirmed": false,
+      "domainPotential": "high",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier",
+        "open_barrier"
+      ],
+      "domainEffectBias": [
+        "sure_hit",
+        "auto_attack",
+        "technique_amp"
+      ],
+      "domainBasePower": 0.62,
+      "domainControl": 0.7,
+      "domainStability": 0.65,
+      "domainCost": 0.58,
+      "domainLoad": 0.6,
+      "burnoutRisk": 0.24,
+      "defaultDuration": 3,
+      "domainThemeTags": [
+        "blood",
+        "project_candidate",
+        "area_pressure"
+      ]
+    },
+    {
+      "techniqueKey": "jet_propulsion",
+      "techniqueName": "喷翼发机",
+      "domainName": "喷翼机巢",
+      "domainNameSource": "project_candidate",
+      "domainNameConfirmed": false,
+      "domainPotential": "low",
+      "defaultDomainShape": "closed_barrier",
+      "allowedDomainShapes": [
+        "closed_barrier"
+      ],
+      "domainEffectBias": [
+        "self_buff",
+        "technique_amp"
+      ],
+      "domainBasePower": 0.18,
+      "domainControl": 0.25,
+      "domainStability": 0.3,
+      "domainCost": 0.28,
+      "domainLoad": 0.36,
+      "burnoutRisk": 0.34,
+      "defaultDuration": 2,
+      "domainThemeTags": [
+        "mobility",
+        "low_potential",
+        "project_candidate"
+      ]
+    }
+  ]
+}

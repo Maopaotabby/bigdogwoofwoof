@@ -1,0 +1,457 @@
+{
+  "schema": "jjk-mechanism-cards",
+  "version": "0.1.4-candidate",
+  "status": "APPROVED_FOR_PROTOTYPE",
+  "approvedByUserAt": "2026-04-26",
+  "scope": "wheel_site instant combat profile",
+  "notes": [
+    "User approved the first executable candidate and will adjust through live feedback.",
+    "This file is data for prototype balancing, not prose canon commentary.",
+    "EX is reserved for states that exceed canon normal ceilings; EX- is used for canon or post-canon extreme but explainable exceptions."
+  ],
+  "rankScale": {
+    "E-": 0,
+    "E": 1,
+    "D": 2,
+    "C": 3,
+    "B": 4,
+    "A": 5,
+    "S": 6,
+    "SS": 7,
+    "SSS": 8,
+    "EX-": 10,
+    "EX": 12
+  },
+  "axisWeights": {
+    "jujutsu": {
+      "cursedEnergyScore": 0.5,
+      "controlScore": 0.27,
+      "efficiencyScore": 0.23,
+      "description": "咒力总量是一切咒术输出和续航的基础，操纵与效率只在总量基础上放大或衰减。"
+    },
+    "body": {
+      "bodyScore": 0.54,
+      "martialScore": 0.46,
+      "description": "体质决定肉体下限与承载，体术决定兑现程度；高体术低体质和高体质低体术都允许存在。"
+    },
+    "insight": {
+      "talentScore": 0.72,
+      "controlScore": 0.16,
+      "martialScore": 0.12,
+      "displayName": "悟性",
+      "description": "悟性代表学习、理解和钻研能力，不再等同于广义天赋。"
+    },
+    "build": {
+      "technique": 0.38,
+      "domain": 0.22,
+      "antiDomain": 0.12,
+      "tool": 0.18,
+      "trait": 0.1,
+      "description": "构筑只负责兑现胜路，不能单独把低基础数值硬拉到天花板。"
+    }
+  },
+  "rankGrowthModel": {
+    "recommended": "piecewise",
+    "reason": "A/S/SS/SSS 在原作表现上不是等距线性增长；S 以后应明显递增，SSS 到 EX/EX- 需要异常门槛。",
+    "numericCurve": {
+      "E-": 0,
+      "E": 1,
+      "D": 2,
+      "C": 3,
+      "B": 4,
+      "A": 5,
+      "S": 6.2,
+      "SS": 7.4,
+      "SSS": 8.8,
+      "EX-": 10.2,
+      "EX": 12
+    }
+  },
+  "poolThresholds": {
+    "weak": {
+      "instantScoreMax": 3.2,
+      "hardOutcome": true,
+      "description": "弱者池；强因果战斗不应靠轻量权重翻盘。"
+    },
+    "normal": {
+      "instantScoreMin": 3.2,
+      "instantScoreMax": 5.8,
+      "hardOutcome": false,
+      "description": "常规术师区间；剧情池只做中等权重修正。"
+    },
+    "strong": {
+      "instantScoreMin": 5.8,
+      "instantScoreMax": 7.8,
+      "hardOutcome": false,
+      "description": "强者区间；提高胜利、存活、达成目标概率，但不能覆盖领域、天敌和剧情锁。"
+    },
+    "special": {
+      "instantScoreMin": 7.8,
+      "hardOutcome": true,
+      "description": "特级或天灾级区间；可影响直接战斗结算，但仍需保留相性、消耗和状态风险。"
+    }
+  },
+  "battlePoolPolicy": {
+    "hardCoverAllowed": [
+      "directDuel",
+      "domainClash",
+      "survivalCheck",
+      "killOrExorciseCheck",
+      "strongCausalBattleOutcome"
+    ],
+    "lightReweightOnly": [
+      "attendance",
+      "factionJoin",
+      "relationship",
+      "politicalResult",
+      "publicEvaluation",
+      "resourceAccess",
+      "randomEncounter",
+      "routeSelection",
+      "endingCommentary"
+    ],
+    "reason": "强度可以决定直接冲突的基本胜算，但不能硬覆盖是否到场、阵营选择、人物关系、政治后果、资源获取和叙事评价。"
+  },
+  "mechanisms": [
+    {
+      "id": "sixEyes",
+      "displayName": "六眼",
+      "match": ["六眼"],
+      "locks": [
+        { "field": "controlScore", "minRank": "SSS", "minScore": 8 },
+        { "field": "efficiencyScore", "minRank": "SSS", "minScore": 8 }
+      ],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.55, "insight": 0.18 },
+        "scoreBonus": 0.28,
+        "tags": ["precision", "efficiencyLock", "domainFriendly"]
+      }
+    },
+    {
+      "id": "twoFacedFourArms",
+      "displayName": "双面四臂",
+      "match": ["双面四臂", "两面四臂"],
+      "locks": [
+        { "field": "cursedEnergyScore", "minRank": "SSS", "minScore": 8 },
+        { "field": "bodyScore", "minRank": "SSS", "minScore": 8 },
+        { "field": "martialScore", "minRank": "SSS", "minScore": 8 }
+      ],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.28, "body": 0.62 },
+        "scoreBonus": 0.38,
+        "tags": ["extraArms", "chantAndHandsignAdvantage", "bodyLock"]
+      }
+    },
+    {
+      "id": "heavenlyRestrictionZeroCE",
+      "displayName": "零咒力天与咒缚",
+      "match": ["零咒力天与咒缚", "零咒力天与暴君", "天与暴君型", "咒力消失"],
+      "locks": [
+        { "field": "bodyScore", "minRank": "SSS", "minScore": 8 },
+        { "field": "martialScore", "minRank": "SSS", "minScore": 8 }
+      ],
+      "instantCombatImpact": {
+        "axisBonus": { "body": 0.75 },
+        "scoreBonus": 0.24,
+        "tags": ["zeroCE", "domainSureHitInvalid", "toolScaling"]
+      }
+    },
+    {
+      "id": "halfHumanHalfCurse",
+      "displayName": "半人半咒",
+      "match": ["半人半咒", "超级受肉体"],
+      "locks": [
+        { "field": "bodyScore", "minRank": "SSS", "minScore": 8 }
+      ],
+      "instantCombatImpact": {
+        "axisBonus": { "body": 0.48 },
+        "scoreBonus": 0.18,
+        "tags": ["bodyLock", "curseHybrid"]
+      }
+    },
+    {
+      "id": "blackFlashAtWill",
+      "displayName": "随意黑闪",
+      "match": ["随意黑闪"],
+      "instantCombatImpact": {
+        "axisBonus": { "insight": 0.55, "build": 0.52 },
+        "scoreBonus": 0.36,
+        "tags": ["blackFlashAtWill", "criticalChain"]
+      }
+    },
+    {
+      "id": "curseObjectSedimentation",
+      "displayName": "不老/咒物沉淀",
+      "match": ["不老/咒物沉淀", "咒物沉淀"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.28, "insight": 0.34, "build": 0.28 },
+        "scoreBonus": 0.22,
+        "tags": ["curseObjectSedimentation", "postCanonAccumulation"]
+      }
+    },
+    {
+      "id": "exAnchor",
+      "displayName": "EX锚点",
+      "match": ["EX锚点"],
+      "instantCombatImpact": {
+        "axisBonus": { "insight": 0.28, "build": 0.22 },
+        "scoreBonus": 0.18,
+        "tags": ["exAnchor"]
+      }
+    },
+    {
+      "id": "bindingMastery",
+      "displayName": "善用束缚",
+      "match": ["善用束缚", "束缚高手", "束缚兑现", "会精明利用束缚"],
+      "instantCombatImpact": {
+        "axisBonus": { "insight": 0.16, "build": 0.16 },
+        "scoreBonus": 0.08,
+        "tags": ["bindingMastery", "conditionalBoost", "highExecution"]
+      }
+    },
+    {
+      "id": "tenShadowsAdaptationPackage",
+      "displayName": "十影适应资源",
+      "match": ["十种影法术", "十影", "魔虚罗", "嵌合兽", "顎吐"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.06, "insight": 0.14, "build": 0.28 },
+        "scoreBonus": 0.08,
+        "tags": ["tenShadowsResource", "mahoragaAdaptation", "shikigamiResource", "conditionalResource"]
+      }
+    },
+    {
+      "id": "worldSlashByMahoragaModel",
+      "displayName": "世界斩（魔虚罗参照）",
+      "match": ["世界斩", "魔虚罗参照"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": 0.22 },
+        "scoreBonus": 0.1,
+        "tags": ["conditionalWorldSlash", "spaceCut", "bindingExecution"]
+      }
+    },
+    {
+      "id": "higurumaRuleDomain",
+      "displayName": "日车式规则审判",
+      "match": ["规则类（日车）", "日车领域", "审判领域"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": 0.35 },
+        "scoreBonus": 0.14,
+        "tags": ["ruleConfiscation", "highDisruption", "domainFriendly"]
+      }
+    },
+    {
+      "id": "chargedCursedEnergy",
+      "displayName": "电荷咒力",
+      "match": ["电荷咒力", "带电咒力", "闪电属性咒力", "雷电属性咒力"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.18, "build": 0.32 },
+        "scoreBonus": 0.26,
+        "tags": ["chargedCursedEnergy", "lightningCursedEnergy", "noDomainLethality"]
+      }
+    },
+    {
+      "id": "domainBurnoutState",
+      "displayName": "领域后术式熔断",
+      "match": ["领域熔断", "领域后术式熔断", "术式烧断", "烧断术式"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": -0.34, "build": -0.76 },
+        "scoreBonus": -0.42,
+        "tags": ["domainBurnout", "temporaryNerf", "techniqueUnavailable"]
+      }
+    },
+    {
+      "id": "confiscatedToolState",
+      "displayName": "咒具没收状态",
+      "match": ["咒具没收状态", "被没收咒具", "神武解被没收", "咒具被没收"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": -0.34 },
+        "scoreBonus": -0.26,
+        "tags": ["toolConfiscated", "temporaryNerf", "confiscation"]
+      }
+    },
+    {
+      "id": "confiscatedTechniqueState",
+      "displayName": "术式没收状态",
+      "match": ["术式没收状态", "被没收术式", "术式被没收"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": -0.42, "build": -0.68 },
+        "scoreBonus": -0.5,
+        "tags": ["techniqueConfiscated", "temporaryNerf", "confiscation"]
+      }
+    },
+    {
+      "id": "domainExpansion",
+      "displayName": "领域展开",
+      "match": ["领域展开"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": 0.58 },
+        "scoreBonus": 0.34,
+        "tags": ["domain", "sureHit"]
+      }
+    },
+    {
+      "id": "yujiFarmDomain",
+      "displayName": "神秘农家乐（虎杖悠仁领域变体）",
+      "match": ["神秘农家乐"],
+      "instantCombatImpact": {
+        "axisBonus": { "body": 0.12, "build": 0.78 },
+        "scoreBonus": 0.45,
+        "tags": ["domain", "sureHit", "yujiDomainVariant", "easterEggStrength"]
+      }
+    },
+    {
+      "id": "simpleDomain",
+      "displayName": "简易领域",
+      "match": ["简易领域"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": 0.18 },
+        "scoreBonus": 0.1,
+        "tags": ["antiDomain", "smallPenaltyInDomain"]
+      }
+    },
+    {
+      "id": "hollowWickerBasket",
+      "displayName": "弥虚葛笼",
+      "match": ["弥虚葛笼"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": 0.12 },
+        "scoreBonus": 0.06,
+        "tags": ["antiDomain", "largePenaltyInDomain"]
+      }
+    },
+    {
+      "id": "cursedSpiritBody",
+      "displayName": "咒灵之躯",
+      "match": ["咒灵之躯"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.18, "body": 0.12 },
+        "scoreBonus": 0.08,
+        "disruption": 0.2,
+        "tags": ["curseBody", "positiveEnergyWeakness"]
+      }
+    },
+    {
+      "id": "disasterCurse",
+      "displayName": "灾害咒灵",
+      "match": ["灾害咒灵"],
+      "instantCombatImpact": {
+        "axisBonus": { "jujutsu": 0.32, "build": 0.24 },
+        "scoreBonus": 0.16,
+        "disruption": 0.35,
+        "tags": ["disasterCurse", "largeScaleOutput"]
+      }
+    },
+    {
+      "id": "soulTransfiguration",
+      "displayName": "无为转变/灵魂干涉",
+      "match": ["无为转变", "灵魂干涉"],
+      "instantCombatImpact": {
+        "axisBonus": { "build": 0.52, "insight": 0.18 },
+        "scoreBonus": 0.22,
+        "disruption": 1.8,
+        "tags": ["soulManipulation", "highDisruption", "touchThreat"]
+      }
+    },
+    {
+      "id": "positiveEnergyOutput",
+      "displayName": "反转术式外放",
+      "match": ["反转术式外放", "正能量外放"],
+      "instantCombatImpact": {
+        "disruption": 0.4,
+        "tags": ["reverseCursedTechnique", "positiveEnergyOutput", "antiCurse"]
+      }
+    }
+  ],
+  "cursedTools": [
+    {
+      "id": "invertedSpear",
+      "displayName": "天逆鉾",
+      "match": ["天逆鉾", "天逆"],
+      "loadoutTier": "signatureTool",
+      "instantCombatImpact": {
+        "scoreBonus": 0.42,
+        "tags": ["techniqueNullification", "meleeContactRequired"]
+      }
+    },
+    {
+      "id": "blackRope",
+      "displayName": "黑绳",
+      "match": ["黑绳"],
+      "loadoutTier": "consumableKit",
+      "instantCombatImpact": {
+        "scoreBonus": 0.34,
+        "tags": ["techniqueDisruption", "consumable"]
+      }
+    },
+    {
+      "id": "splitSoulKatana",
+      "displayName": "释魂刀",
+      "match": ["释魂刀"],
+      "loadoutTier": "signatureTool",
+      "instantCombatImpact": {
+        "scoreBonus": 0.38,
+        "tags": ["soulDamage", "perceptionRequired"]
+      }
+    },
+    {
+      "id": "playfulCloud",
+      "displayName": "游云",
+      "match": ["游云"],
+      "loadoutTier": "signatureTool",
+      "instantCombatImpact": {
+        "scoreBonus": 0.24,
+        "tags": ["physicalScaling"]
+      }
+    },
+    {
+      "id": "chainOfThousandMiles",
+      "displayName": "万里锁",
+      "match": ["万里锁"],
+      "loadoutTier": "partialKit",
+      "instantCombatImpact": {
+        "scoreBonus": 0.14,
+        "tags": ["rangeExtension", "toolCombo"]
+      }
+    },
+    {
+      "id": "kamutoke",
+      "displayName": "神武解",
+      "match": ["神武解"],
+      "loadoutTier": "signatureTool",
+      "instantCombatImpact": {
+        "scoreBonus": 0.28,
+        "tags": ["elementalOutput", "confiscatable"]
+      }
+    },
+    {
+      "id": "hiten",
+      "displayName": "飞天",
+      "match": ["飞天"],
+      "loadoutTier": "unknown",
+      "instantCombatImpact": {
+        "scoreBonus": 0.18,
+        "tags": ["unknown", "unresolved"]
+      }
+    },
+    {
+      "id": "dragonBone",
+      "displayName": "龙骨",
+      "match": ["龙骨"],
+      "loadoutTier": "signatureTool",
+      "instantCombatImpact": {
+        "scoreBonus": 0.2,
+        "tags": ["kineticCharge", "physicalScaling"]
+      }
+    },
+    {
+      "id": "prisonRealm",
+      "displayName": "狱门疆",
+      "match": ["狱门疆"],
+      "loadoutTier": "scenarioTool",
+      "instantCombatImpact": {
+        "scoreBonus": 0.22,
+        "tags": ["scenarioLock", "notGenericCombat"]
+      }
+    }
+  ]
+}

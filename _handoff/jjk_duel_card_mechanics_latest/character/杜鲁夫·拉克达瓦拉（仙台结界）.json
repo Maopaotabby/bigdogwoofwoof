@@ -1,0 +1,24 @@
+{
+  "characterId": "dhruv_lakdawalla_sendai_candidate",
+  "displayName": "杜鲁夫·拉克达瓦拉（仙台结界）",
+  "stage": "sendai",
+  "sourceLayer": "原作本篇-死灭回游/仙台结界",
+  "techniqueName": "式神轨迹领域",
+  "techniqueDescription": "操控大型式神，其移动轨迹构成领域效果，适合范围封锁、阵地压迫与战术消耗。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "A"
+  },
+  "officialGrade": "古代泳者",
+  "powerTier": "grade1_shikigami",
+  "specialHandTags": [
+    "shikigami_domain_track"
+  ],
+  "domainProfile": "轨迹型领域效果",
+  "notes": "不按生前征服期拆分，仅锚定仙台结界信息。",
+  "status": "CANDIDATE"
+}

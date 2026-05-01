@@ -1,0 +1,25 @@
+{
+  "characterId": "ogami_granny_shibuya_candidate",
+  "displayName": "参拜婆（涩谷）",
+  "stage": "shibuya",
+  "sourceLayer": "原作本篇-涩谷事变",
+  "techniqueName": "降灵术",
+  "techniqueDescription": "通过媒介与亲属信息降下死者肉体或灵魂信息，准备充分时可制造高危战斗代理。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "D",
+    "martial": "D",
+    "talent": "B"
+  },
+  "officialGrade": "诅咒师",
+  "powerTier": "support_preparation",
+  "specialHandTags": [
+    "seance",
+    "preparation"
+  ],
+  "domainProfile": "无",
+  "notes": "不拆分伏黑甚尔降灵结果；降灵对象由机制/事件模拟。",
+  "status": "CANDIDATE"
+}

@@ -1,0 +1,24 @@
+{
+  "characterId": "junpei_yoshino_main_start_candidate",
+  "displayName": "吉野顺平（剧情开始）",
+  "stage": "main_start",
+  "sourceLayer": "原作本篇-幼鱼与逆罚",
+  "techniqueName": "淀月",
+  "techniqueDescription": "以水母式神释放毒素和牵制，适合低阶奇袭与中距离干扰。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "D",
+    "martial": "D",
+    "talent": "C"
+  },
+  "officialGrade": "未评级",
+  "powerTier": "grade4_candidate",
+  "specialHandTags": [
+    "shikigami_poison"
+  ],
+  "domainProfile": "无",
+  "notes": "按刚觉醒阶段锚定，不按潜力完全展开处理。",
+  "status": "CANDIDATE"
+}

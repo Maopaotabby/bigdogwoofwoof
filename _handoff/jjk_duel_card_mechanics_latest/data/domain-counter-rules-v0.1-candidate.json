@@ -1,0 +1,159 @@
+{
+  "schema": "jjk-domain-counter-rules",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "scope": "Anti-domain response and domain clash framework for modular JJK duel domains.",
+  "notes": [
+    "Anti-domain success does not mean automatic victory.",
+    "For ordinary domain effects, successful contest can remove sure_hit, auto_attack, hard_control, and soul_damage.",
+    "self_buff is not directly removed by ordinary anti-domain success.",
+    "technique_amp is partially reduced by ordinary anti-domain success.",
+    "rule_based cannot be reactively negated in the same round unless the countermeasure was already active at least one round earlier."
+  ],
+  "antiDomainMethods": [
+    {
+      "id": "domain_expansion",
+      "displayName": "领域展开",
+      "responseClass": "domain_clash",
+      "qualityStats": [
+        "cursedEnergy",
+        "control",
+        "efficiency",
+        "techniquePower",
+        "domainBasePower",
+        "domainControl",
+        "domainStability"
+      ],
+      "ordinaryEffectInteraction": {
+        "sure_hit": "contest_or_remove",
+        "auto_attack": "contest_or_remove",
+        "hard_control": "contest_or_remove",
+        "soul_damage": "contest_or_remove",
+        "self_buff": "not_removed",
+        "technique_amp": "partial_reduce"
+      },
+      "ruleBasedInteraction": "Only preexisting domain expansion can contest rule_based. Same-round reaction enters rule subphase instead."
+    },
+    {
+      "id": "simple_domain",
+      "displayName": "简易领域",
+      "responseClass": "anti_sure_hit_shell",
+      "qualityStats": [
+        "control",
+        "efficiency",
+        "talent"
+      ],
+      "ordinaryEffectInteraction": {
+        "sure_hit": "remove_or_reduce",
+        "auto_attack": "reduce",
+        "hard_control": "reduce",
+        "soul_damage": "remove_or_reduce",
+        "self_buff": "not_removed",
+        "technique_amp": "minor_reduce"
+      },
+      "ruleBasedInteraction": "Only preexisting simple domain can contest or delay rule_based."
+    },
+    {
+      "id": "domain_amplification",
+      "displayName": "领域展延",
+      "responseClass": "close_range_technique_nullification",
+      "qualityStats": [
+        "control",
+        "efficiency",
+        "body",
+        "martial"
+      ],
+      "ordinaryEffectInteraction": {
+        "sure_hit": "reduce",
+        "auto_attack": "reduce",
+        "hard_control": "reduce",
+        "soul_damage": "reduce",
+        "self_buff": "not_removed",
+        "technique_amp": "partial_reduce"
+      },
+      "ruleBasedInteraction": "Only preexisting domain amplification can weaken rule_based; it does not fully replace rule contest."
+    },
+    {
+      "id": "hollow_wicker_basket",
+      "displayName": "弥虚葛笼",
+      "responseClass": "anti_domain_guard",
+      "qualityStats": [
+        "control",
+        "efficiency",
+        "cursedEnergy"
+      ],
+      "ordinaryEffectInteraction": {
+        "sure_hit": "remove_or_reduce",
+        "auto_attack": "reduce",
+        "hard_control": "reduce",
+        "soul_damage": "remove_or_reduce",
+        "self_buff": "not_removed",
+        "technique_amp": "minor_reduce"
+      },
+      "tradeoff": "Large combat penalty while maintained.",
+      "ruleBasedInteraction": "Only preexisting hollow wicker basket can contest or delay rule_based."
+    },
+    {
+      "id": "falling_blossom_emotion",
+      "displayName": "落花之情",
+      "responseClass": "automatic_counter_to_sure_hit",
+      "qualityStats": [
+        "control",
+        "martial",
+        "efficiency"
+      ],
+      "ordinaryEffectInteraction": {
+        "sure_hit": "counter_on_contact",
+        "auto_attack": "counter_or_reduce",
+        "hard_control": "minor_reduce",
+        "soul_damage": "reduce_if_contact_based",
+        "self_buff": "not_removed",
+        "technique_amp": "not_removed"
+      },
+      "ruleBasedInteraction": "Only preexisting falling blossom emotion can participate in rule_based contest; same-round reaction is insufficient."
+    }
+  ],
+  "domainClashScoreCandidate": {
+    "description": "Candidate scoring inputs for domain expansion vs domain expansion. This is not yet a final formula.",
+    "inputs": {
+      "cursedEnergy": 0.18,
+      "control": 0.24,
+      "efficiency": 0.16,
+      "techniquePower": 0.16,
+      "domainBasePower": 0.12,
+      "domainControl": 0.08,
+      "domainStability": 0.06
+    },
+    "shapeModifiers": {
+      "incomplete_domain": -0.18,
+      "closed_barrier": 0,
+      "open_barrier": 0.08,
+      "switchable_barrier": 0.14
+    },
+    "completionModifiers": {
+      "complete_domain": 0,
+      "advanced_domain_application": 0.08,
+      "barrier_genius": 0.14
+    }
+  },
+  "ordinaryCounterSuccessResult": {
+    "removeEffects": [
+      "sure_hit",
+      "auto_attack",
+      "hard_control",
+      "soul_damage"
+    ],
+    "notRemoved": [
+      "self_buff"
+    ],
+    "partiallyReduced": [
+      "technique_amp"
+    ]
+  },
+  "ruleBasedCounterWindow": {
+    "sameRoundReactiveCounter": "not_allowed",
+    "minimumPreexistingRounds": 1,
+    "onNoPreexistingCounter": "enter_rule_subphase",
+    "onPreexistingCounter": "contest_or_delay_rule_subphase"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "characterId": "jinichi_zenin_perfect_preparation_candidate",
+  "displayName": "禅院甚一（禅院家）",
+  "stage": "perfect_preparation",
+  "sourceLayer": "原作本篇-禅院家/葦を啣む",
+  "techniqueName": "巨大咒力拳",
+  "techniqueDescription": "生成大型咒力拳进行中近距离打击和压制，偏重火力与区域威慑。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "A",
+    "talent": "B"
+  },
+  "officialGrade": "特别一级术师",
+  "powerTier": "specialGrade1",
+  "specialHandTags": [
+    "zenin_power_fist"
+  ],
+  "domainProfile": "无",
+  "notes": "按特别一级家族战力锚定。",
+  "status": "CANDIDATE"
+}

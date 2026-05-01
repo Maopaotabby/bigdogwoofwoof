@@ -1,0 +1,24 @@
+{
+  "characterId": "kamo_noritoshi_culling_candidate",
+  "displayName": "加茂宪纪（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-京都校/死灭回游",
+  "techniqueName": "赤血操术",
+  "techniqueDescription": "以自身血液进行穿血、赤鳞跃动、血刃与中距离牵制，资源消耗与身体负担明显。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "A",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "B",
+    "talent": "B"
+  },
+  "officialGrade": "准一级术师候补",
+  "powerTier": "semiGrade1",
+  "specialHandTags": [
+    "blood_manipulation"
+  ],
+  "domainProfile": "无",
+  "notes": "按稳定血操术使用者处理，不拆分赤鳞跃动等短时强化。",
+  "status": "CANDIDATE"
+}

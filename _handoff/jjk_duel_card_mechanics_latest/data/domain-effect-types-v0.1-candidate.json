@@ -1,0 +1,196 @@
+{
+  "schema": "jjk-domain-effect-types",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "scope": "Reusable main and attached domain effect type definitions for JJK duel cards.",
+  "notes": [
+    "Domain main effect and domain attached effects are separate pools.",
+    "rule_based may only appear as domainMainEffect; it must not appear in the attached effect pool.",
+    "sure_hit means evasion fails; it does not bypass block, defense, resistance, damage reduction, or counterplay.",
+    "Successful anti-domain contest can remove sure_hit, auto_attack, hard_control, and soul_damage effects.",
+    "Values are schema and balance candidates, not final combat formulas."
+  ],
+  "mainEffectPool": [
+    "sure_hit",
+    "auto_attack",
+    "self_buff",
+    "technique_amp",
+    "soul_damage",
+    "hard_control",
+    "rule_based"
+  ],
+  "attachedEffectPool": [
+    "sure_hit",
+    "auto_attack",
+    "self_buff",
+    "technique_amp",
+    "soul_damage",
+    "hard_control"
+  ],
+  "domainEffectTypes": [
+    {
+      "id": "sure_hit",
+      "displayName": "必中",
+      "category": "domain_pressure",
+      "definition": "领域内目标若没有使用领域展开、简易领域、领域展延、弥虚葛笼、落花之情等手段成功对抗，则体术闪避判定自动失败。",
+      "doesNotBypass": [
+        "block",
+        "damageReduction",
+        "defense",
+        "resistance",
+        "counterAction"
+      ],
+      "counteredBySuccessfulAntiDomain": true,
+      "fields": {
+        "sureHitQuality": "number",
+        "targetingMode": "single / area / rule_target",
+        "evasionSuppressed": true,
+        "damageStillResolvedNormally": true
+      }
+    },
+    {
+      "id": "auto_attack",
+      "displayName": "自动攻击",
+      "category": "domain_pressure",
+      "definition": "领域维持期间，每回合自动触发一次领域基础攻击。",
+      "counteredBySuccessfulAntiDomain": true,
+      "fields": {
+        "baseDamage": "number",
+        "scalingStat": "jujutsu / ceMaxOutput / techniquePower",
+        "triggerTiming": "round_start / round_end",
+        "canBeBlockedByAntiDomain": true
+      }
+    },
+    {
+      "id": "self_buff",
+      "displayName": "增幅自身",
+      "category": "self_amplification",
+      "definition": "领域内提高术者自身资源或基础轴。可增加咒力回复、稳定、生命恢复、体术压制、行动上限等。",
+      "counteredBySuccessfulAntiDomain": false,
+      "fields": {
+        "ceRegenMultiplier": "number",
+        "hpRegen": "number",
+        "stabilityRegen": "number",
+        "cardDrawBonus": "number",
+        "maxPlayableCardsBonus": "number",
+        "actionCostReduction": "number"
+      }
+    },
+    {
+      "id": "technique_amp",
+      "displayName": "增幅咒术类",
+      "category": "technique_amplification",
+      "definition": "领域内术式卡牌获得倍率加成，例如伤害倍率、最大咒力输出加成、术式命中加成、持续回合增加或消耗降低。",
+      "counteredBySuccessfulAntiDomain": "partial",
+      "suggestedMultiplierBands": {
+        "incomplete_domain": "1.10-1.20",
+        "complete_domain": "1.25-1.50",
+        "advanced_domain_application": "1.50+",
+        "barrier_genius": "1.50+",
+        "special_anomaly": "configured_per_technique"
+      },
+      "fields": {
+        "damageMultiplier": "number",
+        "ceMaxOutputBonus": "number",
+        "techniquePowerMultiplier": "number",
+        "durationBonus": "number",
+        "ceCostReduction": "number"
+      }
+    },
+    {
+      "id": "soul_damage",
+      "displayName": "打击灵魂类",
+      "category": "soul_system",
+      "definition": "引入灵魂血条。所有咒术师默认 soulHp = 100；bodyHp 或 soulHp 任一归零都造成死亡/败北。",
+      "defaultBodyHp": 100,
+      "defaultSoulHp": 100,
+      "counteredBySuccessfulAntiDomain": true,
+      "fields": {
+        "soulDamage": "number",
+        "soulHpMaxBonus": "number",
+        "bypassPhysicalDefense": "boolean",
+        "affectsIncarnatedSorcerer": "boolean",
+        "affectsVesselBond": "boolean",
+        "healability": "none / special_only / rare"
+      }
+    },
+    {
+      "id": "hard_control",
+      "displayName": "强控类",
+      "category": "control",
+      "definition": "领域内施加行动限制、手札封禁、眩晕、出牌上限下降、卡牌费用上升、指定类型卡不可用等。",
+      "counteredBySuccessfulAntiDomain": true,
+      "balanceNote": "强控类默认偏保守，避免破坏游戏体验。",
+      "fields": {
+        "stunTurns": "number",
+        "maxPlayableCardsPenalty": "number",
+        "cardTypeBan": "array",
+        "actionCostIncrease": "number",
+        "forcedDiscard": "number",
+        "handFreeze": "boolean",
+        "mobilityLock": "boolean"
+      }
+    },
+    {
+      "id": "rule_based",
+      "displayName": "规则类",
+      "category": "rule_subphase",
+      "definition": "规则类领域不是普通攻击，不应被当回合反应式反领域手段直接规避。",
+      "onlyInMainEffectPool": true,
+      "cannotBeReactivelyNegatedBy": [
+        "domain_expansion",
+        "simple_domain",
+        "domain_amplification",
+        "hollow_wicker_basket",
+        "falling_blossom_emotion"
+      ],
+      "canBePreemptivelyContestedBy": [
+        "domain_expansion",
+        "simple_domain",
+        "domain_amplification",
+        "hollow_wicker_basket",
+        "falling_blossom_emotion"
+      ],
+      "allowedWith": [
+        "self_buff"
+      ],
+      "exclusiveWith": [
+        "sure_hit",
+        "auto_attack",
+        "technique_amp",
+        "soul_damage",
+        "hard_control"
+      ],
+      "userChoiceRequired": true,
+      "choiceRule": "If rule_based is kept, conflicting effects are removed or disabled and only self_buff may coexist. If rule_based is not kept, fallback behavior remains CANDIDATE and requires user confirmation.",
+      "fields": {
+        "ruleDescription": "string",
+        "trialOrGameSubphase": "string",
+        "failurePenalty": "object",
+        "successReward": "object"
+      }
+    }
+  ],
+  "compatibilityRules": [
+    {
+      "id": "rule_based_only_with_self_buff",
+      "description": "rule_based can coexist only with self_buff."
+    },
+    {
+      "id": "sure_hit_auto_attack_cap",
+      "description": "sure_hit and auto_attack may coexist, but total pressure must be capped by domainBasePower and domainPotential."
+    },
+    {
+      "id": "self_buff_technique_amp_allowed",
+      "description": "self_buff and technique_amp may coexist."
+    },
+    {
+      "id": "soul_damage_combo_limit",
+      "description": "soul_damage should not coexist with strong hard_control and high-multiplier auto_attack unless domainPotential is special."
+    },
+    {
+      "id": "low_potential_cap",
+      "description": "Low domainPotential limits effect quality even when the wheel grants a strong effect type."
+    }
+  ]
+}

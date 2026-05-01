@@ -1,0 +1,52 @@
+{
+  "name": "米格尔（0卷，黑绳）",
+  "hp": 7,
+  "mp": 6,
+  "四轴": {
+    "咒术": 6,
+    "肉体": 7.46,
+    "悟性": 6.24,
+    "构筑": 1.56
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "miguel_volume0",
+  "displayName": "米格尔（0卷，黑绳）",
+  "stage": "volume0",
+  "baseStats": {
+    "cursedEnergy": "S",
+    "control": "S",
+    "efficiency": "S",
+    "body": "SS",
+    "martial": "SSS",
+    "talent": "S",
+    "cursedTechnique": 6,
+    "physical": 7.46,
+    "perception": 6.24,
+    "construction": 1.56
+  },
+  "loadout": [
+    "黑绳"
+  ],
+  "techniquePower": "B",
+  "officialGrade": "诅咒师",
+  "powerTier": "specialGrade",
+  "notes": "按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "advancedTechniques": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

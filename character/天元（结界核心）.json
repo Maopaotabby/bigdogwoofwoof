@@ -1,0 +1,25 @@
+{
+  "characterId": "tengen_barrier_candidate",
+  "displayName": "天元（结界核心）",
+  "stage": "main_story",
+  "sourceLayer": "原作本篇-结界/羂索线",
+  "techniqueName": "不死与结界维护",
+  "techniqueDescription": "不死术式与全国结界维护构成战略级系统功能；直接战斗输出很低。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "SS",
+    "efficiency": "A",
+    "body": "E",
+    "martial": "E",
+    "talent": "SS"
+  },
+  "officialGrade": "结界核心",
+  "powerTier": "strategic_support",
+  "specialHandTags": [
+    "barrier_core",
+    "immortality"
+  ],
+  "domainProfile": "结界核心",
+  "notes": "不按进化/同化状态拆分；战斗卡应体现战略支援而非正面输出。",
+  "status": "CANDIDATE"
+}

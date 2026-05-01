@@ -1,0 +1,56 @@
+{
+  "name": "乙骨忧太（0卷，真里香）",
+  "hp": 4,
+  "mp": 10,
+  "四轴": {
+    "咒术": 7.5,
+    "肉体": 4,
+    "悟性": 7.04,
+    "构筑": 0
+  },
+  "特殊手札": [
+    "okkotsu_rika_copy"
+  ],
+  "specialHandTags": [
+    "okkotsu_rika_copy"
+  ],
+  "characterId": "yuta_okkotsu_volume0_true_rika",
+  "displayName": "乙骨忧太（0卷，真里香）",
+  "stage": "volume0",
+  "baseStats": {
+    "cursedEnergy": "EX-",
+    "control": "A",
+    "efficiency": "A",
+    "body": "B",
+    "martial": "B",
+    "talent": "SSS",
+    "cursedTechnique": 7.5,
+    "physical": 4,
+    "perception": 7.04,
+    "construction": 0
+  },
+  "externalResource": "真里香",
+  "advancedTechniques": [
+    "反转术式外放"
+  ],
+  "officialGrade": "特级",
+  "powerTier": "specialGrade",
+  "notes": "通过相互诅咒形成近乎无限咒力来源；0卷后真里香成佛，资源形态下降。",
+  "techniquePower": "无",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

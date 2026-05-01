@@ -1,0 +1,24 @@
+{
+  "characterId": "ino_takuma_shibuya_candidate",
+  "displayName": "猪野琢真（涩谷）",
+  "stage": "shibuya",
+  "sourceLayer": "原作本篇-涩谷事变",
+  "techniqueName": "降灵术来访瑞兽",
+  "techniqueDescription": "以面具作为媒介调用瑞兽序号进行支援、突击、机动与范围压制；强度依赖准备、距离与命中窗口。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "A",
+    "talent": "B"
+  },
+  "officialGrade": "二级术师",
+  "powerTier": "grade2",
+  "specialHandTags": [
+    "auspicious_beasts"
+  ],
+  "domainProfile": "无",
+  "notes": "不拆分瑞兽序号为独立角色卡；具体瑞兽效果由卡牌/机制标签模拟。",
+  "status": "CANDIDATE"
+}

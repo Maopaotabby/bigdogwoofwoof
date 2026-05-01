@@ -1,0 +1,59 @@
+{
+  "name": "伏黑甚尔（怀玉，完整咒具）",
+  "hp": 8,
+  "mp": 0,
+  "四轴": {
+    "咒术": 0,
+    "肉体": 8,
+    "悟性": 6,
+    "构筑": 0.2
+  },
+  "特殊手札": [
+    "zero_ce_heavenly_restriction"
+  ],
+  "specialHandTags": [
+    "zero_ce_heavenly_restriction"
+  ],
+  "characterId": "toji_fushiguro_hidden_inventory",
+  "displayName": "伏黑甚尔（怀玉，完整咒具）",
+  "stage": "hiddenInventory",
+  "baseStats": {
+    "cursedEnergy": "E-",
+    "control": "E-",
+    "efficiency": "E-",
+    "body": "SSS",
+    "martial": "SSS",
+    "talent": "SS",
+    "cursedTechnique": 0,
+    "physical": 8,
+    "perception": 6,
+    "construction": 0.2
+  },
+  "innateTraits": [
+    "零咒力天与暴君型天与咒缚"
+  ],
+  "loadout": [
+    "天逆鉾",
+    "万里锁",
+    "释魂刀",
+    "武器库咒灵"
+  ],
+  "officialGrade": "无",
+  "powerTier": "topTierPhysical",
+  "notes": "完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。",
+  "techniquePower": "无",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "狗卷棘（0卷）",
+  "hp": 3,
+  "mp": 5,
+  "四轴": {
+    "咒术": 4.5,
+    "肉体": 3,
+    "悟性": 4.6,
+    "构筑": 1.92
+  },
+  "特殊手札": [],
+  "specialHandTags": [],
+  "characterId": "inumaki_toge_volume0",
+  "displayName": "狗卷棘（0卷）",
+  "stage": "volume0",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "B",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "A",
+    "cursedTechnique": 4.5,
+    "physical": 3,
+    "perception": 4.6,
+    "construction": 1.92
+  },
+  "innateTraits": [
+    "咒言"
+  ],
+  "techniquePower": "A",
+  "officialGrade": "二级",
+  "powerTier": "grade2Plus",
+  "notes": "咒言是强控制术式，但副作用和身体基础限制持续战。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "domainProfile": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

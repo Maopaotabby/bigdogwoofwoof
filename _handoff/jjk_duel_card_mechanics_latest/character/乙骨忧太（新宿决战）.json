@@ -1,0 +1,56 @@
+{
+  "name": "乙骨忧太（新宿决战）",
+  "hp": 6,
+  "mp": 8,
+  "四轴": {
+    "咒术": 7.27,
+    "肉体": 6.46,
+    "悟性": 7.72,
+    "构筑": 3.26
+  },
+  "特殊手札": [
+    "okkotsu_rika_copy"
+  ],
+  "specialHandTags": [
+    "okkotsu_rika_copy"
+  ],
+  "characterId": "yuta_okkotsu_shinjuku",
+  "displayName": "乙骨忧太（新宿决战）",
+  "stage": "shinjuku",
+  "baseStats": {
+    "cursedEnergy": "SSS",
+    "control": "SS",
+    "efficiency": "S",
+    "body": "S",
+    "martial": "SS",
+    "talent": "SSS",
+    "cursedTechnique": 7.27,
+    "physical": 6.46,
+    "perception": 7.72,
+    "construction": 3.26
+  },
+  "externalResource": "里香资源",
+  "advancedTechniques": [
+    "反转术式外放"
+  ],
+  "techniquePower": "SSS",
+  "domainProfile": "领域展开：真赝相爱",
+  "officialGrade": "特级",
+  "powerTier": "specialGrade",
+  "notes": "正传特级术师锚点；里香资源和模仿构成高上限，但不使用0卷真里香的近无限咒力。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "visibleGrade": "无",
+  "innateTraits": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

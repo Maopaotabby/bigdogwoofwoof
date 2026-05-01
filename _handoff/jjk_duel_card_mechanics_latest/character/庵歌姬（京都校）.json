@@ -1,0 +1,26 @@
+{
+  "characterId": "utahime_iori_kyoto_candidate",
+  "displayName": "庵歌姬（京都校）",
+  "stage": "kyoto_school",
+  "sourceLayer": "原作本篇-京都校/新宿决战",
+  "techniqueName": "单独禁区",
+  "techniqueDescription": "通过舞、手印、咏唱、乐曲等完整步骤提高目标咒力输出；单人战斗不强，团队蓄力价值高。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "A",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "A"
+  },
+  "officialGrade": "准一级术师",
+  "powerTier": "support_grade1",
+  "specialHandTags": [
+    "output_buff",
+    "ritual_setup",
+    "team_support"
+  ],
+  "domainProfile": "无",
+  "notes": "不把协同增幅拆成独立形态；由支援卡/蓄力卡模拟。",
+  "status": "CANDIDATE"
+}

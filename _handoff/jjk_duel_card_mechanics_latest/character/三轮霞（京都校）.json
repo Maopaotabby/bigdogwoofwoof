@@ -1,0 +1,25 @@
+{
+  "characterId": "miwa_kasumi_kyoto_candidate",
+  "displayName": "三轮霞（京都校）",
+  "stage": "kyoto_school",
+  "sourceLayer": "原作本篇-京都校/涩谷事变",
+  "techniqueName": "简易领域",
+  "techniqueDescription": "以新阴流简易领域和拔刀术进行防守反击，基础术式输出低但反领域价值明确。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "B",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "B",
+    "talent": "C"
+  },
+  "officialGrade": "三级术师",
+  "powerTier": "grade3_defense",
+  "specialHandTags": [
+    "simple_domain",
+    "sword_draw"
+  ],
+  "domainProfile": "简易领域",
+  "notes": "非生得术式型角色，按稳定系统功能写入。",
+  "status": "CANDIDATE"
+}

@@ -1,0 +1,25 @@
+{
+  "characterId": "yuka_okkotsu_modulo_candidate",
+  "displayName": "乙骨忧花（Modulo）",
+  "stage": "modulo",
+  "sourceLayer": "Modulo扩展设定",
+  "techniqueName": "乙骨系咒力适性",
+  "techniqueDescription": "Modulo扩展候选卡；按乙骨系高咒力适性、支援与潜在复制/连接资源的系统锚点处理。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "B",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "A"
+  },
+  "officialGrade": "未评级",
+  "powerTier": "modulo_candidate",
+  "specialHandTags": [
+    "modulo",
+    "okkotsu_lineage"
+  ],
+  "domainProfile": "无",
+  "notes": "低证据候选；不视为最终canon，只作为系统原型占位。",
+  "status": "CANDIDATE"
+}

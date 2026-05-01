@@ -1,0 +1,24 @@
+{
+  "characterId": "ogi_zenin_perfect_preparation_candidate",
+  "displayName": "禅院扇（禅院家）",
+  "stage": "perfect_preparation",
+  "sourceLayer": "原作本篇-禅院家/葦を啣む",
+  "techniqueName": "焦眉之赳",
+  "techniqueDescription": "以刀身和火焰式咒力输出进行近战压制，依赖剑术和家传战斗经验。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "A",
+    "talent": "B"
+  },
+  "officialGrade": "特别一级术师",
+  "powerTier": "specialGrade1",
+  "specialHandTags": [
+    "zenin_sword_fire"
+  ],
+  "domainProfile": "无",
+  "notes": "不按情绪/亲族对战状态拆分。",
+  "status": "CANDIDATE"
+}

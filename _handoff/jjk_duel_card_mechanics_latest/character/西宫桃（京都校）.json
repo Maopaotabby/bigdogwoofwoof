@@ -1,0 +1,24 @@
+{
+  "characterId": "nishimiya_momo_kyoto_candidate",
+  "displayName": "西宫桃（京都校）",
+  "stage": "kyoto_school",
+  "sourceLayer": "原作本篇-京都校",
+  "techniqueName": "付丧操术",
+  "techniqueDescription": "操控扫帚飞行与机动支援，适合侦查、牵制、撤离与空中骚扰。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "B",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "B"
+  },
+  "officialGrade": "二级术师",
+  "powerTier": "grade2_support",
+  "specialHandTags": [
+    "mobility_support"
+  ],
+  "domainProfile": "无",
+  "notes": "按机动/支援角色锚定，正面输出较低。",
+  "status": "CANDIDATE"
+}

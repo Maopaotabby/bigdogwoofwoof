@@ -1,0 +1,25 @@
+{
+  "characterId": "naobito_zenin_shibuya_candidate",
+  "displayName": "禅院直毘人（涩谷）",
+  "stage": "shibuya",
+  "sourceLayer": "原作本篇-涩谷事变",
+  "techniqueName": "投射咒法",
+  "techniqueDescription": "以24帧规则高速移动、打击和冻结错误动作目标；高体术与经验使其极具压制力。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "A",
+    "body": "A",
+    "martial": "SS",
+    "talent": "A"
+  },
+  "officialGrade": "特别一级术师",
+  "powerTier": "specialGrade1_high",
+  "specialHandTags": [
+    "projection_sorcery",
+    "speed"
+  ],
+  "domainProfile": "无",
+  "notes": "不拆分断臂前后状态；伤势由战斗状态模拟。",
+  "status": "CANDIDATE"
+}

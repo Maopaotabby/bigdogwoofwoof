@@ -1,0 +1,24 @@
+{
+  "characterId": "awasaka_jiro_shibuya_candidate",
+  "displayName": "粟坂二良（涩谷）",
+  "stage": "shibuya",
+  "sourceLayer": "原作本篇-涩谷事变",
+  "techniqueName": "强弱颠倒",
+  "techniqueDescription": "将受到攻击的强弱效果反转，适合反打与防御误导；对规则识破和极端条件存在弱点。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "B",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "B",
+    "talent": "C"
+  },
+  "officialGrade": "诅咒师",
+  "powerTier": "grade2_counter",
+  "specialHandTags": [
+    "inverse_counter"
+  ],
+  "domainProfile": "无",
+  "notes": "按规则型防御诅咒师锚定。",
+  "status": "CANDIDATE"
+}

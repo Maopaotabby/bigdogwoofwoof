@@ -1,0 +1,25 @@
+{
+  "characterId": "jabaloma_modulo_candidate",
+  "displayName": "贾巴洛马（Modulo）",
+  "stage": "modulo",
+  "sourceLayer": "Modulo扩展设定",
+  "techniqueName": "塞姆利亚战斗适性",
+  "techniqueDescription": "Modulo扩展候选卡；按塞姆利亚体系中的战斗型个体处理，具体术式和血脉细节由后续资料或机制标签细化。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "B",
+    "efficiency": "B",
+    "body": "A",
+    "martial": "A",
+    "talent": "B"
+  },
+  "officialGrade": "未评级",
+  "powerTier": "modulo_candidate",
+  "specialHandTags": [
+    "modulo",
+    "simuria"
+  ],
+  "domainProfile": "无",
+  "notes": "低证据候选；只作原型平衡锚点，不视为最终canon。",
+  "status": "CANDIDATE"
+}

@@ -1,0 +1,25 @@
+{
+  "characterId": "shoko_ieiri_support_candidate",
+  "displayName": "家入硝子（高专医师）",
+  "stage": "main_story",
+  "sourceLayer": "原作本篇-高专/新宿决战",
+  "techniqueName": "反转术式输出",
+  "techniqueDescription": "可稳定输出反转术式治疗他人，是高专医疗核心；正面对战输出有限但战略价值极高。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "SS",
+    "efficiency": "A",
+    "body": "C",
+    "martial": "D",
+    "talent": "A"
+  },
+  "officialGrade": "高专医师",
+  "powerTier": "support_rct",
+  "specialHandTags": [
+    "rct_output",
+    "healer"
+  ],
+  "domainProfile": "无",
+  "notes": "非普通生得术式卡；按医疗/反转术式系统功能锚定。",
+  "status": "CANDIDATE"
+}

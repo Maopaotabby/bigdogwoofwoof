@@ -1,0 +1,25 @@
+{
+  "characterId": "kokichi_muta_mechamaru_candidate",
+  "displayName": "与幸吉／机械丸（京都校）",
+  "stage": "kyoto_school",
+  "sourceLayer": "原作本篇-京都校/涩谷前",
+  "techniqueName": "傀儡操术",
+  "techniqueDescription": "远程操控机械傀儡作战，可进行炮击、侦查、通讯与替身承伤；强度高度依赖库存、距离与准备。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "B",
+    "body": "E",
+    "martial": "C",
+    "talent": "A"
+  },
+  "officialGrade": "准一级术师",
+  "powerTier": "semiGrade1",
+  "specialHandTags": [
+    "puppet_user",
+    "remote_control"
+  ],
+  "domainProfile": "无",
+  "notes": "不单独拆分究极机械丸形态；大型机体由卡牌/机制模拟。",
+  "status": "CANDIDATE"
+}

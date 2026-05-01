@@ -1,0 +1,24 @@
+{
+  "characterId": "haruta_shigemo_shibuya_candidate",
+  "displayName": "重面春太（涩谷）",
+  "stage": "shibuya",
+  "sourceLayer": "原作本篇-涩谷事变",
+  "techniqueName": "奇迹",
+  "techniqueDescription": "储存日常小奇迹并在致命危机中消耗以回避死亡；直接输出低但生存随机性强。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "C",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "C"
+  },
+  "officialGrade": "诅咒师",
+  "powerTier": "grade3_survival",
+  "specialHandTags": [
+    "luck_survival"
+  ],
+  "domainProfile": "无",
+  "notes": "奇迹存量作为状态/资源模拟，不拆分为不同卡。",
+  "status": "CANDIDATE"
+}

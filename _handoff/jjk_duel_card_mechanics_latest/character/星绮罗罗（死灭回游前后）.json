@@ -1,0 +1,25 @@
+{
+  "characterId": "kirara_hoshi_culling_candidate",
+  "displayName": "星绮罗罗（死灭回游前后）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-秤线/死灭前后",
+  "techniqueName": "星间飞行",
+  "techniqueDescription": "给目标标记星座关系，基于规则控制接近、排斥和路径，适合防守、隔离与战术拖延。",
+  "baseStats": {
+    "cursedEnergy": "B",
+    "control": "A",
+    "efficiency": "B",
+    "body": "C",
+    "martial": "C",
+    "talent": "A"
+  },
+  "officialGrade": "未评级",
+  "powerTier": "support_control",
+  "specialHandTags": [
+    "rule_control",
+    "position_lock"
+  ],
+  "domainProfile": "无",
+  "notes": "规则解释成本较高，卡牌应强调位置控制而非高伤害。",
+  "status": "CANDIDATE"
+}

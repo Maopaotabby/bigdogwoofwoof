@@ -1,0 +1,56 @@
+{
+  "name": "伏黑惠（死灭回游）",
+  "hp": 4,
+  "mp": 5,
+  "四轴": {
+    "咒术": 4.77,
+    "肉体": 4,
+    "悟性": 6.32,
+    "构筑": 2.9
+  },
+  "特殊手札": [
+    "ten_shadows"
+  ],
+  "specialHandTags": [
+    "ten_shadows"
+  ],
+  "characterId": "megumi_fushiguro_culling",
+  "displayName": "伏黑惠（死灭回游）",
+  "stage": "cullingGame",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "B",
+    "body": "B",
+    "martial": "B",
+    "talent": "SS",
+    "cursedTechnique": 4.77,
+    "physical": 4,
+    "perception": 6.32,
+    "construction": 2.9
+  },
+  "innateTraits": [
+    "十种影法术"
+  ],
+  "techniquePower": "SS",
+  "domainProfile": "未完成领域：嵌合暗翳庭",
+  "officialGrade": "二级",
+  "powerTier": "grade1Plus",
+  "notes": "未完成领域与十影潜力很高；按潜力型强者，不默认兑现完整适应资源。",
+  "techniqueName": "无",
+  "techniqueDescription": "无",
+  "externalResource": "无",
+  "visibleGrade": "无",
+  "advancedTechniques": [
+    "无"
+  ],
+  "loadout": [
+    "无"
+  ],
+  "selectedMechanisms": [
+    "无"
+  ],
+  "selectedToolTags": [
+    "无"
+  ]
+}

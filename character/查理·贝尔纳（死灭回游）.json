@@ -1,0 +1,24 @@
+{
+  "characterId": "charles_bernard_culling_candidate",
+  "displayName": "查理·贝尔纳（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-死灭回游",
+  "techniqueName": "G 战杖/未来画面",
+  "techniqueDescription": "以漫画格和笔尖读取短暂未来画面，适合预判、防守和局部反击。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "B",
+    "efficiency": "C",
+    "body": "C",
+    "martial": "C",
+    "talent": "B"
+  },
+  "officialGrade": "觉醒泳者",
+  "powerTier": "grade3_utility",
+  "specialHandTags": [
+    "future_panel"
+  ],
+  "domainProfile": "无",
+  "notes": "按新觉醒泳者处理，战斗经验有限。",
+  "status": "CANDIDATE"
+}

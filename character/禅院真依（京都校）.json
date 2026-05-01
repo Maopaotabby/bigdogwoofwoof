@@ -1,0 +1,25 @@
+{
+  "characterId": "mai_zenin_kyoto_candidate",
+  "displayName": "禅院真依（京都校）",
+  "stage": "kyoto_school",
+  "sourceLayer": "原作本篇-京都交流会/禅院家",
+  "techniqueName": "构筑术式",
+  "techniqueDescription": "以咒力构筑物质，稳定表现为子弹级别构筑；资源效率低，更多依赖枪械与欺骗。",
+  "baseStats": {
+    "cursedEnergy": "C",
+    "control": "B",
+    "efficiency": "D",
+    "body": "C",
+    "martial": "B",
+    "talent": "C"
+  },
+  "officialGrade": "三级术师",
+  "powerTier": "grade3",
+  "specialHandTags": [
+    "construction_low_output",
+    "firearm"
+  ],
+  "domainProfile": "无",
+  "notes": "不按牺牲/双生子结局拆分。",
+  "status": "CANDIDATE"
+}

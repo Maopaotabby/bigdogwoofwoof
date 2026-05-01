@@ -1,0 +1,26 @@
+{
+  "characterId": "kurourushi_sendai_candidate",
+  "displayName": "黑沐死（仙台结界）",
+  "stage": "sendai",
+  "sourceLayer": "原作本篇-死灭回游/仙台结界",
+  "techniqueName": "腐蠊胎巢 —— 黑沐死",
+  "techniqueDescription": "蟑螂、虫群与腐败恐惧凝聚成的咒灵术式，可操控蟑螂群体吞噬、啃咬与压迫，并可配合烂生刀植入虫卵；对正能量脆弱。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "B",
+    "efficiency": "B",
+    "body": "A",
+    "martial": "B",
+    "talent": "B"
+  },
+  "officialGrade": "特级咒灵",
+  "powerTier": "specialGrade_curse",
+  "specialHandTags": [
+    "curse_spirit_general",
+    "swarm",
+    "weak_to_rct"
+  ],
+  "domainProfile": "领域展开：黑蠊腐胎巢（项目候选）",
+  "notes": "按蟑螂与虫群恐惧侧咒灵术式归类；休眠/复苏不拆卡，由状态模拟。",
+  "status": "CANDIDATE"
+}
