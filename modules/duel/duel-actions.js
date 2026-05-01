@@ -650,7 +650,9 @@
     if (requirements.domainActive === true && !actor.domain?.active) return { available: false, reason: "当前未展开领域", costCe: costCe };
     if (requirements.domainActive === false && actor.domain?.active) return { available: false, reason: "领域已展开", costCe: costCe };
     if (requirements.requiresDomainAccess && !domainResponse.canExpandDomain) return { available: false, reason: "当前角色不具备领域条件", costCe: costCe };
-    if (requirements.opponentDomainActive && !isDuelOpponentDomainThreat(opponent, actor, battle)) return { available: false, reason: "对方未展开领域", costCe: costCe };
+    if (requirements.opponentDomainActive && !isDuelOpponentDomainThreat(opponent, actor, battle)) {
+      if (!getDomainResponseActionIds().has(action.id)) return { available: false, reason: "对方未展开领域", costCe: costCe };
+    }
     if (requirements.requiresDomainClash && !domainResponse.allowedDomainResponseActions.includes("domain_clash")) return { available: false, reason: "缺少真正领域对抗条件", costCe: costCe };
     if (requirements.requiresSimpleDomain && !domainResponse.allowedDomainResponseActions.includes("simple_domain_guard")) return { available: false, reason: "缺少简易领域防线", costCe: costCe };
     if (requirements.requiresHollowWickerBasket && !domainResponse.allowedDomainResponseActions.includes("hollow_wicker_basket_guard")) return { available: false, reason: "缺少弥虚葛笼", costCe: costCe };

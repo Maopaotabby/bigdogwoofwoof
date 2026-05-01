@@ -1132,9 +1132,13 @@ function render(room = {}) {
   if (handleRemovedFromRoom(room)) return;
   const opponent = side ? otherSide(side) : "right";
   const onlinePageActive = isOnlinePageActive();
-  syncBattlePageLockState(room, side);
-  syncDuelRuntimeRoomState(room, side);
-  if (onlinePageActive) maybeEnterBattleView(room, side);
+  if (room?.phase === "preparing") {
+    syncPreparingRoomView(room);
+  } else {
+    syncBattlePageLockState(room, side);
+    syncDuelRuntimeRoomState(room, side);
+    if (onlinePageActive) maybeEnterBattleView(room, side);
+  }
   setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
   setText("#onlineRoomCode", room.roomId || "未创建");
   setText("#onlineCurrentRoomCode", room.roomId || "未创建");
@@ -1160,6 +1164,17 @@ function render(room = {}) {
 function syncDuelRuntimeRoomState(room, side) {
   if (!room?.roomId || !side) return;
   globalThis.JJKDuelRuntime?.syncOnlineRoomState?.(room, side);
+}
+
+function syncPreparingRoomView(room) {
+  if (!room?.roomId) return;
+  globalThis.JJKDuelRuntime?.clearOnlineDuelBattle?.(room.roomId);
+  if (!globalThis.JJKBattlePage) return;
+  const pageState = globalThis.JJKBattlePage.getBattlePageState?.() || {};
+  if (pageState.mode === "online" || pageState.activeRoomId === room.roomId || pageState.activePage !== "online") {
+    globalThis.JJKBattlePage.clearBattleMode?.("none");
+    globalThis.JJKBattlePage.activateBattlePage?.("online", { primeMode: false });
+  }
 }
 
 function handleRemovedFromRoom(room = {}) {

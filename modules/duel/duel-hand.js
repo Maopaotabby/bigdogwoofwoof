@@ -810,6 +810,32 @@
     return /rule_trial|rule_defense|trial_owner|trial_defender|审判|辩护|裁定|证据|指控/.test(text);
   }
 
+  function isJackpotSubPhaseCardLike(candidate) {
+    var action = getActionFromEntry(candidate);
+    var id = getActionId(candidate);
+    var text = [
+      id,
+      action?.label,
+      action?.name,
+      action?.cardType,
+      action?.domainClass,
+      action?.domainRole
+    ].concat(asList(action?.tags), asList(action?.allowedContexts)).filter(Boolean).join(" ");
+    if (action?.domainSpecific && action.domainClass === "jackpot_rule") return true;
+    if (["advance_jackpot", "raise_probability", "risk_spin", "stabilize_cycle", "claim_jackpot", "advance_jackpot_cycle"].includes(id)) return true;
+    return /jackpot_rule|jackpot_owner|坐杀搏徒|抽奖|中奖|概率|连续演出/.test(text);
+  }
+
+  function filterInactiveRuleSubphaseCards(candidates, actor, battle) {
+    var trialActive = Boolean(getActiveTrialSubPhaseForActor(actor, battle));
+    var jackpotActive = Boolean(getActiveJackpotSubPhaseForActor(actor, battle));
+    return (candidates || []).filter(function keepCandidate(candidate) {
+      if (!trialActive && isRuleTrialCardLike(candidate)) return false;
+      if (!jackpotActive && isJackpotSubPhaseCardLike(candidate)) return false;
+      return true;
+    });
+  }
+
   function shouldReplaceHandWithTrialCards(actor, battle) {
     var subPhase = getActiveTrialSubPhaseForActor(actor, battle);
     if (!subPhase) return false;
@@ -902,6 +928,10 @@
     };
   }
 
+  function isPermanentHandCard(card) {
+    return Boolean(card?.noRefresh || card?.retainedPermanent || card?.executionSword);
+  }
+
   function getPersistentHandState(battle, side, rules) {
     var activeBattle = getBattle(battle);
     if (!activeBattle) return null;
@@ -931,6 +961,11 @@
     hand.cards = hand.cards.filter(function keepCard(card) {
       var id = getActionId(card);
       if (!ids.has(id)) return true;
+      if (isPermanentHandCard(card)) {
+        card.retained = true;
+        card.lastUsedRound = getTurnNumber(battle);
+        return true;
+      }
       removed.push(card);
       return false;
     });
@@ -940,7 +975,7 @@
   function updatePersistentHandOverflow(hand, maxHandSize) {
     if (!hand) return 0;
     var protectedCards = (hand.cards || []).filter(function countProtected(card) {
-      return Boolean(card?.noRefresh || card?.retainedPermanent || card?.executionSword);
+      return isPermanentHandCard(card);
     });
     var countedCards = (hand.cards || []).length - protectedCards.length;
     var overflow = Math.max(0, countedCards - Number(maxHandSize || hand.maxHandSize || 8));
@@ -961,6 +996,7 @@
       return getActionId(card) === id;
     });
     if (index < 0) return { discarded: false, reason: "手札不在当前手牌中" };
+    if (isPermanentHandCard(hand.cards[index])) return { discarded: false, reason: "该手札为锁定常驻手札，不能弃置" };
     var removed = hand.cards.splice(index, 1)[0];
     var round = getTurnNumber(battle);
     var summary = {
@@ -988,6 +1024,7 @@
       return normalizePersistentHandCard(refreshed, card.drawnRound || hand.round, "retained");
     }).filter(function keepExisting(card) {
       if (!getActiveTrialSubPhaseForActor(actor, battle) && isRuleTrialCardLike(card)) return false;
+      if (!getActiveJackpotSubPhaseForActor(actor, battle) && isJackpotSubPhaseCardLike(card)) return false;
       return Boolean(getActionId(card));
     });
   }
@@ -1185,8 +1222,14 @@
       message: message,
       sourceDomainName: sourceDomainName || ""
     };
-    if (side === "left") battle.actionUiMessage = message;
+    if (shouldShowHandLockMessageForSide(battle, side)) battle.actionUiMessage = message;
     return message;
+  }
+
+  function shouldShowHandLockMessageForSide(battle, side) {
+    if (!battle || !side) return false;
+    if (battle.mode === "online") return (battle.onlinePlayerSide || "left") === side;
+    return side === "left";
   }
 
   function consumeDomainScriptNoCard(actor, battle, side) {
@@ -1198,7 +1241,7 @@
     if (!actor || !battle || !actorSide) return false;
     if (isDomainScriptNoCardLocked(battle, actorSide)) {
       var lockedMessage = battle.handLockMessages?.[actorSide];
-      if (lockedMessage && Number(lockedMessage.round || 0) === round && actorSide === "left") battle.actionUiMessage = lockedMessage.message || "";
+      if (lockedMessage && Number(lockedMessage.round || 0) === round && shouldShowHandLockMessageForSide(battle, actorSide)) battle.actionUiMessage = lockedMessage.message || "";
       return true;
     }
     actor.statusEffects = effects.filter(function keepEffect(effect) {
@@ -1687,6 +1730,7 @@
     var profile = buildDuelCharacterCardProfile(actor, { rules: rules });
     if (consumeDomainScriptNoCard(actor, battle, side)) return [];
     candidates = filterMeaningfulDuelHandCandidates(candidates);
+    candidates = filterInactiveRuleSubphaseCards(candidates, actor, battle);
     candidates = filterStrictRuleSubphaseHandCandidates(candidates, actor, battle);
     var filtered = filterDuelHandCandidatesByCharacter(candidates, actor, { rules: rules, profile: profile, battle: battle });
     return applyDuelCharacterCardWeights(filtered, actor, { rules: rules, profile: profile }).filter(function keepNormalHand(candidate) {
@@ -1722,6 +1766,7 @@
       return wrapActionAsCandidate(action, actor, opponent, battle, { count: choiceCount });
     });
     fullCandidates = filterMeaningfulDuelHandCandidates(fullCandidates);
+    fullCandidates = filterInactiveRuleSubphaseCards(fullCandidates, actor, battle);
     fullCandidates = filterStrictRuleSubphaseHandCandidates(fullCandidates, actor, battle);
     var splitPool = splitNormalAndDomainCandidates(fullCandidates);
     var actions = strictRuleSubphaseHand
@@ -1790,6 +1835,7 @@
       return wrapActionAsCandidate(action, actor, opponent, battle, { count: maxDomainCards, side: side });
     });
     fullCandidates = filterMeaningfulDuelHandCandidates(fullCandidates);
+    fullCandidates = filterInactiveRuleSubphaseCards(fullCandidates, actor, battle);
     var domainCandidates = filterDomainCandidatesByPhase(splitNormalAndDomainCandidates(fullCandidates).domain, actor);
     var ranked = rankDuelHandCandidatesByCharacter(domainCandidates, [], actor, opponent, battle, maxDomainCards, {
       domainHand: true,

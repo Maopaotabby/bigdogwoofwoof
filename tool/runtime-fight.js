@@ -1095,6 +1095,30 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
   return true;
 }
 
+function getActiveDuelHandLockMessage(battle = state.duelBattle, side = getDuelControlledSide(battle)) {
+  if (!battle || !side) return "";
+  const lockEntry = battle.handLockMessages?.[side];
+  return lockEntry && Number(lockEntry.round || 0) === battle.round + 1 ? String(lockEntry.message || "") : "";
+}
+
+function clearOnlineDuelBattle(roomId = "") {
+  const battle = state.duelBattle;
+  if (!battle || battle.mode !== "online") return false;
+  const targetRoomId = String(roomId || "");
+  if (targetRoomId && battle.onlineRoomId && battle.onlineRoomId !== targetRoomId) return false;
+  state.duelBattle = null;
+  setDuelBattleMode("none", {
+    activeBattleId: "",
+    activeRoomId: "",
+    playerSide: null,
+    localLocked: false,
+    activePage: "online"
+  });
+  getBattlePageModule()?.activateBattlePage?.("online", { primeMode: false });
+  renderDuelMode();
+  return true;
+}
+
 function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerSide || "left") {
   const battle = state.duelBattle;
   if (!battle || battle.mode !== "online" || !room?.roomId) return null;
@@ -1128,7 +1152,7 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
     battle.actionChoices = [];
     battle.handCandidates = [];
     updateDuelActionAvailability(battle);
-    battle.actionUiMessage = `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
+    battle.actionUiMessage = getActiveDuelHandLockMessage(battle, side) || `服务器已进入第 ${serverRound} 回合，请选择本回合手札。`;
   } else if (room.phase === "turn_resolving") {
     battle.actionUiMessage = "双方已锁定，服务器正在同步结算。";
   } else if (localLocked) {
@@ -1347,6 +1371,7 @@ globalThis.JJKDuelRuntime = {
   startDuelBattle,
   renderDuelMode,
   syncOnlineRoomState,
+  clearOnlineDuelBattle,
   getSelectedOnlineActionSnapshots,
   getDuelBattle: () => state.duelBattle,
   getDuelModeState: () => ({ ...state.duelModeState })
@@ -3799,7 +3824,7 @@ function runDuelAutoBattle() {
     activeBattle.currentOptions = [];
     activeBattle.selectedIndex = null;
     activeBattle.pendingAction = null;
-    activeBattle.actionUiMessage = "";
+    activeBattle.actionUiMessage = getActiveDuelHandLockMessage(activeBattle, getDuelControlledSide(activeBattle)) || "";
     maybeResolveDuelBattle(activeBattle);
     if (!activeBattle.resolved) updateDuelActionAvailability(activeBattle);
     activeBattle.autoRunning = false;

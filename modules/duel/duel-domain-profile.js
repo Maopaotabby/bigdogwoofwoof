@@ -695,6 +695,68 @@
     return { effective: true, reason: "对方没有展开领域，也没有有效反领域手段，特殊领域效果命中。", blockType: "" };
   }
 
+  function getNextDuelTurnNumber(battle) {
+    return Number(battle?.round || 0) + 2;
+  }
+
+  function getSideHandState(battle, side, key) {
+    if (!battle || !side) return null;
+    battle[key] ||= {};
+    battle[key][side] ||= { cards: [], round: 0 };
+    return battle[key][side];
+  }
+
+  function summarizeRemovedHandCard(card, round, reason) {
+    return {
+      actionId: card?.actionId || card?.id || card?.action?.id || "",
+      label: card?.label || card?.name || card?.action?.label || card?.id || "未知手札",
+      discardedRound: round,
+      reason: reason || "domainNoCardLock"
+    };
+  }
+
+  function clearSideHandForDomainNoCard(battle, opponent, profile) {
+    var side = opponent?.side || "";
+    var lockedRound = getNextDuelTurnNumber(battle);
+    var domainName = profile?.domainName || "领域";
+    var message = "由于本回合被" + domainName + "效果命中，无法行动，请直接点击锁定。";
+    var hand;
+    var domainHand;
+    var removed;
+
+    if (!battle || !side) return;
+    battle.domainScriptNoCardLocks ||= {};
+    battle.domainScriptNoCardLocks[side] = lockedRound;
+    battle.handLockMessages ||= {};
+    battle.handLockMessages[side] = {
+      round: lockedRound,
+      message: message,
+      sourceDomainName: domainName
+    };
+    battle.selectedHandActions ||= {};
+    battle.selectedHandActions[side] = [];
+    hand = getSideHandState(battle, side, "handState");
+    removed = (hand.cards || []).map(function summarize(card) {
+      return summarizeRemovedHandCard(card, lockedRound, "domainNoCardLock");
+    });
+    hand.cards = [];
+    hand.round = lockedRound;
+    hand.lastDrawn = [];
+    hand.lastDiscarded = removed;
+    hand.discardPile = (hand.discardPile || []).concat(removed);
+    hand.pendingDiscardCount = 0;
+    hand.overflowDiscardRequired = false;
+    domainHand = getSideHandState(battle, side, "domainHandState");
+    domainHand.cards = [];
+    domainHand.round = lockedRound;
+    domainHand.lastRefreshed = [];
+    if (side === "left" || battle.onlinePlayerSide === side) {
+      battle.actionUiMessage = message;
+      battle.handCandidates = [];
+      battle.domainHandCandidates = [];
+    }
+  }
+
   function applyDuelDomainScriptEffect(profile, actor, opponent, battle, response, gate) {
     var script = profile?.domainScript;
     var effects = script?.effects || {};
@@ -736,6 +798,7 @@
       });
     }
     if (effects.skipOpponentNextCard) {
+      clearSideHandForDomainNoCard(battle, opponent, profile);
       addOrRefreshDuelStatusEffect(opponent, {
         id: "domainScriptNoCard",
         label: "领域封锁手札",
