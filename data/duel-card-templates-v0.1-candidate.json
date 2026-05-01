@@ -1713,7 +1713,7 @@
       "baseDomainLoadDelta": 4,
       "baseDefensePressure": 6,
       "durationRounds": 1,
-      "baseCeCost": 40,
+      "baseCeCost": 60,
       "costType": "ce_ratio_min",
       "damageType": "none",
       "scalingProfile": "domain_pressure",

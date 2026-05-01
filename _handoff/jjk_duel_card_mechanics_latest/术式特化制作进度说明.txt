@@ -403,6 +403,20 @@ ceMaxOutputScore =
 
 14. 当前版本仍属于 candidate / prototype balance，不应视为最终平衡锁定版。
 
+15. 特殊生得术式卡牌草稿库框架已建立：
+   - 新增 technique-card-draft-schema-v0.1-candidate.json，定义草稿卡字段、枚举、去重状态和普通术式边界。
+   - 新增 technique-card-drafts-v0.1-candidate.json，保存 60 项普通生得术式显式白名单和少量示例草稿。
+   - 新增 technique-card-existing-index-v0.1-candidate.json，用于索引已有卡牌、动作、领域、强度记录和 excludedButIndexed 项。
+   - 新增 technique-card-migration-map-v0.1-candidate.json，预留草稿迁移到 action-backed card 或 domain interface 的路线。
+   - 新增 scripts/build-technique-card-index.js 与 scripts/validate-technique-card-drafts.js。
+   - 新增 docs/technique-card-drafts-readme.md。
+   - 当前只搭建框架和少量示例，不批量生成最终术式卡。
+   - 反转术式、激震掌、魂庭拳、可爱蜜糖、血脉天赋、星浆体、卡利亚物种天赋、瘟柩葬仪/瘟柩三刻等不得进入普通生得术式草稿库，只能作为 existingButExcluded 索引用于去重参考。
+   - v0.1.1 已增强草稿层边界：草稿卡不得写死最终 AP、CE、伤害、防御、灵魂伤害、领域负荷、scalingProfile、规则配置、反领域交互和兼容互斥字段。
+   - 已补充 duplicateWarning、variantOf、variantReason、draftVariantType 字段，用于区分普通版、升级版、领域版、规则版和灵魂版。
+   - 示例草稿已覆盖攻击、防御/资源、领域相关、规则类领域相关和灵魂相关五类验证场景。
+   - 校验脚本已增加：ruleRelated 必须说明 rule_based 只能与 self_buff 共存；soulRelated 必须包含灵魂机制标签；domainRelated 必须填写 possibleDomainEffectTypes。
+
 
 五、注意事项
 

@@ -1,0 +1,705 @@
+{
+  "schema": "jjk-technique-card-drafts",
+  "version": "0.1.1-candidate",
+  "status": "CANDIDATE",
+  "scope": "Draft library framework for ordinary innate technique cards. This file intentionally contains only a small number of examples covering attack, defense/resource, domain, rule, and soul draft cases.",
+  "relatedDataFiles": {
+    "schema": "technique-card-draft-schema-v0.1-candidate.json",
+    "existingIndex": "technique-card-existing-index-v0.1-candidate.json",
+    "migrationMap": "technique-card-migration-map-v0.1-candidate.json",
+    "actionTemplates": "duel-action-templates-v0.1-candidate.json",
+    "cardTemplates": "duel-card-templates-v0.1-candidate.json",
+    "domainProfiles": "duel-domain-profiles-v0.1-candidate.json",
+    "domainCards": "domain-card-templates-v0.1-candidate.json"
+  },
+  "ordinaryTechniquePolicy": {
+    "declaredSourcePoolCount": 60,
+    "sourceWheelTitle": "生得术式",
+    "sourceWheelCurrentEntryCount": 65,
+    "ordinaryPoolIsExplicitAllowlist": true,
+    "notes": [
+      "Do not read all wheel entries as ordinary innate techniques.",
+      "The current wheel includes custom entries, traveler easter egg entries, and special curse/spirit ability entries.",
+      "Entries excluded from ordinary drafts may still appear in the existing index as existingButExcluded for duplicate checks."
+    ],
+    "excludedFromOrdinaryDrafts": [
+      "反转术式",
+      "反转术式外放",
+      "激震掌",
+      "魂庭拳",
+      "可爱蜜糖",
+      "血脉天赋",
+      "星浆体",
+      "卡利亚物种天赋",
+      "不灭兽性",
+      "第三眼与塞姆利亚咒能适性",
+      "德斯昆特血脉：杀意具现适性",
+      "瘟柩葬仪 —— 疱疮神",
+      "瘟柩三刻"
+    ]
+  },
+  "ordinaryTechniqueAllowlist": [
+    {
+      "techniqueId": "ten_shadows",
+      "techniqueName": "十种影法术",
+      "sourceLayer": "原作本篇",
+      "representative": "伏黑惠"
+    },
+    {
+      "techniqueId": "limitless",
+      "techniqueName": "无下限",
+      "sourceLayer": "原作本篇",
+      "representative": "五条悟"
+    },
+    {
+      "techniqueId": "blood_manipulation",
+      "techniqueName": "赤血操术",
+      "sourceLayer": "原作本篇",
+      "representative": "加茂宪纪 / 胀相"
+    },
+    {
+      "techniqueId": "curse_spirit_manipulation",
+      "techniqueName": "咒灵操术",
+      "sourceLayer": "原作本篇",
+      "representative": "夏油杰 / 羂索"
+    },
+    {
+      "techniqueId": "idle_transfiguration",
+      "techniqueName": "无为转变 —— 真人",
+      "sourceLayer": "原作本篇",
+      "representative": "真人"
+    },
+    {
+      "techniqueId": "ratio_technique",
+      "techniqueName": "十划咒法（七海）",
+      "sourceLayer": "原作本篇",
+      "representative": "七海建人"
+    },
+    {
+      "techniqueId": "cursed_speech",
+      "techniqueName": "咒言",
+      "sourceLayer": "原作本篇",
+      "representative": "狗卷棘"
+    },
+    {
+      "techniqueId": "boogie_woogie",
+      "techniqueName": "不义游戏",
+      "sourceLayer": "原作本篇",
+      "representative": "东堂葵"
+    },
+    {
+      "techniqueId": "black_bird_manipulation",
+      "techniqueName": "黑鸟操术",
+      "sourceLayer": "原作本篇",
+      "representative": "冥冥"
+    },
+    {
+      "techniqueId": "projection_sorcery",
+      "techniqueName": "投射咒法",
+      "sourceLayer": "原作本篇",
+      "representative": "禅院直毘人 / 禅院直哉"
+    },
+    {
+      "techniqueId": "construction",
+      "techniqueName": "构筑术式",
+      "sourceLayer": "原作本篇",
+      "representative": "禅院真依 / 万"
+    },
+    {
+      "techniqueId": "puppet_manipulation",
+      "techniqueName": "傀儡操术",
+      "sourceLayer": "原作本篇",
+      "representative": "与幸吉"
+    },
+    {
+      "techniqueId": "tool_manipulation",
+      "techniqueName": "付丧操术",
+      "sourceLayer": "原作本篇",
+      "representative": "付丧操术使用者"
+    },
+    {
+      "techniqueId": "seance_technique",
+      "techniqueName": "降灵术（参拜婆）",
+      "sourceLayer": "原作本篇",
+      "representative": "参拜婆"
+    },
+    {
+      "techniqueId": "straw_doll_technique",
+      "techniqueName": "刍灵咒法（野蔷薇）",
+      "sourceLayer": "原作本篇",
+      "representative": "钉崎野蔷薇"
+    },
+    {
+      "techniqueId": "star_rage",
+      "techniqueName": "星之怒（九十九）",
+      "sourceLayer": "原作本篇",
+      "representative": "九十九由基"
+    },
+    {
+      "techniqueId": "ice_formation",
+      "techniqueName": "冰凝咒法",
+      "sourceLayer": "原作本篇",
+      "representative": "里梅"
+    },
+    {
+      "techniqueId": "immortality_tengen",
+      "techniqueName": "不死（天元）",
+      "sourceLayer": "原作本篇",
+      "representative": "天元"
+    },
+    {
+      "techniqueId": "miracles",
+      "techniqueName": "奇迹（重面春太）",
+      "sourceLayer": "原作本篇",
+      "representative": "重面春太"
+    },
+    {
+      "techniqueId": "disaster_flames",
+      "techniqueName": "熔灾火藏 —— 漏瑚",
+      "sourceLayer": "原作本篇",
+      "representative": "漏瑚"
+    },
+    {
+      "techniqueId": "disaster_plants",
+      "techniqueName": "咒植幻生 —— 花御",
+      "sourceLayer": "原作本篇",
+      "representative": "花御"
+    },
+    {
+      "techniqueId": "disaster_tides",
+      "techniqueName": "潮灾式海 —— 陀艮",
+      "sourceLayer": "原作本篇",
+      "representative": "陀艮"
+    },
+    {
+      "techniqueId": "gakuganji_music",
+      "techniqueName": "乐岩寺",
+      "sourceLayer": "原作本篇",
+      "representative": "乐岩寺嘉伸"
+    },
+    {
+      "techniqueId": "solo_solo_forbidden_area",
+      "techniqueName": "单独禁区",
+      "sourceLayer": "原作本篇",
+      "representative": "庵歌姬"
+    },
+    {
+      "techniqueId": "heart_catch",
+      "techniqueName": "心身掌握",
+      "sourceLayer": "原作本篇",
+      "representative": "拉鲁"
+    },
+    {
+      "techniqueId": "prayer_song",
+      "techniqueName": "祈祷之歌",
+      "sourceLayer": "原作本篇",
+      "representative": "米格尔"
+    },
+    {
+      "techniqueId": "cockroach_swarm",
+      "techniqueName": "腐蠊胎巢 —— 黑沐死",
+      "sourceLayer": "原作本篇",
+      "representative": "黑沐死"
+    },
+    {
+      "techniqueId": "rot_technique",
+      "techniqueName": "蚀烂术式（坏相、血涂）",
+      "sourceLayer": "原作本篇",
+      "representative": "坏相 / 血涂"
+    },
+    {
+      "techniqueId": "ganesh_obstacle_removal",
+      "techniqueName": "象神开障 —— 伽内什",
+      "sourceLayer": "原作本篇",
+      "representative": "伽内什"
+    },
+    {
+      "techniqueId": "body_hopping",
+      "techniqueName": "夺舍（羂索）",
+      "sourceLayer": "原作本篇",
+      "representative": "羂索"
+    },
+    {
+      "techniqueId": "idle_death_gamble",
+      "techniqueName": "坐杀搏徒",
+      "sourceLayer": "原作本篇",
+      "representative": "秤金次"
+    },
+    {
+      "techniqueId": "deadly_sentencing",
+      "techniqueName": "诛伏赐死",
+      "sourceLayer": "原作本篇",
+      "representative": "日车宽见"
+    },
+    {
+      "techniqueId": "comedian",
+      "techniqueName": "超人（高羽）",
+      "sourceLayer": "原作本篇",
+      "representative": "高羽史彦"
+    },
+    {
+      "techniqueId": "copy",
+      "techniqueName": "模仿",
+      "sourceLayer": "原作本篇",
+      "representative": "乙骨忧太"
+    },
+    {
+      "techniqueId": "sky_manipulation",
+      "techniqueName": "天空术式（乌鹭）",
+      "sourceLayer": "原作本篇",
+      "representative": "乌鹭亨子"
+    },
+    {
+      "techniqueId": "granite_blast",
+      "techniqueName": "石流龙",
+      "sourceLayer": "原作本篇",
+      "representative": "石流龙"
+    },
+    {
+      "techniqueId": "manga_artist",
+      "techniqueName": "漫画家",
+      "sourceLayer": "原作本篇",
+      "representative": "查理·贝尔纳"
+    },
+    {
+      "techniqueId": "anti_gravity_system",
+      "techniqueName": "反重力",
+      "sourceLayer": "原作本篇",
+      "representative": "虎杖香织 / 羂索"
+    },
+    {
+      "techniqueId": "angel_jacobs_ladder",
+      "techniqueName": "天使",
+      "sourceLayer": "原作本篇",
+      "representative": "来栖华 / 天使"
+    },
+    {
+      "techniqueId": "kashimo_mythical_beast",
+      "techniqueName": "鹿紫云一",
+      "sourceLayer": "原作本篇",
+      "representative": "鹿紫云一"
+    },
+    {
+      "techniqueId": "dabura_modulo",
+      "techniqueName": "达布拉",
+      "sourceLayer": "Modulo扩展设定",
+      "representative": "达布拉"
+    },
+    {
+      "techniqueId": "embodied_killing_intent_light",
+      "techniqueName": "光 / 具象化杀意",
+      "sourceLayer": "Modulo扩展设定",
+      "representative": "达布拉"
+    },
+    {
+      "techniqueId": "chaos_and_harmony",
+      "techniqueName": "混沌与调和",
+      "sourceLayer": "Modulo扩展设定",
+      "representative": "Modulo 扩展"
+    },
+    {
+      "techniqueId": "recontract_icon",
+      "techniqueName": "再契象",
+      "sourceLayer": "Modulo扩展设定",
+      "representative": "Modulo 扩展"
+    },
+    {
+      "techniqueId": "hazel",
+      "techniqueName": "黄栌折",
+      "sourceLayer": "原作本篇",
+      "representative": "黄栌折"
+    },
+    {
+      "techniqueId": "inverse",
+      "techniqueName": "强弱颠倒",
+      "sourceLayer": "原作本篇",
+      "representative": "粟坂二良"
+    },
+    {
+      "techniqueId": "shrine",
+      "techniqueName": "御厨子（宿傩）",
+      "sourceLayer": "原作本篇",
+      "representative": "两面宿傩"
+    },
+    {
+      "techniqueId": "star_travel",
+      "techniqueName": "星间飞行",
+      "sourceLayer": "原作本篇",
+      "representative": "星绮罗罗"
+    },
+    {
+      "techniqueId": "ui_ui",
+      "techniqueName": "忧忧",
+      "sourceLayer": "原作本篇",
+      "representative": "忧忧"
+    },
+    {
+      "techniqueId": "nitta",
+      "techniqueName": "新田新",
+      "sourceLayer": "原作本篇",
+      "representative": "新田新"
+    },
+    {
+      "techniqueId": "hanyu_jet_hair",
+      "techniqueName": "羽生（喷气背包头发）",
+      "sourceLayer": "原作本篇",
+      "representative": "羽生"
+    },
+    {
+      "techniqueId": "haba_helicopter_hair",
+      "techniqueName": "羽场（直升机头发）",
+      "sourceLayer": "原作本篇",
+      "representative": "羽场"
+    },
+    {
+      "techniqueId": "zenin_jinichi",
+      "techniqueName": "禅院甚一",
+      "sourceLayer": "原作本篇",
+      "representative": "禅院甚一"
+    },
+    {
+      "techniqueId": "zenin_ranta",
+      "techniqueName": "禅院兰太",
+      "sourceLayer": "原作本篇",
+      "representative": "禅院兰太"
+    },
+    {
+      "techniqueId": "zenin_chojuro_earth_hand",
+      "techniqueName": "禅院长寿郎土掌术式",
+      "sourceLayer": "原作本篇",
+      "representative": "禅院长寿郎"
+    },
+    {
+      "techniqueId": "auspicious_beasts",
+      "techniqueName": "降灵术来访瑞兽（猪也）",
+      "sourceLayer": "原作本篇",
+      "representative": "猪野琢真"
+    },
+    {
+      "techniqueId": "remi_hair",
+      "techniqueName": "丽美（拿头发扎人，没别的）",
+      "sourceLayer": "原作本篇",
+      "representative": "丽美"
+    },
+    {
+      "techniqueId": "photo_manipulation",
+      "techniqueName": "照片操控",
+      "sourceLayer": "原作本篇",
+      "representative": "枷场菜菜子"
+    },
+    {
+      "techniqueId": "mimiko_doll",
+      "techniqueName": "美美子玩偶术式",
+      "sourceLayer": "原作本篇",
+      "representative": "枷场美美子"
+    },
+    {
+      "techniqueId": "dhruv_shikigami",
+      "techniqueName": "杜鲁布",
+      "sourceLayer": "原作本篇",
+      "representative": "杜鲁夫·拉克达瓦拉"
+    }
+  ],
+  "draftCards": [
+    {
+      "draftCardId": "draft_ten_shadows_shadow_anchor_v0_1",
+      "techniqueId": "ten_shadows",
+      "techniqueName": "十种影法术",
+      "ownerOrRepresentative": "伏黑惠",
+      "cardName": "影锚牵制",
+      "cardIntent": "control",
+      "effectDraft": "以影子固定路线或拖慢目标动作，作为十种影法术的低到中强度控制候选卡。",
+      "flavorText": "脚下的影子先一步抓住了退路。",
+      "mechanicTags": [
+        "shadow",
+        "restraint",
+        "setup",
+        "shikigamiFriendly"
+      ],
+      "riskTags": [
+        "positionDependent",
+        "needsSurface"
+      ],
+      "domainRelated": false,
+      "soulRelated": false,
+      "ruleRelated": false,
+      "summonRelated": false,
+      "antiDomainRelated": false,
+      "possibleDomainEffectTypes": [
+        "technique_amp",
+        "hard_control"
+      ],
+      "powerHint": "medium",
+      "suggestedRarity": "uncommon",
+      "sourceLayer": "原作本篇",
+      "nameStatus": "project_candidate_locked",
+      "status": "CANDIDATE",
+      "migrationNotes": "Future migration should decide whether this becomes a normal technique card or a domain-exclusive shadow control card.",
+      "doNotFinalizeReason": "Needs damage/control numbers and shikigami interaction review.",
+      "sourceActionId": "",
+      "existingCardRefs": [],
+      "duplicateOf": "",
+      "duplicateStatus": "none",
+      "draftRole": "new_candidate",
+      "reviewStatus": "unreviewed",
+      "duplicateWarning": "",
+      "variantOf": "",
+      "variantReason": "",
+      "draftVariantType": "ordinary"
+    },
+    {
+      "draftCardId": "draft_limitless_distance_filter_v0_1",
+      "techniqueId": "limitless",
+      "techniqueName": "无下限",
+      "ownerOrRepresentative": "五条悟",
+      "cardName": "间隔过滤",
+      "cardIntent": "defense",
+      "effectDraft": "作为无下限防线的低强度或泛用变体候选，只表达接触过滤，不复刻现有 infinity_guard 的完整数值。",
+      "flavorText": "距离没有消失，只是永远不够近。",
+      "mechanicTags": [
+        "limitless",
+        "defense",
+        "contactFilter"
+      ],
+      "riskTags": [
+        "highCeCost",
+        "stabilityPressure"
+      ],
+      "domainRelated": false,
+      "soulRelated": false,
+      "ruleRelated": false,
+      "summonRelated": false,
+      "antiDomainRelated": false,
+      "possibleDomainEffectTypes": [
+        "self_buff",
+        "technique_amp"
+      ],
+      "powerHint": "high",
+      "suggestedRarity": "rare",
+      "sourceLayer": "原作本篇",
+      "nameStatus": "project_candidate_locked",
+      "status": "CANDIDATE",
+      "migrationNotes": "Check against existing card_infinity_guard before turning this into a playable card.",
+      "doNotFinalizeReason": "Potential duplicate/variant of infinity_guard; needs deliberate merge or rejection.",
+      "sourceActionId": "",
+      "existingCardRefs": [
+        "card_infinity_guard",
+        "infinity_guard"
+      ],
+      "duplicateOf": "infinity_guard",
+      "duplicateStatus": "possible",
+      "draftRole": "variant",
+      "reviewStatus": "needs_merge",
+      "duplicateWarning": "Potential overlap with existing card/action; review before migration.",
+      "variantOf": "infinity_guard",
+      "variantReason": "Potential duplicate/variant of infinity_guard; needs deliberate merge or rejection.",
+      "draftVariantType": "upgrade"
+    },
+    {
+      "draftCardId": "draft_blood_manipulation_coagulated_line_v0_1",
+      "techniqueId": "blood_manipulation",
+      "techniqueName": "赤血操术",
+      "ownerOrRepresentative": "加茂宪纪 / 胀相",
+      "cardName": "凝血线",
+      "cardIntent": "attack",
+      "effectDraft": "以血液压缩成线状打击或牵制，作为赤血操术基础攻击候选卡。",
+      "flavorText": "血线一收，距离也被一并切短。",
+      "mechanicTags": [
+        "blood",
+        "piercing",
+        "midRange",
+        "bodyScaling"
+      ],
+      "riskTags": [
+        "resourcePressure",
+        "bodyCostCandidate"
+      ],
+      "domainRelated": false,
+      "soulRelated": false,
+      "ruleRelated": false,
+      "summonRelated": false,
+      "antiDomainRelated": false,
+      "possibleDomainEffectTypes": [
+        "sure_hit",
+        "auto_attack",
+        "technique_amp"
+      ],
+      "powerHint": "medium",
+      "suggestedRarity": "common",
+      "sourceLayer": "原作本篇",
+      "nameStatus": "project_candidate_locked",
+      "status": "CANDIDATE",
+      "migrationNotes": "Should later map to normal action-backed technique card with possible HP/CE tradeoff.",
+      "doNotFinalizeReason": "Needs blood resource model and representative owner split.",
+      "sourceActionId": "",
+      "existingCardRefs": [],
+      "duplicateOf": "",
+      "duplicateStatus": "none",
+      "draftRole": "new_candidate",
+      "reviewStatus": "unreviewed",
+      "duplicateWarning": "",
+      "variantOf": "",
+      "variantReason": "",
+      "draftVariantType": "ordinary"
+    },
+    {
+      "draftCardId": "draft_cursed_speech_domain_command_v0_1",
+      "techniqueId": "cursed_speech",
+      "techniqueName": "??",
+      "ownerOrRepresentative": "???",
+      "cardName": "?????",
+      "cardIntent": "domain",
+      "effectDraft": "????????????????????????? sure_hit / hard_control ?????????????",
+      "flavorText": "????????????????",
+      "mechanicTags": [
+        "cursed_speech",
+        "command",
+        "domain_exclusive",
+        "hard_control"
+      ],
+      "riskTags": [
+        "throatRecoil",
+        "domainOnlyCandidate"
+      ],
+      "domainRelated": true,
+      "soulRelated": false,
+      "ruleRelated": false,
+      "summonRelated": false,
+      "antiDomainRelated": false,
+      "possibleDomainEffectTypes": [
+        "sure_hit",
+        "hard_control",
+        "domain_exclusive"
+      ],
+      "powerHint": "high",
+      "suggestedRarity": "domain",
+      "sourceLayer": "原作本篇",
+      "nameStatus": "project_candidate_locked",
+      "status": "CANDIDATE",
+      "migrationNotes": "Domain-related draft only. Future migration must go through domain-card-templates and domain effect compatibility checks.",
+      "doNotFinalizeReason": "Needs domain framework migration and throat recoil/resource rules.",
+      "sourceActionId": "",
+      "existingCardRefs": [],
+      "duplicateOf": "",
+      "duplicateStatus": "none",
+      "draftRole": "new_candidate",
+      "reviewStatus": "unreviewed",
+      "duplicateWarning": "",
+      "variantOf": "",
+      "variantReason": "Domain variant of cursed speech; reserved for domain interface migration and does not replace ordinary cursed speech cards.",
+      "draftVariantType": "domain_variant"
+    },
+    {
+      "draftCardId": "draft_deadly_sentencing_rule_pressure_v0_1",
+      "techniqueId": "deadly_sentencing",
+      "techniqueName": "????",
+      "ownerOrRepresentative": "????",
+      "cardName": "????",
+      "cardIntent": "rule",
+      "effectDraft": "???????????????/??????????????????????????",
+      "flavorText": "??????????????????",
+      "mechanicTags": [
+        "rule_based",
+        "trial",
+        "judgment",
+        "self_buff"
+      ],
+      "riskTags": [
+        "ruleSubphase",
+        "nonDamageCandidate"
+      ],
+      "domainRelated": true,
+      "soulRelated": false,
+      "ruleRelated": true,
+      "summonRelated": false,
+      "antiDomainRelated": false,
+      "possibleDomainEffectTypes": [
+        "rule_based",
+        "self_buff"
+      ],
+      "powerHint": "special",
+      "suggestedRarity": "unique",
+      "sourceLayer": "原作本篇",
+      "nameStatus": "project_candidate_locked",
+      "status": "CANDIDATE",
+      "migrationNotes": "?????????? self_buff ?????? sure_hit?auto_attack?soul_damage?hard_control ?????Must migrate through rule subphase review, not normal damage card flow.",
+      "doNotFinalizeReason": "Needs rule subphase payload, target eligibility, and verdict system review.",
+      "sourceActionId": "",
+      "existingCardRefs": [],
+      "duplicateOf": "",
+      "duplicateStatus": "none",
+      "draftRole": "migration_placeholder",
+      "reviewStatus": "unreviewed",
+      "duplicateWarning": "",
+      "variantOf": "",
+      "variantReason": "Rule-domain variant; must migrate through rule subphase and does not replace ordinary trial action templates.",
+      "draftVariantType": "rule_variant"
+    },
+    {
+      "draftCardId": "draft_straw_doll_soul_resonance_v0_1",
+      "techniqueId": "straw_doll_technique",
+      "techniqueName": "?????????",
+      "ownerOrRepresentative": "?????",
+      "cardName": "????",
+      "cardIntent": "soul",
+      "effectDraft": "??????????????????/???????????? soulDamage?",
+      "flavorText": "??????????????????",
+      "mechanicTags": [
+        "soul_resonance",
+        "soul_boundary",
+        "mediumRequired",
+        "straw_doll"
+      ],
+      "riskTags": [
+        "requiresMedium",
+        "setupDependent"
+      ],
+      "domainRelated": false,
+      "soulRelated": true,
+      "ruleRelated": false,
+      "summonRelated": false,
+      "antiDomainRelated": false,
+      "possibleDomainEffectTypes": [
+        "soul_damage"
+      ],
+      "powerHint": "high",
+      "suggestedRarity": "rare",
+      "sourceLayer": "原作本篇",
+      "nameStatus": "project_candidate_locked",
+      "status": "CANDIDATE",
+      "migrationNotes": "Soul-related draft. Future migration must wait for formal soulHp and healability rules; no final soulDamage in draft layer.",
+      "doNotFinalizeReason": "Needs soul HP, medium condition, and incarnation/vessel interaction review.",
+      "sourceActionId": "",
+      "existingCardRefs": [],
+      "duplicateOf": "",
+      "duplicateStatus": "none",
+      "draftRole": "new_candidate",
+      "reviewStatus": "unreviewed",
+      "duplicateWarning": "",
+      "variantOf": "",
+      "variantReason": "Soul variant; must wait for soul HP/resource migration and does not replace ordinary straw doll technique cards.",
+      "draftVariantType": "soul_variant"
+    }
+  ],
+  "draftPolicy": {
+    "forbiddenFinalFields": [
+      "apCost",
+      "ceCost",
+      "costCe",
+      "baseDamage",
+      "baseBlock",
+      "soulDamage",
+      "domainLoadDelta",
+      "scalingProfile",
+      "ruleBasedConfig",
+      "antiDomainInteraction",
+      "exclusiveWith",
+      "allowedWith"
+    ],
+    "notes": [
+      "Draft cards must not hard-code final AP, CE, damage, block, soul damage, domain load, scaling profile, rule config, anti-domain interaction, or compatibility fields.",
+      "Use powerHint and migrationNotes until the duel resource, soul HP, max output, rule-domain, and domain-card systems own final numbers.",
+      "Use variantOf and variantReason for upgrade, domain, rule, or soul variants of existing cards."
+    ]
+  }
+}

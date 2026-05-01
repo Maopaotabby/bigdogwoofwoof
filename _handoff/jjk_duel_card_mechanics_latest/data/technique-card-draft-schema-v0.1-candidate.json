@@ -1,0 +1,207 @@
+{
+  "schema": "jjk-technique-card-draft-schema",
+  "version": "0.1.1-candidate",
+  "status": "CANDIDATE",
+  "scope": "Schema and validation rules for ordinary innate technique card drafts. This schema is for draft planning only and does not define playable combat cards.",
+  "requiredFields": [
+    "draftCardId",
+    "techniqueId",
+    "techniqueName",
+    "ownerOrRepresentative",
+    "cardName",
+    "cardIntent",
+    "effectDraft",
+    "flavorText",
+    "mechanicTags",
+    "riskTags",
+    "domainRelated",
+    "soulRelated",
+    "ruleRelated",
+    "summonRelated",
+    "antiDomainRelated",
+    "possibleDomainEffectTypes",
+    "powerHint",
+    "suggestedRarity",
+    "sourceLayer",
+    "nameStatus",
+    "status",
+    "migrationNotes",
+    "doNotFinalizeReason",
+    "sourceActionId",
+    "existingCardRefs",
+    "duplicateOf",
+    "duplicateStatus",
+    "draftRole",
+    "reviewStatus",
+    "duplicateWarning",
+    "variantOf",
+    "variantReason",
+    "draftVariantType"
+  ],
+  "enums": {
+    "cardIntent": [
+      "attack",
+      "defense",
+      "control",
+      "resource",
+      "domain",
+      "finisher",
+      "vow",
+      "support",
+      "mobility",
+      "summon",
+      "rule",
+      "soul"
+    ],
+    "powerHint": [
+      "low",
+      "medium",
+      "high",
+      "special"
+    ],
+    "suggestedRarity": [
+      "common",
+      "uncommon",
+      "rare",
+      "special",
+      "domain",
+      "unique"
+    ],
+    "sourceLayer": [
+      "原作本篇",
+      "Modulo扩展设定",
+      "项目扩展"
+    ],
+    "nameStatus": [
+      "official_or_stable",
+      "common_descriptive_name",
+      "project_candidate_locked",
+      "project_official_modulo"
+    ],
+    "status": [
+      "CANDIDATE"
+    ],
+    "duplicateStatus": [
+      "none",
+      "possible",
+      "confirmed"
+    ],
+    "draftRole": [
+      "new_candidate",
+      "variant",
+      "migration_placeholder"
+    ],
+    "reviewStatus": [
+      "unreviewed",
+      "accepted_candidate",
+      "rejected",
+      "needs_merge"
+    ],
+    "possibleDomainEffectTypes": [
+      "sure_hit",
+      "auto_attack",
+      "self_buff",
+      "technique_amp",
+      "soul_damage",
+      "hard_control",
+      "rule_based",
+      "domain_exclusive",
+      "domain_activation",
+      "anti_domain"
+    ],
+    "draftVariantType": [
+      "ordinary",
+      "upgrade",
+      "domain_variant",
+      "rule_variant",
+      "soul_variant",
+      "migration_only"
+    ]
+  },
+  "duplicateRules": {
+    "hardDuplicateKeys": [
+      "draftCardId",
+      "sourceActionId"
+    ],
+    "softDuplicateKeys": [
+      "techniqueName + cardName",
+      "techniqueId + normalizedCardName",
+      "mechanicTags overlap with existing card tags"
+    ],
+    "existingIndexFile": "technique-card-existing-index-v0.1-candidate.json",
+    "excludedEntriesCanBeIndexed": true,
+    "excludedEntriesCannotBeDraftedAsOrdinaryInnateTechnique": true,
+    "levels": [
+      {
+        "id": "exact",
+        "description": "cardName or normalizedName exactly matches an existing card/draft.",
+        "action": "block unless marked duplicate/variant for review"
+      },
+      {
+        "id": "semantic_near",
+        "description": "same technique with different name but same effectDraft direction.",
+        "action": "warn and require duplicateWarning or variantReason"
+      },
+      {
+        "id": "mechanic_overlap",
+        "description": "same technique, same cardIntent, same core mechanicTags, same effect direction.",
+        "action": "warn and require reviewStatus needs_merge or accepted_candidate"
+      }
+    ]
+  },
+  "ordinaryDraftBoundary": {
+    "declaredSourcePoolCount": 60,
+    "sourcePoolNote": "The current wheel page has 65 entries. Ordinary innate technique draft work must use a curated explicit allowlist instead of reading the wheel page directly.",
+    "mustNotAutoImportFromWheel": true,
+    "excludedFromOrdinaryDrafts": [
+      "反转术式",
+      "反转术式外放",
+      "激震掌",
+      "魂庭拳",
+      "可爱蜜糖",
+      "星浆体",
+      "卡利亚",
+      "不灭兽性",
+      "第三眼与塞姆利亚咒能适性",
+      "德斯昆特血脉：杀意具现适性",
+      "瘟柩葬仪 —— 疱疮神",
+      "瘟柩三刻"
+    ]
+  },
+  "forbiddenFinalFields": [
+    "apCost",
+    "ceCost",
+    "costCe",
+    "baseDamage",
+    "baseBlock",
+    "soulDamage",
+    "domainLoadDelta",
+    "scalingProfile",
+    "ruleBasedConfig",
+    "antiDomainInteraction",
+    "exclusiveWith",
+    "allowedWith"
+  ],
+  "ruleRelatedRequirement": {
+    "requiredMigrationNoteIncludes": [
+      "self_buff",
+      "sure_hit",
+      "auto_attack",
+      "soul_damage",
+      "hard_control"
+    ],
+    "note": "Rule-related drafts must state that rule_based can only coexist with self_buff and cannot retain sure_hit, auto_attack, soul_damage, or hard_control."
+  },
+  "soulRelatedRequirement": {
+    "requiredAnyMechanicTag": [
+      "soul_damage",
+      "soul_boundary",
+      "incarnated_sorcerer_counter",
+      "vessel_separation",
+      "soul_resonance"
+    ]
+  },
+  "domainRelatedRequirement": {
+    "requiresPossibleDomainEffectTypes": true
+  }
+}

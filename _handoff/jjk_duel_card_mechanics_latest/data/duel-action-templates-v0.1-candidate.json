@@ -1006,7 +1006,7 @@
       "apCost": 1,
       "cost": {
         "ceRatio": 0.07,
-        "minCe": 40
+        "minCe": 60
       },
       "requirements": {
         "domainActive": "any"
@@ -1024,7 +1024,7 @@
         "防御"
       ],
       "effects": {
-        "incomingHpScale": 0.95,
+        "incomingHpScale": 0.9,
         "incomingCeScale": 0.9,
         "manualAttackScale": 0.74,
         "domainPressureScale": 0.94,
@@ -1040,7 +1040,7 @@
       "baseDomainLoadDelta": 4,
       "baseDefensePressure": 6,
       "durationRounds": 1,
-      "baseCeCost": 40,
+      "baseCeCost": 60,
       "costType": "ce_ratio_min",
       "damageType": "none",
       "scalingProfile": "domain_pressure",

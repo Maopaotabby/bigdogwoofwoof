@@ -1,0 +1,83 @@
+{
+  "schema": "jjk-technique-card-migration-map",
+  "version": "0.1.0-candidate",
+  "status": "CANDIDATE",
+  "scope": "Placeholder migration routes from ordinary innate technique card drafts into playable duel card/action/domain systems.",
+  "notes": [
+    "This file is an interface placeholder only.",
+    "Draft cards must not be automatically promoted into duel-card-templates or duel-action-templates.",
+    "Domain-related drafts should migrate through the modular domain framework rather than bypassing domain-card-templates.",
+    "Non-ordinary techniques may be indexed for duplicate checks, but they must not migrate through ordinary innate technique routes."
+  ],
+  "routes": [
+    {
+      "routeId": "ordinary_technique_to_action_backed_card",
+      "from": "technique-card-drafts-v0.1-candidate.json:draftCards",
+      "to": [
+        "duel-action-templates-v0.1-candidate.json:templates",
+        "duel-card-templates-v0.1-candidate.json:cards"
+      ],
+      "allowedIntents": [
+        "attack",
+        "defense",
+        "control",
+        "resource",
+        "finisher",
+        "support",
+        "mobility",
+        "summon"
+      ],
+      "requiresHumanReview": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "routeId": "domain_related_draft_to_domain_interface",
+      "from": "technique-card-drafts-v0.1-candidate.json:draftCards[domainRelated=true]",
+      "to": [
+        "domain-card-templates-v0.1-candidate.json",
+        "domain-configs-v0.1-candidate.json",
+        "duel-domain-profiles-v0.1-candidate.json"
+      ],
+      "allowedIntents": [
+        "domain",
+        "control",
+        "rule",
+        "soul",
+        "support"
+      ],
+      "requiresHumanReview": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "routeId": "rule_or_soul_draft_review_gate",
+      "from": "technique-card-drafts-v0.1-candidate.json:draftCards[ruleRelated=true OR soulRelated=true]",
+      "to": [
+        "manual_review_before_any_playable_template"
+      ],
+      "allowedIntents": [
+        "rule",
+        "soul",
+        "domain"
+      ],
+      "requiresHumanReview": true,
+      "status": "CANDIDATE"
+    }
+  ],
+  "blockedRoutes": [
+    {
+      "reason": "Excluded non-ordinary mechanisms must not be promoted as ordinary innate technique cards.",
+      "blockedNames": [
+        "反转术式",
+        "反转术式外放",
+        "激震掌",
+        "魂庭拳",
+        "可爱蜜糖",
+        "星浆体",
+        "卡利亚物种天赋",
+        "瘟柩葬仪 —— 疱疮神",
+        "瘟柩三刻"
+      ],
+      "status": "CANDIDATE"
+    }
+  ]
+}
