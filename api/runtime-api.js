@@ -123,12 +123,32 @@ function inferAiProviderIdForMode(mode) {
   return "";
 }
 
+function getSameOriginAiProxyEndpoint() {
+  const location = globalThis.location;
+  const hostname = String(location?.hostname || "");
+  if (!hostname || ["localhost", "127.0.0.1", "::1"].includes(hostname) || hostname.endsWith("github.io")) return "";
+  if (!/^https?:$/.test(String(location?.protocol || ""))) return "";
+  try {
+    return normalizeAiEndpoint(new URL("/ai", location.href).href);
+  } catch {
+    return "";
+  }
+}
+
+function getAiDefaultProxyEndpoint() {
+  return getSameOriginAiProxyEndpoint() || normalizeAiEndpoint(state.aiProviderRules?.defaultProxyEndpoint || "");
+}
+
 function getDirectAiModes() {
   return ["openai_byok_direct", "deepseek_byok_direct", "openai_compatible_byok_direct"];
 }
 
 function getProviderModeForProviderId(providerId) {
   const id = String(providerId || "").trim();
+  const currentMode = getAiProviderMode();
+  const provider = getAiProviderConfig(id);
+  if (provider && Array.isArray(provider.modes) && provider.modes.includes(currentMode)) return currentMode;
+  if (id === state.aiProviderRules?.defaultProviderId && state.aiProviderRules?.defaultMode) return normalizeAiProviderMode(state.aiProviderRules.defaultMode);
   if (id === "openai") return "openai_byok_direct";
   if (id === "deepseek") return "deepseek_byok_direct";
   if (id === "openai_compatible" || id === "ark_ai") return "openai_compatible_byok_direct";
@@ -154,7 +174,7 @@ function initializeAiNarrativePanel() {
   }
   syncAiProviderForMode(false);
   if (els.aiProxyEndpointInput) {
-    els.aiProxyEndpointInput.value = readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, "");
+    els.aiProxyEndpointInput.value = readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, getAiDefaultProxyEndpoint());
   }
   const activeProvider = getAiProviderConfig(els.aiProviderIdInput?.value || getStoredAiProviderMode());
   if (els.aiBaseUrlInput) {
@@ -230,7 +250,11 @@ function getAiProviderMaxOutputTokens() {
 }
 
 function getStoredAiProviderMode() {
-  return normalizeAiProviderMode(readSafeStorage(window.localStorage, AI_PROVIDER_MODE_STORAGE_KEY, getAiDefaultProviderMode()));
+  const storedMode = normalizeAiProviderMode(readSafeStorage(window.localStorage, AI_PROVIDER_MODE_STORAGE_KEY, getAiDefaultProviderMode()));
+  if (getDirectAiModes().includes(storedMode) && !readAiByokKey() && getAiDefaultProviderMode() === "user_proxy_endpoint") {
+    return "user_proxy_endpoint";
+  }
+  return storedMode;
 }
 
 function getAiProviderMode() {
@@ -305,9 +329,9 @@ function clearAiByokKey() {
 
 function clearAiProxyEndpoint() {
   removeSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY);
-  if (els.aiProxyEndpointInput) els.aiProxyEndpointInput.value = "";
+  if (els.aiProxyEndpointInput) els.aiProxyEndpointInput.value = getAiDefaultProxyEndpoint();
   updateAiProviderUi();
-  updateAiNarrativeStatus("已清除本机保存的 Proxy Endpoint。");
+  updateAiNarrativeStatus("已清除本机保存的 Proxy Endpoint，当前使用服务器默认 AI 代理。");
 }
 
 function clearAllAiProviderSettings() {
@@ -325,10 +349,11 @@ function clearAllAiProviderSettings() {
   clearAiProxyEndpoint();
   if (els.aiProviderMode) els.aiProviderMode.value = getAiDefaultProviderMode();
   if (els.aiProviderIdInput) els.aiProviderIdInput.value = inferAiProviderIdForMode(getAiProviderMode()) || state.aiProviderRules?.defaultProviderId || "ark_ai";
+  if (els.aiProxyEndpointInput) els.aiProxyEndpointInput.value = getAiDefaultProxyEndpoint();
   if (els.aiModelInput) els.aiModelInput.value = getAiProviderDefaultModel();
   if (els.aiOutputTokenInput) els.aiOutputTokenInput.value = String(getAiProviderMaxOutputTokens());
   updateAiProviderUi();
-  updateAiNarrativeStatus("已清除全部 AI Provider 设置；当前回到本地 fallback。");
+  updateAiNarrativeStatus("已清除全部 AI Provider 设置；当前回到服务器默认 AI 代理。");
 }
 
 function saveAiProviderSettings() {
@@ -338,7 +363,7 @@ function saveAiProviderSettings() {
   writeSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, providerId);
   writeSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, mode === "openai_compatible_byok_direct" ? getAiProviderBaseUrl() : "");
   writeSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, mode === "openai_compatible_byok_direct" ? getAiProviderPath() : "");
-  writeSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, normalizeAiEndpoint(els.aiProxyEndpointInput?.value || ""));
+  writeSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, normalizeAiEndpoint(els.aiProxyEndpointInput?.value || getAiDefaultProxyEndpoint()));
   writeSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, String(els.aiModelInput?.value || getAiProviderDefaultModel()).trim() || getAiProviderDefaultModel());
   writeSafeStorage(window.localStorage, AI_OUTPUT_TOKENS_STORAGE_KEY, String(clamp(Number(els.aiOutputTokenInput?.value || getAiProviderMaxOutputTokens()), 64, 4000)));
   writeSafeStorage(window.localStorage, AI_BYOK_PERSIST_LOCAL_STORAGE_KEY, els.aiByokPersistLocal?.checked ? "yes" : "no");
@@ -363,7 +388,7 @@ function getAiProviderSettings() {
     model: String(els.aiModelInput?.value || readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, getAiProviderDefaultModel())).trim() || getAiProviderDefaultModel(),
     maxOutputTokens,
     maxPromptTokens: Number(state.aiProviderRules?.maxPromptTokens || state.aiProviderRules?.tokenBudget?.maxPromptTokens || 6000),
-    proxyEndpoint: normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, "")),
+    proxyEndpoint: normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, getAiDefaultProxyEndpoint())),
     byokPersistLocal: Boolean(els.aiByokPersistLocal?.checked),
     apiKey: getDirectAiModes().includes(aiMode) ? (readAiByokKey() || provider?.defaultApiKey || state.aiProviderRules?.defaultApiKey || "") : ""
   };
@@ -388,7 +413,9 @@ function updateAiProviderUi() {
         ? "安全提示：当前版本内置了默认 Provider API Key，仅适合本地或私有测试；公开部署会暴露调用额度。"
         : "安全提示：官方不建议在浏览器中暴露 API Key。此模式仅适合个人本地使用。Key 只保存在你的浏览器中，不会上传到本站服务器。请自行承担泄露与调用费用风险。")
       : mode === "user_proxy_endpoint"
-        ? "推荐模式：请填写你自己部署的 Proxy Endpoint。网站只发送 prompt payload，真实 API key 应保存在你的 proxy。"
+        ? (providerId === "ark_ai"
+          ? "服务器 ArkAI 代理：网站只发送 prompt payload，API Key 保存在服务器端。"
+          : "推荐模式：请填写你自己部署的 Proxy Endpoint。网站只发送 prompt payload，真实 API key 应保存在你的 proxy。")
         : "当前不会调用远程 AI，也不会消耗任何 API token。";
     els.aiProviderWarning.textContent = warning;
     els.aiProviderWarning.classList.toggle("error-text", isDirect);
@@ -417,8 +444,10 @@ function updateAiProviderUi() {
       ? "AI 已关闭：所有 AI 入口都只返回本地规则说明。"
       : mode === "local_fallback"
         ? "本地 fallback：不调用 API，适合零成本使用。"
-        : mode === "user_proxy_endpoint"
-          ? "User proxy：只向你的 endpoint 发送 prompt payload，不需要在网页输入 API Key。"
+      : mode === "user_proxy_endpoint"
+          ? (providerId === "ark_ai"
+            ? "服务器 ArkAI 代理：无需在网页输入 API Key。"
+            : "User proxy：只向你的 endpoint 发送 prompt payload，不需要在网页输入 API Key。")
           : `BYOK direct：只在请求时把你的 key 发送给 ${provider?.label || providerId || "所选 Provider"}。`;
   }
   if (els.globalSettingsStatus) {
@@ -705,7 +734,7 @@ function buildLocalLifeNarrativeFallback(context) {
 
 function getAiEndpointCandidates() {
   if (getAiProviderMode() === "user_proxy_endpoint") {
-    const proxyEndpoint = normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, ""));
+    const proxyEndpoint = normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, getAiDefaultProxyEndpoint()));
     return proxyEndpoint ? [{ id: "user_proxy_endpoint", label: "玩家自托管 Proxy", endpoint: proxyEndpoint }] : [];
   }
   const mode = getAiEndpointMode();

@@ -5,8 +5,9 @@ workers_dev = true
 preview_urls = true
 
 [vars]
-AI_PROVIDER = "openai_compatible"
-AI_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+AI_PROVIDER = "ark_ai"
+AI_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3/responses"
+AI_RESPONSES_URL = "https://ark.cn-beijing.volces.com/api/v3/responses"
 AI_MODEL = "doubao-seed-2-0-mini-260215"
 AI_MAX_TOKENS = "700"
 AI_TEMPERATURE = "0.4"

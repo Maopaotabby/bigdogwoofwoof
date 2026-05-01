@@ -58,8 +58,8 @@
                 <option value="local_fallback">本地 fallback</option>
                 <option value="openai_byok_direct">玩家自带 OpenAI API Key（实验性）</option>
                 <option value="deepseek_byok_direct">玩家自带 DeepSeek API Key（实验性）</option>
-                <option value="openai_compatible_byok_direct" selected>ArkAI / OpenAI-compatible Provider（实验性）</option>
-                <option value="user_proxy_endpoint">玩家自托管 Proxy Endpoint（推荐）</option>
+                <option value="openai_compatible_byok_direct">ArkAI / OpenAI-compatible Provider（实验性）</option>
+                <option value="user_proxy_endpoint" selected>服务器 ArkAI 代理（默认）</option>
               </select>
             </label>
             <label class="field">
@@ -98,7 +98,7 @@
             </label>
           </div>
           <p id="aiProviderWarning" class="muted">
-            当前默认使用 ArkAI / 火山方舟 OpenAI-compatible 调用方式；V2.2 测试包已内置默认 Key，仅适合本地或私有测试。
+            当前默认使用服务器 ArkAI 代理；API Key 保存在服务器端，网页不再需要填写默认 Key。
           </p>
           <div class="ai-mode-panel" data-ai-mode-panel="openai_byok_direct deepseek_byok_direct openai_compatible_byok_direct" hidden>
             <p class="error-text">

@@ -64,10 +64,15 @@ class FileRoomStore {
 const roomStore = new FileRoomStore(ROOMS_FILE);
 
 function buildEnv() {
+  const defaultArkResponsesUrl = "https://ark.cn-beijing.volces.com/api/v3/responses";
+  const explicitResponsesUrl = process.env.AI_RESPONSES_URL || process.env.AI_API_URL || "";
+  const baseAiUrl = process.env.AI_BASE_URL || defaultArkResponsesUrl;
+  const aiResponsesUrl = explicitResponsesUrl || (/\/responses\/?$/i.test(baseAiUrl) ? baseAiUrl : `${baseAiUrl.replace(/\/+$/, "")}/responses`);
   return {
     JJK_ONLINE_ROOMS: roomStore,
-    AI_PROVIDER: process.env.AI_PROVIDER || "openai_compatible",
-    AI_BASE_URL: process.env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
+    AI_PROVIDER: process.env.AI_PROVIDER || "ark_ai",
+    AI_BASE_URL: aiResponsesUrl,
+    AI_RESPONSES_URL: aiResponsesUrl,
     AI_MODEL: process.env.AI_MODEL || "doubao-seed-2-0-mini-260215",
     AI_MAX_TOKENS: process.env.AI_MAX_TOKENS || "700",
     AI_TEMPERATURE: process.env.AI_TEMPERATURE || "0.4",

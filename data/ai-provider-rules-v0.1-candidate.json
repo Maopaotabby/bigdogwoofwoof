@@ -1,18 +1,18 @@
 {
   "version": "0.1.1",
   "status": "CANDIDATE",
-  "defaultMode": "openai_compatible_byok_direct",
+  "defaultMode": "user_proxy_endpoint",
   "defaultProviderId": "ark_ai",
+  "defaultProxyEndpoint": "http://119.91.224.223/ai",
   "providers": [
     {
       "providerId": "ark_ai",
       "label": "ArkAI / 火山方舟",
       "modes": ["openai_compatible_byok_direct", "user_proxy_endpoint"],
-      "endpointType": "chat_completions",
-      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
-      "defaultPath": "/chat/completions",
+      "endpointType": "responses",
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3/responses",
+      "defaultPath": "",
       "defaultModel": "doubao-seed-2-0-mini-260215",
-      "defaultApiKey": "09d6d696-dc76-4d99-a912-b15bec17c869",
       "modelPresets": ["doubao-seed-2-0-mini-260215"],
       "allowCustomBaseUrl": false,
       "allowCustomPath": false,
@@ -148,6 +148,6 @@
     "neverExportApiKey": true,
     "neverLogApiKey": true,
     "neverPutApiKeyInUrl": true,
-    "siteOwnerDoesNotPayPlayerTokens": true
+    "serverProxyKeepsApiKeyPrivate": true
   }
 }

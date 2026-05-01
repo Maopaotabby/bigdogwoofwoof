@@ -1,10 +1,9 @@
-import OpenAI from "openai";
-
 const PROTOCOL = "jjk_online_battle_v1";
 const WORKER_BUILD_VERSION = "20260430-online-pass-turn-v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
+const DEFAULT_ARK_RESPONSES_URL = "https://ark.cn-beijing.volces.com/api/v3/responses";
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const PASS_TURN_ACTION_ID = "online_pass_turn";
 const memoryRooms = new Map();
@@ -448,16 +447,118 @@ function parseAiText(value) {
   }
 }
 
+function normalizeServerAiEndpoint(value) {
+  const text = String(value || "").trim().replace(/\/+$/, "");
+  if (!text) return "";
+  try {
+    const url = new URL(text);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+    return url.toString().replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+function getServerAiResponsesUrl(env) {
+  const explicit = normalizeServerAiEndpoint(env.AI_RESPONSES_URL || env.AI_API_URL || "");
+  if (explicit) return explicit;
+  const base = normalizeServerAiEndpoint(env.AI_BASE_URL || "");
+  if (!base) return DEFAULT_ARK_RESPONSES_URL;
+  return /\/responses$/i.test(base) ? base : `${base}/responses`;
+}
+
+function extractAiResponseText(data) {
+  if (!data) return "";
+  if (typeof data === "string") return data;
+  if (typeof data.text === "string") return data.text;
+  if (typeof data.markdown === "string") return data.markdown;
+  if (typeof data.output_text === "string") return data.output_text;
+  if (Array.isArray(data.choices)) {
+    return data.choices.map((choice) => choice?.message?.content || choice?.text || "").join("");
+  }
+  if (Array.isArray(data.output)) {
+    return data.output.map((item) => {
+      if (typeof item?.content === "string") return item.content;
+      if (Array.isArray(item?.content)) {
+        return item.content.map((content) => content?.text || content?.content || content?.value || "").join("");
+      }
+      return "";
+    }).join("");
+  }
+  return "";
+}
+
+function normalizeResponsesInput(input) {
+  const list = Array.isArray(input) ? input : [{ role: "user", content: input || "" }];
+  return list.map((message) => {
+    const next = { ...(message || {}) };
+    const role = next.role === "system" || next.role === "developer" || next.role === "assistant" ? next.role : "user";
+    const content = next.content && typeof next.content === "object" ? JSON.stringify(next.content) : String(next.content || "");
+    return { role, content };
+  }).filter((message) => message.content);
+}
+
+function buildServerResponsesPayload(env, payload = {}) {
+  const maxOutputTokens = Math.max(64, Math.min(4000, Number(payload.max_output_tokens || env.AI_MAX_TOKENS || 700)));
+  const temperature = Number.isFinite(Number(payload.temperature ?? env.AI_TEMPERATURE))
+    ? Math.max(0, Math.min(2, Number(payload.temperature ?? env.AI_TEMPERATURE)))
+    : 0.4;
+  const input = normalizeResponsesInput(payload.input || payload.messages || payload.prompt || "");
+  return {
+    model: String(env.AI_MODEL || payload.model || "doubao-seed-2-0-mini-260215").trim(),
+    input: input.length ? input : [{ role: "user", content: String(payload.text || "你好") }],
+    max_output_tokens: maxOutputTokens,
+    temperature
+  };
+}
+
+async function handleAiProxy(env, body = {}) {
+  const apiKey = String(env.AI_API_KEY || "").trim();
+  const responsesUrl = getServerAiResponsesUrl(env);
+  const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 150000);
+  const payload = buildServerResponsesPayload(env, body.payload || {});
+  const startedAt = nowMs();
+
+  if (!apiKey) return json({ ok: false, error: "服务器未配置 AI_API_KEY。" }, 503);
+  if (!responsesUrl) return json({ ok: false, error: "服务器 AI Responses URL 无效。" }, 500);
+  const response = await withTimeout(fetch(responsesUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
+  }), timeoutMs, `AI 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data?.error?.message || data?.error || `AI HTTP ${response.status}`;
+    return json({ ok: false, error: String(message), status: response.status }, response.status);
+  }
+  const text = extractAiResponseText(data);
+  return json({
+    ok: true,
+    provider: env.AI_PROVIDER || "ark_ai",
+    endpointType: "responses",
+    model: payload.model,
+    text,
+    markdown: text,
+    usage: data.usage || null,
+    durationMs: nowMs() - startedAt,
+    promptTemplateId: String(body.promptTemplateId || body.payload?.metadata?.templateId || "").slice(0, 80),
+    siteVersion: String(body.siteVersion || "").slice(0, 80)
+  });
+}
+
 async function resolveTurnWithAi(env, room) {
   const model = env.AI_MODEL || "doubao-seed-2-0-mini-260215";
-  const baseURL = env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3";
+  const responsesUrl = getServerAiResponsesUrl(env);
   const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000);
   const apiKey = String(env.AI_API_KEY || "").trim();
   const aiMessages = buildAiPrompt(room);
   const aiRequestPreview = {
-    provider: "openai_compatible",
+    provider: env.AI_PROVIDER || "ark_ai",
     model,
-    baseURL,
+    responsesUrl,
     timeoutMs,
     temperature: Number(env.AI_TEMPERATURE || 0.4),
     maxTokens: Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700))),
@@ -471,20 +572,28 @@ async function resolveTurnWithAi(env, room) {
       actions: redactSecrets(room.turnState.actions)
     };
   }
-  const client = new OpenAI({ apiKey, baseURL });
-  const startedAt = nowMs();
-  const completion = await withTimeout(client.chat.completions.create({
+  const payload = buildServerResponsesPayload(env, {
     model,
-    messages: aiMessages,
-    temperature: aiRequestPreview.temperature,
-    max_tokens: aiRequestPreview.maxTokens,
-    response_format: { type: "json_object" }
+    input: aiMessages,
+    max_output_tokens: aiRequestPreview.maxTokens,
+    temperature: aiRequestPreview.temperature
+  });
+  const startedAt = nowMs();
+  const response = await withTimeout(fetch(responsesUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
   }), timeoutMs, `AI 请求超时（${Math.round(timeoutMs / 1000)} 秒）`);
-  const text = completion.choices?.[0]?.message?.content || "";
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data?.error?.message || data?.error || `AI HTTP ${response.status}`);
+  const text = extractAiResponseText(data);
   const parsed = parseAiText(text) || { summary: `第 ${room.round} 回合 AI 已返回，但内容为空。`, winnerHint: "undecided" };
   return {
     source: "server_ai",
-    provider: "openai_compatible",
+    provider: env.AI_PROVIDER || "ark_ai",
     model,
     summary: parsed.summary,
     leftEffect: parsed.leftEffect,
@@ -494,7 +603,7 @@ async function resolveTurnWithAi(env, room) {
     responseTextPreview: String(text || "").slice(0, 1200),
     durationMs: nowMs() - startedAt,
     timeoutMs,
-    usage: completion.usage || null,
+    usage: data.usage || null,
     actions: redactSecrets(room.turnState.actions)
   };
 }
@@ -556,8 +665,8 @@ async function handleOperation(env, body) {
     requestId,
     message: "online battle endpoint ready",
     aiConfigured: Boolean(String(env.AI_API_KEY || "").trim()),
-    aiProvider: env.AI_PROVIDER || "openai_compatible",
-    aiBaseURL: env.AI_BASE_URL || "https://ark.cn-beijing.volces.com/api/v3",
+    aiProvider: env.AI_PROVIDER || "ark_ai",
+    aiBaseURL: getServerAiResponsesUrl(env),
     aiModel: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
     aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000),
     hasRoomKv: Boolean(env.JJK_ONLINE_ROOMS),
@@ -747,6 +856,7 @@ export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return json({ ok: true });
     if (request.method !== "POST") return json({ ok: false, error: "Only POST is supported." }, 405);
+    const pathname = new URL(request.url).pathname;
     let body;
     try {
       body = await request.json();
@@ -754,6 +864,8 @@ export default {
       return json({ ok: false, error: "JSON 请求无效。" }, 400);
     }
     try {
+      if (pathname === "/ai") return await handleAiProxy(env, body);
+      if (pathname !== "/online-room") return json({ ok: false, error: "Unknown endpoint." }, 404);
       return await handleOperation(env, body);
     } catch (error) {
       return json({
