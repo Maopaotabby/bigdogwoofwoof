@@ -1,0 +1,47 @@
+{
+  "schema": "jjk.technique.feature.hand.drafts.latest-manifest",
+  "version": "2026-05-01-v0.6",
+  "status": "CANDIDATE_REVIEWED_MERGED",
+  "latestReviewedPackage": "technique-feature-hand-drafts-v0.6-merged-balanced.json",
+  "latestRuntimeImportCandidates": "technique-feature-hand-drafts-v0.6-runtime-import-candidates.json",
+  "latestMergeMap": "technique-feature-hand-drafts-v0.6-merge-map.json",
+  "latestSummary": "technique-feature-hand-drafts-v0.6-merge-summary.txt",
+  "sourceReviewedPackages": [
+    "technique-feature-hand-drafts-v0.4-reviewed.json",
+    "technique-feature-hand-drafts-v0.5-untouched-only-delta-reviewed.json"
+  ],
+  "counts": {
+    "sourceCardsPreserved": 216,
+    "runtimeImportCandidates": 206,
+    "acceptedCandidate": 206,
+    "needsMerge": 7,
+    "skipDuplicatePreviousReview": 3,
+    "statBoundCards": 216
+  },
+  "balanceCaps": {
+    "maxBaseDamage": 26,
+    "maxBaseBlock": 32,
+    "maxBaseCeCost": 58,
+    "maxApCost": 2
+  },
+  "mergeDecisions": [
+    {
+      "mergeKey": "local_deadly_sentencing_trial_subphase",
+      "rule": "Do not import as ordinary hands; inject during Deadly Sentencing domain trial flow only."
+    },
+    {
+      "mergeKey": "mechanism:technique_extinguishment",
+      "rule": "Use latest angel_jacobs_ladder mapping and merge into anti-technique/barrier/incarnation targeting logic."
+    },
+    {
+      "mergeKey": "mechanism:conditionalWorldSlash",
+      "rule": "Keep as conditional world-slash mechanism, not repeatable normal hand draw."
+    }
+  ],
+  "doNotUseAsFinalRuntime": true,
+  "notes": [
+    "This manifest marks v0.6 as the latest reviewed feature-hand candidate package.",
+    "Do not import v0.4 or v0.5 directly after v0.6 exists.",
+    "Runtime candidates still require manual mapping into playable duel action/card templates."
+  ]
+}

@@ -1,0 +1,35 @@
+JJK feature hand drafts v0.6 merged balance summary
+generatedAt: 2026-05-01
+
+sources:
+- C:\Users\15164\OneDrive\桌面\归档\V1.399A\bigdogwoofwoof-main\data\technique-feature-hand-drafts-v0.4-reviewed.json (180 cards)
+- C:\Users\15164\OneDrive\桌面\归档\V1.399A\bigdogwoofwoof-main\data\technique-feature-hand-drafts-v0.5-untouched-only-delta-reviewed.json (36 cards)
+
+outputs:
+- merged: C:\Users\15164\OneDrive\桌面\归档\V1.399A\bigdogwoofwoof-main\data\technique-feature-hand-drafts-v0.6-merged-balanced.json
+- runtime import candidates: C:\Users\15164\OneDrive\桌面\归档\V1.399A\bigdogwoofwoof-main\data\technique-feature-hand-drafts-v0.6-runtime-import-candidates.json
+- merge map: C:\Users\15164\OneDrive\桌面\归档\V1.399A\bigdogwoofwoof-main\data\technique-feature-hand-drafts-v0.6-merge-map.json
+
+counts:
+- total source cards preserved: 216
+- importableFromMergedPackage: 206
+- accepted_candidate: 206
+- needs_merge: 7
+- skip_duplicate_previous_review: 3
+- rebalancedOutliers: 192
+- statBoundCards: 216
+
+balance caps verified on import candidates:
+- max baseDamage: 26
+- max baseBlock: 32
+- max baseCeCost: 58
+- max apCost: 2
+
+merge decisions:
+- local_deadly_sentencing_trial_subphase: Do not import as ordinary hands; inject during domain trial flow only. (3 source cards)
+- mechanism:technique_extinguishment: Merge Jacob's Ladder variants into one anti-technique/barrier/incarnation targeting mechanism. (6 source cards)
+- mechanism:conditionalWorldSlash: Keep as conditional world-slash mechanism, not repeatable normal hand draw. (1 source cards)
+
+not done:
+- No playable template file was overwritten.
+- No git commit, push, or deployment was performed.

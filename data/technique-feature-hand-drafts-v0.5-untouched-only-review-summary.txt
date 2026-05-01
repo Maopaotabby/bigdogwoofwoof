@@ -1,0 +1,36 @@
+JJK feature hand drafts v0.5-untouched-only review/migration summary
+generatedAt: 2026-05-01
+sourceFile: C:\Users\15164\Downloads\jjk_feature_hand_drafts_untouched_only_latest_20260501_1649_v0.5_candidate.json
+baselineFile: .\data\technique-feature-hand-drafts-v0.4-reviewed.json
+outputFile: C:\Users\15164\OneDrive\桌面\归档\V2.0\data\technique-feature-hand-drafts-v0.5-untouched-only-reviewed.json
+deltaOutputFile: C:\Users\15164\OneDrive\桌面\归档\V2.0\data\technique-feature-hand-drafts-v0.5-untouched-only-delta-reviewed.json
+
+counts:
+- total: 144
+- accepted_candidate: 35
+- needs_merge: 1
+- skip_duplicate_previous_review: 108
+- importableFromThisPackage: 35
+- notNormalHand: 0
+- rebalancedOutliers: 36
+
+delta counts:
+- total: 36
+- accepted_candidate: 35
+- needs_merge: 1
+- importableFromThisPackage: 35
+- rebalancedOutliers: 9
+
+policy:
+- Original file was not modified.
+- Raw candidateRuntimeStats are preserved as originalCandidateRuntimeStats.
+- balancedRuntimeStats caps current beta scale: non-finisher damage <= 26, block <= 32, finisher damage <= 60, CE <= 60.
+- Migration fields were added: sourceActionId, existingCardRefs, duplicateStatus, draftRole, reviewStatus, variantOf, variantReason, draftVariantType.
+- deadly_sentencing trial/execution cards are subphase-only and must not enter normal hand draw.
+- world_slash is marked as conditionalWorldSlash mechanism variant.
+- jacobs_ladder is marked as technique_extinguishment targeting variant.
+
+next:
+1. Manually review needs_merge items before runtime import.
+2. Map balancedRuntimeStats to action/card template fields only after review.
+3. soul/rule/hard_control/domain_variant cards still need local script hooks.

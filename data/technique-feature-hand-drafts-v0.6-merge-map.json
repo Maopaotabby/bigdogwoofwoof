@@ -1,0 +1,109 @@
+{
+  "schema": "jjk.technique.feature.hand.drafts.v0.6.merge-map",
+  "version": "v0.6-merge-map",
+  "generatedAt": "2026-05-01T00:00:00-04:00",
+  "duplicateRecords": [],
+  "mergeGroups": [
+    {
+      "mergeKey": "local_deadly_sentencing_trial_subphase",
+      "representative": "local Deadly Sentencing rule subphase",
+      "action": "Do not import as ordinary hands; inject during domain trial flow only.",
+      "cards": [
+        {
+          "draftCardId": "draft_deadly_sentencing_1_54f86b_v0_4",
+          "techniqueId": "deadly_sentencing",
+          "cardName": "判官开庭",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "local_trial_subphase_only",
+          "migrationDirective": "rule_trial_subphase_only_do_not_draw_before_domain"
+        },
+        {
+          "draftCardId": "draft_deadly_sentencing_2_77aa71_v0_4",
+          "techniqueId": "deadly_sentencing",
+          "cardName": "没收宣告",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "local_trial_subphase_only",
+          "migrationDirective": "rule_trial_subphase_only_do_not_draw_before_domain"
+        },
+        {
+          "draftCardId": "draft_deadly_sentencing_3_1c0733_v0_4",
+          "techniqueId": "deadly_sentencing",
+          "cardName": "处刑剑影",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "local_trial_subphase_only",
+          "migrationDirective": "execution_sword_flow_only_do_not_draw_before_death_verdict"
+        }
+      ]
+    },
+    {
+      "mergeKey": "mechanism:technique_extinguishment",
+      "representative": "angel_jacobs_ladder / technique_extinguishment",
+      "action": "Merge Jacob's Ladder variants into one anti-technique/barrier/incarnation targeting mechanism.",
+      "cards": [
+        {
+          "draftCardId": "draft_technique_extinguishment_1_8b64d7_v0_4",
+          "techniqueId": "technique_extinguishment",
+          "cardName": "雅各布天梯",
+          "reviewStatus": "skip_duplicate_previous_review",
+          "runtimeImportStatus": "superseded_by_latest_angel_jacobs_ladder_mapping",
+          "migrationDirective": "skip_duplicate_superseded_by_angel_jacobs_ladder"
+        },
+        {
+          "draftCardId": "draft_technique_extinguishment_2_31c197_v0_4",
+          "techniqueId": "technique_extinguishment",
+          "cardName": "结界剥离",
+          "reviewStatus": "skip_duplicate_previous_review",
+          "runtimeImportStatus": "superseded_by_latest_angel_jacobs_ladder_mapping",
+          "migrationDirective": "skip_duplicate_superseded_by_angel_jacobs_ladder"
+        },
+        {
+          "draftCardId": "draft_technique_extinguishment_3_b98d65_v0_4",
+          "techniqueId": "technique_extinguishment",
+          "cardName": "受肉净断",
+          "reviewStatus": "skip_duplicate_previous_review",
+          "runtimeImportStatus": "superseded_by_latest_angel_jacobs_ladder_mapping",
+          "migrationDirective": "skip_duplicate_superseded_by_angel_jacobs_ladder"
+        },
+        {
+          "draftCardId": "draft_angel_jacobs_ladder_1_8b64d7_v0_5",
+          "techniqueId": "angel_jacobs_ladder",
+          "cardName": "雅各布天梯",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "merge_into_technique_extinguishment_mechanism",
+          "migrationDirective": "merge_into_anti_technique_targeting_logic"
+        },
+        {
+          "draftCardId": "draft_angel_jacobs_ladder_2_31c197_v0_5",
+          "techniqueId": "angel_jacobs_ladder",
+          "cardName": "结界剥离",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "merge_into_technique_extinguishment_mechanism",
+          "migrationDirective": "merge_into_anti_technique_targeting_logic"
+        },
+        {
+          "draftCardId": "draft_angel_jacobs_ladder_3_b98d65_v0_5",
+          "techniqueId": "angel_jacobs_ladder",
+          "cardName": "受肉净断",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "merge_into_technique_extinguishment_mechanism",
+          "migrationDirective": "merge_into_anti_technique_targeting_logic"
+        }
+      ]
+    },
+    {
+      "mergeKey": "mechanism:conditionalWorldSlash",
+      "representative": "conditionalWorldSlash",
+      "action": "Keep as conditional world-slash mechanism, not repeatable normal hand draw.",
+      "cards": [
+        {
+          "draftCardId": "draft_shrine_1_a6aa84_v0_4",
+          "techniqueId": "shrine",
+          "cardName": "世界斩迹",
+          "reviewStatus": "needs_merge",
+          "runtimeImportStatus": "merge_into_conditional_world_slash",
+          "migrationDirective": "merge_into_conditional_world_slash_logic"
+        }
+      ]
+    }
+  ]
+}
