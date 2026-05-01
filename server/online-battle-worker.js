@@ -3,6 +3,7 @@ const WORKER_BUILD_VERSION = "20260430-online-pass-turn-v1";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
+const MAX_AI_TIMEOUT_MS = 150000;
 const DEFAULT_ARK_RESPONSES_URL = "https://ark.cn-beijing.volces.com/api/v3/responses";
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const PASS_TURN_ACTION_ID = "online_pass_turn";
@@ -515,7 +516,7 @@ function buildServerResponsesPayload(env, payload = {}) {
 async function handleAiProxy(env, body = {}) {
   const apiKey = String(env.AI_API_KEY || "").trim();
   const responsesUrl = getServerAiResponsesUrl(env);
-  const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 150000);
+  const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, MAX_AI_TIMEOUT_MS);
   const payload = buildServerResponsesPayload(env, body.payload || {});
   const startedAt = nowMs();
 
@@ -552,7 +553,7 @@ async function handleAiProxy(env, body = {}) {
 async function resolveTurnWithAi(env, room) {
   const model = env.AI_MODEL || "doubao-seed-2-0-mini-260215";
   const responsesUrl = getServerAiResponsesUrl(env);
-  const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000);
+  const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, MAX_AI_TIMEOUT_MS);
   const apiKey = String(env.AI_API_KEY || "").trim();
   const aiMessages = buildAiPrompt(room);
   const aiRequestPreview = {
@@ -668,7 +669,7 @@ async function handleOperation(env, body) {
     aiProvider: env.AI_PROVIDER || "ark_ai",
     aiBaseURL: getServerAiResponsesUrl(env),
     aiModel: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
-    aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, 45000),
+    aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, MAX_AI_TIMEOUT_MS),
     hasRoomKv: Boolean(env.JJK_ONLINE_ROOMS),
     serverTime: new Date().toISOString()
   });
