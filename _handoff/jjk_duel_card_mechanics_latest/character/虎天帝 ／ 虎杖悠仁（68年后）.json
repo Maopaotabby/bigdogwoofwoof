@@ -9,10 +9,12 @@
     "构筑": 2.95
   },
   "特殊手札": [
-    "yuji_soul_melee"
+    "yuji_soul_melee",
+    "hutian_black_flash"
   ],
   "specialHandTags": [
-    "yuji_soul_melee"
+    "yuji_soul_melee",
+    "hutian_black_flash"
   ],
   "characterId": "yuji_itadori_after68",
   "displayName": "虎天帝 / 虎杖悠仁（68年后）",
@@ -39,7 +41,7 @@
   "domainProfile": "高阶反领域/领域对策",
   "officialGrade": "不适用",
   "powerTier": "postCanonException",
-  "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。",
+  "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。特色手札「黑闪！」为主动黑闪候选卡，命中后恢复自身并递增下一次基础伤害百分比。",
   "techniqueName": "无",
   "techniqueDescription": "无",
   "externalResource": "无",

@@ -681,7 +681,23 @@
         "延迟",
         "窗口",
         "灵魂打击"
-      ]
+      ],
+      "specialHandTags": [
+        "hutian_black_flash"
+      ],
+      "特殊手札": [
+        "hutian_black_flash"
+      ],
+      "rules": {
+        "forceAllowSourceActionIds": [
+          "hutian_black_flash"
+        ],
+        "weightBoostTags": [
+          "虎天帝",
+          "黑闪",
+          "特殊手札"
+        ]
+      }
     }
   },
   "sourceActionRules": {
@@ -1543,6 +1559,28 @@
         "curse_spirit_general",
         "mahito_soul_transfiguration"
       ]
+    },
+    "hutian_black_flash": {
+      "tags": [
+        "虎天帝",
+        "虎杖",
+        "黑闪",
+        "体术",
+        "爆发",
+        "特殊手札"
+      ],
+      "exclusiveToCharacters": [
+        "yuji_itadori_after68",
+        "虎天帝 / 虎杖悠仁（68年后）",
+        "虎天帝"
+      ],
+      "specialHandTags": [
+        "hutian_black_flash"
+      ],
+      "特殊手札": [
+        "hutian_black_flash"
+      ],
+      "requiresCe": true
     }
   }
 }

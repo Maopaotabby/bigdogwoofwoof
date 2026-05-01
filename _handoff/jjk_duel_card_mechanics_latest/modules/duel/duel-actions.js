@@ -970,6 +970,55 @@
     }
   }
 
+  function getHutianBlackFlashStacks(actor) {
+    var stored = Number(actor?.hutianBlackFlashStacks || 0);
+    var statusValue = getDuelStatusEffectValue(actor, "hutianBlackFlashGrowth");
+    return Math.max(0, Math.floor(Number.isFinite(stored) ? Math.max(stored, statusValue) : statusValue));
+  }
+
+  function setHutianBlackFlashStacks(actor, stacks) {
+    if (!actor) return;
+    var value = Math.max(0, Math.floor(Number(stacks || 0)));
+    actor.hutianBlackFlashStacks = value;
+    actor.statusEffects = Array.isArray(actor.statusEffects) ? actor.statusEffects.filter(function keepEffect(effect) {
+      return effect?.id !== "hutianBlackFlashGrowth";
+    }) : [];
+    if (value > 0) {
+      actor.statusEffects.push({
+        id: "hutianBlackFlashGrowth",
+        label: "黑闪递增",
+        rounds: 999,
+        value: value
+      });
+    }
+  }
+
+  function applyHutianBlackFlashEffect(effects, actor, opponent) {
+    var stacks = getHutianBlackFlashStacks(actor);
+    var baseRatio = Number(effects.hutianBlackFlashBaseHpRatio || 0.03) + stacks * Number(effects.hutianBlackFlashGrowthPerHit || 0.005);
+    var baseDamage = Math.max(0, Number(actor?.hp || 0) * baseRatio);
+    var exponent = Number(effects.hutianBlackFlashDamageExponent || 2.5);
+    var directDamage = Math.max(0, Math.round(Math.pow(baseDamage, exponent)));
+    if (directDamage > 0) opponent.hp -= directDamage;
+    var hpHeal = Math.max(0, Number(actor?.hp || 0) * Number(effects.hutianBlackFlashHpHealCurrentRatio || 0.08));
+    var ceHeal = Math.max(0, Number(actor?.ce || 0) * Number(effects.hutianBlackFlashCeHealCurrentRatio || 0.04));
+    actor.hp = Number(actor.hp || 0) + hpHeal;
+    actor.ce = Number(actor.ce || 0) + ceHeal;
+    actor.stability = Number(clamp(Number(actor.stability || 0) + Number(effects.hutianBlackFlashStabilityDelta || 0.01), 0, 1).toFixed(4));
+    setHutianBlackFlashStacks(actor, stacks + 1);
+    opponent.statusEffects = Array.isArray(opponent.statusEffects) ? opponent.statusEffects : [];
+    opponent.statusEffects.push({ id: "hutianBlackFlashShock", label: "黑闪！", rounds: 1, value: 1 });
+    return {
+      directDamage: directDamage,
+      baseDamage: Number(baseDamage.toFixed(4)),
+      baseRatio: Number(baseRatio.toFixed(4)),
+      stacksBefore: stacks,
+      stacksAfter: stacks + 1,
+      hpHeal: Number(hpHeal.toFixed(1)),
+      ceHeal: Number(ceHeal.toFixed(1))
+    };
+  }
+
   function applyDuelActionEffect(action, actor, opponent, duelState) {
     var battle = getBattle(duelState);
     if (!action || !actor || !opponent || !battle) return null;
@@ -1013,7 +1062,7 @@
       opponentDomainLoad: opponent.domain?.load || 0
     };
     var numericPreview = calculateActionNumericPreview(action, actor);
-    var blackFlashWindow = isStrikeLikeAction(action) ? takeBlackFlashWindow(actor) : null;
+    var blackFlashWindow = effects.hutianBlackFlash ? null : (isStrikeLikeAction(action) ? takeBlackFlashWindow(actor) : null);
     var costCe = Math.min(actor.ce, Number(action.costCe ?? getDuelActionCost(action, actor)));
     actor.ce -= costCe;
     actor.stability = Number(clamp(Number(actor.stability || 0) + Number(effects.stabilityDelta || 0), 0, 1).toFixed(4));
@@ -1058,12 +1107,17 @@
     if (Number(effects.lowStabilityHpRecoil || 0) && Number(actor.stability || 0) < 0.38) actor.hp -= Number(effects.lowStabilityHpRecoil);
     var directDamage = Math.max(0, Math.round(Number(numericPreview?.finalDamage || 0) * (action.risk === "high" || action.risk === "critical" ? 0.58 : 0.45)));
     var stabilityShock = Math.max(0, Number(numericPreview?.base?.baseStabilityDamage || 0) / 100);
+    var hutianBlackFlashResult = null;
+    if (effects.hutianBlackFlash) {
+      hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent);
+      directDamage = hutianBlackFlashResult.directDamage;
+    }
     if (blackFlashWindow) {
       directDamage = Math.max(directDamage + 10, Math.round(Number(numericPreview?.finalDamage || 8) * 0.9));
       stabilityShock += 0.085;
       opponent.statusEffects.push({ id: "blackFlashShock", label: actor?.characterCardProfile?.isZeroCe ? "极限打击冲击" : "黑闪冲击", rounds: 1, value: 1 });
     }
-    if (directDamage > 0) opponent.hp -= directDamage;
+    if (!effects.hutianBlackFlash && directDamage > 0) opponent.hp -= directDamage;
     if (stabilityShock > 0) {
       opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
     }
@@ -1096,8 +1150,9 @@
       domainActivated: !before.actorDomainActive && Boolean(actor.domain?.active),
       domainReleased: before.actorDomainActive && !actor.domain?.active,
       directDamage: directDamage,
-      blackFlashTriggered: Boolean(blackFlashWindow),
-      blackFlashLabel: blackFlashWindow ? (actor?.characterCardProfile?.isZeroCe ? "极限打击窗口" : "黑闪") : "",
+      blackFlashTriggered: Boolean(blackFlashWindow || effects.hutianBlackFlash),
+      blackFlashLabel: effects.hutianBlackFlash ? "黑闪！" : (blackFlashWindow ? (actor?.characterCardProfile?.isZeroCe ? "极限打击窗口" : "黑闪") : ""),
+      hutianBlackFlash: hutianBlackFlashResult || undefined,
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {
         return {

@@ -2,7 +2,7 @@
   "schema": "jjk-technique-card-existing-index",
   "version": "0.1.0-candidate",
   "status": "CANDIDATE",
-  "generatedAt": "2026-05-01T04:45:16.736Z",
+  "generatedAt": "2026-05-01T04:58:14.744Z",
   "generator": "scripts/build-technique-card-index.js",
   "sourceFiles": [
     "data/duel-card-templates-v0.1-candidate.json",
@@ -14,9 +14,9 @@
     "data/wheels.json"
   ],
   "counts": {
-    "existingCards": 108,
-    "existingCardCopy": 61,
-    "existingActions": 56,
+    "existingCards": 109,
+    "existingCardCopy": 62,
+    "existingActions": 57,
     "domainEntries": 22,
     "strengthEntries": 23,
     "wheelTechniqueEntries": 65,
@@ -1112,6 +1112,30 @@
         "爆发"
       ],
       "effectSummary": "建立下一次 strike 类动作的爆发机会；这不是主动暴击卡。",
+      "status": "CANDIDATE",
+      "existingKind": "cardTemplate"
+    },
+    {
+      "source": "duel-card-templates-v0.1-candidate.json",
+      "sourceFile": "data/duel-card-templates-v0.1-candidate.json",
+      "cardId": "card_hutian_black_flash",
+      "cardName": "黑闪！",
+      "sourceActionId": "hutian_black_flash",
+      "name": "黑闪！",
+      "normalizedName": "黑闪！",
+      "dedupeKey": "hutianblackflash|黑闪！|special",
+      "techniqueName": "",
+      "ownerOrRepresentative": "",
+      "cardType": "special",
+      "tags": [
+        "虎天帝",
+        "虎杖",
+        "黑闪",
+        "体术",
+        "爆发",
+        "特殊手札"
+      ],
+      "effectSummary": "消耗40咒力；以当前体势的3%为基础伤害并取2.5次方造成最终伤害。命中后恢复当前生命8%、当前咒力4%、稳定+1%，并使下次基础体势百分比+0.5%，可重复。",
       "status": "CANDIDATE",
       "existingKind": "cardTemplate"
     },
@@ -2717,6 +2741,27 @@
       "source": "duel-card-copy-v0.1-candidate.json",
       "sourceFile": "data/duel-card-copy-v0.1-candidate.json",
       "cardId": "",
+      "cardName": "黑闪！",
+      "sourceActionId": "hutian_black_flash",
+      "name": "黑闪！",
+      "normalizedName": "黑闪！",
+      "dedupeKey": "hutianblackflash|黑闪！",
+      "techniqueName": "",
+      "ownerOrRepresentative": "",
+      "cardType": "",
+      "tags": [
+        "虎天帝",
+        "黑闪",
+        "递增"
+      ],
+      "effectSummary": "40咒力；按当前体势3%的2.5次方造成伤害，命中后恢复并递增下次基础百分比。",
+      "status": "CANDIDATE",
+      "existingKind": "cardCopy"
+    },
+    {
+      "source": "duel-card-copy-v0.1-candidate.json",
+      "sourceFile": "data/duel-card-copy-v0.1-candidate.json",
+      "cardId": "",
       "cardName": "式神牵制",
       "sourceActionId": "shikigami_intercept",
       "name": "式神牵制",
@@ -3932,6 +3977,30 @@
         "爆发"
       ],
       "effectSummary": "建立下一次 strike 类动作的爆发机会；这不是主动暴击卡。",
+      "status": "CANDIDATE",
+      "existingKind": "actionTemplate"
+    },
+    {
+      "source": "duel-action-templates-v0.1-candidate.json",
+      "sourceFile": "data/duel-action-templates-v0.1-candidate.json",
+      "actionId": "hutian_black_flash",
+      "cardName": "黑闪！",
+      "sourceActionId": "hutian_black_flash",
+      "name": "黑闪！",
+      "normalizedName": "黑闪！",
+      "dedupeKey": "hutianblackflash|黑闪！",
+      "techniqueName": "",
+      "ownerOrRepresentative": "",
+      "cardType": "",
+      "tags": [
+        "虎天帝",
+        "虎杖",
+        "黑闪",
+        "体术",
+        "爆发",
+        "特殊手札"
+      ],
+      "effectSummary": "虎天帝专属主动黑闪。以当前体势的基础百分比计算伤害，并在命中后恢复自身、提高稳定与下次基础百分比。",
       "status": "CANDIDATE",
       "existingKind": "actionTemplate"
     },
@@ -6766,6 +6835,26 @@
         "source": "duel-action-templates-v0.1-candidate.json",
         "id": "impact_timing_window",
         "name": "爆发窗口",
+        "existingKind": "actionTemplate"
+      }
+    ],
+    "黑闪！": [
+      {
+        "source": "duel-card-templates-v0.1-candidate.json",
+        "id": "card_hutian_black_flash",
+        "name": "黑闪！",
+        "existingKind": "cardTemplate"
+      },
+      {
+        "source": "duel-card-copy-v0.1-candidate.json",
+        "id": "",
+        "name": "黑闪！",
+        "existingKind": "cardCopy"
+      },
+      {
+        "source": "duel-action-templates-v0.1-candidate.json",
+        "id": "hutian_black_flash",
+        "name": "黑闪！",
         "existingKind": "actionTemplate"
       }
     ],

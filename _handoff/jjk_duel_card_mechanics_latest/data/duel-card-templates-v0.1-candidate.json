@@ -1560,6 +1560,50 @@
       "status": "CANDIDATE"
     },
     {
+      "cardId": "card_hutian_black_flash",
+      "sourceActionId": "hutian_black_flash",
+      "name": "黑闪！",
+      "cardType": "special",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "虎天帝",
+        "虎杖",
+        "黑闪",
+        "体术",
+        "爆发",
+        "特殊手札"
+      ],
+      "specialHandTags": [
+        "hutian_black_flash"
+      ],
+      "特殊手札": [
+        "hutian_black_flash"
+      ],
+      "exclusiveToCharacters": [
+        "yuji_itadori_after68",
+        "虎天帝 / 虎杖悠仁（68年后）",
+        "虎天帝"
+      ],
+      "rarity": "special",
+      "weight": 1.2,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "消耗40咒力；以当前体势的3%为基础伤害并取2.5次方造成最终伤害。命中后恢复当前生命8%、当前咒力4%、稳定+1%，并使下次基础体势百分比+0.5%，可重复。",
+      "baseDamage": 0,
+      "durationRounds": 1,
+      "baseCeCost": 40,
+      "costType": "flat_ce",
+      "damageType": "black_flash",
+      "scalingProfile": "hutian_black_flash_current_hp_power",
+      "risk": "critical",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
       "cardId": "card_shikigami_intercept",
       "sourceActionId": "shikigami_intercept",
       "name": "式神牵制",

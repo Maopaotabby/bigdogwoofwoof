@@ -800,6 +800,66 @@
       "logTemplate": "你校准打击与咒力误差，下一次近身爆发窗口成形。"
     },
     {
+      "id": "hutian_black_flash",
+      "label": "黑闪！",
+      "status": "CANDIDATE",
+      "description": "虎天帝专属主动黑闪。以当前体势的基础百分比计算伤害，并在命中后恢复自身、提高稳定与下次基础百分比。",
+      "apCost": 1,
+      "cost": {
+        "ceRatio": 0,
+        "minCe": 40
+      },
+      "requirements": {
+        "domainActive": "any"
+      },
+      "availability": {
+        "domainActive": "any",
+        "handBeta": true
+      },
+      "mechanicIds": [],
+      "tags": [
+        "虎天帝",
+        "虎杖",
+        "黑闪",
+        "体术",
+        "爆发",
+        "特殊手札"
+      ],
+      "specialHandTags": [
+        "hutian_black_flash"
+      ],
+      "特殊手札": [
+        "hutian_black_flash"
+      ],
+      "exclusiveToCharacters": [
+        "yuji_itadori_after68",
+        "虎天帝 / 虎杖悠仁（68年后）",
+        "虎天帝"
+      ],
+      "effects": {
+        "hutianBlackFlash": true,
+        "hutianBlackFlashBaseHpRatio": 0.03,
+        "hutianBlackFlashGrowthPerHit": 0.005,
+        "hutianBlackFlashDamageExponent": 2.5,
+        "hutianBlackFlashHpHealCurrentRatio": 0.08,
+        "hutianBlackFlashCeHealCurrentRatio": 0.04,
+        "hutianBlackFlashStabilityDelta": 0.01,
+        "weightDeltas": {
+          "melee": 1.1,
+          "finisher": 0.9,
+          "initiative": 0.35
+        }
+      },
+      "baseDamage": 0,
+      "durationRounds": 1,
+      "baseCeCost": 40,
+      "costType": "flat_ce",
+      "damageType": "black_flash",
+      "scalingProfile": "hutian_black_flash_current_hp_power",
+      "risk": "critical",
+      "logTemplate": "虎天帝打出黑闪！体势、咒力与稳定性在命中后反向回流，下一次黑闪基础百分比继续提高。"
+    },
+    {
       "id": "shikigami_intercept",
       "label": "式神牵制",
       "status": "CANDIDATE",
