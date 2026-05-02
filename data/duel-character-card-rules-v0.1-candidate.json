@@ -334,6 +334,44 @@
         "咒力储备"
       ]
     },
+    "recontract_icon": {
+      "label": "雷吉 / 再契象 / 收据再现",
+      "profilePatch": {
+        "hasCe": true,
+        "hasInnateTechnique": true,
+        "hasDomainAccess": false
+      },
+      "allowTags": [
+        "雷吉",
+        "再契象",
+        "收据",
+        "库存",
+        "实物具现",
+        "实物式神",
+        "服务收据",
+        "房产再具象化",
+        "recontract_icon",
+        "receipt",
+        "recontract"
+      ],
+      "weightBoostTags": [
+        "雷吉",
+        "再契象",
+        "收据",
+        "实物具现",
+        "实物式神",
+        "服务收据",
+        "recontract_icon"
+      ],
+      "forceAllowSourceActionIds": [
+        "recontract_receipt_stock",
+        "recontract_santana_sedan",
+        "recontract_excavator",
+        "recontract_kitchen_knife",
+        "recontract_detached_house",
+        "recontract_five_star_resort_week"
+      ]
+    },
     "curse_spirit_general": {
       "label": "咒灵通用",
       "profilePatch": {
@@ -663,6 +701,67 @@
             "probability": 0.1,
             "handSource": "black_flash_round_proc",
             "note": "普通虎杖的黑闪不进入常规卡组；每轮独立以 1/10 概率临时加入手牌。"
+          }
+        ]
+      }
+    },
+    "reggie_star_culling": {
+      "aliases": [
+        "reggie",
+        "reggie_star",
+        "Reggie Star",
+        "雷吉",
+        "雷吉·斯塔",
+        "雷吉斯塔",
+        "レジィ",
+        "レジィ・スター"
+      ],
+      "archetypes": [
+        "recontract_icon"
+      ],
+      "techniqueFamilies": [
+        "recontract_icon",
+        "recontract",
+        "receipt_materialization"
+      ],
+      "specialHandTags": [
+        "recontract_icon"
+      ],
+      "特殊手札": [
+        "recontract_icon"
+      ],
+      "forceAllowTags": [
+        "再契象",
+        "收据",
+        "实物具现",
+        "实物式神",
+        "服务收据",
+        "recontract_icon"
+      ],
+      "rules": {
+        "forceAllowSourceActionIds": [
+          "recontract_receipt_stock",
+          "recontract_santana_sedan",
+          "recontract_excavator",
+          "recontract_kitchen_knife",
+          "recontract_detached_house",
+          "recontract_five_star_resort_week"
+        ],
+        "weightBoostTags": [
+          "再契象",
+          "收据",
+          "实物具现",
+          "实物式神",
+          "服务收据",
+          "recontract_icon"
+        ],
+        "randomHandInjections": [
+          {
+            "sourceActionId": "recontract_receipt_stock",
+            "probability": 1,
+            "weight": 99,
+            "handSource": "recontract_core_receipt",
+            "note": "雷吉的再契象起手资源牌；保证自身特殊手札池可启动。"
           }
         ]
       }

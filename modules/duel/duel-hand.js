@@ -367,6 +367,7 @@
     if (/伏黑|十种影|式神|嵌合暗翳庭/i.test(text)) traits.push("ten_shadows", "shikigami", "shadow", "伏黑", "式神", "影");
     if (/真人|灵魂|无为转变|自闭圆顿裹/i.test(text)) traits.push("mahito", "soul", "真人", "灵魂");
     if (/乙骨|里香|真赝相爱|复制/i.test(text)) traits.push("okkotsu", "rika", "copy_candidate", "乙骨", "里香");
+    if (/雷吉|レジィ|reggie|再契象|契约再现|收据|receipt|recontract/i.test(text)) traits.push("recontract_icon", "recontract", "receipt", "再契象", "收据", "实物具现");
     return uniqueList(traits);
   }
 
@@ -394,6 +395,7 @@
     if (/真人|无为转变|灵魂/i.test(text) && !archetypes.includes("mahito_soul_transfiguration")) archetypes.push("mahito_soul_transfiguration");
     if (/乙骨|里香|复制/i.test(text) && !archetypes.includes("okkotsu_rika_copy")) archetypes.push("okkotsu_rika_copy");
     if (/咒灵之躯|灾害咒灵|咒灵/i.test(text) && !archetypes.includes("curse_spirit_general")) archetypes.push("curse_spirit_general");
+    if (/雷吉|レジィ|reggie|再契象|契约再现|收据|receipt|recontract/i.test(text) && !archetypes.includes("recontract_icon")) archetypes.push("recontract_icon");
     return uniqueList(archetypes);
   }
 
