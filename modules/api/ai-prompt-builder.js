@@ -16,17 +16,17 @@
     status: "CANDIDATE",
     defaultMode: "user_proxy_endpoint",
     defaultProviderId: "ark_ai",
-    defaultProxyEndpoint: "http://119.91.224.223/ai",
+    defaultProxyEndpoint: "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev/ai",
     providers: Object.freeze([
       Object.freeze({
         providerId: "ark_ai",
         label: "ArkAI / 火山方舟",
         modes: Object.freeze(["openai_compatible_byok_direct", "user_proxy_endpoint"]),
-        endpointType: "responses",
-        baseUrl: "https://ark.cn-beijing.volces.com/api/v3/responses",
-        defaultPath: "",
-        defaultModel: "doubao-seed-2-0-mini-260215",
-        modelPresets: Object.freeze(["doubao-seed-2-0-mini-260215"]),
+        endpointType: "chat_completions",
+        baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
+        defaultPath: "/chat/completions",
+        defaultModel: "doubao-seed-2-0-lite-260215",
+        modelPresets: Object.freeze(["doubao-seed-2-0-lite-260215"]),
         allowCustomBaseUrl: false,
         allowCustomPath: false,
         allowCustomModel: true,
@@ -91,7 +91,7 @@
       openai_compatible_byok_direct: Object.freeze({ enabled: true, label: "ArkAI / OpenAI-compatible Provider（实验性）", providerId: "ark_ai", defaultStorage: "sessionStorage", allowLocalStorage: true }),
       user_proxy_endpoint: Object.freeze({ enabled: true, label: "玩家自托管 Proxy Endpoint（推荐）", providerId: "user_proxy" })
     }),
-    defaultModel: "doubao-seed-2-0-mini-260215",
+    defaultModel: "doubao-seed-2-0-lite-260215",
     openAiResponsesEndpoint: "https://api.openai.com/v1/responses",
     tokenBudget: Object.freeze({
       maxPromptTokens: 6000,

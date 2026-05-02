@@ -40,17 +40,14 @@ python -m http.server 4173 --bind 127.0.0.1
 http://127.0.0.1:4173/
 ```
 
-## GitHub Pages
+## Cloudflare Pages
 
-这是纯静态站点，可以直接用 GitHub Pages 部署：
+国外 HTTPS 静态源已迁移到 Cloudflare Pages direct upload，不再依赖 GitHub Pages 从 Git 仓库读取代码：
 
-- Branch：`main`
-- Folder：`/ (root)`
-
-当前外部 GitHub Pages 地址：
+当前外部 Cloudflare Pages 地址：
 
 ```text
-https://maopaotabby.github.io/bigdogwoofwoof/
+https://bigdogwoofwoof.pages.dev/
 ```
 
 ## 联机后端与服务器状态
@@ -63,7 +60,7 @@ https://maopaotabby.github.io/bigdogwoofwoof/
 https://jjk-online-battle.maopaotabby-jjk-life.workers.dev
 ```
 
-- 用途：GitHub Pages 的默认 HTTPS 联机后端。
+- 用途：Cloudflare Pages 国外静态源的默认 HTTPS 联机后端与 AI 代理。
 - 状态：仍可用，`main` 分支提交修改 Worker 文件后会由 `.githooks/post-commit` 自动部署。
 - 监控：`monitor-worker.ps1` 会检查 build、AI timeout、KV 绑定和 AI 配置状态。
 - 注意：联机回合裁判 AI 已取消；Worker 只保存房间、锁定行动、延迟 1 秒展示锁定反馈，并把回合交给前端本地规则引擎结算。

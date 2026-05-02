@@ -3,17 +3,17 @@
   "status": "CANDIDATE",
   "defaultMode": "user_proxy_endpoint",
   "defaultProviderId": "ark_ai",
-  "defaultProxyEndpoint": "http://119.91.224.223/ai",
+  "defaultProxyEndpoint": "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev/ai",
   "providers": [
     {
       "providerId": "ark_ai",
       "label": "ArkAI / 火山方舟",
       "modes": ["openai_compatible_byok_direct", "user_proxy_endpoint"],
-      "endpointType": "responses",
-      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3/responses",
-      "defaultPath": "",
-      "defaultModel": "doubao-seed-2-0-mini-260215",
-      "modelPresets": ["doubao-seed-2-0-mini-260215"],
+      "endpointType": "chat_completions",
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+      "defaultPath": "/chat/completions",
+      "defaultModel": "doubao-seed-2-0-lite-260215",
+      "modelPresets": ["doubao-seed-2-0-lite-260215"],
       "allowCustomBaseUrl": false,
       "allowCustomPath": false,
       "allowCustomModel": true,
@@ -110,7 +110,7 @@
       "securityWarningRequired": true
     }
   },
-  "defaultModel": "doubao-seed-2-0-mini-260215",
+  "defaultModel": "doubao-seed-2-0-lite-260215",
   "openAiResponsesEndpoint": "https://api.openai.com/v1/responses",
   "tokenBudget": {
     "maxPromptTokens": 6000,

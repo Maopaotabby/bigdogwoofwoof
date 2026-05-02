@@ -1793,6 +1793,151 @@
     return battle.battlefieldUnits;
   }
 
+  function cloneDuelPlain(value) {
+    if (value == null || typeof value !== "object") return value;
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (error) {
+      return Array.isArray(value) ? value.slice() : { ...value };
+    }
+  }
+
+  function getDuelCardTemplateByCardId(cardId) {
+    var getter = getOptionalDependency("getDuelCardTemplateIndex");
+    var index = getter ? getter() : global.JJKDuelCardTemplate?.getDuelCardTemplateIndex?.();
+    var cards = Array.isArray(index?.cards) ? index.cards : [];
+    return cards.find(function findCard(card) {
+      return card?.cardId === cardId || card?.sourceActionId === cardId;
+    }) || null;
+  }
+
+  function buildDuelGeneratedHandAction(card, sourceAction, round) {
+    if (!card?.sourceActionId) return null;
+    return {
+      id: card.sourceActionId,
+      actionId: card.sourceActionId,
+      sourceActionId: card.sourceActionId,
+      cardId: card.cardId || ("card_" + card.sourceActionId),
+      label: card.name || card.sourceActionId,
+      description: card.effectSummary || "",
+      type: card.cardType || "maintenance",
+      cardType: card.cardType || "maintenance",
+      tags: Array.isArray(card.tags) ? card.tags.slice() : [],
+      apCost: Number(card.apCost || 0),
+      costCe: Number(card.baseCeCost || card.ceCost || 0),
+      baseCeCost: Number(card.baseCeCost || card.ceCost || 0),
+      baseDamage: Number(card.baseDamage || 0),
+      baseBlock: Number(card.baseBlock || 0),
+      risk: card.risk || sourceAction?.risk || "medium",
+      effectSummary: card.effectSummary || "",
+      maintenanceSpec: cloneDuelPlain(card.maintenanceSpec),
+      generatedBy: card.generatedBy || sourceAction?.id || sourceAction?.sourceActionId || "",
+      generatedRound: round,
+      handSource: "generated-maintenance",
+      retainedPermanent: true,
+      noRefresh: true,
+      playableGeneratedCard: true,
+      selectionWeight: 999,
+      weight: 999
+    };
+  }
+
+  function injectDuelGeneratedHandCard(battle, side, card, sourceAction) {
+    if (!battle || !side || !card) return null;
+    battle.handState ||= {};
+    battle.handState[side] ||= { cards: [], discardPile: [], round: 0, lastDrawn: [], lastInjected: [] };
+    var hand = battle.handState[side];
+    var id = card.sourceActionId || card.cardId || "";
+    if (!id) return null;
+    var existing = (hand.cards || []).find(function findExisting(entry) {
+      return (entry?.actionId || entry?.id || entry?.action?.id || "") === id;
+    });
+    if (existing) return existing;
+    var generated = buildDuelGeneratedHandAction(card, sourceAction, Number(battle.round || 0) + 1);
+    if (!generated) return null;
+    hand.cards = Array.isArray(hand.cards) ? hand.cards : [];
+    hand.cards.unshift(generated);
+    hand.lastInjected = [{ actionId: generated.id, label: generated.label, reason: "summon-maintenance" }].concat(hand.lastInjected || []).slice(0, 8);
+    return generated;
+  }
+
+  function applyDuelSummonAction(action, actor, battle) {
+    var summonSpec = action?.summonSpec;
+    if (!summonSpec?.unitCardId || !actor || !battle) return null;
+    var unitTemplate = getDuelCardTemplateByCardId(summonSpec.unitCardId);
+    var unitStats = cloneDuelPlain(unitTemplate?.unitStats || action.unitStats || {});
+    var ownerSide = actor.side || "";
+    var round = Number(battle.round || 0) + 1;
+    var unitId = [summonSpec.unitCardId, ownerSide || "neutral", round, getDuelBattlefieldUnits(battle).length + 1].join("_");
+    var control = summonSpec.control || unitStats.control || "player_controlled";
+    var side = control === "neutral_uncontrolled" || control === "neutral_berserk" ? "neutral" : ownerSide;
+    var unit = {
+      id: unitId,
+      cardId: unitTemplate?.cardId || summonSpec.unitCardId,
+      sourceActionId: unitTemplate?.sourceActionId || summonSpec.unitCardId,
+      name: unitTemplate?.name || summonSpec.unitName || summonSpec.unitCardId,
+      label: unitTemplate?.name || summonSpec.unitName || summonSpec.unitCardId,
+      side: side,
+      ownerSide: ownerSide,
+      controllerSide: side === "neutral" ? "" : ownerSide,
+      control: control,
+      placement: summonSpec.placement || unitStats.placement || "battlefield",
+      tags: Array.isArray(unitTemplate?.tags) ? unitTemplate.tags.slice() : [],
+      unitStats: unitStats,
+      hp: Number(unitStats.currentHp || unitStats.maxHp || unitTemplate?.baseHp || 0),
+      maxHp: Number(unitStats.maxHp || unitStats.currentHp || unitTemplate?.baseHp || 0),
+      baseDamage: Number(unitStats.baseDamage || unitTemplate?.baseDamage || 0),
+      damageType: unitTemplate?.damageType || "",
+      targetingRules: cloneDuelPlain(unitTemplate?.targetingRules || {}),
+      guardRules: cloneDuelPlain(unitTemplate?.guardRules || {}),
+      adaptationRules: cloneDuelPlain(unitTemplate?.adaptationRules || {}),
+      matchupModifiers: cloneDuelPlain(unitTemplate?.matchupModifiers || {}),
+      active: true,
+      spawnedBy: action.id || action.sourceActionId || "",
+      spawnedRound: round
+    };
+    getDuelBattlefieldUnits(battle).push(unit);
+    var maintenanceCard = null;
+    if (summonSpec.requiresMaintenanceCardId) {
+      maintenanceCard = injectDuelGeneratedHandCard(battle, ownerSide, getDuelCardTemplateByCardId(summonSpec.requiresMaintenanceCardId), action);
+    }
+    battle.summonLog ||= [];
+    battle.summonLog.unshift({
+      round: round,
+      actorSide: ownerSide,
+      actionId: action.id || "",
+      unitId: unit.id,
+      unitName: unit.name,
+      control: control,
+      maintenanceActionId: maintenanceCard?.id || ""
+    });
+    return { unit: unit, maintenanceCard: maintenanceCard };
+  }
+
+  function applyDuelMaintenanceAction(action, actor, battle) {
+    var spec = action?.maintenanceSpec;
+    if (!spec || !actor || !battle) return null;
+    var actorSide = actor.side || "";
+    var stateId = spec.grantsState || "";
+    if (stateId) {
+      actor.statusEffects = Array.isArray(actor.statusEffects) ? actor.statusEffects : [];
+      var existing = actor.statusEffects.find(function findState(status) {
+        return status?.id === stateId;
+      });
+      if (existing) existing.rounds = Math.max(Number(existing.rounds || 0), 1);
+      else actor.statusEffects.push({ id: stateId, label: "影中藏身", rounds: 1, value: 1, sourceActionId: action.id || "" });
+    }
+    if (spec.apCostMode === "all_remaining_ap" && battle.actionPoints?.[actorSide]) {
+      battle.actionPoints[actorSide].spent = Number(battle.actionPoints[actorSide].spent || 0) + Number(battle.actionPoints[actorSide].current || 0);
+      battle.actionPoints[actorSide].current = 0;
+    }
+    return {
+      grantsState: stateId,
+      skipActiveTurn: Boolean(spec.skipActiveTurn),
+      apCostMode: spec.apCostMode || ""
+    };
+  }
+
   function getDuelTargetSide(resource, fallback) {
     return resource?.side || resource?.ownerSide || resource?.teamSide || fallback || "";
   }
@@ -2063,6 +2208,8 @@
     var blackFlashDamageBonus = 0;
     var damageTarget = null;
     var damageApplication = null;
+    var summonResult = null;
+    var maintenanceResult = null;
     var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
@@ -2125,6 +2272,8 @@
       actor.hp = Number(clamp(beforeHealHp + directHealing, 0, Number(actor.maxHp || beforeHealHp + directHealing)).toFixed(1));
       actualHealing = Math.max(0, Number((Number(actor.hp || 0) - beforeHealHp).toFixed(1)));
     }
+    summonResult = applyDuelSummonAction(action, actor, battle);
+    maintenanceResult = applyDuelMaintenanceAction(action, actor, battle);
 
     actorContext.outgoingScale *= Number(effects.outgoingScale || 1);
     actorContext.incomingHpScale *= Number(effects.incomingHpScale || 1);
@@ -2174,6 +2323,18 @@
       } : undefined,
       damageApplication: damageApplication || undefined,
       guardIntercepted: Boolean(damageTarget?.intercepted),
+      summon: summonResult ? {
+        unitId: summonResult.unit?.id || "",
+        unitName: summonResult.unit?.name || "",
+        side: summonResult.unit?.side || "",
+        ownerSide: summonResult.unit?.ownerSide || "",
+        control: summonResult.unit?.control || "",
+        hp: summonResult.unit?.hp || 0,
+        maxHp: summonResult.unit?.maxHp || 0,
+        baseDamage: summonResult.unit?.baseDamage || 0,
+        maintenanceActionId: summonResult.maintenanceCard?.id || ""
+      } : undefined,
+      maintenance: maintenanceResult || undefined,
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {
         return {

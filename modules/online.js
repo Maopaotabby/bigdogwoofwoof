@@ -919,6 +919,7 @@ function getSameOriginOfficialEndpoint() {
   if (!hostname) return "";
   if (["localhost", "127.0.0.1", "::1"].includes(hostname)) return "";
   if (hostname.endsWith("github.io")) return "";
+  if (hostname.endsWith("pages.dev")) return "";
   if (!/^https?:$/.test(String(location?.protocol || ""))) return "";
   try {
     return new URL("/online-room", location.href).href;

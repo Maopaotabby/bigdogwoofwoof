@@ -1,4 +1,5 @@
 node_modules/
+server-data/
 server/.wrangler/
 server.err.log
 server.out.log

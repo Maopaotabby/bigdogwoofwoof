@@ -1,4 +1,6 @@
 //--AI服务配置与叙事请求--//
+let aiAdminSession = null;
+
 function getAiPromptBuilder() {
   return globalThis.JJKAiPromptBuilder || globalThis.JJKAiPromptApi || null;
 }
@@ -126,7 +128,7 @@ function inferAiProviderIdForMode(mode) {
 function getSameOriginAiProxyEndpoint() {
   const location = globalThis.location;
   const hostname = String(location?.hostname || "");
-  if (!hostname || ["localhost", "127.0.0.1", "::1"].includes(hostname) || hostname.endsWith("github.io")) return "";
+  if (!hostname || ["localhost", "127.0.0.1", "::1"].includes(hostname) || hostname.endsWith("github.io") || hostname.endsWith("pages.dev")) return "";
   if (!/^https?:$/.test(String(location?.protocol || ""))) return "";
   try {
     return normalizeAiEndpoint(new URL("/ai", location.href).href);
@@ -195,6 +197,7 @@ function initializeAiNarrativePanel() {
   if (els.aiByokKeyInput) {
     els.aiByokKeyInput.value = readAiByokKey() || activeProvider?.defaultApiKey ? "••••••••••••" : "";
   }
+  updateAiAdminStatus();
   updateAiProviderUi();
   updateAiNarrativeStatus(getAiEndpointModeHint());
 }
@@ -354,6 +357,34 @@ function clearAllAiProviderSettings() {
   if (els.aiOutputTokenInput) els.aiOutputTokenInput.value = String(getAiProviderMaxOutputTokens());
   updateAiProviderUi();
   updateAiNarrativeStatus("已清除全部 AI Provider 设置；当前回到服务器默认 AI 代理。");
+}
+
+function getAiAdminAuth() {
+  return aiAdminSession && aiAdminSession.id && aiAdminSession.password ? { ...aiAdminSession } : null;
+}
+
+function updateAiAdminStatus(message) {
+  if (!els.aiAdminStatus) return;
+  els.aiAdminStatus.textContent = message || (getAiAdminAuth() ? "管理员已登录，本标签页 AI辅助角色生成不受普通 IP 限制。" : "管理员未登录。");
+}
+
+function loginAiAdmin() {
+  const id = String(els.aiAdminIdInput?.value || "").trim();
+  const password = String(els.aiAdminPasswordInput?.value || "");
+  if (!id || !password) {
+    updateAiAdminStatus("请输入管理员 ID 和密码。");
+    return;
+  }
+  aiAdminSession = { id, password };
+  if (els.aiAdminPasswordInput) els.aiAdminPasswordInput.value = "";
+  updateAiAdminStatus("管理员凭据已载入本标签页；下一次服务器代理请求会进行服务器校验。");
+}
+
+function logoutAiAdmin() {
+  aiAdminSession = null;
+  if (els.aiAdminIdInput) els.aiAdminIdInput.value = "";
+  if (els.aiAdminPasswordInput) els.aiAdminPasswordInput.value = "";
+  updateAiAdminStatus("管理员已退出。");
 }
 
 function saveAiProviderSettings() {
@@ -645,6 +676,21 @@ async function requestAiGoverned(templateId, context, options = {}) {
     return localResponse("missing-proxy-endpoint");
   }
   try {
+    if (settings.aiMode === "user_proxy_endpoint") {
+      const data = await requestUserProxyAiPayload(settings.proxyEndpoint, promptPayload, {
+        promptTemplateId: templateId,
+        timeoutMs: options.timeoutMs || AI_REQUEST_TIMEOUT_MS,
+        clientRequest: options.clientRequest || undefined
+      });
+      const text = data.text || data.markdown || "";
+      return {
+        ...(data || {}),
+        text,
+        markdown: data.markdown || text,
+        localFallback: false,
+        usage: data.usage || null
+      };
+    }
     if (!builder?.callAiProvider) throw new Error("AI prompt builder is unavailable.");
     const result = await callAiProviderWithTimeout(builder, settings, promptPayload, {
       promptTemplateId: templateId,
@@ -700,7 +746,9 @@ async function requestUserProxyAiPayload(endpoint, promptPayload, options = {}) 
       endpointType: options.endpointType || getAiProviderSettings().endpointType || "proxy",
       payload: promptPayload,
       siteVersion: APP_BUILD_VERSION,
-      promptTemplateId: options.promptTemplateId || promptPayload.metadata?.templateId || ""
+      promptTemplateId: options.promptTemplateId || promptPayload.metadata?.templateId || "",
+      clientRequest: options.clientRequest || undefined,
+      adminAuth: getAiAdminAuth() || undefined
     }),
     signal: controller.signal
   }).finally(() => window.clearTimeout(timeoutId));
@@ -1260,12 +1308,20 @@ async function requestDuelAiAssist(endpoint, payload) {
   if (endpoint) {
     return requestUserProxyAiPayload(endpoint, buildAiPromptPayload(templateId, payload), {
       promptTemplateId: templateId,
-      timeoutMs: AI_REQUEST_TIMEOUT_MS
+      timeoutMs: AI_REQUEST_TIMEOUT_MS,
+      clientRequest: templateId === "duel_character_assist" ? {
+        kind: "duel_character_assist",
+        uploadedText: payload?.description || ""
+      } : undefined
     });
   }
   const data = await requestAiGoverned(templateId, payload, {
     timeoutMs: AI_REQUEST_TIMEOUT_MS,
-    localFallbackText: buildLocalAiFallbackText(templateId, payload)
+    localFallbackText: buildLocalAiFallbackText(templateId, payload),
+    clientRequest: templateId === "duel_character_assist" ? {
+      kind: "duel_character_assist",
+      uploadedText: payload?.description || ""
+    } : undefined
   });
   const parsedData = payload?.mode === "characterBuild" ? parseDuelAiStructuredJson(data) : data;
   if (payload?.mode === "battleNarrative" && !data.battleText && (data.text || data.markdown)) {
@@ -2470,7 +2526,7 @@ function shouldSyncGlobalUsageCounter() {
   if (!hostname) return false;
   const allowedHosts = Array.isArray(GLOBAL_USAGE_COUNTER.allowedHosts)
     ? GLOBAL_USAGE_COUNTER.allowedHosts
-    : ["maopaotabby.github.io"];
+    : ["bigdogwoofwoof.pages.dev"];
   return allowedHosts.includes(hostname);
 }
 

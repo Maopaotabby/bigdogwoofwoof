@@ -74,9 +74,9 @@
             </label>
             <label class="field">
               <span>当前模型</span>
-              <input id="aiModelInput" type="text" value="doubao-seed-2-0-mini-260215" autocomplete="off" list="aiModelPresets">
+              <input id="aiModelInput" type="text" value="doubao-seed-2-0-lite-260215" autocomplete="off" list="aiModelPresets">
               <datalist id="aiModelPresets">
-                <option value="doubao-seed-2-0-mini-260215"></option>
+                <option value="doubao-seed-2-0-lite-260215"></option>
                 <option value="gpt-5-mini"></option>
                 <option value="deepseek-chat"></option>
                 <option value="deepseek-reasoner"></option>
@@ -130,6 +130,26 @@
             <div class="action-row compact">
               <button id="clearAiProxyBtn" class="secondary" type="button">清除 Proxy Endpoint</button>
             </div>
+          </div>
+          <div class="ai-mode-panel" data-ai-mode-panel="user_proxy_endpoint" hidden>
+            <p class="muted">
+              管理员凭据只随服务器代理请求发送，用于跳过 AI辅助角色生成的 IP 限流与输入字节限制。
+            </p>
+            <div class="creator-grid">
+              <label class="field">
+                <span>管理员 ID</span>
+                <input id="aiAdminIdInput" type="text" autocomplete="username">
+              </label>
+              <label class="field">
+                <span>管理员密码</span>
+                <input id="aiAdminPasswordInput" type="password" autocomplete="current-password">
+              </label>
+            </div>
+            <div class="action-row compact">
+              <button id="aiAdminLoginBtn" class="secondary" type="button">管理员登录</button>
+              <button id="aiAdminLogoutBtn" class="secondary" type="button">退出管理员</button>
+            </div>
+            <p id="aiAdminStatus" class="muted">管理员未登录。</p>
           </div>
           <div class="ai-provider-meta">
             <span id="aiPromptEstimate">估算 prompt token：待生成；最大输出 token：1800</span>

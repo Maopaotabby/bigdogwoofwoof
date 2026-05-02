@@ -945,6 +945,29 @@
     return Boolean(card?.noRefresh || card?.retainedPermanent || card?.executionSword);
   }
 
+  function getMaintenanceSpec(card) {
+    return card?.maintenanceSpec || card?.action?.maintenanceSpec || null;
+  }
+
+  function isMaintenanceUnitAlive(battle, unitCardId) {
+    if (!unitCardId) return true;
+    return (battle?.battlefieldUnits || []).some(function matchUnit(unit) {
+      var id = unit?.cardId || unit?.sourceActionId || unit?.id || "";
+      var hp = Number(unit?.hp ?? unit?.currentHp ?? unit?.unitStats?.currentHp ?? unit?.unitStats?.maxHp ?? 0);
+      return id === unitCardId && unit?.defeated !== true && unit?.active !== false && hp > 0;
+    });
+  }
+
+  function isMaintenanceCardCurrentlyValid(card, battle) {
+    var spec = getMaintenanceSpec(card);
+    if (!spec?.mandatoryWhileUnitActive) return true;
+    return isMaintenanceUnitAlive(battle, spec.mandatoryWhileUnitActive);
+  }
+
+  function isSkipTurnMaintenance(entry) {
+    return Boolean(getMaintenanceSpec(entry)?.skipActiveTurn);
+  }
+
   function getPersistentHandState(battle, side, rules) {
     var activeBattle = getBattle(battle);
     if (!activeBattle) return null;
@@ -1036,6 +1059,7 @@
       var refreshed = byId[id] || card;
       return normalizePersistentHandCard(refreshed, card.drawnRound || hand.round, "retained");
     }).filter(function keepExisting(card) {
+      if (!isMaintenanceCardCurrentlyValid(card, battle)) return false;
       if (!getActiveTrialSubPhaseForActor(actor, battle) && isRuleTrialCardLike(card)) return false;
       if (!getActiveJackpotSubPhaseForActor(actor, battle) && isJackpotSubPhaseCardLike(card)) return false;
       return Boolean(getActionId(card));
@@ -2281,6 +2305,16 @@
     var seen = new Set();
     var totalCeCost = 0;
     var results = [];
+    var selectedIds = new Set(entries.map(getActionId).filter(Boolean));
+    var mandatoryMaintenance = (getPersistentHandState(battle, side, options?.rules)?.cards || []).filter(function findMandatory(card) {
+      return isSkipTurnMaintenance(card) && isMaintenanceCardCurrentlyValid(card, battle);
+    });
+    if (mandatoryMaintenance.length && !mandatoryMaintenance.some(function selectedMandatory(card) { return selectedIds.has(getActionId(card)); })) {
+      return { applied: false, ok: false, reason: "未调幅魔虚罗在场时，本轮必须先打出「影中藏身」。", side: side, actions: entries.map(getActionFromEntry), results: results, totalCeCost: totalCeCost };
+    }
+    if (entries.some(isSkipTurnMaintenance) && entries.length > 1) {
+      return { applied: false, ok: false, reason: "影中藏身会消耗全部行动点，不能与其他手札同回合结算。", side: side, actions: entries.map(getActionFromEntry), results: results, totalCeCost: totalCeCost };
+    }
     for (var index = 0; index < entries.length; index += 1) {
       var entry = entries[index];
       var action = getActionFromEntry(entry);

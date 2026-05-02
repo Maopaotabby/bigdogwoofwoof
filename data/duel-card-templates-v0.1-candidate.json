@@ -3609,7 +3609,7 @@
       "summonSpec": {
         "unitCardId": "card_unit_mahoraga_unattuned",
         "placement": "battlefield_center",
-        "control": "neutral_uncontrolled",
+        "control": "neutral_berserk",
         "requiresMaintenanceCardId": "card_ten_shadows_shadow_hide",
         "failureRule": "if_user_not_shadow_hidden_user_is_valid_target"
       },

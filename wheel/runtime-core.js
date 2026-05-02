@@ -165,6 +165,11 @@ const els = {
   clearAiProxyBtn: document.querySelector("#clearAiProxyBtn"),
   clearAiAllSettingsBtn: document.querySelector("#clearAiAllSettingsBtn"),
   testAiProviderBtn: document.querySelector("#testAiProviderBtn"),
+  aiAdminIdInput: document.querySelector("#aiAdminIdInput"),
+  aiAdminPasswordInput: document.querySelector("#aiAdminPasswordInput"),
+  aiAdminLoginBtn: document.querySelector("#aiAdminLoginBtn"),
+  aiAdminLogoutBtn: document.querySelector("#aiAdminLogoutBtn"),
+  aiAdminStatus: document.querySelector("#aiAdminStatus"),
   aiNarrativeKind: document.querySelector("#aiNarrativeKind"),
   saveAiEndpointBtn: document.querySelector("#saveAiEndpointBtn"),
   generateAiNarrativeBtn: document.querySelector("#generateAiNarrativeBtn"),
@@ -407,12 +412,12 @@ const DUEL_CURATED_EXTERNAL_RESOURCES = [
 const GLOBAL_USAGE_COUNTER = {
   provider: "jujutsu-life-ai-worker",
   domain: "maopaotabby-bigdogwoofwoof-jjk-wheel",
-  canonicalUrl: "https://maopaotabby.github.io/bigdogwoofwoof/",
+  canonicalUrl: "https://bigdogwoofwoof.pages.dev/",
   endpoint: "https://jujutsu-life-ai.maopaotabby-jjk-life.workers.dev/api/usage-stats",
   fallbackProvider: "hitscounter.dev",
   fallbackEndpoint: "https://hitscounter.dev/api/hit",
   requestTimeoutMs: 12000,
-  allowedHosts: ["maopaotabby.github.io", "119.91.224.223"],
+  allowedHosts: ["bigdogwoofwoof.pages.dev", "119.91.224.223"],
   timezone: "Asia/Shanghai",
   utcOffsetMinutes: 480,
   label: "open"
@@ -1112,6 +1117,8 @@ function bindEvents() {
   els.clearAiProxyBtn?.addEventListener("click", clearAiProxyEndpoint);
   els.clearAiAllSettingsBtn?.addEventListener("click", clearAllAiProviderSettings);
   els.testAiProviderBtn?.addEventListener("click", testAiProviderConnection);
+  els.aiAdminLoginBtn?.addEventListener("click", loginAiAdmin);
+  els.aiAdminLogoutBtn?.addEventListener("click", logoutAiAdmin);
   els.globalSettingsBtn?.addEventListener("click", () => toggleGlobalSettingsPanel());
   els.globalSettingsCloseBtn?.addEventListener("click", () => toggleGlobalSettingsPanel(false));
   els.generateAiNarrativeBtn?.addEventListener("click", generateAiNarrative);

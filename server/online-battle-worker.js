@@ -4,7 +4,10 @@ const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
 const MAX_AI_TIMEOUT_MS = 150000;
-const DEFAULT_ARK_RESPONSES_URL = "https://ark.cn-beijing.volces.com/api/v3/responses";
+const DEFAULT_ARK_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
+const DEFAULT_ARK_CHAT_COMPLETIONS_URL = `${DEFAULT_ARK_BASE_URL}/chat/completions`;
+const DEFAULT_ARK_MODEL = "doubao-seed-2-0-lite-260215";
+const DEFAULT_AI_ALLOWED_ORIGINS = "https://bigdogwoofwoof.pages.dev";
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const PASS_TURN_ACTION_ID = "online_pass_turn";
 const memoryRooms = new Map();
@@ -19,6 +22,116 @@ function json(data, status = 200) {
       "Access-Control-Allow-Headers": "Content-Type"
     }
   });
+}
+
+function getRequestHeader(request, name) {
+  return String(request?.headers?.get(name) || "").trim();
+}
+
+function requestOrigin(request) {
+  const origin = getRequestHeader(request, "origin");
+  if (origin) return origin.replace(/\/+$/, "");
+  const referer = getRequestHeader(request, "referer");
+  if (!referer) return "";
+  try {
+    return new URL(referer).origin.replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+function getClientIpFromRequest(request) {
+  return String(
+    getRequestHeader(request, "cf-connecting-ip") ||
+    getRequestHeader(request, "x-forwarded-for").split(",")[0].trim() ||
+    "unknown"
+  ).replace(/^::ffff:/, "");
+}
+
+function utf8Bytes(value) {
+  return new TextEncoder().encode(String(value || "")).length;
+}
+
+async function sha256(value) {
+  const bytes = new TextEncoder().encode(String(value || ""));
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function splitCsv(value) {
+  return String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function isAiOriginAllowed(request, env) {
+  const origin = requestOrigin(request);
+  if (!origin) return env.AI_ALLOW_NO_ORIGIN === "true";
+  const allowed = new Set(splitCsv(env.AI_ALLOWED_ORIGINS || DEFAULT_AI_ALLOWED_ORIGINS).map((item) => item.replace(/\/+$/, "")));
+  return allowed.has(origin);
+}
+
+function parseIpv4ToInt(ip) {
+  const parts = String(ip || "").split(".");
+  if (parts.length !== 4) return null;
+  let value = 0;
+  for (const part of parts) {
+    if (!/^\d+$/.test(part)) return null;
+    const byte = Number(part);
+    if (byte < 0 || byte > 255) return null;
+    value = (value << 8) + byte;
+  }
+  return value >>> 0;
+}
+
+function ipv4InCidr(ip, cidr) {
+  const [range, bitsText] = String(cidr || "").split("/");
+  const bits = Number(bitsText);
+  const ipInt = parseIpv4ToInt(ip);
+  const rangeInt = parseIpv4ToInt(range);
+  if (ipInt === null || rangeInt === null || !Number.isInteger(bits) || bits < 0 || bits > 32) return false;
+  const mask = bits === 0 ? 0 : (0xffffffff << (32 - bits)) >>> 0;
+  return (ipInt & mask) === (rangeInt & mask);
+}
+
+function isHenanRegionText(value) {
+  return /河南|henan|cn-ha|^ha$/i.test(String(value || "").trim());
+}
+
+function getHenanAccessClassification(request, env, ip) {
+  const headerNames = splitCsv(env.AI_HENAN_REGION_HEADERS || "x-province,x-client-province,x-ip-region,x-real-region,x-forwarded-region,cf-region,cf-ipregion,cloudfront-viewer-country-region");
+  const regionHeaders = Object.fromEntries(headerNames.map((name) => [name, getRequestHeader(request, name)]).filter((entry) => entry[1]));
+  const matchedHeader = Object.entries(regionHeaders).find(([, value]) => isHenanRegionText(value));
+  if (matchedHeader) return { henanIp: true, method: "region_header", header: matchedHeader[0], value: matchedHeader[1], exemptionEnabled: env.AI_HENAN_EXEMPT_RATE_LIMIT !== "false", regionHeaders };
+  const matchedCidr = splitCsv(env.AI_HENAN_IP_CIDRS || "").find((cidr) => ipv4InCidr(ip, cidr));
+  if (matchedCidr) return { henanIp: true, method: "configured_cidr", cidr: matchedCidr, exemptionEnabled: env.AI_HENAN_EXEMPT_RATE_LIMIT !== "false", regionHeaders };
+  return { henanIp: false, method: "", exemptionEnabled: env.AI_HENAN_EXEMPT_RATE_LIMIT !== "false", regionHeaders };
+}
+
+function extractUploadedText(body) {
+  const direct = body?.clientRequest?.uploadedText ?? body?.uploadedText;
+  if (direct != null) return String(direct || "");
+  const context = body?.payload?.metadata?.context || body?.payload?.context || {};
+  return String(context.description || context.text || context.prompt || "");
+}
+
+function isAdminRequest(env, body) {
+  const auth = body?.adminAuth || {};
+  const adminId = String(env.AI_ADMIN_ID || "ADMIN");
+  const adminPassword = String(env.AI_ADMIN_PASSWORD || "");
+  return Boolean(adminPassword) && String(auth.id || "").trim() === adminId && String(auth.password || "") === adminPassword;
+}
+
+function redactAdminAuth(value) {
+  if (!value || typeof value !== "object") return value;
+  const copy = { ...value };
+  if (copy.adminAuth) copy.adminAuth = { id: String(copy.adminAuth.id || ""), password: "[redacted]" };
+  return copy;
+}
+
+function stripAdminAuth(value) {
+  if (!value || typeof value !== "object") return value;
+  const copy = { ...value };
+  delete copy.adminAuth;
+  return copy;
 }
 
 function normalizeRoomId(value) {
@@ -343,6 +456,30 @@ async function readRoom(env, roomId) {
   return room ? normalizeRoom(room) : null;
 }
 
+async function appendAiAuditLog(env, entry) {
+  if (!env.JJK_ONLINE_ROOMS) return;
+  const key = `ai_audit:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+  await env.JJK_ONLINE_ROOMS.put(key, JSON.stringify(entry), { expirationTtl: 60 * 60 * 24 * 30 });
+}
+
+async function enforceAiAssistRateLimit(env, ip, isAdmin, henanExempt) {
+  if (isAdmin) return { limited: false, remaining: "admin" };
+  if (henanExempt) return { limited: false, remaining: "henan_exempt", exemptReason: "henan_ip_policy" };
+  const limit = Math.max(1, Number(env.AI_ASSIST_DAILY_LIMIT || 5));
+  const now = nowMs();
+  const windowMs = 24 * 60 * 60 * 1000;
+  const key = `ai_rate:${ip || "unknown"}`;
+  const raw = env.JJK_ONLINE_ROOMS ? await env.JJK_ONLINE_ROOMS.get(key) : null;
+  const timestamps = raw ? JSON.parse(raw).filter((time) => now - Number(time || 0) < windowMs) : [];
+  if (timestamps.length >= limit) {
+    if (env.JJK_ONLINE_ROOMS) await env.JJK_ONLINE_ROOMS.put(key, JSON.stringify(timestamps), { expirationTtl: 60 * 60 * 25 });
+    return { limited: true, remaining: 0, resetAt: new Date(Math.min(...timestamps) + windowMs).toISOString() };
+  }
+  timestamps.push(now);
+  if (env.JJK_ONLINE_ROOMS) await env.JJK_ONLINE_ROOMS.put(key, JSON.stringify(timestamps), { expirationTtl: 60 * 60 * 25 });
+  return { limited: false, remaining: Math.max(0, limit - timestamps.length) };
+}
+
 function mergePreservedRoomState(base, current, options = {}) {
   if (!current) return base;
   if (options.preservePlayers) {
@@ -460,12 +597,13 @@ function normalizeServerAiEndpoint(value) {
   }
 }
 
-function getServerAiResponsesUrl(env) {
-  const explicit = normalizeServerAiEndpoint(env.AI_RESPONSES_URL || env.AI_API_URL || "");
+function getServerAiChatCompletionsUrl(env) {
+  const explicit = normalizeServerAiEndpoint(env.AI_CHAT_COMPLETIONS_URL || env.AI_API_URL || "");
   if (explicit) return explicit;
   const base = normalizeServerAiEndpoint(env.AI_BASE_URL || "");
-  if (!base) return DEFAULT_ARK_RESPONSES_URL;
-  return /\/responses$/i.test(base) ? base : `${base}/responses`;
+  if (!base) return DEFAULT_ARK_CHAT_COMPLETIONS_URL;
+  if (/\/chat\/completions$/i.test(base)) return base;
+  return `${base}/chat/completions`;
 }
 
 function extractAiResponseText(data) {
@@ -499,30 +637,78 @@ function normalizeResponsesInput(input) {
   }).filter((message) => message.content);
 }
 
-function buildServerResponsesPayload(env, payload = {}) {
-  const maxOutputTokens = Math.max(64, Math.min(4000, Number(payload.max_output_tokens || env.AI_MAX_TOKENS || 700)));
+function buildServerChatCompletionsPayload(env, payload = {}) {
+  const maxOutputTokens = Math.max(64, Math.min(4000, Number(payload.max_tokens || payload.max_output_tokens || env.AI_MAX_TOKENS || 700)));
   const temperature = Number.isFinite(Number(payload.temperature ?? env.AI_TEMPERATURE))
     ? Math.max(0, Math.min(2, Number(payload.temperature ?? env.AI_TEMPERATURE)))
     : 0.4;
   const input = normalizeResponsesInput(payload.input || payload.messages || payload.prompt || "");
   return {
-    model: String(env.AI_MODEL || payload.model || "doubao-seed-2-0-mini-260215").trim(),
-    input: input.length ? input : [{ role: "user", content: String(payload.text || "你好") }],
-    max_output_tokens: maxOutputTokens,
+    model: String(env.AI_MODEL || payload.model || DEFAULT_ARK_MODEL).trim(),
+    messages: input.length ? input : [{ role: "user", content: String(payload.text || "你好") }],
+    max_tokens: maxOutputTokens,
     temperature
   };
 }
 
-async function handleAiProxy(env, body = {}) {
+async function handleAiProxy(env, body = {}, request = null, rawBody = "") {
+  const ip = request ? getClientIpFromRequest(request) : "unknown";
+  const origin = request ? requestOrigin(request) : "";
+  const promptTemplateId = String(body.promptTemplateId || body.payload?.metadata?.templateId || "").slice(0, 80);
+  const isCharacterAssist = promptTemplateId === "duel_character_assist";
+  const uploadedText = extractUploadedText(body);
+  const uploadedTextBytes = utf8Bytes(uploadedText);
+  const accessClass = request ? getHenanAccessClassification(request, env, ip) : { henanIp: false, exemptionEnabled: true };
+  const henanExempt = Boolean(accessClass.henanIp && accessClass.exemptionEnabled);
+  const admin = isAdminRequest(env, body);
+  const promptPayloadText = JSON.stringify(body.payload || {});
+  const strictAudit = {
+    strictAudit: Boolean(accessClass?.henanIp),
+    accessClass,
+    network: request ? {
+      host: getRequestHeader(request, "host"),
+      origin: getRequestHeader(request, "origin"),
+      referer: getRequestHeader(request, "referer"),
+      userAgent: getRequestHeader(request, "user-agent"),
+      cfConnectingIp: getRequestHeader(request, "cf-connecting-ip"),
+      forwardedFor: getRequestHeader(request, "x-forwarded-for")
+    } : {},
+    requestMeta: {
+      method: request?.method || "POST",
+      url: request?.url || "",
+      rawBodyBytes: utf8Bytes(rawBody),
+      rawBodySha256: await sha256(rawBody),
+      promptPayloadBytes: utf8Bytes(promptPayloadText),
+      promptPayloadSha256: await sha256(promptPayloadText),
+      uploadedTextBytes,
+      uploadedTextSha256: await sha256(uploadedText)
+    }
+  };
+  if (request && !isAiOriginAllowed(request, env)) {
+    await appendAiAuditLog(env, { time: new Date().toISOString(), ip, origin, promptTemplateId, ...strictAudit, rejected: true, reason: "origin_not_allowed", request: redactAdminAuth(body) });
+    return json({ ok: false, error: "AI 生成必须从 Cloudflare Pages 正式来源发起，当前来源未被允许。" }, 403);
+  }
+  if (isCharacterAssist && uploadedTextBytes > Math.max(1, Number(env.AI_ASSIST_MAX_TEXT_BYTES || 1000)) && !admin && !henanExempt) {
+    await appendAiAuditLog(env, { time: new Date().toISOString(), ip, origin, promptTemplateId, ...strictAudit, rejected: true, reason: "uploaded_text_too_large", uploadedTextBytes, request: redactAdminAuth(body) });
+    return json({ ok: false, error: `AI辅助角色生成输入不能超过 ${env.AI_ASSIST_MAX_TEXT_BYTES || 1000} 字节。` }, 413);
+  }
+  if (isCharacterAssist) {
+    const rate = await enforceAiAssistRateLimit(env, ip, admin, henanExempt);
+    if (rate.limited) {
+      await appendAiAuditLog(env, { time: new Date().toISOString(), ip, origin, promptTemplateId, ...strictAudit, rejected: true, reason: "ip_daily_limit", uploadedTextBytes, request: redactAdminAuth(body), rateLimit: rate });
+      return json({ ok: false, error: "该 IP 24 小时内 AI辅助角色生成次数已达上限。", rateLimit: rate }, 429);
+    }
+  }
   const apiKey = String(env.AI_API_KEY || "").trim();
-  const responsesUrl = getServerAiResponsesUrl(env);
+  const chatCompletionsUrl = getServerAiChatCompletionsUrl(env);
   const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, MAX_AI_TIMEOUT_MS);
-  const payload = buildServerResponsesPayload(env, body.payload || {});
+  const safeBody = stripAdminAuth(body);
+  const payload = buildServerChatCompletionsPayload(env, safeBody.payload || {});
   const startedAt = nowMs();
 
   if (!apiKey) return json({ ok: false, error: "服务器未配置 AI_API_KEY。" }, 503);
-  if (!responsesUrl) return json({ ok: false, error: "服务器 AI Responses URL 无效。" }, 500);
-  const response = await withTimeout(fetch(responsesUrl, {
+  if (!chatCompletionsUrl) return json({ ok: false, error: "服务器 AI Chat Completions URL 无效。" }, 500);
+  const response = await withTimeout(fetch(chatCompletionsUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -533,33 +719,37 @@ async function handleAiProxy(env, body = {}) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = data?.error?.message || data?.error || `AI HTTP ${response.status}`;
-    return json({ ok: false, error: String(message), status: response.status }, response.status);
+    const errorResponse = { ok: false, error: String(message), status: response.status };
+    await appendAiAuditLog(env, { time: new Date().toISOString(), ip, origin, promptTemplateId, ...strictAudit, admin: admin ? "yes" : "no", henanExempt: henanExempt ? "yes" : "no", limitPolicy: henanExempt ? "henan_ip_unlimited_strict_audit" : (admin ? "admin_unlimited" : "standard_ip_24h_limit"), providerId: String(body.providerId || ""), endpointType: String(body.endpointType || ""), siteVersion: String(body.siteVersion || ""), uploadedText, uploadedTextBytes, promptPayload: body.payload || null, usage: null, responseStatus: response.status, responseOk: false, error: String(message), request: redactAdminAuth(body) });
+    return json(errorResponse, response.status);
   }
   const text = extractAiResponseText(data);
-  return json({
+  const responsePayload = {
     ok: true,
     provider: env.AI_PROVIDER || "ark_ai",
-    endpointType: "responses",
+    endpointType: "chat_completions",
     model: payload.model,
     text,
     markdown: text,
     usage: data.usage || null,
     durationMs: nowMs() - startedAt,
-    promptTemplateId: String(body.promptTemplateId || body.payload?.metadata?.templateId || "").slice(0, 80),
+    promptTemplateId,
     siteVersion: String(body.siteVersion || "").slice(0, 80)
-  });
+  };
+  await appendAiAuditLog(env, { time: new Date().toISOString(), ip, origin, promptTemplateId, ...strictAudit, admin: admin ? "yes" : "no", henanExempt: henanExempt ? "yes" : "no", limitPolicy: henanExempt ? "henan_ip_unlimited_strict_audit" : (admin ? "admin_unlimited" : "standard_ip_24h_limit"), providerId: String(body.providerId || ""), endpointType: String(body.endpointType || ""), siteVersion: String(body.siteVersion || ""), uploadedText, uploadedTextBytes, promptPayload: body.payload || null, usage: data.usage || null, responseStatus: 200, responseOk: true, error: "", request: redactAdminAuth(body) });
+  return json(responsePayload);
 }
 
 async function resolveTurnWithAi(env, room) {
-  const model = env.AI_MODEL || "doubao-seed-2-0-mini-260215";
-  const responsesUrl = getServerAiResponsesUrl(env);
+  const model = env.AI_MODEL || DEFAULT_ARK_MODEL;
+  const chatCompletionsUrl = getServerAiChatCompletionsUrl(env);
   const timeoutMs = clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, MAX_AI_TIMEOUT_MS);
   const apiKey = String(env.AI_API_KEY || "").trim();
   const aiMessages = buildAiPrompt(room);
   const aiRequestPreview = {
     provider: env.AI_PROVIDER || "ark_ai",
     model,
-    responsesUrl,
+    chatCompletionsUrl,
     timeoutMs,
     temperature: Number(env.AI_TEMPERATURE || 0.4),
     maxTokens: Math.max(64, Math.min(1200, Number(env.AI_MAX_TOKENS || 700))),
@@ -573,14 +763,14 @@ async function resolveTurnWithAi(env, room) {
       actions: redactSecrets(room.turnState.actions)
     };
   }
-  const payload = buildServerResponsesPayload(env, {
+  const payload = buildServerChatCompletionsPayload(env, {
     model,
     input: aiMessages,
-    max_output_tokens: aiRequestPreview.maxTokens,
+    max_tokens: aiRequestPreview.maxTokens,
     temperature: aiRequestPreview.temperature
   });
   const startedAt = nowMs();
-  const response = await withTimeout(fetch(responsesUrl, {
+  const response = await withTimeout(fetch(chatCompletionsUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -667,8 +857,8 @@ async function handleOperation(env, body) {
     message: "online battle endpoint ready",
     aiConfigured: Boolean(String(env.AI_API_KEY || "").trim()),
     aiProvider: env.AI_PROVIDER || "ark_ai",
-    aiBaseURL: getServerAiResponsesUrl(env),
-    aiModel: env.AI_MODEL || "doubao-seed-2-0-mini-260215",
+    aiBaseURL: getServerAiChatCompletionsUrl(env),
+    aiModel: env.AI_MODEL || DEFAULT_ARK_MODEL,
     aiTimeoutMs: clampNumber(env.AI_TIMEOUT_MS, DEFAULT_AI_TIMEOUT_MS, 3000, MAX_AI_TIMEOUT_MS),
     hasRoomKv: Boolean(env.JJK_ONLINE_ROOMS),
     serverTime: new Date().toISOString()
@@ -859,14 +1049,16 @@ export default {
     if (request.method !== "POST") return json({ ok: false, error: "Only POST is supported." }, 405);
     const pathname = new URL(request.url).pathname;
     let body;
+    let rawBody = "";
     try {
-      body = await request.json();
+      rawBody = await request.text();
+      body = JSON.parse(rawBody || "{}");
     } catch {
       return json({ ok: false, error: "JSON 请求无效。" }, 400);
     }
     try {
-      if (pathname === "/ai") return await handleAiProxy(env, body);
-      if (pathname !== "/online-room") return json({ ok: false, error: "Unknown endpoint." }, 404);
+      if (pathname === "/ai") return await handleAiProxy(env, body, request, rawBody);
+      if (pathname !== "/online-room" && pathname !== "/") return json({ ok: false, error: "Unknown endpoint." }, 404);
       return await handleOperation(env, body);
     } catch (error) {
       return json({
