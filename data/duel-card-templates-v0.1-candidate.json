@@ -3669,6 +3669,7 @@
         "魔虚罗",
         "式神",
         "中立单位",
+        "狂暴单位",
         "未调幅",
         "自动行动",
         "适应",
@@ -3697,13 +3698,18 @@
         "guardBreak": 24,
         "actionsPerRound": 1,
         "placement": "battlefield_center",
-        "control": "neutral_uncontrolled",
+        "control": "neutral_berserk",
         "controlResistance": "high",
         "domainResistance": "high"
       },
       "targetingRules": {
-        "default": "highest_threat_last_round",
-        "userIsValidTargetUnlessState": "shadow_hidden_from_unattuned_mahoraga"
+        "default": "berserk_all_units_and_players",
+        "hostileTo": "all_sides",
+        "ownerPriority": "highest_unless_shadow_hidden",
+        "ownerStateToAvoidPriority": "shadow_hidden_from_unattuned_mahoraga",
+        "whileOwnerHidden": "target_other_valid_combatants_by_threat",
+        "userIsValidTargetUnlessState": "shadow_hidden_from_unattuned_mahoraga",
+        "neverCountsAsGuard": true
       },
       "adaptationRules": {
         "tracksThreatTags": true,

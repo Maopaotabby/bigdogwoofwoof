@@ -1835,6 +1835,9 @@
 
   function isDuelGuardUnit(unit) {
     var tags = getDuelUnitTags(unit);
+    if (unit?.targetingRules?.neverCountsAsGuard || unit?.guardRules?.neverCountsAsGuard) return false;
+    if (unit?.unitStats?.control === "neutral_berserk" || unit?.control === "neutral_berserk") return false;
+    if (tags.includes("狂暴单位") || tags.includes("berserk")) return false;
     return Boolean(
       unit?.guardRules?.interceptsOpponentAttacks ||
       unit?.guardRules?.protectOwner ||
