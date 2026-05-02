@@ -1729,6 +1729,144 @@
     };
   }
 
+  function getDuelBattlefieldUnits(battle) {
+    if (!battle) return [];
+    if (!Array.isArray(battle.battlefieldUnits)) battle.battlefieldUnits = [];
+    return battle.battlefieldUnits;
+  }
+
+  function getDuelTargetSide(resource, fallback) {
+    return resource?.side || resource?.ownerSide || resource?.teamSide || fallback || "";
+  }
+
+  function getDuelUnitHp(unit) {
+    var hp = unit?.hp ?? unit?.currentHp ?? unit?.unitStats?.currentHp ?? unit?.unitStats?.maxHp ?? 0;
+    hp = Number(hp || 0);
+    return Number.isFinite(hp) ? Math.max(0, hp) : 0;
+  }
+
+  function setDuelUnitHp(unit, hp) {
+    if (!unit) return;
+    var value = Math.max(0, Number(hp || 0));
+    unit.hp = value;
+    unit.currentHp = value;
+    if (unit.unitStats && typeof unit.unitStats === "object") unit.unitStats.currentHp = value;
+    if (value <= 0) {
+      unit.defeated = true;
+      unit.active = false;
+    }
+  }
+
+  function isDuelUnitAlive(unit) {
+    if (!unit || unit.defeated) return false;
+    if (unit.active === false && getDuelUnitHp(unit) <= 0) return false;
+    return getDuelUnitHp(unit) > 0;
+  }
+
+  function getDuelUnitTags(unit) {
+    var tags = [];
+    if (Array.isArray(unit?.tags)) tags = tags.concat(unit.tags);
+    if (Array.isArray(unit?.template?.tags)) tags = tags.concat(unit.template.tags);
+    if (Array.isArray(unit?.cardTemplate?.tags)) tags = tags.concat(unit.cardTemplate.tags);
+    return tags.map(function normalizeTag(tag) { return String(tag || "").toLowerCase(); });
+  }
+
+  function getDuelGuardPriority(unit) {
+    return Number(unit?.guardPriority ?? unit?.guardRules?.priority ?? unit?.targetingRules?.guardPriority ?? 0);
+  }
+
+  function isDuelGuardUnit(unit) {
+    var tags = getDuelUnitTags(unit);
+    return Boolean(
+      unit?.guardRules?.interceptsOpponentAttacks ||
+      unit?.guardRules?.protectOwner ||
+      unit?.targetingRules?.interceptsOpponentAttacks ||
+      unit?.interceptsOpponentAttacks ||
+      unit?.protectsOwner ||
+      tags.includes("guard") ||
+      tags.includes("protector") ||
+      tags.includes("守护")
+    );
+  }
+
+  function getDuelGuardUnitsForSide(battle, defenderSide) {
+    return getDuelBattlefieldUnits(battle)
+      .filter(function guardForSide(unit) {
+        var side = getDuelTargetSide(unit, unit?.side);
+        return side === defenderSide && isDuelUnitAlive(unit) && isDuelGuardUnit(unit);
+      })
+      .sort(function byPriority(left, right) {
+        return getDuelGuardPriority(right) - getDuelGuardPriority(left) || getDuelUnitHp(right) - getDuelUnitHp(left);
+      });
+  }
+
+  function findDuelBattlefieldTargetById(battle, targetId, defender) {
+    if (!targetId) return null;
+    var normalized = String(targetId);
+    var unit = getDuelBattlefieldUnits(battle).find(function matchUnit(candidate) {
+      return String(candidate?.id || candidate?.cardId || candidate?.sourceActionId || "") === normalized;
+    });
+    if (unit && isDuelUnitAlive(unit)) return { type: "unit", unit: unit, id: unit.id || unit.cardId || normalized, name: unit.name || unit.label || unit.cardName || normalized, side: getDuelTargetSide(unit, defender?.side) };
+    if (String(defender?.id || defender?.side || "") === normalized) return { type: "character", resource: defender, id: defender.id || defender.side || normalized, name: defender.name || defender.label || defender.side || normalized, side: defender.side || "" };
+    return null;
+  }
+
+  function resolveDuelDamageTarget(action, actor, opponent, battle, options) {
+    var targetPlan = action?.targetPlan || action?.targetingPlan || {};
+    var defenderSide = targetPlan.primaryTargetSide || targetPlan.targetSide || opponent?.side || "";
+    var explicitTarget = findDuelBattlefieldTargetById(battle, targetPlan.primaryTargetId || targetPlan.explicitTargetId || targetPlan.targetId, opponent);
+    if (explicitTarget) return { ...explicitTarget, explicit: true, intercepted: false, selectionMode: targetPlan.selectionMode || "explicit" };
+    if (options?.damage > 0 && targetPlan.allowUnitInterception !== false && !action?.effects?.bypassGuard && !action?.bypassGuard) {
+      var guardUnit = getDuelGuardUnitsForSide(battle, defenderSide)[0];
+      if (guardUnit) {
+        return {
+          type: "unit",
+          unit: guardUnit,
+          id: guardUnit.id || guardUnit.cardId || guardUnit.sourceActionId || "",
+          name: guardUnit.name || guardUnit.label || guardUnit.cardName || "守护单位",
+          side: defenderSide,
+          explicit: false,
+          intercepted: true,
+          selectionMode: "guard_priority"
+        };
+      }
+    }
+    return { type: "character", resource: opponent, id: opponent?.id || opponent?.side || defenderSide, name: opponent?.name || opponent?.label || defenderSide, side: defenderSide, explicit: false, intercepted: false, selectionMode: targetPlan.selectionMode || "opponent_character" };
+  }
+
+  function applyDuelHpDamageToTarget(target, amount) {
+    var damage = Math.max(0, Number(amount || 0));
+    if (!target || damage <= 0) return { applied: 0, overkill: 0, defeated: false, targetType: target?.type || "" };
+    if (target.type === "unit") {
+      var beforeHp = getDuelUnitHp(target.unit);
+      var appliedToUnit = Math.min(beforeHp, damage);
+      var afterHp = Math.max(0, beforeHp - appliedToUnit);
+      setDuelUnitHp(target.unit, afterHp);
+      return {
+        targetType: "unit",
+        targetId: target.id || "",
+        targetName: target.name || "",
+        applied: Number(appliedToUnit.toFixed(1)),
+        beforeHp: Number(beforeHp.toFixed(1)),
+        afterHp: Number(afterHp.toFixed(1)),
+        overkill: Number(Math.max(0, damage - appliedToUnit).toFixed(1)),
+        defeated: beforeHp > 0 && afterHp <= 0
+      };
+    }
+    var beforeCharacterHp = Number(target.resource?.hp || 0);
+    target.resource.hp = beforeCharacterHp - damage;
+    return {
+      targetType: "character",
+      targetId: target.id || "",
+      targetName: target.name || "",
+      applied: Number(damage.toFixed(1)),
+      beforeHp: Number(beforeCharacterHp.toFixed(1)),
+      afterHp: Number(Number(target.resource.hp || 0).toFixed(1)),
+      overkill: 0,
+      defeated: beforeCharacterHp > 0 && Number(target.resource.hp || 0) <= 0
+    };
+  }
+
   function applyHutianBlackFlashEffect(effects, actor, opponent, options) {
     var stacks = getHutianBlackFlashStacks(actor);
     var baseRatio = Number(effects.hutianBlackFlashBaseHpRatio || 0.03) + stacks * Number(effects.hutianBlackFlashGrowthPerHit || 0.005);
@@ -1747,15 +1885,17 @@
         previewOnly: true
       };
     }
-    if (directDamage > 0) opponent.hp -= directDamage;
+    if (directDamage > 0 && !options?.skipOpponentDamage) opponent.hp -= directDamage;
     var hpHeal = Math.max(0, Number(actor?.hp || 0) * Number(effects.hutianBlackFlashHpHealCurrentRatio || 0.08));
     var ceHeal = Math.max(0, Number(actor?.ce || 0) * Number(effects.hutianBlackFlashCeHealCurrentRatio || 0.04));
     actor.hp = Number(actor.hp || 0) + hpHeal;
     actor.ce = Number(actor.ce || 0) + ceHeal;
     actor.stability = Number(clamp(Number(actor.stability || 0) + Number(effects.hutianBlackFlashStabilityDelta || 0.01), 0, 1).toFixed(4));
     setHutianBlackFlashStacks(actor, stacks + 1);
-    opponent.statusEffects = Array.isArray(opponent.statusEffects) ? opponent.statusEffects : [];
-    opponent.statusEffects.push({ id: "hutianBlackFlashShock", label: "黑闪！", rounds: 1, value: 1 });
+    if (!options?.skipOpponentStatus) {
+      opponent.statusEffects = Array.isArray(opponent.statusEffects) ? opponent.statusEffects : [];
+      opponent.statusEffects.push({ id: "hutianBlackFlashShock", label: "黑闪！", rounds: 1, value: 1 });
+    }
     return {
       directDamage: directDamage,
       baseDamage: Number(baseDamage.toFixed(4)),
@@ -1849,9 +1989,7 @@
     (effects.selfStatuses || []).forEach(function addSelfStatus(status) {
       if (status?.id) actor.statusEffects.push({ ...status });
     });
-    (effects.opponentStatuses || []).forEach(function addOpponentStatus(status) {
-      if (status?.id) opponent.statusEffects.push({ ...status });
-    });
+    var pendingOpponentStatuses = Array.isArray(effects.opponentStatuses) ? effects.opponentStatuses : [];
     if (Number(effects.lowStabilityHpRecoil || 0) && Number(actor.stability || 0) < 0.38) actor.hp -= Number(effects.lowStabilityHpRecoil);
     var directDamage = Math.max(0, Math.round(Number(numericPreview?.finalDamage || 0) * (action.risk === "high" || action.risk === "critical" ? 0.58 : 0.45)));
     var directHealing = Math.max(0, Math.round(Number(numericPreview?.finalHealing || 0)));
@@ -1862,6 +2000,8 @@
     var blackFlashStatus = null;
     var blackFlashDamageBefore = 0;
     var blackFlashDamageBonus = 0;
+    var damageTarget = null;
+    var damageApplication = null;
     var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
@@ -1896,17 +2036,27 @@
       instantKillOnHit = false;
       if (hutianBlackFlashResult) hutianBlackFlashResult.evaded = true;
     }
+    damageTarget = resolveDuelDamageTarget(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
     if (!evasionResult?.evaded && instantKillOnHit) {
-      directDamage = Math.max(directDamage, Math.ceil(Number(opponent.hp || 0)));
-      opponent.hp = 0;
+      directDamage = Math.max(directDamage, Math.ceil(damageTarget?.type === "unit" ? getDuelUnitHp(damageTarget.unit) : Number(opponent.hp || 0)));
+      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
     } else if (!evasionResult?.evaded && effects.hutianBlackFlash) {
-      hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent);
+      hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, {
+        skipOpponentDamage: damageTarget?.type === "unit",
+        skipOpponentStatus: damageTarget?.type === "unit"
+      });
       directDamage = hutianBlackFlashResult.directDamage;
+      if (damageTarget?.type === "unit") damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
     } else if (!effects.hutianBlackFlash && directDamage > 0) {
-      opponent.hp -= directDamage;
+      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
     }
-    if (!evasionResult?.evaded && blackFlashStatus) opponent.statusEffects.push(blackFlashStatus);
-    if (stabilityShock > 0) {
+    if (!evasionResult?.evaded && blackFlashStatus && damageTarget?.type !== "unit") opponent.statusEffects.push(blackFlashStatus);
+    if (!evasionResult?.evaded && damageTarget?.type !== "unit") {
+      pendingOpponentStatuses.forEach(function addOpponentStatus(status) {
+        if (status?.id) opponent.statusEffects.push({ ...status });
+      });
+    }
+    if (stabilityShock > 0 && damageTarget?.type !== "unit") {
       opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
     }
     if (directHealing > 0 && Number(actor.maxHp || 0) > 0) {
@@ -1953,6 +2103,16 @@
       blackFlashDamageBonus: blackFlashWindow ? blackFlashDamageBonus : undefined,
       blackFlashSourceActionId: blackFlashWindow ? (action.id || "") : undefined,
       hutianBlackFlash: hutianBlackFlashResult || undefined,
+      damageTarget: damageTarget ? {
+        type: damageTarget.type,
+        id: damageTarget.id || "",
+        name: damageTarget.name || "",
+        side: damageTarget.side || "",
+        intercepted: Boolean(damageTarget.intercepted),
+        selectionMode: damageTarget.selectionMode || ""
+      } : undefined,
+      damageApplication: damageApplication || undefined,
+      guardIntercepted: Boolean(damageTarget?.intercepted),
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {
         return {

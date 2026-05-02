@@ -1080,6 +1080,25 @@
       "status": "CONFIRMED"
     },
     {
+      "sourceActionId": "unit_mahoraga_tuned",
+      "displayName": "八握剑异戒神将 魔虚罗",
+      "subtitle": "调幅后的友方守护单位",
+      "shortEffect": "300 血，60 基础伤害，24 破防；未被击破前，对手攻击优先判定到魔虚罗身上。攻击咒灵时基础伤害乘以 3。",
+      "longEffect": "调幅后的魔虚罗作为友方单位登场，拥有 300 血、60 基础伤害和 24 破防。在魔虚罗存活期间，对手对我方的攻击会先进入守护目标判定，并优先落到魔虚罗身上；只有魔虚罗被击破后，攻击才继续判定到我方角色或其他目标。它保留适应机制，并且对咒灵目标基础伤害乘以 3。",
+      "flavorLine": "调幅完成后，神将不再乱斩，而是先站到术者身前。",
+      "uiTags": [
+        "魔虚罗",
+        "调幅后",
+        "友方单位",
+        "守护",
+        "300血",
+        "60伤害",
+        "咒灵特攻"
+      ],
+      "tone": "formal",
+      "status": "CONFIRMED"
+    },
+    {
       "sourceActionId": "recontract_receipt_stock",
       "displayName": "收据库存",
       "subtitle": "先整理能再现的契约",

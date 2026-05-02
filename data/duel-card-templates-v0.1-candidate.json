@@ -3692,6 +3692,77 @@
       }
     },
     {
+      "cardId": "card_unit_mahoraga_tuned",
+      "sourceActionId": "unit_mahoraga_tuned",
+      "name": "八握剑异戒神将 魔虚罗",
+      "cardType": "unit",
+      "apCost": 0,
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "魔虚罗",
+        "式神",
+        "友方单位",
+        "调幅后",
+        "守护",
+        "适应",
+        "咒灵特攻"
+      ],
+      "rarity": "special",
+      "weight": 0,
+      "allowedContexts": [
+        "battlefield_unit",
+        "mahoraga_tuned_active"
+      ],
+      "effectSummary": "调幅后的友方魔虚罗。拥有独立血条与数值；在其未被击破前，对手攻击优先判定到魔虚罗身上。对咒灵目标基础伤害乘以 3。",
+      "baseDamage": 60,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_exorcism_blade",
+      "scalingProfile": "mahoraga_tuned_guard_unit",
+      "risk": "high",
+      "status": "CONFIRMED",
+      "playableInHandBeta": false,
+      "generatedBy": "ten_shadows_mahoraga_tuning_success",
+      "unitStats": {
+        "maxHp": 300,
+        "currentHp": 300,
+        "baseDamage": 60,
+        "guardBreak": 24,
+        "actionsPerRound": 1,
+        "placement": "frontline_guard",
+        "control": "player_controlled",
+        "controlResistance": "very_high",
+        "domainResistance": "high"
+      },
+      "guardRules": {
+        "interceptsOpponentAttacks": true,
+        "protectsSide": "owner",
+        "priority": 100,
+        "untilDefeated": true,
+        "scope": "single_or_team_side"
+      },
+      "targetingRules": {
+        "default": "protect_owner_then_highest_threat",
+        "interceptsOpponentAttacks": true,
+        "teamTargetingReady": true
+      },
+      "adaptationRules": {
+        "tracksThreatTags": true,
+        "initialThreshold": 2,
+        "strongThreshold": 3,
+        "initialEffect": "reduce_next_same_tag_effect",
+        "strongEffect": "major_reduction_and_counter_modifier"
+      },
+      "matchupModifiers": {
+        "againstCurse": {
+          "baseDamageMultiplier": 3,
+          "reason": "mahoraga_exorcism_blade_curse_special_attack"
+        }
+      }
+    },
+    {
       "cardId": "card_recontract_receipt_stock",
       "sourceActionId": "recontract_receipt_stock",
       "name": "收据库存",

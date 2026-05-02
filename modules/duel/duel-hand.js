@@ -2191,6 +2191,33 @@
     return { cleared: true, count: cleared };
   }
 
+  function buildDuelHandTargetPlan(action, actor, opponent, battle, entry, options) {
+    var explicitTargetId = entry?.targetId || entry?.primaryTargetId || entry?.target?.id || action?.targetId || action?.primaryTargetId || "";
+    var targetSide = entry?.targetSide || entry?.primaryTargetSide || action?.targetSide || action?.primaryTargetSide || opponent?.side || "";
+    return {
+      source: "duel_hand_selection",
+      selectionMode: explicitTargetId ? "explicit" : "guard_priority",
+      actorSide: actor?.side || getActorSide(actor, options),
+      primaryTargetSide: targetSide,
+      primaryTargetId: explicitTargetId,
+      targetTeamId: entry?.targetTeamId || action?.targetTeamId || "",
+      allowUnitInterception: action?.allowUnitInterception !== false && action?.bypassGuard !== true,
+      teamModeReady: true
+    };
+  }
+
+  function withDuelHandTargetPlan(action, actor, opponent, battle, entry, options) {
+    if (!action) return action;
+    var existing = action.targetPlan || {};
+    return {
+      ...action,
+      targetPlan: {
+        ...buildDuelHandTargetPlan(action, actor, opponent, battle, entry, options),
+        ...existing
+      }
+    };
+  }
+
   function applyDuelSelectedHandActions(actor, opponent, duelState, options) {
     var battle = getBattle(duelState);
     if (!battle || !actor || !opponent) return { applied: false, reason: "战斗资源缺失", actions: [], results: [] };
@@ -2206,7 +2233,7 @@
       var entry = selected[index];
       var action = getActionFromEntry(entry);
       if (!action?.id) continue;
-      var actionForExecution = withZeroCeCostOverride(action, actor);
+      var actionForExecution = withDuelHandTargetPlan(withZeroCeCostOverride(action, actor), actor, opponent, battle, entry, options);
       var result = callDependency("applyDuelActionEffect", [actionForExecution, actor, opponent, battle]);
       results.push({ applied: Boolean(result), reason: result ? "" : "动作未结算", action: actionForExecution, result: result });
       if (result) appliedActions.push(actionForExecution);
@@ -2366,7 +2393,7 @@
       cost: apCost,
       reason: "AP 已降级为 legacy 显示，不再阻止普通手札。"
     };
-    action = withZeroCeCostOverride(action, actor);
+    action = withDuelHandTargetPlan(withZeroCeCostOverride(action, actor), actor, opponent, battle, candidate, options);
     var result = callDependency("applyDuelActionEffect", [action, actor, opponent, battle]);
     return {
       applied: true,
