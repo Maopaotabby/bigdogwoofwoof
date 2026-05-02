@@ -164,7 +164,7 @@
       "displayName": "高羽史彦（死灭回游）",
       "stage": "cullingGame",
       "baseStats": {
-        "cursedEnergy": "B",
+        "cursedEnergy": "A",
         "control": "B",
         "efficiency": "B",
         "body": "B",
@@ -254,8 +254,8 @@
         "cursedEnergy": "EX-",
         "control": "A",
         "efficiency": "A",
-        "body": "B",
-        "martial": "B",
+        "body": "A",
+        "martial": "S",
         "talent": "SSS"
       },
       "externalResource": "真里香",
@@ -1559,6 +1559,34 @@
       "officialGrade": "诅咒师",
       "powerTier": "specialGrade",
       "notes": "按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。"
+    },
+    {
+      "characterId": "reggie_star_culling",
+      "displayName": "雷吉·斯塔（死灭回游）",
+      "stage": "culling",
+      "baseStats": {
+        "cursedEnergy": "A",
+        "control": "A",
+        "efficiency": "B",
+        "body": "A",
+        "martial": "S",
+        "talent": "A"
+      },
+      "innateTraits": [
+        "再契象",
+        "契约库存",
+        "道具式神"
+      ],
+      "techniquePower": "A",
+      "officialGrade": "觉醒泳者",
+      "powerTier": "grade1Trickster",
+      "specialHandTags": [
+        "recontract_icon",
+        "receipt_materialization",
+        "object_shikigami"
+      ],
+      "domainProfile": "无",
+      "notes": "再契象以收据/契约再具象化实物或服务；实物可短暂控制，按低到中血量道具式神/战场单位处理。一户建属于高伤害慢速压杀牌。"
     }
   ]
 }

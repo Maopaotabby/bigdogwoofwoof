@@ -1,0 +1,26 @@
+{
+  "characterId": "reggie_star_culling",
+  "displayName": "雷吉·斯塔（死灭回游）",
+  "stage": "culling",
+  "sourceLayer": "原作本篇-死灭回游",
+  "techniqueName": "再契象",
+  "techniqueDescription": "以收据/契约内容再具象化实物或服务。实物可短暂作为低到中耐久的战场单位或道具式神使用，服务类收据可转化为恢复、补给或资源调度。",
+  "baseStats": {
+    "cursedEnergy": "A",
+    "control": "A",
+    "efficiency": "B",
+    "body": "A",
+    "martial": "S",
+    "talent": "A"
+  },
+  "officialGrade": "觉醒泳者",
+  "powerTier": "grade1Trickster",
+  "specialHandTags": [
+    "recontract_icon",
+    "receipt_materialization",
+    "object_shikigami"
+  ],
+  "domainProfile": "无",
+  "notes": "雷吉强在契约库存、物资调度和战场判断。再契象具现出的实物可短暂控制，本项目按道具式神/临时单位处理；本体不按高肉体或高爆发术师处理。",
+  "status": "CONFIRMED"
+}

@@ -211,7 +211,7 @@
       "suggestedRarity": "rare",
       "sourceLayer": "原作本篇",
       "nameStatus": "official_or_stable",
-      "status": "CANDIDATE",
+      "status": "SUPERSEDED_BY_CONFIRMED_CARD",
       "duplicateCheck": {
         "checkedAgainstLatestPackage": "jjk_duel_card_mechanics_latest_20260501_1649.zip",
         "existingCards": 109,
@@ -220,10 +220,12 @@
         "exactNameDuplicate": false,
         "normalizedName": "鵺雷羽"
       },
-      "migrationNotes": "候选数值仅供新版卡牌迁移参考，最终 AP/CE/伤害/领域负荷由迁移表统一校准。",
-      "doNotFinalizeReason": "需等待新版领域框架、灵魂血条、咒力最大输出与资源规则统一迁移。",
+      "migrationNotes": "已由正式单位化召唤卡「鵺」替换；旧鵺雷羽单次伤害草案不再作为普通手牌导入。",
+      "doNotFinalizeReason": "已改为带独立血条、飞行位置、雷击牵制和目标逻辑的战场单位。",
       "sourceActionId": "feature_ten_shadows_001",
-      "existingCardRefs": [],
+      "existingCardRefs": [
+        "card_ten_shadows_nue"
+      ],
       "duplicateOf": "",
       "duplicateStatus": "none",
       "draftRole": "new_candidate",
@@ -263,8 +265,8 @@
           "baseDamage capped to playable beta scale"
         ]
       },
-      "playableAsNormalHand": true,
-      "migrationDirective": "candidate_name_copy_pool_balance_recomputed",
+      "playableAsNormalHand": false,
+      "migrationDirective": "replaced_by_confirmed_unit_summon_card",
       "reviewLineInSource": 24,
       "reviewedAt": "2026-05-01",
       "sourcePackage": {
@@ -308,8 +310,8 @@
         "formulaHint": "final value = balancedRuntimeStats base anchor + character-stat modifier; ceCost is reduced by efficiency and constrained by cursedEnergy; damage effects are still subject to evasion unless accuracyProfile is unavoidable.",
         "usesCharacterBaseStats": true
       },
-      "runtimeImportStatus": "ready_for_manual_mapping",
-      "importableFromMergedPackage": true
+      "runtimeImportStatus": "replaced_by_confirmed_duel_card_template",
+      "importableFromMergedPackage": false
     },
     {
       "draftCardId": "draft_ten_shadows_2_8064ef_v0_4",
@@ -345,7 +347,7 @@
       "suggestedRarity": "rare",
       "sourceLayer": "原作本篇",
       "nameStatus": "official_or_stable",
-      "status": "CANDIDATE",
+      "status": "SUPERSEDED_BY_CONFIRMED_CARD",
       "duplicateCheck": {
         "checkedAgainstLatestPackage": "jjk_duel_card_mechanics_latest_20260501_1649.zip",
         "existingCards": 109,
@@ -354,10 +356,12 @@
         "exactNameDuplicate": false,
         "normalizedName": "脱兔烟幕"
       },
-      "migrationNotes": "候选数值仅供新版卡牌迁移参考，最终 AP/CE/伤害/领域负荷由迁移表统一校准。",
-      "doNotFinalizeReason": "需等待新版领域框架、灵魂血条、咒力最大输出与资源规则统一迁移。",
+      "migrationNotes": "已由正式防御扰乱卡「脱兔烟幕」替换；保留为十影机制牌，不生成独立血条单位。",
+      "doNotFinalizeReason": "已改为遮蔽、目标偏移和单体锁定扰乱机制牌。",
       "sourceActionId": "feature_ten_shadows_002",
-      "existingCardRefs": [],
+      "existingCardRefs": [
+        "card_ten_shadows_rabbit_escape"
+      ],
       "duplicateOf": "",
       "duplicateStatus": "none",
       "draftRole": "new_candidate",
@@ -398,8 +402,8 @@
           "zeroed non-runtime fields: domainLoadDelta"
         ]
       },
-      "playableAsNormalHand": true,
-      "migrationDirective": "candidate_name_copy_pool_balance_recomputed",
+      "playableAsNormalHand": false,
+      "migrationDirective": "replaced_by_confirmed_disruption_card",
       "reviewLineInSource": 80,
       "reviewedAt": "2026-05-01",
       "sourcePackage": {
@@ -443,8 +447,8 @@
         "formulaHint": "final value = balancedRuntimeStats base anchor + character-stat modifier; ceCost is reduced by efficiency and constrained by cursedEnergy; damage effects are still subject to evasion unless accuracyProfile is unavoidable.",
         "usesCharacterBaseStats": true
       },
-      "runtimeImportStatus": "ready_for_manual_mapping",
-      "importableFromMergedPackage": true
+      "runtimeImportStatus": "replaced_by_confirmed_duel_card_template",
+      "importableFromMergedPackage": false
     },
     {
       "draftCardId": "draft_ten_shadows_3_db25b5_v0_4",
@@ -452,49 +456,55 @@
       "techniqueName": "十种影法术",
       "ownerOrRepresentative": "伏黑惠；宿傩夺取伏黑身体后也使用",
       "domainName": "嵌合暗翳庭",
-      "cardName": "魔虚罗调伏仪",
-      "cardIntent": "domain",
-      "mechanicSubtype": "domain",
-      "futureCardType": "domain_exclusive",
+      "cardName": "魔虚罗调幅仪式",
+      "cardIntent": "summon",
+      "mechanicSubtype": "ritual_summon",
+      "futureCardType": "unique_uncontrolled_summon",
       "scalingProfile": "techniquePower + control",
-      "effectDraft": "以调伏仪式召出适应压力；若自身无法维持，领域负荷与反噬同步上升。",
-      "shortEffect": "以调伏仪式召出适应压力；若自身无法维持，领域负荷与反噬同步上升。",
-      "longEffect": "以调伏仪式召出适应压力；若自身无法维持，领域负荷与反噬同步上升。 候选结算：仅在相关领域或领域候选状态下使用，施加 41 点领域压迫。",
-      "flavorText": "「魔虚罗调伏仪」是 十种影法术 的候选特色手札，保留为 CANDIDATE，不视为最终平衡。",
+      "effectDraft": "召出未调幅的八握剑异戒神将魔虚罗，并生成每轮必须打出的「影中藏身」。魔虚罗作为中立暴走随从自动行动，未藏身时可将使用者也视为有效目标。",
+      "shortEffect": "召出未调幅魔虚罗；每轮必须以「影中藏身」消耗全部 AP 并跳过回合，否则魔虚罗也会攻击使用者。",
+      "longEffect": "召出未调幅的八握剑异戒神将魔虚罗。魔虚罗不归属于任何一方，每轮自动行动 1 次，优先攻击上一轮对其造成最高威胁的单位；若使用者未处于影中藏身，也可攻击使用者。使用者获得「影中藏身」：每轮开始时必须打出，消耗全部 AP，本回合跳过主动行动，并使自身不被未调幅魔虚罗优先选为目标。魔虚罗受到同类威胁后获得适应层，2 层初适应，3 层强适应。",
+      "flavorText": "「魔虚罗调幅仪式」是 十种影法术 的候选特色手札，保留为 CANDIDATE，不视为最终平衡。",
       "mechanicTags": [
         "mahoraga",
         "adaptation",
         "ritual",
+        "uncontrolled_summon",
+        "forced_maintenance",
+        "shadow_hide",
+        "adaptation_stack",
         "high_risk"
       ],
       "riskTags": [
         "high"
       ],
-      "domainRelated": true,
+      "domainRelated": false,
       "soulRelated": false,
       "ruleRelated": false,
-      "summonRelated": false,
+      "summonRelated": true,
       "antiDomainRelated": false,
-      "possibleDomainEffectTypes": [
-        "auto_attack"
-      ],
-      "powerHint": "high",
-      "suggestedRarity": "rare",
+      "possibleDomainEffectTypes": [],
+      "powerHint": "special",
+      "suggestedRarity": "unique",
       "sourceLayer": "原作本篇",
       "nameStatus": "official_or_stable",
-      "status": "CANDIDATE",
+      "status": "SUPERSEDED_BY_CONFIRMED_CARD_PACKAGE",
       "duplicateCheck": {
         "checkedAgainstLatestPackage": "jjk_duel_card_mechanics_latest_20260501_1649.zip",
         "existingCards": 109,
         "existingDrafts": 6,
         "existingActions": 57,
         "exactNameDuplicate": false,
-        "normalizedName": "魔虚罗调伏仪"
+        "normalizedName": "魔虚罗调幅仪式"
       },
-      "migrationNotes": "候选数值仅供新版卡牌迁移参考，最终 AP/CE/伤害/领域负荷由迁移表统一校准。",
-      "doNotFinalizeReason": "需等待新版领域框架、灵魂血条、咒力最大输出与资源规则统一迁移。",
+      "migrationNotes": "已由正式三卡包替换：魔虚罗调幅仪式、影中藏身、八握剑异戒神将 魔虚罗。旧单卡候选不再作为普通手牌导入。",
+      "doNotFinalizeReason": "已拆分为启动牌、强制维持牌和中立暴走单位牌；旧单卡仅保留来源记录。",
       "sourceActionId": "feature_ten_shadows_003",
-      "existingCardRefs": [],
+      "existingCardRefs": [
+        "card_ten_shadows_mahoraga_tuning_ritual",
+        "card_ten_shadows_shadow_hide",
+        "card_unit_mahoraga_unattuned"
+      ],
       "duplicateOf": "",
       "duplicateStatus": "none",
       "draftRole": "new_candidate",
@@ -502,42 +512,60 @@
       "duplicateWarning": "",
       "variantOf": "",
       "variantReason": "",
-      "draftVariantType": "domain_variant",
+      "draftVariantType": "uncontrolled_summon_variant",
       "originalCandidateRuntimeStats": {
-        "apCost": 2,
-        "baseCeCost": 57,
-        "baseDamage": 42,
+        "apCost": 3,
+        "baseCeCost": 70,
+        "baseDamage": 60,
         "baseBlock": 0,
-        "controlValue": 41,
+        "controlValue": 0,
         "soulDamage": 0,
-        "domainLoadDelta": 28,
-        "durationRounds": 2
+        "domainLoadDelta": 0,
+        "durationRounds": 0
       },
       "balancedRuntimeStats": {
-        "apCost": 2,
-        "baseCeCost": 42,
-        "baseDamage": 20,
+        "apCost": 3,
+        "baseCeCost": 70,
+        "baseDamage": 60,
         "baseBlock": 0,
-        "controlValue": 30,
+        "controlValue": 0,
         "soulDamage": 0,
-        "domainLoadDelta": 12,
-        "durationRounds": 1,
-        "accuracyProfile": "technique_area",
+        "domainLoadDelta": 0,
+        "durationRounds": 0,
+        "accuracyProfile": "summon_auto_action",
         "evasionAllowed": true,
         "hitRateModifier": 0,
         "meaningfulFields": [
+          "mahoragaDurability",
           "baseDamage",
-          "controlValue",
-          "domainLoadDelta"
+          "mahoragaGuardBreak",
+          "adaptationThresholdStrong"
         ],
-        "proposedEffectFields": {},
+        "proposedEffectFields": {
+          "summonedUnitName": "八握剑异戒神将 魔虚罗",
+          "summonControl": "neutral_uncontrolled",
+          "summonPlacement": "battlefield_center",
+          "mahoragaDurability": 300,
+          "mahoragaDamage": 60,
+          "mahoragaGuardBreak": 24,
+          "mahoragaActionsPerRound": 1,
+          "controlResistance": "high",
+          "domainResistance": "high",
+          "adaptationThresholdInitial": 2,
+          "adaptationThresholdStrong": 3,
+          "maintenanceCardName": "影中藏身",
+          "maintenanceApCost": "all",
+          "maintenanceSkipTurn": true,
+          "failureTargetingRule": "if_not_hidden_user_is_valid_target",
+          "againstCurseBaseDamageMultiplier": 3
+        },
         "balanceNotes": [
-          "baseDamage capped to playable beta scale",
-          "controlValue capped to draft control scale"
+          "未调幅魔虚罗作为中立暴走高数值随从，不作为己方可控召唤物。",
+          "使用者每轮必须通过影中藏身消耗全部 AP 并跳过回合，否则会被魔虚罗纳入攻击目标。"
         ]
       },
-      "playableAsNormalHand": true,
-      "migrationDirective": "candidate_name_copy_pool_balance_recomputed",
+      "playableAsNormalHand": false,
+      "migrationDirective": "replaced_by_confirmed_three_card_package",
       "reviewLineInSource": 136,
       "reviewedAt": "2026-05-01",
       "sourcePackage": {
@@ -550,14 +578,14 @@
       "mergeKey": "",
       "mergeDuplicateOf": "",
       "priorBalancedRuntimeStats": {
-        "apCost": 2,
-        "baseCeCost": 51,
-        "baseDamage": 26,
+        "apCost": 3,
+        "baseCeCost": 70,
+        "baseDamage": 60,
         "baseBlock": 0,
-        "controlValue": 30,
+        "controlValue": 0,
         "soulDamage": 0,
-        "domainLoadDelta": 12,
-        "durationRounds": 1,
+        "domainLoadDelta": 0,
+        "durationRounds": 0,
         "balanceNotes": []
       },
       "statBinding": {
@@ -579,8 +607,8 @@
         "formulaHint": "final value = balancedRuntimeStats base anchor + character-stat modifier; ceCost is reduced by efficiency and constrained by cursedEnergy; damage effects are still subject to evasion unless accuracyProfile is unavoidable.",
         "usesCharacterBaseStats": true
       },
-      "runtimeImportStatus": "ready_for_manual_mapping",
-      "importableFromMergedPackage": true
+      "runtimeImportStatus": "replaced_by_confirmed_duel_card_package",
+      "importableFromMergedPackage": false
     },
     {
       "draftCardId": "draft_limitless_1_063b76_v0_4",
@@ -14518,7 +14546,7 @@
       "suggestedRarity": "uncommon",
       "sourceLayer": "原作本篇",
       "nameStatus": "official_or_stable",
-      "status": "CANDIDATE",
+      "status": "SUPERSEDED_BY_CONFIRMED_CARD_PACKAGE",
       "duplicateCheck": {
         "checkedAgainstLatestPackage": "jjk_duel_card_mechanics_latest_20260501_1649.zip",
         "existingCards": 109,
@@ -14527,10 +14555,15 @@
         "exactNameDuplicate": false,
         "normalizedName": "收据具现"
       },
-      "migrationNotes": "候选数值仅供新版卡牌迁移参考，最终 AP/CE/伤害/领域负荷由迁移表统一校准。",
-      "doNotFinalizeReason": "需等待新版领域框架、灵魂血条、咒力最大输出与资源规则统一迁移。",
+      "migrationNotes": "已由正式再契象卡组替换：收据库存、桑塔纳轿车、挖掘机、菜刀。一户建和服务收据另行作为高质量/恢复分支。",
+      "doNotFinalizeReason": "旧单张收据具现过于抽象，已拆分为可控制的实物式神/道具单位与资源调度牌。",
       "sourceActionId": "feature_recontract_icon_109",
-      "existingCardRefs": [],
+      "existingCardRefs": [
+        "card_recontract_receipt_stock",
+        "card_recontract_santana_sedan",
+        "card_recontract_excavator",
+        "card_recontract_kitchen_knife"
+      ],
       "duplicateOf": "",
       "duplicateStatus": "none",
       "draftRole": "new_candidate",
@@ -14571,8 +14604,8 @@
           "zeroed non-runtime fields: domainLoadDelta"
         ]
       },
-      "playableAsNormalHand": true,
-      "migrationDirective": "candidate_name_copy_pool_balance_recomputed",
+      "playableAsNormalHand": false,
+      "migrationDirective": "replaced_by_confirmed_recontract_object_package",
       "reviewLineInSource": 6020,
       "reviewedAt": "2026-05-01",
       "sourcePackage": {
@@ -14615,8 +14648,8 @@
         "formulaHint": "final value = balancedRuntimeStats base anchor + character-stat modifier; ceCost is reduced by efficiency and constrained by cursedEnergy; damage effects are still subject to evasion unless accuracyProfile is unavoidable.",
         "usesCharacterBaseStats": true
       },
-      "runtimeImportStatus": "ready_for_manual_mapping",
-      "importableFromMergedPackage": true
+      "runtimeImportStatus": "replaced_by_confirmed_duel_card_package",
+      "importableFromMergedPackage": false
     },
     {
       "draftCardId": "draft_recontract_icon_2_abce68_v0_4",
@@ -14651,7 +14684,7 @@
       "suggestedRarity": "uncommon",
       "sourceLayer": "原作本篇",
       "nameStatus": "official_or_stable",
-      "status": "CANDIDATE",
+      "status": "SUPERSEDED_BY_CONFIRMED_CARD",
       "duplicateCheck": {
         "checkedAgainstLatestPackage": "jjk_duel_card_mechanics_latest_20260501_1649.zip",
         "existingCards": 109,
@@ -14660,10 +14693,12 @@
         "exactNameDuplicate": false,
         "normalizedName": "契约重压"
       },
-      "migrationNotes": "候选数值仅供新版卡牌迁移参考，最终 AP/CE/伤害/领域负荷由迁移表统一校准。",
-      "doNotFinalizeReason": "需等待新版领域框架、灵魂血条、咒力最大输出与资源规则统一迁移。",
+      "migrationNotes": "已由正式高质量压杀牌「一户建」替换，并加入巨大慢速物体闪避与未完成十影领域特殊必中规则。",
+      "doNotFinalizeReason": "旧契约重压数值过低且概念笼统，已具象化为房产再具象化压杀牌。",
       "sourceActionId": "feature_recontract_icon_110",
-      "existingCardRefs": [],
+      "existingCardRefs": [
+        "card_recontract_detached_house"
+      ],
       "duplicateOf": "",
       "duplicateStatus": "none",
       "draftRole": "new_candidate",
@@ -14703,8 +14738,8 @@
           "baseDamage capped to playable beta scale"
         ]
       },
-      "playableAsNormalHand": true,
-      "migrationDirective": "candidate_name_copy_pool_balance_recomputed",
+      "playableAsNormalHand": false,
+      "migrationDirective": "replaced_by_confirmed_detached_house_card",
       "reviewLineInSource": 6075,
       "reviewedAt": "2026-05-01",
       "sourcePackage": {
@@ -14748,8 +14783,8 @@
         "formulaHint": "final value = balancedRuntimeStats base anchor + character-stat modifier; ceCost is reduced by efficiency and constrained by cursedEnergy; damage effects are still subject to evasion unless accuracyProfile is unavoidable.",
         "usesCharacterBaseStats": true
       },
-      "runtimeImportStatus": "ready_for_manual_mapping",
-      "importableFromMergedPackage": true
+      "runtimeImportStatus": "replaced_by_confirmed_duel_card_template",
+      "importableFromMergedPackage": false
     },
     {
       "draftCardId": "draft_recontract_icon_3_2bf564_v0_4",
@@ -14784,7 +14819,7 @@
       "suggestedRarity": "uncommon",
       "sourceLayer": "原作本篇",
       "nameStatus": "official_or_stable",
-      "status": "CANDIDATE",
+      "status": "SUPERSEDED_BY_CONFIRMED_CARD",
       "duplicateCheck": {
         "checkedAgainstLatestPackage": "jjk_duel_card_mechanics_latest_20260501_1649.zip",
         "existingCards": 109,
@@ -14793,10 +14828,12 @@
         "exactNameDuplicate": false,
         "normalizedName": "购置再现"
       },
-      "migrationNotes": "候选数值仅供新版卡牌迁移参考，最终 AP/CE/伤害/领域负荷由迁移表统一校准。",
-      "doNotFinalizeReason": "需等待新版领域框架、灵魂血条、咒力最大输出与资源规则统一迁移。",
+      "migrationNotes": "已由正式服务收据牌「五星级度假村7日套餐」替换，承担生命、咒力、稳定和领域负荷恢复。",
+      "doNotFinalizeReason": "旧购置再现过于笼统，已具象化为服务收据恢复牌。",
       "sourceActionId": "feature_recontract_icon_111",
-      "existingCardRefs": [],
+      "existingCardRefs": [
+        "card_recontract_five_star_resort_week"
+      ],
       "duplicateOf": "",
       "duplicateStatus": "none",
       "draftRole": "new_candidate",
@@ -14835,8 +14872,8 @@
           "zeroed non-runtime fields: domainLoadDelta"
         ]
       },
-      "playableAsNormalHand": true,
-      "migrationDirective": "candidate_name_copy_pool_balance_recomputed",
+      "playableAsNormalHand": false,
+      "migrationDirective": "replaced_by_confirmed_service_receipt_card",
       "reviewLineInSource": 6130,
       "reviewedAt": "2026-05-01",
       "sourcePackage": {
@@ -14875,8 +14912,8 @@
         "formulaHint": "final value = balancedRuntimeStats base anchor + character-stat modifier; ceCost is reduced by efficiency and constrained by cursedEnergy; damage effects are still subject to evasion unless accuracyProfile is unavoidable.",
         "usesCharacterBaseStats": true
       },
-      "runtimeImportStatus": "ready_for_manual_mapping",
-      "importableFromMergedPackage": true
+      "runtimeImportStatus": "replaced_by_confirmed_duel_card_template",
+      "importableFromMergedPackage": false
     },
     {
       "draftCardId": "draft_explosive_body_1_5a1f58_v0_4",

@@ -23,6 +23,9 @@
     "jackpot": "坐杀搏徒",
     "resource": "资源",
     "support": "支援",
+    "summon": "召唤",
+    "maintenance": "维持",
+    "unit": "单位",
     "curse_tool": "咒具",
     "special": "特殊"
   },
@@ -3222,6 +3225,748 @@
       "status": "CANDIDATE",
       "futureTemplate": true,
       "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_ten_shadows_divine_dog_totality",
+      "sourceActionId": "ten_shadows_divine_dog_totality",
+      "name": "玉犬·浑",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 32,
+      "tags": [
+        "十种影法术",
+        "玉犬",
+        "浑",
+        "式神",
+        "追踪",
+        "夹击"
+      ],
+      "rarity": "rare",
+      "weight": 0.75,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "从影子中召出玉犬·浑，作为己方追踪单位持续撕咬、夹击并压迫目标退路。",
+      "baseDamage": 28,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_melee",
+      "scalingProfile": "ten_shadows_controlled_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_divine_dog_totality",
+        "placement": "shadow_adjacent_flank",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 90,
+        "currentHp": 90,
+        "baseDamage": 28,
+        "guardBreak": 14,
+        "actionsPerRound": 1,
+        "placement": "shadow_adjacent_flank",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "medium"
+      },
+      "targetingRules": {
+        "default": "marked_or_lowest_guard_enemy",
+        "bonus": "追踪已被影子标记或被夹击的目标"
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_nue",
+      "sourceActionId": "ten_shadows_nue",
+      "name": "鵺",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 36,
+      "tags": [
+        "十种影法术",
+        "鵺",
+        "式神",
+        "飞行",
+        "雷击",
+        "牵制"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出飞行式神鵺，拥有独立血条，可进行雷击牵制并干扰敌方行动线路。",
+      "baseDamage": 24,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_lightning",
+      "scalingProfile": "ten_shadows_controlled_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_nue",
+        "placement": "air_shadow_lane",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 70,
+        "currentHp": 70,
+        "baseDamage": 24,
+        "guardBreak": 8,
+        "controlValue": 10,
+        "actionsPerRound": 1,
+        "placement": "air_shadow_lane",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "medium"
+      },
+      "targetingRules": {
+        "default": "backline_or_casting_enemy",
+        "bonus": "优先牵制正在蓄力、展开或维持术式的目标"
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_max_elephant",
+      "sourceActionId": "ten_shadows_max_elephant",
+      "name": "满象",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 42,
+      "tags": [
+        "十种影法术",
+        "满象",
+        "式神",
+        "大型单位",
+        "压制",
+        "冲散"
+      ],
+      "rarity": "rare",
+      "weight": 0.6,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出大型式神满象，以体型和水压冲散阵位，作为高耐久战场单位存在。",
+      "baseDamage": 34,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_pressure",
+      "scalingProfile": "ten_shadows_heavy_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_max_elephant",
+        "placement": "frontline_shadow_lane",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 160,
+        "currentHp": 160,
+        "baseDamage": 34,
+        "guardBreak": 26,
+        "areaPressure": 18,
+        "actionsPerRound": 1,
+        "placement": "frontline_shadow_lane",
+        "control": "player_controlled",
+        "controlResistance": "high",
+        "domainResistance": "medium"
+      },
+      "targetingRules": {
+        "default": "frontline_cluster",
+        "bonus": "对站位集中或被影子限制路线的目标提高冲散收益"
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_rabbit_escape",
+      "sourceActionId": "ten_shadows_rabbit_escape",
+      "name": "脱兔烟幕",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 22,
+      "tags": [
+        "十种影法术",
+        "脱兔",
+        "扰乱",
+        "遮蔽",
+        "防御",
+        "目标偏移"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "释放脱兔群形成遮蔽与目标扰乱。本牌不生成独立血条单位，主要用于防御、撤位和打乱索敌。",
+      "baseDamage": 0,
+      "baseBlock": 32,
+      "baseDefensePressure": 12,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 1,
+      "damageType": "none",
+      "scalingProfile": "ten_shadows_disruption",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "mechanismSpec": {
+        "createsUnit": false,
+        "grantsState": "rabbit_screen",
+        "targetingDisruption": 22,
+        "evasionModifier": 0.18,
+        "breaksSingleTargetLock": true
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_round_deer",
+      "sourceActionId": "ten_shadows_round_deer",
+      "name": "圆鹿",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 45,
+      "tags": [
+        "十种影法术",
+        "圆鹿",
+        "式神",
+        "反转术式",
+        "净化",
+        "辅助"
+      ],
+      "rarity": "special",
+      "weight": 0.45,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出圆鹿，作为辅助单位提供反转术式性质的恢复、净化与术式干扰缓解。",
+      "baseDamage": 8,
+      "baseBlock": 0,
+      "baseStabilityRestore": 28,
+      "baseDomainLoadDelta": -4,
+      "durationRounds": 0,
+      "damageType": "reverse_cursed_technique",
+      "scalingProfile": "ten_shadows_support_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_round_deer",
+        "placement": "rear_shadow_support",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 110,
+        "currentHp": 110,
+        "baseDamage": 8,
+        "guardBreak": 4,
+        "stabilityRestore": 28,
+        "techniqueDisruptionCleanse": 16,
+        "actionsPerRound": 1,
+        "placement": "rear_shadow_support",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "high"
+      },
+      "supportRules": {
+        "canCleanseTechniqueInterference": true,
+        "canReduceDomainLoad": true,
+        "antiCursePositiveEnergyRoute": true
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_piercing_ox",
+      "sourceActionId": "ten_shadows_piercing_ox",
+      "name": "贯牛",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 40,
+      "tags": [
+        "十种影法术",
+        "贯牛",
+        "式神",
+        "直线冲锋",
+        "破防",
+        "距离增伤"
+      ],
+      "rarity": "rare",
+      "weight": 0.55,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出贯牛作为直线冲锋单位。移动距离越长，冲撞伤害和破防越高。",
+      "baseDamage": 22,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_charge",
+      "scalingProfile": "ten_shadows_linear_charge",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_piercing_ox",
+        "placement": "far_shadow_line",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 130,
+        "currentHp": 130,
+        "baseDamage": 22,
+        "guardBreak": 18,
+        "actionsPerRound": 1,
+        "placement": "far_shadow_line",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "medium"
+      },
+      "chargeRules": {
+        "requiresStraightLine": true,
+        "damagePerDistanceStep": 12,
+        "guardBreakPerDistanceStep": 4,
+        "maxBonusDamage": 48,
+        "blockedByHardTerrainOrLineBreak": true
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_mahoraga_tuning_ritual",
+      "sourceActionId": "ten_shadows_mahoraga_tuning_ritual",
+      "name": "魔虚罗调幅仪式",
+      "cardType": "summon",
+      "apCost": 3,
+      "ceCostMode": "fixed",
+      "baseCeCost": 70,
+      "tags": [
+        "十种影法术",
+        "魔虚罗",
+        "调幅仪式",
+        "未调幅",
+        "中立暴走",
+        "式神",
+        "高风险"
+      ],
+      "rarity": "special",
+      "weight": 0.2,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "在战场中央召出未调幅魔虚罗，并生成每轮必须打出的「影中藏身」。",
+      "baseDamage": 0,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "none",
+      "scalingProfile": "ten_shadows_uncontrolled_summon",
+      "risk": "extreme",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "spawnsCards": [
+        "card_ten_shadows_shadow_hide"
+      ],
+      "spawnsUnits": [
+        "card_unit_mahoraga_unattuned"
+      ],
+      "summonSpec": {
+        "unitCardId": "card_unit_mahoraga_unattuned",
+        "placement": "battlefield_center",
+        "control": "neutral_uncontrolled",
+        "requiresMaintenanceCardId": "card_ten_shadows_shadow_hide",
+        "failureRule": "if_user_not_shadow_hidden_user_is_valid_target"
+      }
+    },
+    {
+      "cardId": "card_ten_shadows_shadow_hide",
+      "sourceActionId": "ten_shadows_shadow_hide",
+      "name": "影中藏身",
+      "cardType": "maintenance",
+      "apCost": "all",
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "十种影法术",
+        "影藏",
+        "强制维持",
+        "跳过回合",
+        "魔虚罗"
+      ],
+      "rarity": "special",
+      "weight": 0,
+      "allowedContexts": [
+        "mahoraga_unattuned_active"
+      ],
+      "effectSummary": "每轮开始时必须打出；消耗全部 AP 并跳过主动行动，使自身不被未调幅魔虚罗优先选为目标。",
+      "baseDamage": 0,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 1,
+      "damageType": "none",
+      "scalingProfile": "forced_maintenance",
+      "risk": "high",
+      "status": "CONFIRMED",
+      "playableInHandBeta": false,
+      "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
+      "maintenanceSpec": {
+        "mandatoryWhileUnitActive": "card_unit_mahoraga_unattuned",
+        "timing": "round_start",
+        "apCostMode": "all_remaining_ap",
+        "skipActiveTurn": true,
+        "grantsState": "shadow_hidden_from_unattuned_mahoraga",
+        "missedPaymentConsequence": "user_becomes_valid_mahoraga_target"
+      }
+    },
+    {
+      "cardId": "card_unit_mahoraga_unattuned",
+      "sourceActionId": "unit_mahoraga_unattuned",
+      "name": "八握剑异戒神将 魔虚罗",
+      "cardType": "unit",
+      "apCost": 0,
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "魔虚罗",
+        "式神",
+        "中立单位",
+        "未调幅",
+        "自动行动",
+        "适应",
+        "咒灵特攻"
+      ],
+      "rarity": "special",
+      "weight": 0,
+      "allowedContexts": [
+        "battlefield_unit"
+      ],
+      "effectSummary": "战场中央出现的未调幅魔虚罗。拥有独立血条与数值，每轮自动行动；对咒灵目标基础伤害乘以 3。",
+      "baseDamage": 60,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_exorcism_blade",
+      "scalingProfile": "mahoraga_unattuned_unit",
+      "risk": "extreme",
+      "status": "CONFIRMED",
+      "playableInHandBeta": false,
+      "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
+      "unitStats": {
+        "maxHp": 300,
+        "currentHp": 300,
+        "baseDamage": 60,
+        "guardBreak": 24,
+        "actionsPerRound": 1,
+        "placement": "battlefield_center",
+        "control": "neutral_uncontrolled",
+        "controlResistance": "high",
+        "domainResistance": "high"
+      },
+      "targetingRules": {
+        "default": "highest_threat_last_round",
+        "userIsValidTargetUnlessState": "shadow_hidden_from_unattuned_mahoraga"
+      },
+      "adaptationRules": {
+        "tracksThreatTags": true,
+        "initialThreshold": 2,
+        "strongThreshold": 3,
+        "initialEffect": "reduce_next_same_tag_effect",
+        "strongEffect": "major_reduction_and_counter_modifier"
+      },
+      "matchupModifiers": {
+        "againstCurse": {
+          "baseDamageMultiplier": 3,
+          "reason": "mahoraga_exorcism_blade_curse_special_attack"
+        }
+      }
+    },
+    {
+      "cardId": "card_recontract_receipt_stock",
+      "sourceActionId": "recontract_receipt_stock",
+      "name": "收据库存",
+      "cardType": "resource",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 6,
+      "tags": [
+        "再契象",
+        "收据",
+        "库存",
+        "资源"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "整理可再现的收据库存，为后续实物具现或服务再现降低调度压力。",
+      "baseDamage": 0,
+      "baseBlock": 8,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 2,
+      "damageType": "none",
+      "scalingProfile": "recontract_resource_setup",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "resourceSpec": {
+        "addsReceiptStock": 2,
+        "reducesNextRecontractCeCost": 8,
+        "validForTags": [
+          "receipt_materialization",
+          "object_shikigami",
+          "service_receipt"
+        ]
+      }
+    },
+    {
+      "cardId": "card_recontract_santana_sedan",
+      "sourceActionId": "recontract_santana_sedan",
+      "name": "桑塔纳轿车",
+      "cardType": "summon",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 24,
+      "tags": [
+        "再契象",
+        "桑塔纳轿车",
+        "实物式神",
+        "冲撞",
+        "临时单位"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.8,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再现桑塔纳轿车作为低血量实物式神，短暂冲撞并占位阻挡路线。",
+      "baseDamage": 24,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 2,
+      "damageType": "materialized_object_impact",
+      "scalingProfile": "recontract_object_shikigami",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_recontract_santana_sedan",
+        "placement": "nearby_lane",
+        "control": "temporary_player_controlled",
+        "durationRounds": 2
+      },
+      "unitStats": {
+        "maxHp": 55,
+        "currentHp": 55,
+        "baseDamage": 24,
+        "guardBreak": 12,
+        "actionsPerRound": 1,
+        "placement": "nearby_lane",
+        "control": "temporary_player_controlled",
+        "controlResistance": "low",
+        "domainResistance": "low"
+      },
+      "objectRules": {
+        "countsAsShikigamiLikeObject": true,
+        "expiresWhenDestroyedOrDurationEnds": true
+      }
+    },
+    {
+      "cardId": "card_recontract_excavator",
+      "sourceActionId": "recontract_excavator",
+      "name": "挖掘机",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 38,
+      "tags": [
+        "再契象",
+        "挖掘机",
+        "实物式神",
+        "重型单位",
+        "破防"
+      ],
+      "rarity": "rare",
+      "weight": 0.55,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再现挖掘机作为低机动重型实物式神，血量不高但破防和地形压制较强。",
+      "baseDamage": 36,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 2,
+      "damageType": "materialized_heavy_machine",
+      "scalingProfile": "recontract_heavy_object",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_recontract_excavator",
+        "placement": "frontline_lane",
+        "control": "temporary_player_controlled",
+        "durationRounds": 2
+      },
+      "unitStats": {
+        "maxHp": 85,
+        "currentHp": 85,
+        "baseDamage": 36,
+        "guardBreak": 30,
+        "actionsPerRound": 1,
+        "placement": "frontline_lane",
+        "control": "temporary_player_controlled",
+        "controlResistance": "low",
+        "domainResistance": "low"
+      },
+      "objectRules": {
+        "countsAsShikigamiLikeObject": true,
+        "movement": "slow",
+        "terrainPressure": 20,
+        "expiresWhenDestroyedOrDurationEnds": true
+      }
+    },
+    {
+      "cardId": "card_recontract_kitchen_knife",
+      "sourceActionId": "recontract_kitchen_knife",
+      "name": "菜刀",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 14,
+      "tags": [
+        "再契象",
+        "菜刀",
+        "实物具现",
+        "投掷",
+        "近身"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "再现菜刀进行投掷或近身切割，消耗低，适合补刀、牵制和逼闪避。",
+      "baseDamage": 18,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "materialized_blade",
+      "scalingProfile": "recontract_small_object",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "accuracyProfile": "small_object_projectile",
+      "evasionAllowed": true,
+      "hitRateModifier": 0.08
+    },
+    {
+      "cardId": "card_recontract_detached_house",
+      "sourceActionId": "recontract_detached_house",
+      "name": "一户建",
+      "cardType": "special",
+      "apCost": 3,
+      "ceCostMode": "fixed",
+      "baseCeCost": 85,
+      "tags": [
+        "再契象",
+        "一户建",
+        "房产再具象化",
+        "巨大质量",
+        "慢速压杀"
+      ],
+      "rarity": "special",
+      "weight": 0.18,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再具象化曾购买的房产并砸向目标，造成巨量慢速压杀伤害；体型巨大，通常容易被闪避。",
+      "baseDamage": 360,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 8,
+      "durationRounds": 0,
+      "damageType": "materialized_house_crush",
+      "scalingProfile": "recontract_massive_object_finisher",
+      "risk": "extreme",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "accuracyProfile": "huge_slow_object",
+      "evasionAllowed": true,
+      "hitRateModifier": -0.35,
+      "specialResolution": {
+        "baseDamage": 360,
+        "normalRule": "slow_huge_object_evasion_check",
+        "unfinishedTenShadowsDomainRule": {
+          "condition": "target_has_unfinished_ten_shadows_domain && caster_has_no_active_domain",
+          "damageMultiplier": 0.8,
+          "treatedAsSureHit": true,
+          "reason": "未完成领域提供影中战场但未建立完整必中防御，巨大房产再具象化可直接落入领域内。",
+          "escapeOverride": {
+            "condition": "ten_shadows_user_releases_domain_next_round_after_this_card",
+            "resolution": "use_normal_slow_huge_object_evasion_check"
+          }
+        }
+      }
+    },
+    {
+      "cardId": "card_recontract_five_star_resort_week",
+      "sourceActionId": "recontract_five_star_resort_week",
+      "name": "五星级度假村7日套餐",
+      "cardType": "resource",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 18,
+      "tags": [
+        "再契象",
+        "服务收据",
+        "度假套餐",
+        "恢复",
+        "补给"
+      ],
+      "rarity": "rare",
+      "weight": 0.45,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再现服务类收据效果，大幅恢复生命与咒力，但需要脱离直接压制或拥有足够调度窗口。",
+      "baseDamage": 0,
+      "baseBlock": 18,
+      "baseStabilityRestore": 55,
+      "baseCeRestore": 50,
+      "baseHpRestore": 60,
+      "baseDomainLoadDelta": -6,
+      "durationRounds": 1,
+      "damageType": "none",
+      "scalingProfile": "recontract_service_receipt_restore",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "serviceReceiptRules": {
+        "requiresNotHardControlled": true,
+        "canBeInterruptedByImmediateMeleePressure": true,
+        "restoresHp": 60,
+        "restoresCe": 50,
+        "restoresStability": 55,
+        "reducesDomainLoad": 6
+      }
     }
   ]
 }

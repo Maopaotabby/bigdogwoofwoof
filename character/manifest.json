@@ -601,6 +601,16 @@
         "modulo",
         "simuria"
       ]
+    },
+    {
+      "name": "雷吉·斯塔（死灭回游）",
+      "file": "雷吉·斯塔（死灭回游）.json",
+      "characterId": "reggie_star_culling",
+      "specialHandTags": [
+        "recontract_icon",
+        "receipt_materialization",
+        "object_shikigami"
+      ]
     }
   ]
 }

@@ -933,6 +933,245 @@
       ],
       "tone": "formal",
       "status": "CANDIDATE"
+    },
+    {
+      "sourceActionId": "ten_shadows_divine_dog_totality",
+      "displayName": "玉犬·浑",
+      "subtitle": "影中追踪，夹击撕咬",
+      "shortEffect": "召出 90 血、28 伤害的追踪式神，优先夹击被标记或低防目标。",
+      "longEffect": "从影子中召出玉犬·浑，作为己方战场单位存在。它拥有独立血条，会持续追踪、撕咬并配合影子标记夹击目标。",
+      "flavorLine": "影子先锁住退路，犬牙才落下。",
+      "uiTags": [
+        "十影",
+        "玉犬",
+        "单位",
+        "追踪"
+      ],
+      "tone": "direct",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_nue",
+      "displayName": "鵺",
+      "subtitle": "飞行式神，雷击牵制",
+      "shortEffect": "召出 70 血、24 伤害的飞行式神，优先干扰后排、蓄力和维持术式的目标。",
+      "longEffect": "召出鵺作为飞行战场单位。鵺以雷击和空中线路压迫对手，适合打断蓄力、牵制后排或配合领域内的影子环境。",
+      "flavorLine": "雷声先到，影子随后合上。",
+      "uiTags": [
+        "十影",
+        "鵺",
+        "单位",
+        "雷击"
+      ],
+      "tone": "sharp",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_max_elephant",
+      "displayName": "满象",
+      "subtitle": "大型式神，水压冲散",
+      "shortEffect": "召出 160 血、34 伤害、26 破防的大型单位，压制并冲散集中站位。",
+      "longEffect": "召出满象作为高耐久大型式神。它以体型、水压和正面压迫打乱阵位，对被影子限制路线或站位集中的目标收益更高。",
+      "flavorLine": "不是挡路，是整条路塌下来。",
+      "uiTags": [
+        "十影",
+        "满象",
+        "单位",
+        "压制"
+      ],
+      "tone": "heavy",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_rabbit_escape",
+      "displayName": "脱兔烟幕",
+      "subtitle": "兔群遮蔽，扰乱索敌",
+      "shortEffect": "不生成独立单位；获得 32 防御并扰乱单体锁定，持续 1 回合。",
+      "longEffect": "释放脱兔群制造遮蔽和目标偏移。它更适合作为防御、撤位和扰乱机制牌，而不是独立战场单位。",
+      "flavorLine": "兔群涌出时，真正的位置已经不清楚了。",
+      "uiTags": [
+        "十影",
+        "脱兔",
+        "防御",
+        "扰乱"
+      ],
+      "tone": "calm",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_round_deer",
+      "displayName": "圆鹿",
+      "subtitle": "反转术式性质的辅助式神",
+      "shortEffect": "召出 110 血辅助单位，提供恢复、净化和领域负荷回落。",
+      "longEffect": "召出圆鹿作为辅助战场单位。圆鹿偏向反转术式性质的恢复、净化和术式干扰缓解，对咒灵也保留正能量路线价值。",
+      "flavorLine": "它不把战场撕开，只把崩坏处重新接上。",
+      "uiTags": [
+        "十影",
+        "圆鹿",
+        "单位",
+        "辅助"
+      ],
+      "tone": "calm",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_piercing_ox",
+      "displayName": "贯牛",
+      "subtitle": "直线越长，冲撞越重",
+      "shortEffect": "召出 130 血冲锋单位；基础 22 伤害，直线距离越长伤害和破防越高。",
+      "longEffect": "召出贯牛作为直线冲锋式神。它需要明确冲锋线路，移动距离越长，冲撞伤害和破防越高；若线路被硬阻断，收益会下降。",
+      "flavorLine": "给它一条直线，剩下的交给冲撞。",
+      "uiTags": [
+        "十影",
+        "贯牛",
+        "单位",
+        "冲锋"
+      ],
+      "tone": "direct",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_mahoraga_tuning_ritual",
+      "displayName": "魔虚罗调幅仪式",
+      "subtitle": "把未调幅的神将放到战场中央",
+      "shortEffect": "在战场中央召出未调幅魔虚罗，并生成每轮必须打出的「影中藏身」。",
+      "longEffect": "召出未调幅的八握剑异戒神将魔虚罗。魔虚罗拥有独立血条和数值，不归属于任何一方，会在战场中央自动行动。使用者每轮必须打出「影中藏身」，否则也会成为魔虚罗的有效目标。",
+      "flavorLine": "这不是命令式神，而是把谁都拦不住的东西放出来。",
+      "uiTags": [
+        "十影",
+        "魔虚罗",
+        "中立暴走",
+        "高风险"
+      ],
+      "tone": "urgent",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "ten_shadows_shadow_hide",
+      "displayName": "影中藏身",
+      "subtitle": "不行动，只躲过魔虚罗",
+      "shortEffect": "每轮必须打出；消耗全部 AP 并跳过回合，使自身不被未调幅魔虚罗优先选为目标。",
+      "longEffect": "在未调幅魔虚罗存在期间，使用者每轮开始时必须以全部 AP 打出此牌。本回合跳过主动行动，并进入影中藏身。若没有打出或无法支付代价，使用者会被魔虚罗视为有效目标。",
+      "flavorLine": "影子不是进攻路线，是活到下一轮的缝隙。",
+      "uiTags": [
+        "影藏",
+        "维持",
+        "跳过回合",
+        "魔虚罗"
+      ],
+      "tone": "tense",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "unit_mahoraga_unattuned",
+      "displayName": "八握剑异戒神将 魔虚罗",
+      "subtitle": "未调幅的中立暴走单位",
+      "shortEffect": "300 血，60 基础伤害，24 破防；每轮自动行动。攻击咒灵时基础伤害乘以 3。",
+      "longEffect": "未调幅魔虚罗出现在战场中央，拥有 300 血、60 基础伤害和 24 破防。它不属于任何一方，每轮自动攻击上一轮威胁最高的有效目标；若使用者没有影中藏身，也会被纳入目标。魔虚罗会记录承受过的威胁标签，2 层初适应，3 层强适应。对咒灵目标时，基础伤害乘以 3。",
+      "flavorLine": "法轮转过之后，同一种手段就不再可靠。",
+      "uiTags": [
+        "魔虚罗",
+        "300血",
+        "60伤害",
+        "适应",
+        "咒灵特攻"
+      ],
+      "tone": "formal",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "recontract_receipt_stock",
+      "displayName": "收据库存",
+      "subtitle": "先整理能再现的契约",
+      "shortEffect": "获得收据库存，并降低下一张再契象牌的调度压力。",
+      "longEffect": "整理可再现的收据库存，为后续实物具现、道具式神或服务收据再现提供资源窗口。",
+      "flavorLine": "雷吉的武器不是一件东西，是一叠已经付款的事实。",
+      "uiTags": [
+        "再契象",
+        "资源",
+        "收据"
+      ],
+      "tone": "technical",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "recontract_santana_sedan",
+      "displayName": "桑塔纳轿车",
+      "subtitle": "短暂控制的实物式神",
+      "shortEffect": "召出 55 血、24 伤害的轿车单位，冲撞并占位阻挡路线。",
+      "longEffect": "再现桑塔纳轿车作为低血量实物式神。它可以短暂受雷吉控制，进行冲撞、占位和路线封锁。",
+      "flavorLine": "收据落下，车灯已经贴到脸前。",
+      "uiTags": [
+        "再契象",
+        "轿车",
+        "单位",
+        "冲撞"
+      ],
+      "tone": "direct",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "recontract_excavator",
+      "displayName": "挖掘机",
+      "subtitle": "重型实物式神",
+      "shortEffect": "召出 85 血、36 伤害、30 破防的慢速重型单位。",
+      "longEffect": "再现挖掘机作为短暂可控的重型实物式神。它血量不算高，但破防和地形压制很强，适合逼迫走位。",
+      "flavorLine": "不是术式轨迹，是一整台机器压过来。",
+      "uiTags": [
+        "再契象",
+        "挖掘机",
+        "单位",
+        "破防"
+      ],
+      "tone": "heavy",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "recontract_kitchen_knife",
+      "displayName": "菜刀",
+      "subtitle": "小型实物具现",
+      "shortEffect": "低消耗投掷或近身切割，适合补刀、牵制和逼闪避。",
+      "longEffect": "再现菜刀进行投掷或近身切割。它不是高上限牌，但便宜、直接，适合填补雷吉战术节奏中的小空档。",
+      "flavorLine": "越普通的收据，越容易混进战斗节奏里。",
+      "uiTags": [
+        "再契象",
+        "菜刀",
+        "投掷"
+      ],
+      "tone": "sharp",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "recontract_detached_house",
+      "displayName": "一户建",
+      "subtitle": "房产再具象化，巨大质量压杀",
+      "shortEffect": "360 基础伤害，巨大慢速物体，通常容易闪避；对未完成十影领域有特殊必中规则。",
+      "longEffect": "再具象化曾购买的房产并砸向目标，造成巨量伤害。因为体型巨大且落下缓慢，通常按容易闪避的巨大物体判定。若目标处于十种影法术的未完成领域，且雷吉没有展开领域，则本牌视为必中但伤害乘以 0.8；若十影使用者在次回合正好解除领域，则改回普通巨大物体闪避判定。",
+      "flavorLine": "房子不是落点，是整片天花板。",
+      "uiTags": [
+        "再契象",
+        "一户建",
+        "巨量伤害",
+        "慢速"
+      ],
+      "tone": "urgent",
+      "status": "CONFIRMED"
+    },
+    {
+      "sourceActionId": "recontract_five_star_resort_week",
+      "displayName": "五星级度假村7日套餐",
+      "subtitle": "服务收据，大幅恢复",
+      "shortEffect": "恢复生命、咒力和稳定，并回落领域负荷；被强压制时可能中断。",
+      "longEffect": "再现服务类收据效果，大幅恢复生命、咒力与稳定度，并降低领域负荷。它需要足够调度窗口，若处于强近身压制或硬控制下可能被中断。",
+      "flavorLine": "七天套餐压缩成一口喘息的时间。",
+      "uiTags": [
+        "再契象",
+        "服务",
+        "恢复",
+        "补给"
+      ],
+      "tone": "calm",
+      "status": "CONFIRMED"
     }
   ]
 }
