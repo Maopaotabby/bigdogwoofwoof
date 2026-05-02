@@ -36,7 +36,13 @@
     "calculateDuelBlockFromCard",
     "calculateDuelHealingFromCard",
     "calculateDuelDomainPressureFromCard",
-    "buildDuelCardNumericPreview"
+    "buildDuelCardNumericPreview",
+    "buildDuelCardTemplateIndexes",
+    "getDuelCardTemplateIndex",
+    "getDuelCardTemplateBySourceActionId",
+    "warmDuelCardTemplateCache",
+    "invalidateDuelCardTemplateCache",
+    "getDuelCardTemplateCacheStats"
   ];
   var expectedDependencyNames = [
     "state",
