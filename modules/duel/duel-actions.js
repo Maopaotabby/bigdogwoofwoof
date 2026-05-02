@@ -1914,6 +1914,113 @@
     return { unit: unit, maintenanceCard: maintenanceCard };
   }
 
+  function isMahoragaTuningRitualAction(action) {
+    var text = [
+      action?.id,
+      action?.sourceActionId,
+      action?.cardId,
+      action?.label,
+      action?.name,
+      action?.effectSummary
+    ].filter(Boolean).join(" ");
+    return /mahoraga_tuning_ritual|魔虚罗调幅仪式|魔须罗调幅仪式|调幅魔须罗仪式|调幅仪式/.test(text)
+      && /mahoraga|魔虚罗|魔须罗/.test(text);
+  }
+
+  function createMahoragaProxyProfile(sourceProfile, side) {
+    var original = sourceProfile || {};
+    var name = "八握剑异戒神将 魔须罗";
+    return {
+      ...original,
+      id: "builtin_mahoraga_proxy_" + (side || "side"),
+      characterId: "builtin_mahoraga_proxy_" + (side || "side"),
+      name: name,
+      displayName: name,
+      visibleGrade: "S",
+      grade: "S",
+      combatPowerUnit: {
+        label: "内置式神 · 调幅代打",
+        value: Math.max(Number(original?.combatPowerUnit?.value || 0), 300)
+      },
+      traits: ["完全适应", "八握剑", "魔须罗代打中"],
+      description: "调幅仪式后替代术师参战。会记录对手攻击手札，同名手札每命中一次都会降低后续伤害，第 6 次起归零。"
+    };
+  }
+
+  function activateMahoragaProxy(action, actor, battle) {
+    var side = actor?.side;
+    var profileKey = side === "right" ? "right" : "left";
+    var profile = battle?.[profileKey] || actor?.characterCardProfile || {};
+    if (!side || !actor || !battle) return null;
+    battle.mahoragaProxy ||= {};
+    if (!battle.mahoragaProxy[side]?.active) {
+      battle.mahoragaProxy[side] = {
+        active: true,
+        side: side,
+        startedRound: Number(battle.round || 0) + 1,
+        ritualActionId: action?.id || action?.sourceActionId || "mahoraga_tuning_ritual",
+        originalProfile: cloneDuelPlain(profile),
+        originalResource: cloneDuelPlain(actor),
+        attackMemory: {}
+      };
+    }
+    var proxyProfile = createMahoragaProxyProfile(profile, side);
+    battle[profileKey] = proxyProfile;
+    actor.name = proxyProfile.name;
+    actor.maxHp = Math.max(300, Number(actor.maxHp || 0));
+    actor.hp = actor.maxHp;
+    actor.maxCe = Math.max(220, Number(actor.maxCe || 0));
+    actor.ce = Math.min(actor.maxCe, Math.max(0, Number(actor.ce || 0)));
+    actor.ceRegen = Math.max(18, Number(actor.ceRegen || 0));
+    actor.stability = Math.max(0.92, Number(actor.stability || 0));
+    actor.characterCardProfile = proxyProfile;
+    actor.statusEffects = (Array.isArray(actor.statusEffects) ? actor.statusEffects : [])
+      .filter(function removeDuplicate(effect) { return effect?.id !== "mahoragaSubstitute"; });
+    actor.statusEffects.push({
+      id: "mahoragaSubstitute",
+      label: "魔须罗代打中",
+      rounds: 999,
+      value: 1
+    });
+    return {
+      active: true,
+      side: side,
+      name: proxyProfile.name,
+      startedRound: Number(battle.round || 0) + 1
+    };
+  }
+
+  function getMahoragaProxyState(battle, side) {
+    var state = battle?.mahoragaProxy?.[side];
+    return state?.active ? state : null;
+  }
+
+  function getMahoragaAttackKey(action) {
+    return String(action?.sourceActionId || action?.cardId || action?.id || action?.label || action?.name || "unknown_action");
+  }
+
+  function applyMahoragaAdaptation(action, opponent, battle, directDamage, stabilityShock) {
+    var state = getMahoragaProxyState(battle, opponent?.side);
+    if (!state || directDamage <= 0) return null;
+    var key = getMahoragaAttackKey(action);
+    var before = Math.max(0, Number(state.attackMemory?.[key] || 0));
+    var scale = Math.max(0, (6 - before) / 6);
+    var adaptedDamage = Math.max(0, Math.round(Number(directDamage || 0) * scale));
+    var adaptedShock = Math.max(0, Number(stabilityShock || 0) * scale);
+    state.attackMemory[key] = Math.min(6, before + 1);
+    return {
+      actionKey: key,
+      actionLabel: action?.label || action?.name || key,
+      countBefore: before,
+      countAfter: state.attackMemory[key],
+      damageScale: Number(scale.toFixed(4)),
+      originalDamage: directDamage,
+      adaptedDamage: adaptedDamage,
+      originalStabilityShock: Number((stabilityShock || 0).toFixed(4)),
+      adaptedStabilityShock: Number(adaptedShock.toFixed(4))
+    };
+  }
+
   function applyDuelMaintenanceAction(action, actor, battle) {
     var spec = action?.maintenanceSpec;
     if (!spec || !actor || !battle) return null;
@@ -2210,6 +2317,8 @@
     var damageApplication = null;
     var summonResult = null;
     var maintenanceResult = null;
+    var mahoragaProxyResult = null;
+    var mahoragaAdaptation = null;
     var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
@@ -2245,6 +2354,13 @@
       if (hutianBlackFlashResult) hutianBlackFlashResult.evaded = true;
     }
     damageTarget = resolveDuelDamageTarget(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
+    if (!evasionResult?.evaded && damageTarget?.type !== "unit") {
+      mahoragaAdaptation = applyMahoragaAdaptation(action, opponent, battle, directDamage, stabilityShock);
+      if (mahoragaAdaptation) {
+        directDamage = mahoragaAdaptation.adaptedDamage;
+        stabilityShock = mahoragaAdaptation.adaptedStabilityShock;
+      }
+    }
     if (!evasionResult?.evaded && instantKillOnHit) {
       directDamage = Math.max(directDamage, Math.ceil(damageTarget?.type === "unit" ? getDuelUnitHp(damageTarget.unit) : Number(opponent.hp || 0)));
       damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
@@ -2272,7 +2388,11 @@
       actor.hp = Number(clamp(beforeHealHp + directHealing, 0, Number(actor.maxHp || beforeHealHp + directHealing)).toFixed(1));
       actualHealing = Math.max(0, Number((Number(actor.hp || 0) - beforeHealHp).toFixed(1)));
     }
-    summonResult = applyDuelSummonAction(action, actor, battle);
+    if (isMahoragaTuningRitualAction(action)) {
+      mahoragaProxyResult = activateMahoragaProxy(action, actor, battle);
+    } else {
+      summonResult = applyDuelSummonAction(action, actor, battle);
+    }
     maintenanceResult = applyDuelMaintenanceAction(action, actor, battle);
 
     actorContext.outgoingScale *= Number(effects.outgoingScale || 1);
@@ -2335,6 +2455,8 @@
         maintenanceActionId: summonResult.maintenanceCard?.id || ""
       } : undefined,
       maintenance: maintenanceResult || undefined,
+      mahoragaProxy: mahoragaProxyResult || undefined,
+      mahoragaAdaptation: mahoragaAdaptation || undefined,
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {
         return {

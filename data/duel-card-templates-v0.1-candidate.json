@@ -3569,17 +3569,17 @@
     {
       "cardId": "card_ten_shadows_mahoraga_tuning_ritual",
       "sourceActionId": "ten_shadows_mahoraga_tuning_ritual",
-      "name": "魔虚罗调幅仪式",
+      "name": "调幅魔须罗仪式",
       "cardType": "summon",
       "apCost": 3,
       "ceCostMode": "fixed",
       "baseCeCost": 70,
       "tags": [
         "十种影法术",
-        "魔虚罗",
+        "魔须罗",
         "调幅仪式",
-        "未调幅",
-        "中立暴走",
+        "代打",
+        "完全适应",
         "式神",
         "高风险",
         "ten_shadows"
@@ -3590,31 +3590,26 @@
         "normal",
         "domain"
       ],
-      "effectSummary": "在战场中央召出未调幅魔虚罗，并生成每轮必须打出的「影中藏身」。",
+      "effectSummary": "清除手牌并切换为魔须罗代打中；之后每回合手牌区后台随机锁定，由魔须罗自主行动。同名攻击手札每次命中都会被记录并降低后续伤害，第 6 次起归零。",
       "baseDamage": 0,
       "baseBlock": 0,
       "baseDomainLoadDelta": 0,
       "durationRounds": 0,
       "damageType": "none",
-      "scalingProfile": "ten_shadows_uncontrolled_summon",
+      "scalingProfile": "ten_shadows_mahoraga_proxy",
       "risk": "extreme",
       "status": "CONFIRMED",
       "playableInHandBeta": true,
-      "spawnsCards": [
-        "card_ten_shadows_shadow_hide"
-      ],
-      "spawnsUnits": [
-        "card_unit_mahoraga_unattuned"
-      ],
-      "summonSpec": {
-        "unitCardId": "card_unit_mahoraga_unattuned",
-        "placement": "battlefield_center",
-        "control": "neutral_berserk",
-        "requiresMaintenanceCardId": "card_ten_shadows_shadow_hide",
-        "failureRule": "if_user_not_shadow_hidden_user_is_valid_target"
+      "mahoragaProxySpec": {
+        "unitCardId": "card_unit_mahoraga_tuned",
+        "displayName": "八握剑异戒神将 魔须罗",
+        "handLockMessage": "魔须罗代打中",
+        "adaptationLimit": 6,
+        "sameAttackDamageRule": "同名攻击手札每命中一次降低 1/6 伤害，第 6 次起归零。"
       },
       "specialHandTags": [
-        "ten_shadows"
+        "ten_shadows",
+        "mahoraga_tuning_ritual"
       ]
     },
     {

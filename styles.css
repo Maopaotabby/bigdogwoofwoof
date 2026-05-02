@@ -1508,6 +1508,7 @@ body.debug-mode .duel-debug-panel.debug-only {
 }
 
 .duel-resource-side,
+.duel-round-memo,
 .duel-replay-meta,
 .duel-residual-log {
   border: 1px solid #d6dee8;
@@ -1638,7 +1639,66 @@ body.debug-mode .duel-debug-panel.debug-only {
 }
 
 .duel-status-effects {
+  display: grid;
+  gap: 4px;
   min-height: 18px;
+  padding: 8px;
+  border: 1px solid rgba(180, 35, 24, 0.18);
+  border-radius: 8px;
+  background: rgba(180, 35, 24, 0.05);
+}
+
+.duel-status-effects span {
+  color: #8a1f17;
+  font-weight: 950;
+}
+
+.duel-status-effects strong {
+  color: var(--ink);
+  font-weight: 850;
+}
+
+.duel-round-memo {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(15, 118, 110, 0.09), rgba(248, 250, 252, 0.96)),
+    rgba(248, 250, 252, 0.94);
+}
+
+.duel-round-memo strong {
+  color: #0f5f59;
+  font-size: 13px;
+}
+
+.duel-round-memo p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.duel-round-memo dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 8px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.duel-round-memo dt {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.duel-round-memo dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 750;
+  overflow-wrap: anywhere;
 }
 
 .duel-replay-meta {
@@ -1669,6 +1729,10 @@ body.debug-mode .duel-debug-panel.debug-only {
 .duel-replay-meta dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.duel-replay-meta-log {
+  margin-top: 14px;
 }
 
 .duel-residual-log {
@@ -1957,6 +2021,24 @@ body.debug-mode .duel-debug-panel.debug-only {
   font-weight: 950;
   line-height: 1.35;
   text-align: center;
+}
+
+.duel-mahoraga-banner {
+  display: grid;
+  place-items: center;
+  min-height: 82px;
+  padding: 16px;
+  border: 2px solid rgba(15, 23, 42, 0.58);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(180, 35, 24, 0.2), transparent 34%),
+    linear-gradient(135deg, #0f172a, #2f1f18 48%, #111827);
+  color: #fff7ed;
+  font-size: clamp(30px, 7vw, 66px);
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.46);
 }
 
 .duel-hand-pool-hint {

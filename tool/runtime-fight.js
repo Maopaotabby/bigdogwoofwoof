@@ -1107,6 +1107,7 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
 
 function getActiveDuelHandLockMessage(battle = state.duelBattle, side = getDuelControlledSide(battle)) {
   if (!battle || !side) return "";
+  if (battle.mahoragaProxy?.[side]?.active) return "魔须罗代打中";
   const lockEntry = battle.handLockMessages?.[side];
   return lockEntry && Number(lockEntry.round || 0) === battle.round + 1 ? String(lockEntry.message || "") : "";
 }
@@ -2140,6 +2141,16 @@ function updateDuelActionAvailability(battle = state.duelBattle) {
   const handRules = getDuelHandRules();
   const handChoiceCount = handRules.hand?.maxHandSize || handRules.hand?.defaultChoiceCount || getDuelActionRules().choiceCount || 8;
   const domainHandCount = handRules.domainHand?.enabled === false ? 0 : Number(handRules.domainHand?.maxHandSize || 3);
+  if (isMahoragaProxyActive(battle, actorSide)) {
+    lockMahoragaHandForTurn(battle, actorSide);
+    battle.actionChoices = [];
+    battle.handCandidates = [];
+    battle.domainHandCandidates = [];
+    battle.actionRound = battle.round + 1;
+    battle.pendingAction = null;
+    battle.actionUiMessage = "魔须罗代打中";
+    return battle.actionChoices;
+  }
   battle.actionChoices = pickDuelHandCandidates(actor, opponent, battle, handChoiceCount);
   battle.handCandidates = battle.actionChoices;
   battle.domainHandCandidates = domainHandCount > 0 ? pickDuelDomainHandCandidates(actor, opponent, battle, domainHandCount) : [];
@@ -2652,6 +2663,227 @@ function updateDuelResourceReplayKey(battle) {
   if (battle.resourceState) battle.resourceState.replayKey = battle.replayKey;
 }
 
+function snapshotDuelMemoResource(resource = {}) {
+  return {
+    hp: Number(resource.hp || 0),
+    ce: Number(resource.ce || 0),
+    stability: Number(resource.stability || 0),
+    domainLoad: Number(resource.domain?.load || 0),
+    statuses: (Array.isArray(resource.statusEffects) ? resource.statusEffects : []).map((effect) => ({
+      id: String(effect?.id || effect?.label || ""),
+      label: String(effect?.label || effect?.id || "异常状态"),
+      rounds: Number(effect?.rounds || 0)
+    })).filter((effect) => effect.id || effect.label)
+  };
+}
+
+function snapshotDuelMemoState(battle) {
+  return {
+    left: snapshotDuelMemoResource(battle?.resourceState?.p1),
+    right: snapshotDuelMemoResource(battle?.resourceState?.p2)
+  };
+}
+
+function formatDuelMemoDelta(before = {}, after = {}) {
+  const rows = [];
+  const add = (label, key, suffix = "") => {
+    const delta = Number(after[key] || 0) - Number(before[key] || 0);
+    if (Math.abs(delta) < 0.005) return;
+    rows.push(`${label}${formatSignedDuelDelta(key === "stability" ? delta * 100 : delta)}${suffix}`);
+  };
+  add("体势", "hp");
+  add("咒力", "ce");
+  add("稳定", "stability", "%");
+  add("领域负荷", "domainLoad");
+  return rows.length ? rows.join("，") : "无明显数值变化";
+}
+
+function getDuelNewStatuses(before = {}, after = {}) {
+  const previous = new Set((before.statuses || []).map((effect) => effect.id || effect.label));
+  return (after.statuses || []).filter((effect) => !previous.has(effect.id || effect.label));
+}
+
+function formatDuelStatusEffectLabel(effect = {}) {
+  const label = effect.label || effect.name || effect.id || "异常状态";
+  const rounds = Number(effect.rounds || 0);
+  if (effect.id === "mahoragaSubstitute") return label;
+  return rounds > 0 && rounds < 900 ? `${label}（${formatNumber(rounds)}回合）` : label;
+}
+
+function getDuelActionMissText(actions = [], results = []) {
+  const actionable = actions.filter((action) => action && action.type !== "pass" && action.id !== "duel_pass_turn" && Number(action.baseDamage || action.damage || action.numericPreview?.finalDamage || 0) > 0);
+  const evasionResults = results.map((entry) => entry?.result || entry).filter((result) => result?.evasion?.checked);
+  if (!actionable.length && !evasionResults.length) return "无攻击判定";
+  if (evasionResults.some((result) => result.evasion?.evaded)) return "Miss";
+  return "命中或未触发闪避";
+}
+
+function buildDuelRoundMemo(battle, beforeSnapshot, afterSnapshot, leftHandResult, rightHandResult) {
+  const leftBefore = beforeSnapshot?.left || {};
+  const rightBefore = beforeSnapshot?.right || {};
+  const leftAfter = afterSnapshot?.left || {};
+  const rightAfter = afterSnapshot?.right || {};
+  return {
+    round: Number(battle?.round || 0),
+    leftMiss: getDuelActionMissText(leftHandResult?.actions || [], leftHandResult?.results || []),
+    rightMiss: getDuelActionMissText(rightHandResult?.actions || [], rightHandResult?.results || []),
+    leftDelta: formatDuelMemoDelta(leftBefore, leftAfter),
+    rightDelta: formatDuelMemoDelta(rightBefore, rightAfter),
+    leftStatuses: getDuelNewStatuses(leftBefore, leftAfter).map(formatDuelStatusEffectLabel),
+    rightStatuses: getDuelNewStatuses(rightBefore, rightAfter).map(formatDuelStatusEffectLabel)
+  };
+}
+
+function renderDuelRoundMemoPanel(battle = state.duelBattle) {
+  const memo = battle?.lastRoundMemo;
+  if (!memo) {
+    return `
+      <aside class="duel-round-memo">
+        <strong>上一回合纪要</strong>
+        <p>暂无上一回合纪要。</p>
+      </aside>
+    `;
+  }
+  return `
+    <aside class="duel-round-memo">
+      <strong>上一回合纪要 · R${escapeHtml(formatNumber(memo.round))}</strong>
+      <dl>
+        <dt>我方攻击</dt><dd>${escapeHtml(memo.leftMiss)}</dd>
+        <dt>对方攻击</dt><dd>${escapeHtml(memo.rightMiss)}</dd>
+        <dt>我方数值</dt><dd>${escapeHtml(memo.leftDelta)}</dd>
+        <dt>对方数值</dt><dd>${escapeHtml(memo.rightDelta)}</dd>
+        <dt>我方异常</dt><dd>${escapeHtml(memo.leftStatuses?.length ? memo.leftStatuses.join("、") : "无新增")}</dd>
+        <dt>对方异常</dt><dd>${escapeHtml(memo.rightStatuses?.length ? memo.rightStatuses.join("、") : "无新增")}</dd>
+      </dl>
+    </aside>
+  `;
+}
+
+function renderDuelReplayMeta(battle = state.duelBattle) {
+  if (!battle) return "";
+  return `
+    <details class="duel-replay-meta duel-replay-meta-log">
+      <summary>复现标识</summary>
+      <dl>
+        <dt>battleId</dt><dd>${escapeHtml(battle.battleId)}</dd>
+        <dt>seed</dt><dd>${escapeHtml(battle.seed)}</dd>
+        <dt>replayKey</dt><dd>${escapeHtml(battle.replayKey)}</dd>
+      </dl>
+    </details>
+  `;
+}
+
+function isMahoragaProxyActive(battle = state.duelBattle, side = "") {
+  return Boolean(side && battle?.mahoragaProxy?.[side]?.active);
+}
+
+function clearMahoragaHandState(battle, side) {
+  if (!battle || !side) return;
+  battle.handState ||= {};
+  battle.domainHandState ||= {};
+  battle.handState[side] = {
+    ...(battle.handState[side] || {}),
+    cards: [],
+    lastDrawn: [],
+    lastInjected: [],
+    lastDiscarded: [],
+    pendingDiscardCount: 0,
+    round: battle.round + 1
+  };
+  battle.domainHandState[side] = {
+    ...(battle.domainHandState[side] || {}),
+    cards: [],
+    round: battle.round + 1
+  };
+  clearDuelSelectedHandActions(battle, side, { refund: false });
+}
+
+function lockMahoragaHandForTurn(battle, side) {
+  if (!isMahoragaProxyActive(battle, side)) return null;
+  clearMahoragaHandState(battle, side);
+  battle.handLockMessages ||= {};
+  battle.handLockMessages[side] = {
+    round: battle.round + 1,
+    message: "魔须罗代打中",
+    sourceDomainName: "魔须罗"
+  };
+  const action = createMahoragaAutoAction(battle, side);
+  battle.mahoragaProxy[side].lastLockedAction = {
+    round: battle.round + 1,
+    actionId: action.id,
+    label: action.label
+  };
+  return action;
+}
+
+function createMahoragaAutoAction(battle, side) {
+  const roll = duelRandom(battle, `mahoraga:${side}:action`);
+  const variants = [
+    {
+      id: "mahoraga_eight_handled_sword",
+      label: "魔须罗·八握剑斩击",
+      baseDamage: 68,
+      baseStabilityDamage: 22,
+      effectSummary: "魔须罗自主代打，以八握剑进行强压斩击。"
+    },
+    {
+      id: "mahoraga_adaptive_counter",
+      label: "魔须罗·适应反击",
+      baseDamage: 54,
+      baseStabilityDamage: 18,
+      effects: { incomingHpScale: 0.92 },
+      effectSummary: "法轮记录攻击模式后反打，并略微降低本回合承伤。"
+    },
+    {
+      id: "mahoraga_guard_break_step",
+      label: "魔须罗·破防踏碎",
+      baseDamage: 46,
+      baseStabilityDamage: 28,
+      effects: { opponentStabilityDelta: -0.045 },
+      effectSummary: "以巨力破坏站位与防御结构。"
+    }
+  ];
+  const picked = variants[Math.min(variants.length - 1, Math.floor(roll * variants.length))];
+  return {
+    ...picked,
+    sourceActionId: picked.id,
+    cardType: "mahoraga_proxy",
+    type: "attack",
+    risk: "high",
+    apCost: 0,
+    costCe: 0,
+    ceCost: 0,
+    baseCeCost: 0,
+    damageType: "physical",
+    scalingProfile: "mahoraga_proxy",
+    accuracyProfile: "weapon",
+    evasionAllowed: true,
+    tags: ["魔须罗", "代打", "适应"],
+    playableInHandBeta: true,
+    available: true,
+    handSource: "mahoraga-proxy",
+    logTemplate: `${side === "right" ? "对方" : "我方"}魔须罗代替术师自主行动。`
+  };
+}
+
+function processMahoragaProxyAfterHandResult(battle, handResult) {
+  if (!battle || !Array.isArray(handResult?.results)) return;
+  handResult.results.forEach((entry) => {
+    const proxy = entry?.result?.mahoragaProxy;
+    if (!proxy?.active || !proxy.side) return;
+    clearMahoragaHandState(battle, proxy.side);
+    lockMahoragaHandForTurn(battle, proxy.side);
+    battle.actionUiMessage = "魔须罗代打中";
+    recordDuelResourceChange(battle, {
+      side: proxy.side,
+      title: "调幅仪式完成",
+      detail: `${getDuelResourceSideLabel(proxy.side)}角色栏切换为${proxy.name}，手牌区清空并进入魔须罗代打中。`,
+      type: "action",
+      delta: { mahoragaProxy: true, side: proxy.side }
+    });
+  });
+}
+
 function formatSignedDuelDelta(value) {
   const number = Number(value || 0);
   if (Math.abs(number) < 0.05) return "+0";
@@ -2686,14 +2918,7 @@ function renderDuelResourcePanel(battle = state.duelBattle) {
   return `
     <section class="duel-resource-panel">
       ${renderDuelResourceSide(battle.resourceState.p1, battle.left)}
-      <details class="duel-replay-meta">
-        <summary>复现标识</summary>
-        <dl>
-          <dt>battleId</dt><dd>${escapeHtml(battle.battleId)}</dd>
-          <dt>seed</dt><dd>${escapeHtml(battle.seed)}</dd>
-          <dt>replayKey</dt><dd>${escapeHtml(battle.replayKey)}</dd>
-        </dl>
-      </details>
+      ${renderDuelRoundMemoPanel(battle)}
       ${renderDuelResourceSide(battle.resourceState.p2, battle.right)}
     </section>
   `;
@@ -2913,6 +3138,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   const domainChoices = battle.domainHandCandidates || [];
   const { actorSide, actor } = getDuelSideResources(battle);
   const selectedEntries = getDuelSelectedHandActions(battle, actorSide);
+  const mahoragaProxyActive = isMahoragaProxyActive(battle, actorSide);
   const selectedIds = new Set(selectedEntries.map((entry) => entry.actionId || entry.id));
   const selectedOrderMap = new Map(selectedEntries.map((entry, index) => [entry.actionId || entry.id, index + 1]));
   const handRules = getDuelHandRules();
@@ -2940,6 +3166,8 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   ` : `<p class="duel-selected-hand-empty">尚未选择本回合手札</p>`;
   const selectionHint = pendingDiscardCount > 0
     ? `手牌超过上限，请先弃置 ${formatNumber(pendingDiscardCount)} 张。弃牌范围包含原有手牌与本轮新增手牌。`
+    : mahoragaProxyActive
+    ? "魔须罗已经接管行动；手牌区每回合后台随机锁定，由魔须罗自行行动。"
     : onlineLocked
     ? "联机行动已锁定；等待对方锁定或结算。"
     : onlineMode
@@ -2979,6 +3207,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
       ${sideHandState.lastDiscarded?.length ? `<p class="duel-action-message">已弃置：${escapeHtml(sideHandState.lastDiscarded.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
       ${warning ? `<p class="duel-action-warning">${escapeHtml(warning)}</p>` : ""}
       ${battle.actionUiMessage ? `<p class="duel-action-message">${escapeHtml(battle.actionUiMessage)}</p>` : ""}
+      ${mahoragaProxyActive ? `<div class="duel-mahoraga-banner">魔须罗代打中</div>` : ""}
       ${handLockMessage ? `<div class="duel-hand-lock-message">${escapeHtml(handLockMessage)}</div>` : ""}
       <div class="duel-action-toolbar">
         <div class="duel-selected-hand-summary">
@@ -2996,7 +3225,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
           ? choices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, { discardMode: pendingDiscardCount > 0 })).join("")
           : (handLockMessage ? `<p class="duel-selected-hand-empty">${escapeHtml(handLockMessage)}</p>` : "")}
       </div>
-      ${maxDomainHandSize ? `
+      ${maxDomainHandSize && !mahoragaProxyActive ? `
         <div class="duel-domain-hand-head">
           <strong>领域操控手札</strong>
           <span>独立 ${escapeHtml(formatNumber(maxDomainHandSize))} 位，每轮刷新；特色领域角色更容易抽到领域展开 / 维持牌。</span>
@@ -3362,7 +3591,7 @@ function renderDuelResourceSide(resource, profile) {
   const ceRatio = resource.maxCe ? clamp(resource.ce / resource.maxCe, 0, 1) : 0;
   const domainRatio = resource.domain?.threshold ? clamp(resource.domain.load / resource.domain.threshold, 0, 1) : 0;
   const status = resource.statusEffects?.length
-    ? resource.statusEffects.map((effect) => effect.label || effect.id).join("、")
+    ? resource.statusEffects.map(formatDuelStatusEffectLabel).join("、")
     : "无";
   const domainText = resource.domain?.threshold
     ? `${resource.domain.active ? "维持中" : "未展开"} · ${formatNumber(resource.domain.load)} / ${formatNumber(resource.domain.threshold)}`
@@ -3384,7 +3613,7 @@ function renderDuelResourceSide(resource, profile) {
         <strong>${escapeHtml(domainText)}</strong>
         <div class="duel-resource-bar domain"><i style="width:${domainRatio * 100}%"></i></div>
       </div>
-      <div class="duel-status-effects">状态：${escapeHtml(status)}</div>
+      <div class="duel-status-effects"><span>异常状态</span><strong>${escapeHtml(status)}</strong></div>
     </article>
   `;
 }
@@ -3515,6 +3744,7 @@ function renderDuelBattlePanel(left, right, baseRate) {
         </section>
       </div>
       ${renderDuelBattleLog(battle)}
+      ${renderDuelReplayMeta(battle)}
       ${renderDuelResidualLog(battle)}
     </div>
   `;
@@ -3937,10 +4167,15 @@ function runDuelAutoBattle() {
     }
 
     activeBattle.opponentTactic = pickDuelOpponentTactic(activeBattle);
-    const leftSelections = getDuelSelectedHandActions(activeBattle, "left").length
+    const beforeMemoSnapshot = snapshotDuelMemoState(activeBattle);
+    const leftSelections = isMahoragaProxyActive(activeBattle, "left")
+      ? [lockMahoragaHandForTurn(activeBattle, "left")]
+      : getDuelSelectedHandActions(activeBattle, "left").length
       ? getDuelSelectedHandActions(activeBattle, "left")
       : [createDuelPassTurnAction("left", activeBattle)];
-    const pickedRightSelections = pickDuelCpuHandActions(activeBattle.resourceState?.p2, activeBattle.resourceState?.p1, activeBattle, { side: "right" });
+    const pickedRightSelections = isMahoragaProxyActive(activeBattle, "right")
+      ? [lockMahoragaHandForTurn(activeBattle, "right")]
+      : pickDuelCpuHandActions(activeBattle.resourceState?.p2, activeBattle.resourceState?.p1, activeBattle, { side: "right" });
     const rightSelections = pickedRightSelections.length ? pickedRightSelections : [createDuelPassTurnAction("right", activeBattle)];
     appendDuelHandBatchLog(activeBattle, "left", leftSelections, { phase: "selected" });
     appendDuelHandBatchLog(activeBattle, "right", rightSelections, { phase: "selected" });
@@ -3956,6 +4191,8 @@ function runDuelAutoBattle() {
       return;
     }
     const rightHandResult = applyDuelSelectedHandActions(activeBattle.resourceState.p2, activeBattle.resourceState.p1, activeBattle, { side: "right", actions: rightSelections });
+    processMahoragaProxyAfterHandResult(activeBattle, leftHandResult);
+    processMahoragaProxyAfterHandResult(activeBattle, rightHandResult);
     appendDuelHandBatchLog(activeBattle, "left", leftSelections, { phase: "executed", result: leftHandResult });
     appendDuelHandBatchLog(activeBattle, "right", rightSelections, { phase: "executed", result: rightHandResult });
     const leftActions = leftHandResult.actions || [];
@@ -3990,6 +4227,7 @@ function runDuelAutoBattle() {
     activeBattle.operations.push(`round:${activeBattle.round + 1}:action:${leftActions.map((action) => action.id).join("+") || "none"}:cpuAction:${rightActions.map((action) => action.id).join("+") || "none"}:opponent:${activeBattle.opponentTactic}:event:${result.index}`);
     updateDuelResourceReplayKey(activeBattle);
     applyDuelRoundResult(activeBattle, result);
+    activeBattle.lastRoundMemo = buildDuelRoundMemo(activeBattle, beforeMemoSnapshot, snapshotDuelMemoState(activeBattle), leftHandResult, rightHandResult);
     activeBattle.currentOptions = [];
     activeBattle.selectedIndex = null;
     activeBattle.pendingAction = null;
