@@ -1720,6 +1720,7 @@
       "ceDamage"
     ];
     if (action.domainSpecific || action.domainRole || effects.activateDomain || effects.releaseDomain) return true;
+    if (action.summonSpec || action.mechanismSpec || action.resourceSpec || action.serviceReceiptRules || action.massiveObjectRules) return true;
     if (numericFields.some(function hasNumericField(field) {
       var value = Number(action[field] ?? effects[field]);
       return Number.isFinite(value) && value !== 0;

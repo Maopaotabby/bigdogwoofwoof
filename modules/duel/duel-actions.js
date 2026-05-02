@@ -18,6 +18,7 @@
     "state",
     "getDuelActionRules",
     "getDuelMechanicTemplateRules",
+    "getDuelCardTemplateIndex",
     "getDuelBattle",
     "getDuelActionCost",
     "getDuelProfileForSide",
@@ -47,6 +48,7 @@
     getDuelDomainResponseProfile: ["JJKDuelDomainResponse", "getDuelDomainResponseProfile"],
     isDuelOpponentDomainThreat: ["JJKDuelDomainResponse", "isDuelOpponentDomainThreat"],
     hasDuelDomainCounterAccess: ["JJKDuelDomainResponse", "hasDuelDomainCounterAccess"],
+    getDuelCardTemplateIndex: ["JJKDuelCardTemplate", "getDuelCardTemplateIndex"],
     getDuelResourcePair: ["JJKDuelResource", "getDuelResourcePair"],
     clampDuelResource: ["JJKDuelResource", "clampDuelResource"],
     syncDuelTrialSubPhaseLifecycle: ["JJKDuelRuleSubphase", "syncDuelTrialSubPhaseLifecycle"],
@@ -1255,6 +1257,15 @@
       ...buildTechniqueFeatureHandActions(actor, opponent, battle),
       ...buildDuelDomainSpecificActions(actor, opponent, battle)
     ];
+    var existingIds = new Set(templates.map(function mapTemplateId(template) {
+      return template?.id || template?.sourceActionId || "";
+    }).filter(Boolean));
+    buildDuelCardTemplateHandActions().forEach(function addCardTemplateAction(action) {
+      var id = action?.id || action?.sourceActionId || "";
+      if (!id || existingIds.has(id)) return;
+      templates.push(action);
+      existingIds.add(id);
+    });
     return templates.filter(function filterIdentityScopedAction(template) {
       return isDuelActionAllowedByActorIdentity(template, actor, battle);
     }).map(function mapTemplate(template) {
@@ -1285,6 +1296,53 @@
         available: true
       };
     });
+  }
+
+  function buildDuelCardTemplateHandAction(card) {
+    if (!card?.sourceActionId || card.playableInHandBeta === false || card.futureTemplate) return null;
+    return {
+      id: card.sourceActionId,
+      sourceActionId: card.sourceActionId,
+      cardId: card.cardId || ("card_" + card.sourceActionId),
+      label: card.name || card.sourceActionId,
+      name: card.name || card.sourceActionId,
+      description: card.effectSummary || "",
+      cardType: card.cardType || "technique",
+      type: "card_template_runtime",
+      tags: Array.isArray(card.tags) ? card.tags.slice() : [],
+      specialHandTags: Array.isArray(card.specialHandTags) ? card.specialHandTags.slice() : [],
+      allowedContexts: Array.isArray(card.allowedContexts) ? card.allowedContexts.slice() : ["normal"],
+      requirements: { ...(card.requirements || {}) },
+      apCost: Number(card.apCost || 1),
+      baseCeCost: Number(card.baseCeCost || card.ceCost || card.costCe || 0),
+      baseDamage: Number(card.baseDamage || 0),
+      baseBlock: Number(card.baseBlock || 0),
+      baseDomainLoadDelta: Number(card.baseDomainLoadDelta || 0),
+      durationRounds: Number(card.durationRounds || 0),
+      damageType: card.damageType || "none",
+      scalingProfile: card.scalingProfile || "card_template_runtime",
+      accuracyProfile: card.accuracyProfile || "none",
+      evasionAllowed: card.evasionAllowed,
+      hitRateModifier: Number(card.hitRateModifier || 0),
+      effects: { ...(card.effects || {}) },
+      risk: card.risk || "medium",
+      rarity: card.rarity || "common",
+      weight: Number(card.weight || 1),
+      selectionWeight: Number(card.selectionWeight || card.weight || 1),
+      effectSummary: card.effectSummary || "",
+      summonSpec: card.summonSpec ? { ...card.summonSpec } : undefined,
+      mechanismSpec: card.mechanismSpec ? { ...card.mechanismSpec } : undefined,
+      resourceSpec: card.resourceSpec ? { ...card.resourceSpec } : undefined,
+      serviceReceiptRules: card.serviceReceiptRules ? { ...card.serviceReceiptRules } : undefined,
+      massiveObjectRules: card.massiveObjectRules ? { ...card.massiveObjectRules } : undefined,
+      status: card.status || "CANDIDATE"
+    };
+  }
+
+  function buildDuelCardTemplateHandActions() {
+    var getter = getOptionalDependency("getDuelCardTemplateIndex");
+    var index = getter ? getter() : global.JJKDuelCardTemplate?.getDuelCardTemplateIndex?.();
+    return (index?.cards || []).map(buildDuelCardTemplateHandAction).filter(Boolean);
   }
 
   function scoreDuelActionCandidate(action, actor, opponent, duelState) {

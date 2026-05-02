@@ -3240,7 +3240,8 @@
         "浑",
         "式神",
         "追踪",
-        "夹击"
+        "夹击",
+        "ten_shadows"
       ],
       "rarity": "rare",
       "weight": 0.75,
@@ -3277,7 +3278,10 @@
       "targetingRules": {
         "default": "marked_or_lowest_guard_enemy",
         "bonus": "追踪已被影子标记或被夹击的目标"
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_nue",
@@ -3293,7 +3297,8 @@
         "式神",
         "飞行",
         "雷击",
-        "牵制"
+        "牵制",
+        "ten_shadows"
       ],
       "rarity": "rare",
       "weight": 0.7,
@@ -3331,7 +3336,10 @@
       "targetingRules": {
         "default": "backline_or_casting_enemy",
         "bonus": "优先牵制正在蓄力、展开或维持术式的目标"
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_max_elephant",
@@ -3347,7 +3355,8 @@
         "式神",
         "大型单位",
         "压制",
-        "冲散"
+        "冲散",
+        "ten_shadows"
       ],
       "rarity": "rare",
       "weight": 0.6,
@@ -3385,7 +3394,10 @@
       "targetingRules": {
         "default": "frontline_cluster",
         "bonus": "对站位集中或被影子限制路线的目标提高冲散收益"
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_rabbit_escape",
@@ -3401,7 +3413,8 @@
         "扰乱",
         "遮蔽",
         "防御",
-        "目标偏移"
+        "目标偏移",
+        "ten_shadows"
       ],
       "rarity": "uncommon",
       "weight": 0.9,
@@ -3427,7 +3440,10 @@
         "targetingDisruption": 22,
         "evasionModifier": 0.18,
         "breaksSingleTargetLock": true
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_round_deer",
@@ -3443,7 +3459,8 @@
         "式神",
         "反转术式",
         "净化",
-        "辅助"
+        "辅助",
+        "ten_shadows"
       ],
       "rarity": "special",
       "weight": 0.45,
@@ -3484,7 +3501,10 @@
         "canCleanseTechniqueInterference": true,
         "canReduceDomainLoad": true,
         "antiCursePositiveEnergyRoute": true
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_piercing_ox",
@@ -3500,7 +3520,8 @@
         "式神",
         "直线冲锋",
         "破防",
-        "距离增伤"
+        "距离增伤",
+        "ten_shadows"
       ],
       "rarity": "rare",
       "weight": 0.55,
@@ -3540,7 +3561,10 @@
         "guardBreakPerDistanceStep": 4,
         "maxBonusDamage": 48,
         "blockedByHardTerrainOrLineBreak": true
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_mahoraga_tuning_ritual",
@@ -3557,7 +3581,8 @@
         "未调幅",
         "中立暴走",
         "式神",
-        "高风险"
+        "高风险",
+        "ten_shadows"
       ],
       "rarity": "special",
       "weight": 0.2,
@@ -3587,7 +3612,10 @@
         "control": "neutral_uncontrolled",
         "requiresMaintenanceCardId": "card_ten_shadows_shadow_hide",
         "failureRule": "if_user_not_shadow_hidden_user_is_valid_target"
-      }
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "cardId": "card_ten_shadows_shadow_hide",
@@ -3774,7 +3802,8 @@
         "再契象",
         "收据",
         "库存",
-        "资源"
+        "资源",
+        "recontract_icon"
       ],
       "rarity": "uncommon",
       "weight": 0.9,
@@ -3801,7 +3830,10 @@
           "object_shikigami",
           "service_receipt"
         ]
-      }
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     },
     {
       "cardId": "card_recontract_santana_sedan",
@@ -3816,7 +3848,8 @@
         "桑塔纳轿车",
         "实物式神",
         "冲撞",
-        "临时单位"
+        "临时单位",
+        "recontract_icon"
       ],
       "rarity": "uncommon",
       "weight": 0.8,
@@ -3854,7 +3887,10 @@
       "objectRules": {
         "countsAsShikigamiLikeObject": true,
         "expiresWhenDestroyedOrDurationEnds": true
-      }
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     },
     {
       "cardId": "card_recontract_excavator",
@@ -3869,7 +3905,8 @@
         "挖掘机",
         "实物式神",
         "重型单位",
-        "破防"
+        "破防",
+        "recontract_icon"
       ],
       "rarity": "rare",
       "weight": 0.55,
@@ -3909,7 +3946,10 @@
         "movement": "slow",
         "terrainPressure": 20,
         "expiresWhenDestroyedOrDurationEnds": true
-      }
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     },
     {
       "cardId": "card_recontract_kitchen_knife",
@@ -3924,7 +3964,8 @@
         "菜刀",
         "实物具现",
         "投掷",
-        "近身"
+        "近身",
+        "recontract_icon"
       ],
       "rarity": "common",
       "weight": 1,
@@ -3945,7 +3986,10 @@
       "playableInHandBeta": true,
       "accuracyProfile": "small_object_projectile",
       "evasionAllowed": true,
-      "hitRateModifier": 0.08
+      "hitRateModifier": 0.08,
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     },
     {
       "cardId": "card_recontract_detached_house",
@@ -3960,7 +4004,8 @@
         "一户建",
         "房产再具象化",
         "巨大质量",
-        "慢速压杀"
+        "慢速压杀",
+        "recontract_icon"
       ],
       "rarity": "special",
       "weight": 0.18,
@@ -3994,7 +4039,10 @@
             "resolution": "use_normal_slow_huge_object_evasion_check"
           }
         }
-      }
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     },
     {
       "cardId": "card_recontract_five_star_resort_week",
@@ -4009,7 +4057,8 @@
         "服务收据",
         "度假套餐",
         "恢复",
-        "补给"
+        "补给",
+        "recontract_icon"
       ],
       "rarity": "rare",
       "weight": 0.45,
@@ -4037,7 +4086,10 @@
         "restoresCe": 50,
         "restoresStability": 55,
         "reducesDomainLoad": 6
-      }
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     }
   ]
 }
