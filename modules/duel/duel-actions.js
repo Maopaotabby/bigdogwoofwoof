@@ -105,6 +105,25 @@
     auspicious_beasts: ["来访瑞兽", "猪野琢真", "猪野"],
     manga_artist: ["漫画家", "查理", "贝尔纳"]
   });
+  var RCT_CHARACTER_IDS = new Set([
+    "gojo_satoru_shinjuku",
+    "sukuna_heian_or_shinjuku",
+    "yuta_okkotsu_volume0_true_rika",
+    "yuta_okkotsu_shinjuku",
+    "shoko_ieiri_support_candidate",
+    "kenjaku_geto_body",
+    "yuki_tsukumo_culling",
+    "yuji_itadori_shinjuku",
+    "yuji_itadori_after68",
+    "higuruma_hiromi_culling",
+    "hazel"
+  ]);
+  var RCT_OUTPUT_CHARACTER_IDS = new Set([
+    "sukuna_heian_or_shinjuku",
+    "yuta_okkotsu_volume0_true_rika",
+    "yuta_okkotsu_shinjuku",
+    "shoko_ieiri_support_candidate"
+  ]);
 
   function hasOwn(source, key) {
     return Object.prototype.hasOwnProperty.call(source, key);
@@ -681,6 +700,9 @@
     var costCe = getDuelActionCost(action, actor);
     if (!actor || !opponent) return { available: false, reason: "资源状态缺失", costCe: costCe };
     if (actor.ce < costCe) return { available: false, reason: "咒力不足", costCe: costCe };
+    if (requirements.requiresMissingHp && actor.maxHp && Number(actor.hp || 0) >= Number(actor.maxHp || 0) - 0.5) {
+      return { available: false, reason: "当前没有需要反转治疗的伤势", costCe: costCe };
+    }
     if (requirements.domainActive === true && !actor.domain?.active) return { available: false, reason: "当前未展开领域", costCe: costCe };
     if (requirements.domainActive === false && actor.domain?.active) return { available: false, reason: "领域已展开", costCe: costCe };
     if (requirements.requiresDomainAccess && !domainResponse.canExpandDomain) return { available: false, reason: "当前角色不具备领域条件", costCe: costCe };
@@ -786,10 +808,14 @@
       "technique",
       "techniqueName",
       "techniqueText",
+      "techniqueDescription",
       "domainProfile",
       "notes",
+      "sourceLayer",
       "officialGrade",
-      "powerTier"
+      "visibleGrade",
+      "powerTier",
+      "externalResource"
     ].forEach(function pushField(field) {
       if (source[field]) parts.push(source[field]);
     });
@@ -1068,15 +1094,170 @@
     return matched;
   }
 
+  function isCursedSpiritActor(actor, battle, snapshot) {
+    var profile = getDuelProfileForSide(battle, actor?.side || "") || actor?.characterCardProfile || actor?.profile || {};
+    var text = [
+      snapshot?.text,
+      actor?.name,
+      actor?.displayName,
+      actor?.characterId,
+      actor?.officialGrade,
+      actor?.powerTier,
+      actor?.notes,
+      actor?.profile?.officialGrade,
+      actor?.profile?.powerTier,
+      actor?.profile?.notes,
+      actor?.characterCardProfile?.officialGrade,
+      actor?.characterCardProfile?.powerTier,
+      actor?.characterCardProfile?.notes,
+      profile?.officialGrade,
+      profile?.powerTier,
+      profile?.notes
+    ].concat(
+      toFeatureList(actor?.specialHandTags),
+      toFeatureList(actor?.["特殊手札"]),
+      toFeatureList(actor?.profile?.specialHandTags),
+      toFeatureList(actor?.profile?.["特殊手札"]),
+      toFeatureList(actor?.characterCardProfile?.specialHandTags),
+      toFeatureList(actor?.characterCardProfile?.["特殊手札"]),
+      toFeatureList(profile?.specialHandTags),
+      toFeatureList(profile?.["特殊手札"])
+    ).join(" ");
+    return /特级咒灵|低级咒灵|咒灵之躯|咒灵，|咒灵\)|咒灵）|（咒灵|\(咒灵|cursed_spirit|cursedspirit|disaster_curse|disastercurse|low_grade_curse|lowgradecurse/i.test(text);
+  }
+
+  function getDuelActionIdentityText(action) {
+    return [
+      action?.id,
+      action?.sourceActionId,
+      action?.label,
+      action?.name,
+      action?.description,
+      action?.cardType,
+      action?.type,
+      action?.scalingProfile
+    ].concat(
+      toFeatureList(action?.tags),
+      toFeatureList(action?.mechanicIds)
+    ).join(" ");
+  }
+
+  function isReverseCursedTechniqueAction(action) {
+    if (action?.rctHealing) return true;
+    var text = getDuelActionIdentityText(action).toLowerCase();
+    if (/curse_regen|咒灵再生/.test(text)) return false;
+    return /反转术式|rct|reverse_output|reverse_cursed_technique|正能量|疗伤|治疗/.test(text);
+  }
+
+  function isReverseCursedTechniqueOutputAction(action) {
+    var text = getDuelActionIdentityText(action).toLowerCase();
+    return /reverse_output|rct_output|反转输出|正能量外放|输出反转/.test(text);
+  }
+
+  function isCurseRegenerationAction(action) {
+    var text = getDuelActionIdentityText(action).toLowerCase();
+    return /curse_regen|咒灵再生/.test(text) || (/咒灵/.test(text) && /再生/.test(text));
+  }
+
+  function isDuelActionAllowedByActorIdentity(action, actor, battle) {
+    if (!actor || !action) return true;
+    if (!isReverseCursedTechniqueAction(action) && !isCurseRegenerationAction(action)) return true;
+    var snapshot = getActorFeatureSnapshot(actor, battle);
+    var cursedSpirit = isCursedSpiritActor(actor, battle, snapshot);
+    if (isReverseCursedTechniqueAction(action)) {
+      if (cursedSpirit) return false;
+      if (isReverseCursedTechniqueOutputAction(action)) return hasReverseCursedTechniqueOutputAccess(actor, battle, snapshot);
+      return hasReverseCursedTechniqueAccess(actor, battle, snapshot);
+    }
+    if (isCurseRegenerationAction(action)) return cursedSpirit;
+    return true;
+  }
+
+  function hasReverseCursedTechniqueAccess(actor, battle, snapshot) {
+    var ids = snapshot?.ids || [];
+    if (ids.some(function hasKnownRctId(id) { return RCT_CHARACTER_IDS.has(String(id || "")); })) return true;
+    var text = snapshot?.text || "";
+    return /反转术式|反转输出|正能量外放|rct_user|rct_output|reverse_output|reverse_cursed_technique|healer|self_repair|反转恢复|疗伤/i.test(text);
+  }
+
+  function hasReverseCursedTechniqueOutputAccess(actor, battle, snapshot) {
+    var ids = snapshot?.ids || [];
+    if (ids.some(function hasKnownRctOutputId(id) { return RCT_OUTPUT_CHARACTER_IDS.has(String(id || "")); })) return true;
+    var text = snapshot?.text || "";
+    return /反转输出|正能量外放|rct_output|reverse_output|healer/i.test(text);
+  }
+
+  function buildReverseCursedTechniqueActions(actor, opponent, duelState) {
+    var battle = getBattle(duelState);
+    var snapshot = getActorFeatureSnapshot(actor, battle);
+    if (!snapshot?.normalizedText || isCursedSpiritActor(actor, battle, snapshot)) return [];
+    if (!hasReverseCursedTechniqueAccess(actor, battle, snapshot)) return [];
+    var hpRatio = actor?.maxHp ? Number(actor.hp || 0) / Number(actor.maxHp || 1) : 1;
+    if (hpRatio >= 0.985) return [];
+    var missingHp = Math.max(0, Number(actor?.maxHp || 0) - Number(actor?.hp || 0));
+    var baseHealing = missingHp > 90 ? 24 : (missingHp > 45 ? 20 : 16);
+    return [{
+      id: "reverse_cursed_technique_heal",
+      sourceActionId: "reverse_cursed_technique_heal",
+      label: "反转术式疗伤",
+      description: "将咒力反转为正向能量修复自身伤势，治疗量按角色咒力操控、效率、术式能力和输出修正。",
+      cardType: "healing",
+      type: "rct_healing",
+      rctHealing: true,
+      normalHandOnly: true,
+      tags: ["反转术式", "rct", "正能量", "疗伤", "治疗", "支援", "resource"],
+      exclusiveToCharacters: snapshot.ids || [],
+      requiresCe: true,
+      requirements: {
+        domainActive: "any",
+        requiresMissingHp: true
+      },
+      apCost: 1,
+      baseCeCost: 20,
+      baseHealing: baseHealing,
+      baseBlock: 8,
+      baseStabilityRestore: 20,
+      durationRounds: 1,
+      damageType: "none",
+      scalingProfile: "healing",
+      accuracyProfile: "none",
+      evasionAllowed: false,
+      effects: {
+        incomingHpScale: 0.9,
+        stabilityDelta: 0.024,
+        weightDeltas: {
+          sustain: 0.8,
+          support: 0.65,
+          resource: 0.35
+        },
+        selfStatus: {
+          id: "rctRecovery",
+          label: "反转治疗",
+          rounds: 1,
+          value: 1
+        }
+      },
+      risk: "medium",
+      rarity: "uncommon",
+      weight: hpRatio < 0.45 ? 7.2 : 5.4,
+      selectionWeight: hpRatio < 0.45 ? 8.4 : 6.1,
+      effectSummary: "按基础治疗值与角色属性修正恢复体势。",
+      logTemplate: "你使用反转术式疗伤，把咒力转为正向能量修复伤势。"
+    }];
+  }
+
   function buildDuelActionPool(actor, opponent, duelState) {
     var battle = getBattle(duelState);
     var templates = [
       ...getDuelActionTemplateIndex().templates,
       ...buildCustomDuelSpecialActions(actor),
+      ...buildReverseCursedTechniqueActions(actor, opponent, battle),
       ...buildTechniqueFeatureHandActions(actor, opponent, battle),
       ...buildDuelDomainSpecificActions(actor, opponent, battle)
     ];
-    return templates.map(function mapTemplate(template) {
+    return templates.filter(function filterIdentityScopedAction(template) {
+      return isDuelActionAllowedByActorIdentity(template, actor, battle);
+    }).map(function mapTemplate(template) {
       if (template.domainSpecific && template.available !== undefined) return template;
       var availability = getDuelActionAvailability(template, actor, opponent, battle);
       return {
@@ -1149,6 +1330,12 @@
     if (stable < 0.38) score += ["ce_compression", "defensive_frame", "residue_reading"].includes(action.id) ? 2.1 : -1.1;
     if (getDuelStatusEffectValue(actor, "techniqueImbalance") > 0) score += ["ce_compression", "defensive_frame", "residue_reading"].includes(action.id) ? 2 : -2.2;
     if (getDuelStatusEffectValue(actor, "ceRegenBlocked") > 0) score += action.costCe <= Math.max(8, actor.maxCe * 0.035) ? 1.3 : -1.5;
+    if (Number(action.baseHealing || 0) > 0 || action.rctHealing || isCurseRegenerationAction(action)) {
+      var missingHpRatio = Math.max(0, 1 - hpRatio);
+      if (hpRatio < 0.72) score += Math.min(4.2, 0.8 + missingHpRatio * 5);
+      if (hpRatio < 0.38) score += 1.6;
+      if (action.id === "reverse_cursed_technique_heal" || action.id === "curse_regen_candidate") score += 1.8;
+    }
     if (actor.domain?.active) {
       score += ["domain_compress", "domain_force_sustain", "domain_release"].includes(action.id) ? 2.4 : 0;
       if (domainRisk > 0.72) score += ["domain_compress", "domain_release"].includes(action.id) ? 2.8 : (action.id === "domain_force_sustain" ? -2.4 : 0);
@@ -1182,6 +1369,10 @@
       pushById("domain_force_sustain");
     } else {
       pushById("domain_expand");
+    }
+    if (actor?.maxHp && Number(actor.hp || 0) / Number(actor.maxHp || 1) < 0.72) {
+      pushById("reverse_cursed_technique_heal");
+      pushById("curse_regen_candidate");
     }
     if (isDuelOpponentDomainThreat(opponent, actor, battle)) {
       domainResponse.allowedDomainResponseActions.forEach(pushById);
@@ -1619,6 +1810,8 @@
     });
     if (Number(effects.lowStabilityHpRecoil || 0) && Number(actor.stability || 0) < 0.38) actor.hp -= Number(effects.lowStabilityHpRecoil);
     var directDamage = Math.max(0, Math.round(Number(numericPreview?.finalDamage || 0) * (action.risk === "high" || action.risk === "critical" ? 0.58 : 0.45)));
+    var directHealing = Math.max(0, Math.round(Number(numericPreview?.finalHealing || 0)));
+    var actualHealing = 0;
     var stabilityShock = Math.max(0, Number(numericPreview?.base?.baseStabilityDamage || 0) / 100);
     var hutianBlackFlashResult = null;
     var evasionResult = null;
@@ -1665,6 +1858,11 @@
     if (stabilityShock > 0) {
       opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
     }
+    if (directHealing > 0 && Number(actor.maxHp || 0) > 0) {
+      var beforeHealHp = Number(actor.hp || 0);
+      actor.hp = Number(clamp(beforeHealHp + directHealing, 0, Number(actor.maxHp || beforeHealHp + directHealing)).toFixed(1));
+      actualHealing = Math.max(0, Number((Number(actor.hp || 0) - beforeHealHp).toFixed(1)));
+    }
 
     actorContext.outgoingScale *= Number(effects.outgoingScale || 1);
     actorContext.incomingHpScale *= Number(effects.incomingHpScale || 1);
@@ -1694,6 +1892,8 @@
       domainActivated: !before.actorDomainActive && Boolean(actor.domain?.active),
       domainReleased: before.actorDomainActive && !actor.domain?.active,
       directDamage: directDamage,
+      directHealing: directHealing,
+      actorHealing: actualHealing,
       instantKillOnHit: Boolean(!evasionResult?.evaded && (action.instantKillOnHit || effects.instantKillOnHit)),
       evasion: evasionResult?.checked ? evasionResult : undefined,
       blackFlashTriggered: Boolean(!evasionResult?.evaded && (blackFlashWindow || effects.hutianBlackFlash)),

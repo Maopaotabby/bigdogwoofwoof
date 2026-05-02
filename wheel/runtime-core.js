@@ -255,7 +255,7 @@ const els = {
 
 const DEBUG_ACCESS_CODE = "258079";
 const DEBUG_SUMMON_SEQUENCE = "258079";
-const APP_BUILD_VERSION = "20260501-feature-hands-v06-bind-v1";
+const APP_BUILD_VERSION = "20260502-rct-healing-v1";
 const MOBILE_TOPBAR_QUERY = "(max-width: 640px)";
 const MOBILE_TOPBAR_SCROLL_DELTA = 8;
 const MOBILE_TOPBAR_MIN_HIDE_AFTER = 72;

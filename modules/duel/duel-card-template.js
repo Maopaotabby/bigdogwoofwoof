@@ -34,6 +34,7 @@
     "calculateDuelCardCeCost",
     "calculateDuelDamageFromCard",
     "calculateDuelBlockFromCard",
+    "calculateDuelHealingFromCard",
     "calculateDuelDomainPressureFromCard",
     "buildDuelCardNumericPreview"
   ];
@@ -61,6 +62,7 @@
     jackpot: "坐杀搏徒",
     resource: "资源",
     support: "支援",
+    healing: "治疗",
     curse_tool: "咒具",
     special: "特殊"
   };
@@ -742,6 +744,7 @@
     if (/domain|领域|barrier/.test(tags) || template?.cardType === "domain") return "domain";
     if (/trial|evidence|verdict|审判|证据|判决/.test(tags) || template?.cardType === "rule_trial") return "trial_rule";
     if (/jackpot|reach|probability|坐杀|中奖|演出/.test(tags) || template?.cardType === "jackpot") return "jackpot_rule";
+    if (/反转术式|rct|reverse|healing|治疗|疗伤|正能量/.test(tags) || template?.cardType === "healing") return "healing";
     if (/defense|guard|防御|守势/.test(tags) || template?.cardType === "defense") return "defense";
     if (/physical|melee|strike|体术|近身|打击/.test(tags)) return "physical";
     if (/burst|爆发|forced_output/.test(action.id || "")) return "ce_burst";
@@ -756,6 +759,7 @@
     if (["domain", "domain_pressure", "domain_sustain", "domain_control"].includes(key)) return "domain";
     if (["trial", "trial_rule", "rule_trial", "evidence"].includes(key)) return "trial_rule";
     if (["jackpot", "jackpot_rule", "probability"].includes(key)) return "jackpot_rule";
+    if (["healing", "rct", "rct_healing", "reverse", "reverse_cursed_technique", "reverse_cursed_technique_heal"].includes(key)) return "healing";
     if (["zero_ce", "heavenly_restriction"].includes(key)) return "zero_ce";
     if (["cursed_tool", "tool"].includes(key)) return "cursed_tool";
     if (["guard", "defense", "shield", "block"].includes(key)) return "defense";
@@ -866,6 +870,37 @@
     return roundPreviewNumber(value, 1);
   }
 
+  function calculateDuelHealingFromCard(actionOrCandidate, characterOrActor, options) {
+    var base = calculateDuelCardBaseEffect(actionOrCandidate);
+    if (!base.baseHealing) return 0;
+    var action = actionOrCandidate?.action || actionOrCandidate || {};
+    var template = getDuelCardTemplateForAction(actionOrCandidate);
+    var stats = getDuelCharacterCombatStats(characterOrActor || {});
+    var m = stats.multipliers;
+    var tags = []
+      .concat(asArray(action.tags))
+      .concat(asArray(template?.tags))
+      .concat([action.id, action.label, action.description, base.scalingProfile])
+      .join(" ")
+      .toLowerCase();
+    var contextMultiplier = toNumber(options?.contextMultiplier, 1) || 1;
+    var value = base.baseHealing;
+    if (base.scalingProfile === "healing" || /反转术式|rct|reverse|正能量|疗伤|治疗/.test(tags)) {
+      var healingMultiplier = (
+        Math.pow(m.ceControl, 0.55) * 0.42 +
+        Math.pow(m.ceEfficiency, 0.5) * 0.28 +
+        Math.pow(m.techniquePower, 0.35) * 0.18 +
+        Math.pow(m.ceOutput, 0.3) * 0.12
+      );
+      value *= Math.max(0.55, Math.min(2.35, healingMultiplier)) * contextMultiplier;
+    } else if (base.scalingProfile === "jackpot_rule") {
+      value *= Math.max(m.ceEfficiency, m.domainSkill) * Math.pow(m.ceControl, 0.35) * contextMultiplier;
+    } else {
+      value *= Math.max(0.7, (m.ceControl + m.ceEfficiency) / 2) * contextMultiplier;
+    }
+    return roundPreviewNumber(value, 1);
+  }
+
   function calculateDuelDomainPressureFromCard(actionOrCandidate, characterOrActor) {
     var base = calculateDuelCardBaseEffect(actionOrCandidate);
     var stats = getDuelCharacterCombatStats(characterOrActor || {});
@@ -883,6 +918,7 @@
       cost: cost,
       finalDamage: calculateDuelDamageFromCard(actionOrCandidate, characterOrActor || {}, options || {}),
       finalBlock: calculateDuelBlockFromCard(actionOrCandidate, characterOrActor || {}, options || {}),
+      finalHealing: calculateDuelHealingFromCard(actionOrCandidate, characterOrActor || {}, options || {}),
       finalDomainPressure: calculateDuelDomainPressureFromCard(actionOrCandidate, characterOrActor || {}),
       finalEvidencePressure: roundPreviewNumber(base.baseEvidencePressure * getDuelRankMultiplier(stats.techniquePower), 1),
       finalDefensePressure: roundPreviewNumber(base.baseDefensePressure * getDuelRankMultiplier(stats.ceControl), 1),
@@ -898,6 +934,7 @@
     var base = preview.base;
     if (base.baseDamage) lines.push("基础伤害：" + formatPlainNumber(base.baseDamage) + "，最终预估：" + formatPlainNumber(preview.finalDamage) + "。");
     if (base.baseBlock || base.baseShield) lines.push("基础防御：" + formatPlainNumber(Math.max(base.baseBlock, base.baseShield)) + "，最终防御：" + formatPlainNumber(preview.finalBlock) + "。");
+    if (base.baseHealing) lines.push("基础治疗：" + formatPlainNumber(base.baseHealing) + "，最终恢复：" + formatPlainNumber(preview.finalHealing) + "。");
     if (base.baseDomainPressure) lines.push("基础领域压制：" + formatPlainNumber(base.baseDomainPressure) + "，最终领域压制：" + formatPlainNumber(preview.finalDomainPressure) + "。");
     if (base.baseEvidencePressure) lines.push("证据压力：" + formatPlainNumber(base.baseEvidencePressure) + " → " + formatPlainNumber(preview.finalEvidencePressure) + "。");
     if (base.baseJackpotGauge) lines.push("jackpot 期待度：" + formatPlainNumber(base.baseJackpotGauge) + " → " + formatPlainNumber(preview.finalJackpotGauge) + "。");
@@ -1496,6 +1533,7 @@
     calculateDuelCardCeCost: calculateDuelCardCeCost,
     calculateDuelDamageFromCard: calculateDuelDamageFromCard,
     calculateDuelBlockFromCard: calculateDuelBlockFromCard,
+    calculateDuelHealingFromCard: calculateDuelHealingFromCard,
     calculateDuelDomainPressureFromCard: calculateDuelDomainPressureFromCard,
     buildDuelCardNumericPreview: buildDuelCardNumericPreview,
     buildDuelCardTemplateIndexes: buildDuelCardTemplateIndexes,

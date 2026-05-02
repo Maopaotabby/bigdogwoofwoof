@@ -2201,6 +2201,8 @@ function appendDuelActionLog(action, actor, opponent, result, battle = state.due
     costText
   ];
   if (result.actorStability) parts.push(`稳定 ${formatSignedDuelDelta(result.actorStability * 100)}%`);
+  if (result.actorHp && (!result.actorHealing || Math.abs(Number(result.actorHp) - Number(result.actorHealing)) > 0.1)) parts.push(`${actor.name} 体势 ${formatSignedDuelDelta(result.actorHp)}`);
+  if (result.actorHealing) parts.push(`实际治疗 ${formatSignedDuelDelta(result.actorHealing)}`);
   if (result.opponentHp) parts.push(`${opponent.name} 体势 ${formatSignedDuelDelta(result.opponentHp)}`);
   if (result.opponentStability) parts.push(`${opponent.name} 稳定 ${formatSignedDuelDelta(result.opponentStability * 100)}%`);
   if (result.actorDomainLoad) parts.push(`领域负荷 ${formatSignedDuelDelta(result.actorDomainLoad)}`);

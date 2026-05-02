@@ -1714,6 +1714,7 @@
       "baseStabilityDamage",
       "baseStabilityRestore",
       "baseDomainLoadDelta",
+      "baseHealing",
       "baseCeDamage",
       "hpDamage",
       "ceDamage"
