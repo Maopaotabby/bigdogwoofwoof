@@ -2392,6 +2392,18 @@ function getDuelEventAccuracyProfile(kind) {
   return "none";
 }
 
+function getDuelRoundEventOutputScale(actionContext = {}) {
+  const raw = Number(actionContext.outgoingScale || 1);
+  if (!Number.isFinite(raw) || raw <= 0) return 1;
+  if (Math.abs(raw - 1) < 0.001) return 1;
+  const actionCount = Math.max(1, Array.isArray(actionContext.actionLabels) ? actionContext.actionLabels.length : 1);
+  if (raw > 1) {
+    const singleCardBonus = Math.pow(raw, 1 / actionCount) - 1;
+    return Number(clamp(1 + Math.min(singleCardBonus, 0.18), 1, 1.18).toFixed(4));
+  }
+  return Number(clamp(Math.pow(raw, 1 / actionCount), 0.72, 1).toFixed(4));
+}
+
 function resolveDuelEvasionCheck({ battle, actor, opponent, profile, label = "evasion", hitRateModifier = 0, damage = 0 }) {
   const config = getDuelEvasionProfileConfig(profile);
   if (!battle || !actor || !opponent || !config || Number(damage || 0) <= 0) {
@@ -2499,7 +2511,8 @@ function applyDuelEventResourceDelta(event, actor, opponent, battle = state.duel
   actor.ce -= actualCeCost;
   const actorActionContext = getDuelActionContext(battle, actorSide);
   const opponentActionContext = getDuelActionContext(battle, opponentSide);
-  let outputScale = (ceCost > 0 ? clamp(actualCeCost / ceCost, 0.58, 1) : 1) * Number(actorActionContext.outgoingScale || 1);
+  const eventOutputScale = getDuelRoundEventOutputScale(actorActionContext);
+  let outputScale = (ceCost > 0 ? clamp(actualCeCost / ceCost, 0.58, 1) : 1) * eventOutputScale;
   const executionStateCandidate = getDuelStatusEffectValue(actor, "executionStateCandidate");
   if (executionStateCandidate > 0) outputScale *= 1 + executionStateCandidate * 0.22;
   const techniqueImbalance = getDuelStatusEffectValue(actor, "techniqueImbalance");
@@ -2612,7 +2625,7 @@ function applyDuelEventResourceDelta(event, actor, opponent, battle = state.duel
     title: `${event.label}资源结算`,
     detail,
     type: kind === "domain" ? "domain" : "resource",
-    delta: { ...delta, evasion: evasionResult.checked ? evasionResult : undefined }
+    delta: { ...delta, evasion: evasionResult.checked ? evasionResult : undefined, eventOutputScale }
   });
   return delta;
 }

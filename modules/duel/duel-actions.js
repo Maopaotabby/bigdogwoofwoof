@@ -1496,15 +1496,58 @@
     return Boolean(resource?.domain && resource.domain.active);
   }
 
-  function isStrikeLikeAction(action) {
-    var text = [
+  function getDuelActionText(action) {
+    return [
       action?.id,
       action?.label,
-      [].concat(action?.tags || []).join(" "),
+      action?.name,
+      action?.description,
+      action?.effectSummary,
       action?.damageType,
-      action?.scalingProfile
-    ].join(" ").toLowerCase();
-    return /strike|melee|physical|打击|体术|近身|拳|slash|斩|cursed_tool|咒具/.test(text);
+      action?.scalingProfile,
+      action?.cardType,
+      action?.type,
+      [].concat(action?.tags || []).join(" "),
+      [].concat(action?.specialHandTags || []).join(" ")
+    ].filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function createsBlackFlashWindow(action) {
+    var effectText = [
+      action?.effects?.selfStatus?.id,
+      action?.effects?.selfStatus?.label,
+      [].concat(action?.effects?.selfStatuses || []).map(function mapStatus(status) {
+        return [status?.id, status?.label].filter(Boolean).join(" ");
+      }).join(" ")
+    ].filter(Boolean).join(" ");
+    return /impactWindowCandidate|burstTimingWindowCandidate|blackFlashWindow|black_flash_window|爆发窗口候选|爆发时机窗口候选/i.test(effectText);
+  }
+
+  function isStrikeLikeAction(action) {
+    var text;
+    var cardType;
+    var damageType;
+    var scalingProfile;
+    var baseDamage;
+    var profile;
+
+    if (!action || action.blackFlashEligible === false || action.evasionAllowed === false) return false;
+    if (action.domainSpecific || action.effects?.activateDomain || action.effects?.releaseDomain || action.effects?.hutianBlackFlash) return false;
+    if (createsBlackFlashWindow(action)) return false;
+    text = getDuelActionText(action);
+    cardType = String(action.cardType || action.type || "").toLowerCase();
+    damageType = String(action.damageType || "").toLowerCase();
+    scalingProfile = String(action.scalingProfile || "").toLowerCase();
+    if (/domain|领域|healing|rct|反转术式|治疗|resource|support|defense|guard|防御|领域应对|domain_response/.test(cardType + " " + scalingProfile)) return false;
+    if (/苍|赫|茈|blue|red|purple|解|捌|cleave|dismantle|slash|斩击|远程|远距|投射|射出|projectile|beam|光束|吸引|反转爆发|范围|area|aoe|必中|sure_hit|式神|shikigami/.test(text)) return false;
+    baseDamage = Number(action.baseDamage ?? action.damage ?? 0);
+    if (!(baseDamage > 0) && !action.instantKillOnHit && !action.effects?.instantKillOnHit && action.blackFlashEligible !== true) return false;
+    if (action.blackFlashEligible === true) return true;
+    profile = action.accuracyProfile ? String(action.accuracyProfile) : inferDuelAccuracyProfile(action);
+    if (!["melee", "weapon", "execution_sword"].includes(profile)) return false;
+    if (damageType === "melee" || damageType === "physical" || damageType === "cursed_tool") return true;
+    if (["physical", "zero_ce", "cursed_tool", "melee", "strike"].includes(scalingProfile)) return true;
+    return /strike|melee|physical|打击|体术|近身|拳|踢|肉搏|贴身|cursed_tool|咒具|刀|剑/.test(text);
   }
 
   function takeBlackFlashWindow(actor) {
@@ -1598,7 +1641,8 @@
     if (action?.accuracyProfile) return String(action.accuracyProfile);
     if (action?.executionSword || action?.instantKillOnHit) return "execution_sword";
     if (/范围|area|aoe|environment|swarm|散射|爆破|地形|环境/.test(text)) return "technique_area";
-    if (/咒具|cursed_tool|weapon|刀|剑|斩|slash/.test(text) || cardType === "curse_tool" || damageType === "cursed_tool") return "weapon";
+    if (/咒具|cursed_tool|weapon|刀|剑/.test(text) || cardType === "curse_tool" || damageType === "cursed_tool") return "weapon";
+    if (/苍|赫|茈|blue|red|purple|解|捌|cleave|dismantle|slash|斩击|远程|远距|投射|射出|projectile|beam|光束|吸引|反转爆发/.test(text)) return "technique_projectile";
     if (/近身|体术|拳|踢|melee|strike|physical|black_flash/.test(text) || cardType === "attack" || cardType === "basic") return "melee";
     if (cardType === "technique" || cardType === "ce_burst" || cardType === "special" || cardType === "soul_pressure") return "technique_projectile";
     return "melee";
@@ -1766,7 +1810,7 @@
       opponentDomainLoad: opponent.domain?.load || 0
     };
     var numericPreview = calculateActionNumericPreview(action, actor);
-    var blackFlashWindow = effects.hutianBlackFlash ? null : (isStrikeLikeAction(action) ? takeBlackFlashWindow(actor) : null);
+    var blackFlashWindow = null;
     var costCe = Math.min(actor.ce, Number(action.costCe ?? getDuelActionCost(action, actor)));
     actor.ce -= costCe;
     actor.stability = Number(clamp(Number(actor.stability || 0) + Number(effects.stabilityDelta || 0), 0, 1).toFixed(4));
@@ -1816,13 +1860,20 @@
     var hutianBlackFlashResult = null;
     var evasionResult = null;
     var blackFlashStatus = null;
+    var blackFlashDamageBefore = 0;
+    var blackFlashDamageBonus = 0;
     var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
       directDamage = hutianBlackFlashResult.directDamage;
     }
+    if (!effects.hutianBlackFlash && directDamage > 0 && isStrikeLikeAction(action)) {
+      blackFlashWindow = takeBlackFlashWindow(actor);
+    }
     if (blackFlashWindow) {
-      directDamage = Math.max(directDamage + 10, Math.round(Number(numericPreview?.finalDamage || 8) * 0.9));
+      blackFlashDamageBefore = directDamage;
+      directDamage = Math.max(directDamage + 8, Math.round(directDamage * 1.35));
+      blackFlashDamageBonus = Math.max(0, directDamage - blackFlashDamageBefore);
       stabilityShock += 0.085;
       blackFlashStatus = { id: "blackFlashShock", label: actor?.characterCardProfile?.isZeroCe ? "极限打击冲击" : "黑闪冲击", rounds: 1, value: 1 };
     }
@@ -1898,6 +1949,9 @@
       evasion: evasionResult?.checked ? evasionResult : undefined,
       blackFlashTriggered: Boolean(!evasionResult?.evaded && (blackFlashWindow || effects.hutianBlackFlash)),
       blackFlashLabel: !evasionResult?.evaded && effects.hutianBlackFlash ? "黑闪！" : (!evasionResult?.evaded && blackFlashWindow ? (actor?.characterCardProfile?.isZeroCe ? "极限打击窗口" : "黑闪") : ""),
+      blackFlashDamageBefore: blackFlashWindow ? blackFlashDamageBefore : undefined,
+      blackFlashDamageBonus: blackFlashWindow ? blackFlashDamageBonus : undefined,
+      blackFlashSourceActionId: blackFlashWindow ? (action.id || "") : undefined,
       hutianBlackFlash: hutianBlackFlashResult || undefined,
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {
