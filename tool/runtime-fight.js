@@ -2924,6 +2924,112 @@ function renderDuelResourcePanel(battle = state.duelBattle) {
   `;
 }
 
+function getDuelUnitControlLabel(control = "") {
+  const labels = {
+    player_controlled: "友方控制",
+    temporary_player_controlled: "临时友方",
+    neutral_uncontrolled: "中立失控",
+    neutral_berserk: "中立狂暴",
+    mahoraga_proxy: "内置式神代打"
+  };
+  return labels[control] || control || "控制未定";
+}
+
+function getDuelUnitSideLabel(unit = {}) {
+  if (unit.control === "neutral_berserk" || unit.control === "neutral_uncontrolled" || unit.side === "neutral") return "中立单位";
+  if (unit.side === "right" || unit.ownerSide === "right" || unit.controllerSide === "right") return "对方式神";
+  if (unit.side === "left" || unit.ownerSide === "left" || unit.controllerSide === "left") return "我方式神";
+  return "战场单位";
+}
+
+function getDuelUnitHpValue(unit = {}) {
+  const hp = Number(unit.hp ?? unit.currentHp ?? unit.unitStats?.currentHp ?? unit.unitStats?.maxHp ?? 0);
+  return Number.isFinite(hp) ? Math.max(0, hp) : 0;
+}
+
+function getDuelUnitMaxHpValue(unit = {}) {
+  const maxHp = Number(unit.maxHp ?? unit.unitStats?.maxHp ?? unit.hp ?? unit.currentHp ?? 0);
+  return Number.isFinite(maxHp) ? Math.max(0, maxHp) : 0;
+}
+
+function getVisibleDuelBattlefieldUnits(battle = state.duelBattle) {
+  const units = (Array.isArray(battle?.battlefieldUnits) ? battle.battlefieldUnits : [])
+    .filter((unit) => unit && unit.active !== false && getDuelUnitHpValue(unit) > 0)
+    .map((unit) => ({ ...unit, displayType: "unit" }));
+  ["left", "right"].forEach((side) => {
+    const proxy = battle?.mahoragaProxy?.[side];
+    const resource = side === "right" ? battle?.resourceState?.p2 : battle?.resourceState?.p1;
+    if (!proxy?.active || !resource) return;
+    units.push({
+      id: `mahoraga_proxy_${side}`,
+      name: resource.name || "八握剑异戒神将 魔须罗",
+      label: resource.name || "八握剑异戒神将 魔须罗",
+      side,
+      ownerSide: side,
+      controllerSide: side,
+      control: "mahoraga_proxy",
+      placement: "角色栏代打",
+      hp: resource.hp,
+      maxHp: resource.maxHp,
+      baseDamage: 60,
+      spawnedRound: proxy.startedRound,
+      displayType: "proxy",
+      attackMemory: proxy.attackMemory || {}
+    });
+  });
+  return units;
+}
+
+function renderDuelBattlefieldUnitsPanel(battle = state.duelBattle) {
+  const units = getVisibleDuelBattlefieldUnits(battle);
+  if (!units.length) {
+    return `
+      <section class="duel-battlefield-units empty">
+        <div>
+          <strong>战场单位 / 式神</strong>
+          <p>当前没有已显现的式神、中立单位或内置代打单位。</p>
+        </div>
+      </section>
+    `;
+  }
+  return `
+    <section class="duel-battlefield-units">
+      <div class="duel-battlefield-units-head">
+        <strong>战场单位 / 式神</strong>
+        <span>${escapeHtml(formatNumber(units.length))} 个单位显现</span>
+      </div>
+      <div class="duel-battlefield-unit-grid">
+        ${units.map(renderDuelBattlefieldUnitCard).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderDuelBattlefieldUnitCard(unit = {}) {
+  const hp = getDuelUnitHpValue(unit);
+  const maxHp = getDuelUnitMaxHpValue(unit);
+  const hpRatio = maxHp ? clamp(hp / maxHp, 0, 1) : 0;
+  const memoryCount = Object.keys(unit.attackMemory || {}).length;
+  const detail = unit.displayType === "proxy"
+    ? `适应记录 ${formatNumber(memoryCount)} 类攻击手札；同名手札第 6 次起伤害归零。`
+    : `基础伤害 ${formatNumber(unit.baseDamage || 0)}；${unit.defeated ? "已被击破" : "仍在场"}`;
+  return `
+    <article class="duel-battlefield-unit-card ${escapeHtml(unit.side || "neutral")}">
+      <div class="duel-battlefield-unit-title">
+        <span>${escapeHtml(getDuelUnitSideLabel(unit))}</span>
+        <strong>${escapeHtml(unit.name || unit.label || unit.id || "未命名单位")}</strong>
+      </div>
+      <div class="duel-battlefield-unit-meta">
+        <span>${escapeHtml(getDuelUnitControlLabel(unit.control))}</span>
+        <span>${escapeHtml(unit.placement || "战场")}</span>
+        <span>R${escapeHtml(formatNumber(unit.spawnedRound || 0))} 显现</span>
+      </div>
+      ${renderDuelResourceBar("单位体势", hp, maxHp || hp, hpRatio, "hp")}
+      <p>${escapeHtml(detail)}</p>
+    </article>
+  `;
+}
+
 function getDuelSubPhaseProfile(battle, side) {
   if (!battle || !side) return null;
   return side === "left" ? battle.left : side === "right" ? battle.right : null;
@@ -3727,6 +3833,7 @@ function renderDuelBattlePanel(left, right, baseRate) {
       </div>
       ${statusRows}
       ${renderDuelResourcePanel(battle)}
+      ${renderDuelBattlefieldUnitsPanel(battle)}
       ${renderDuelDomainProfilePanel(battle)}
       ${renderDuelActionChoices(battle)}
       ${renderDuelBetaFeedbackPanel(battle)}

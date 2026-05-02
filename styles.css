@@ -1735,6 +1735,109 @@ body.debug-mode .duel-debug-panel.debug-only {
   margin-top: 14px;
 }
 
+.duel-battlefield-units {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid rgba(47, 111, 104, 0.3);
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(180, 35, 24, 0.05)),
+    rgba(248, 250, 252, 0.95);
+  box-shadow: var(--shadow-sm);
+}
+
+.duel-battlefield-units.empty {
+  border-style: dashed;
+  background: rgba(248, 250, 252, 0.72);
+}
+
+.duel-battlefield-units.empty p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.duel-battlefield-units-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.duel-battlefield-units-head strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.duel-battlefield-units-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.duel-battlefield-unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.duel-battlefield-unit-card {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.duel-battlefield-unit-card.neutral {
+  border-color: rgba(180, 35, 24, 0.25);
+  background: rgba(255, 247, 237, 0.86);
+}
+
+.duel-battlefield-unit-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: start;
+}
+
+.duel-battlefield-unit-title span {
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.duel-battlefield-unit-title strong {
+  color: var(--ink);
+  text-align: right;
+}
+
+.duel-battlefield-unit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.duel-battlefield-unit-meta span {
+  padding: 2px 7px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.9);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.duel-battlefield-unit-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .duel-residual-log {
   margin: 14px 0 0;
   padding: 12px;
