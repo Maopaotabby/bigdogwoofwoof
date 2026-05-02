@@ -3518,26 +3518,30 @@
       "items": [
         {
           "text": "彻底摆烂",
-          "weight": 1
+          "weight": 0.5
         },
         {
           "text": "懒惰",
-          "weight": 2
+          "weight": 1
         },
         {
           "text": "不太想动",
-          "weight": 4
+          "weight": 2
         },
         {
           "text": "一般",
-          "weight": 6
+          "weight": 8
         },
         {
           "text": "比较勤奋",
-          "weight": 4
+          "weight": 6
         },
         {
           "text": "非常勤奋",
+          "weight": 4
+        },
+        {
+          "text": "水滴石穿的努力",
           "weight": 2
         },
         {
@@ -3545,7 +3549,7 @@
           "weight": 1
         }
       ],
-      "sourceNote": "1.24: 天道酬勤候选模块；只生成隐藏修正，不覆盖原始基础属性结果。"
+      "sourceNote": "2.13: 努力体系更新；按天道酬勤规则生成面板、高级技巧、领域权重和咒具损耗修正。"
     },
     {
       "dbId": 167,

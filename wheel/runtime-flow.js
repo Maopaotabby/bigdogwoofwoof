@@ -2976,9 +2976,11 @@ function applyAdvancedTechniqueDrawProgression(task, options, context = {}) {
 }
 
 function getDomainExpansionChanceForAdvancedDraw(drawNumber) {
+  const effects = state.flags.effortEffects || {};
+  if (effects.forceDomainExpansion) return 1;
   const step = Math.max(1, Number(drawNumber) || 1);
   if (step <= 1) return 0;
-  return clamp(0.25 + 0.1 * (step - 2), 0, 1);
+  return clamp(0.25 + 0.1 * (step - 2) + Number(effects.domainExpansionChanceBonus || 0), 0, 1);
 }
 
 function applyAiFreeWeightAdjustments(task, optionText, adjustedWeight, baseWeight) {
@@ -3951,6 +3953,9 @@ function createEffortEffects(text = "") {
   const effects = {
     level: text,
     advancedTechniqueDelta: 0,
+    minAdvancedTechniqueCount: 0,
+    domainExpansionChanceBonus: 0,
+    forceDomainExpansion: false,
     toolCountDelta: 0,
     buildBonus: 0,
     weakBoosts: [],
@@ -3959,27 +3964,44 @@ function createEffortEffects(text = "") {
     labels: []
   };
 
-  const addAdvancedTechniqueChance = (chance, label) => {
+  const addAdvancedTechniqueCount = (amount, label, domainBonus = 0) => {
     if (effects.advancedTechniqueDelta >= EFFORT_ADVANCED_TECHNIQUE_CAP) {
       effects.labels.push(`${label}（高级技巧数量已达努力上限）`);
       return;
     }
-    if (Math.random() < chance) {
-      effects.advancedTechniqueDelta += 1;
-      effects.labels.push("高级技巧数量 +1（努力小概率）");
+    const value = Math.min(
+      Math.max(0, Number(amount) || 0),
+      EFFORT_ADVANCED_TECHNIQUE_CAP - effects.advancedTechniqueDelta
+    );
+    effects.advancedTechniqueDelta += value;
+    effects.domainExpansionChanceBonus += effects.forceDomainExpansion ? 0 : domainBonus;
+    const domainText = effects.forceDomainExpansion ? "，领域已由咒力核心保证，转而扩充其他技巧" : "，提高领域获取权重";
+    effects.labels.push(`${label} +${value}${domainText}`);
+  };
+
+  const addDomainWeight = (amount, label) => {
+    if (effects.forceDomainExpansion) {
+      effects.labels.push(`${label}（已由咒力核心保证领域）`);
       return;
     }
-    effects.labels.push(`${label}（未转化为数量）`);
+    effects.domainExpansionChanceBonus += Number(amount) || 0;
+    effects.labels.push(`${label}：提高领域获取权重`);
+  };
+
+  const addGuaranteedDomain = () => {
+    effects.forceDomainExpansion = true;
+    effects.minAdvancedTechniqueCount = Math.max(effects.minAdvancedTechniqueCount, 1);
+    effects.labels.push("掌握咒力核心：必定获取领域展开");
   };
 
   const addReward = (rewardId) => {
     if (rewardId === 1) {
-      addAdvancedTechniqueChance(0.22, "高级技巧学习倾向微升");
-    } else if (rewardId === 2) {
       effects.weakBoosts.push({ count: 1, amount: 1 });
       effects.labels.push("一个弱项 +1");
+    } else if (rewardId === 2) {
+      addDomainWeight(0.14, "高级技巧中领域倾向上升");
     } else if (rewardId === 3) {
-      addAdvancedTechniqueChance(0.38, "高级技巧学习倾向上升");
+      addAdvancedTechniqueCount(1, "高级技巧数量", 0.12);
     } else if (rewardId === 4) {
       effects.weakBoosts.push({ count: 1, amount: 2 });
       effects.labels.push("一个弱项 +2");
@@ -3990,9 +4012,13 @@ function createEffortEffects(text = "") {
       effects.weakBoosts.push({ count: 2, amount: 2 });
       effects.labels.push("两处弱项 +2");
     } else if (rewardId === 7) {
+      addAdvancedTechniqueCount(2, "高级技巧数量", 0.22);
+    } else if (rewardId === 8) {
       effects.allPanelBoost = Math.max(effects.allPanelBoost, 1);
       effects.labels.push("全战力面板 +1（最高至 SSS）");
-    } else if (rewardId === 8) {
+    } else if (rewardId === 9) {
+      addGuaranteedDomain();
+    } else if (rewardId === 10) {
       effects.peakBoost = Math.max(effects.peakBoost, 2);
       effects.labels.push("最高项 +2（可到 EX）");
     }
@@ -4011,18 +4037,20 @@ function createEffortEffects(text = "") {
     return effects;
   }
 
-  if (text.includes("懒惰")) {
+  if (text.includes("懒惰") || text.includes("不太想动")) {
     effects.labels.push("无加强");
     return effects;
   }
 
-  if (text.includes("不太想动") || text === "一般") {
-    addReward(randomPick([1, 2]));
+  if (text === "一般") {
+    addReward(1);
+    addReward(randomPick([2, 3]));
     return effects;
   }
 
   if (text.includes("比较勤奋")) {
-    addReward(randomPick([1, 2]));
+    addReward(1);
+    addReward(2);
     addReward(randomPick([3, 4]));
     return effects;
   }
@@ -4031,15 +4059,24 @@ function createEffortEffects(text = "") {
     addReward(1);
     addReward(2);
     addReward(randomPick([3, 4]));
-    addReward(randomPick([5, 6, 7, 8]));
+    addReward(randomPick([5, 6, 7, 8, 9]));
+    return effects;
+  }
+
+  if (text.includes("水滴石穿")) {
+    addReward(1);
+    addReward(2);
+    addReward(3);
+    addReward(4);
+    for (const rewardId of randomSample([5, 6, 7, 8, 9, 10], 2)) addReward(rewardId);
     return effects;
   }
 
   if (text.includes("持之以恒")) {
     addReward(1);
-    addReward(2);
-    addReward(randomPick([3, 4]));
-    for (const rewardId of randomSample([5, 6, 7, 8], 2)) addReward(rewardId);
+    addReward(3);
+    addReward(4);
+    for (const rewardId of randomSample([5, 6, 7, 8, 9, 10], 3)) addReward(rewardId);
   }
 
   return effects;
@@ -4873,7 +4910,7 @@ function getAdjustedCountFrom(nodeId, baseCount) {
   const count = Number(baseCount) || 0;
   const effects = state.flags.effortEffects || {};
   if (nodeId === "advancedTechniqueCount") {
-    return clamp(Math.round(count + Number(effects.advancedTechniqueDelta || 0)), 0, 10);
+    return clamp(Math.max(Number(effects.minAdvancedTechniqueCount || 0), Math.round(count + Number(effects.advancedTechniqueDelta || 0))), 0, 10);
   }
   if (nodeId === "toolCount") {
     return clamp(Math.round(count + Number(effects.toolCountDelta || 0)), 0, 10);
