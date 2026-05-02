@@ -2,7 +2,7 @@
 import { ApiModule } from "./api.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { CharacterModule } from "./character.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { LifeWheelModule } from "./life-wheel.js?v=20260428-v1.390A-combat-core-rationalization-pass";
-import { FightModule } from "./fight.js?v=20260430-single-pass-turn-v1";
+import { FightModule } from "./fight.js?v=20260502-v2.12-duel-start-fix";
 import { BattlePageModule } from "./jjk-battle-page.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 import { OnlineModule } from "./online.js?v=20260430-online-pass-turn-v1";
 import { UiModule } from "./ui.js?v=20260428-v1.390A-combat-core-rationalization-pass";
@@ -21,7 +21,7 @@ import "./main/main.js?v=20260428-v1.390A-combat-core-rationalization-pass";
 // import { DebugModule } from "./debug.js"
 // import "./main/main.js"
 
-const APP_BUILD_VERSION = "20260502-v2.11-per-card-damage-v1";
+const APP_BUILD_VERSION = "20260502-v2.12-duel-start-fix";
 const legacyMain = globalThis.JJKMain || null;
 const RUNTIME_CHUNKS = Object.freeze([
   { id: "wheel-core", path: "../wheel/runtime-core.js" },

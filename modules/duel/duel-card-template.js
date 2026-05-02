@@ -410,7 +410,11 @@
   function getDuelSummonedUnitTemplate(summonSpec) {
     var unitCardId = summonSpec?.unitCardId || summonSpec?.unitId || "";
     if (!unitCardId) return null;
-    return getDuelCardTemplateIndex().cardById?.[unitCardId] || null;
+    var rules = getDuelCardTemplateRules();
+    var cards = Array.isArray(rules?.cards) ? rules.cards : [];
+    return cards.find(function findSummonedUnit(card) {
+      return card?.cardId === unitCardId;
+    }) || null;
   }
 
   function getDuelSummonControlLabel(control) {
