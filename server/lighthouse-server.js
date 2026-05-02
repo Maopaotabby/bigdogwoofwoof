@@ -431,6 +431,7 @@ async function handleAiRequest(req, res, rawBody) {
   const accessClass = getHenanAccessClassification(req, ip);
   const henanExempt = Boolean(accessClass.henanIp && accessClass.exemptionEnabled);
   const strictAudit = buildStrictAiAuditBase(req, body, rawBody, uploadedText, uploadedTextBytes, accessClass);
+  let aiAssistRateLimit = null;
 
   if (!admin && !isAiOriginAllowed(req)) {
     await appendAiAuditLog({
@@ -464,6 +465,7 @@ async function handleAiRequest(req, res, rawBody) {
     const rate = henanExempt
       ? { limited: false, remaining: "henan_exempt", exemptReason: "henan_ip_policy" }
       : await enforceAiAssistRateLimit(ip, admin);
+    aiAssistRateLimit = rate;
     if (rate.limited) {
       await appendAiAuditLog({
         time: new Date().toISOString(),
@@ -535,6 +537,10 @@ async function handleAiRequest(req, res, rawBody) {
     responseJson = fallbackResult.responseJson;
     fallbackProxy.fallbackStatus = response.status;
     fallbackProxy.fallbackOk = response.ok;
+  }
+  if (isCharacterAssist && response.ok && responseJson && typeof responseJson === "object") {
+    responseJson.rateLimit = aiAssistRateLimit || responseJson.rateLimit || null;
+    responseText = JSON.stringify(responseJson);
   }
   await appendAiAuditLog({
     time: new Date().toISOString(),

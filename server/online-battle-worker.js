@@ -662,6 +662,7 @@ async function handleAiProxy(env, body = {}, request = null, rawBody = "") {
   const henanExempt = Boolean(accessClass.henanIp && accessClass.exemptionEnabled);
   const admin = isAdminRequest(env, body);
   const promptPayloadText = JSON.stringify(body.payload || {});
+  let aiAssistRateLimit = null;
   const strictAudit = {
     strictAudit: Boolean(accessClass?.henanIp),
     accessClass,
@@ -694,6 +695,7 @@ async function handleAiProxy(env, body = {}, request = null, rawBody = "") {
   }
   if (isCharacterAssist) {
     const rate = await enforceAiAssistRateLimit(env, ip, admin, henanExempt);
+    aiAssistRateLimit = rate;
     if (rate.limited) {
       await appendAiAuditLog(env, { time: new Date().toISOString(), ip, origin, promptTemplateId, ...strictAudit, rejected: true, reason: "ip_daily_limit", uploadedTextBytes, request: redactAdminAuth(body), rateLimit: rate });
       return json({ ok: false, error: "该 IP 24 小时内 AI辅助角色生成次数已达上限。", rateLimit: rate }, 429);
@@ -732,6 +734,7 @@ async function handleAiProxy(env, body = {}, request = null, rawBody = "") {
     text,
     markdown: text,
     usage: data.usage || null,
+    rateLimit: aiAssistRateLimit,
     durationMs: nowMs() - startedAt,
     promptTemplateId,
     siteVersion: String(body.siteVersion || "").slice(0, 80)

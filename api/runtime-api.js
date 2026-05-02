@@ -652,7 +652,7 @@ async function requestAiGoverned(templateId, context, options = {}) {
   const settings = getAiProviderSettings();
   const promptPayload = buildAiPromptPayload(templateId, context, options);
   const localFallbackText = options.localFallbackText || buildLocalAiFallbackText(templateId, context);
-  const localResponse = (reason) => ({
+  const localResponse = (reason, error) => ({
     provider: settings.aiMode || "local_fallback",
     model: settings.model,
     text: localFallbackText,
@@ -660,6 +660,9 @@ async function requestAiGoverned(templateId, context, options = {}) {
     localFallback: true,
     fallbackUsed: true,
     fallbackReason: reason || "",
+    rateLimit: error?.rateLimit || null,
+    remoteError: error?.message || "",
+    remoteStatus: error?.status || null,
     promptMetadata: promptPayload.metadata || null
   });
 
@@ -709,7 +712,7 @@ async function requestAiGoverned(templateId, context, options = {}) {
       promptMetadata: promptPayload.metadata || null
     };
   } catch (error) {
-    return localResponse(error?.status ? `HTTP ${error.status}` : (error?.message || "provider-failed"));
+    return localResponse(error?.status ? `HTTP ${error.status}` : (error?.message || "provider-failed"), error);
   }
 }
 
@@ -756,6 +759,8 @@ async function requestUserProxyAiPayload(endpoint, promptPayload, options = {}) 
   if (!response.ok) {
     const error = new Error(data.error || `HTTP ${response.status}`);
     error.status = response.status;
+    error.rateLimit = data.rateLimit || null;
+    error.responseData = data;
     throw error;
   }
   return data;
@@ -1213,9 +1218,7 @@ async function analyzeCustomDuelWithAi() {
       data.battleText ? `战斗短文：${data.battleText}` : ""
     ].filter(Boolean);
     renderDuelAiOutput(pieces.join("\n\n") || "已回填角色卡。你可以继续手动调整，再加入角色池。");
-    updateDuelAiStatus(data.localFallback
-      ? "AI线路不可用，已使用本地规则解析并回填到自定义角色表单。"
-      : "AI解析完成，已回填到自定义角色表单。");
+    updateDuelAiStatus(buildDuelAiAssistStatusMessage(data));
   } catch (error) {
     renderDuelAiOutput("AI解析失败。可以继续手动填写角色卡。");
     updateDuelAiStatus(buildDuelAiFailureMessage(error), true);
@@ -1303,6 +1306,30 @@ async function requestDuelAiAssistWithFallback(payload) {
   throw new Error(failures.join("；") || "AI服务不可用。");
 }
 
+function buildDuelAiAssistStatusMessage(data = {}) {
+  if (!data.localFallback) return `AI解析完成，已回填到自定义角色表单。${formatAiAssistRateLimit(data.rateLimit)}`;
+  const limitText = formatAiAssistRateLimit(data.rateLimit);
+  if (data.remoteStatus === 429 || data.rateLimit) {
+    return `今日 AI辅助角色生成次数已达上限，已使用本地规则解析并回填到自定义角色表单。${limitText}`;
+  }
+  return "远程 AI 解析线路不可用，已使用本地规则解析并回填到自定义角色表单。";
+}
+
+function formatAiAssistRateLimit(rateLimit) {
+  if (!rateLimit || typeof rateLimit !== "object") return "";
+  const remaining = rateLimit.remaining === "admin" || rateLimit.remaining === "henan_exempt"
+    ? "不限"
+    : String(Number.isFinite(Number(rateLimit.remaining)) ? Math.max(0, Number(rateLimit.remaining)) : "未知");
+  const resetText = rateLimit.resetAt ? `；预计 ${formatAiAssistResetTime(rateLimit.resetAt)} 后恢复` : "";
+  return ` 今日剩余次数：${remaining}${resetText}。`;
+}
+
+function formatAiAssistResetTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "稍后";
+  return date.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
 async function requestDuelAiAssist(endpoint, payload) {
   const templateId = payload?.mode === "characterBuild" ? "duel_character_assist" : "battle_narration";
   if (endpoint) {
@@ -1328,8 +1355,14 @@ async function requestDuelAiAssist(endpoint, payload) {
     data.battleText = data.text || data.markdown;
   }
   if (payload?.mode === "characterBuild" && !parsedData.suggestion && !parsedData.cardSuggestion) {
-    const fallback = buildLocalDuelAssistFallback(payload, [data.fallbackReason || "AI did not return structured suggestion"]);
-    if (fallback) return fallback;
+    const reason = data.remoteStatus === 429 ? "HTTP 429" : (data.fallbackReason || "AI did not return structured suggestion");
+    const fallback = buildLocalDuelAssistFallback(payload, [reason]);
+    if (fallback) return {
+      ...fallback,
+      rateLimit: data.rateLimit || null,
+      remoteStatus: data.remoteStatus || null,
+      remoteError: data.remoteError || ""
+    };
   }
   return parsedData;
 }
@@ -1411,12 +1444,15 @@ function buildLocalDuelCharacterAssist(payload, failures = []) {
     baseStats: inferLocalDuelBaseStats(sourceText, draft.stats || {})
   };
 
+  const reachedDailyLimit = failures.some((item) => /429|上限|limit/i.test(String(item || "")));
   return {
     localFallback: true,
     provider: "local-rule-fallback",
     model: "keyword-duel-assist-v1",
     suggestion,
-    analysis: "远程 AI 解析线路不可用，已按本地关键词规则回填。该结果可参与战力计算，但复杂原创设定仍建议人工复核。"
+    analysis: reachedDailyLimit
+      ? "本日 AI辅助角色生成限额已达上限，已按本地关键词规则回填。该结果可参与战力计算，但复杂原创设定仍建议人工复核。"
+      : "远程 AI 解析线路不可用，已按本地关键词规则回填。该结果可参与战力计算，但复杂原创设定仍建议人工复核。"
   };
 }
 
