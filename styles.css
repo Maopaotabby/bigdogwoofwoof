@@ -2143,6 +2143,39 @@ body.debug-mode .duel-debug-panel.debug-only {
   box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14), var(--shadow-sm);
 }
 
+.duel-hand-card.summon .duel-action-choice {
+  border-color: rgba(37, 99, 235, 0.3);
+  background: #eff6ff;
+}
+
+.duel-hand-card.summon.active .duel-action-choice {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14), var(--shadow-sm);
+}
+
+.duel-summon-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  color: #1e3a8a;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.duel-summon-preview b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 11px;
+}
+
 .duel-action-choice:disabled {
   cursor: not-allowed;
   opacity: 0.55;

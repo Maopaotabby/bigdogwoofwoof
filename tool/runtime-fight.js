@@ -3306,8 +3306,9 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
   const statusClass = selected ? "selected" : (view.available ? "available" : "blocked");
   const readablePreview = getDuelReadableEffectPreview(view, action);
   const numericBrief = getDuelCardNumericBrief(view);
+  const cardTypeClass = String(view.cardType || "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
   return `
-    <article class="duel-hand-card${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
+    <article class="duel-hand-card ${escapeHtml(cardTypeClass)}${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
       <button class="duel-action-choice duel-hand-main${selected ? " active" : ""}" data-duel-action="${escapeHtml(view.actionId)}" type="button" ${onlineLocked || discardMode || selected || !view.available ? "disabled" : ""}>
         <span class="duel-action-title">${escapeHtml(titleText)}</span>
         ${subtitleText ? `<span class="duel-action-subtitle">${escapeHtml(subtitleText)}</span>` : ""}
@@ -3318,6 +3319,7 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
         </span>
         <span class="duel-action-cost">AP ${escapeHtml(formatNumber(view.apCost))}｜咒力 ${escapeHtml(formatNumber(view.ceCost || 0))}</span>
         <span class="duel-action-numeric-brief">${escapeHtml(numericBrief)}</span>
+        ${renderDuelSummonInlinePreview(view)}
         <span class="duel-action-effect">效果：${escapeHtml(shortEffectText)}</span>
         <span class="duel-action-tags" title="${escapeHtml(fullTagText)}">标签：${escapeHtml(tagText + tagSuffix)}</span>
         <em class="duel-action-status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</em>
@@ -3336,6 +3338,22 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
       </details>
     </article>
   `;
+}
+
+function renderDuelSummonInlinePreview(view) {
+  const summon = view?.summonSpec;
+  if (!summon) return "";
+  const unitName = summon.unitName || summon.unitCardId || "召唤单位";
+  const controlLabels = {
+    player_controlled: "友方",
+    temporary_player_controlled: "临时友方",
+    neutral_uncontrolled: "中立失控",
+    neutral_berserk: "中立狂暴"
+  };
+  const control = controlLabels[summon.control] || summon.control || "控制未定";
+  const placement = summon.placement || "位置未定";
+  const duration = Number(summon.durationRounds || 0) > 0 ? `｜${formatNumber(summon.durationRounds)} 回合` : "";
+  return `<span class="duel-summon-preview"><b>召唤</b>${escapeHtml(unitName)}｜${escapeHtml(control)}｜${escapeHtml(placement)}${escapeHtml(duration)}</span>`;
 }
 
 function renderDuelResourceSide(resource, profile) {

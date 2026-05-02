@@ -407,6 +407,22 @@
     return ownerText + "：" + label + duration + "。";
   }
 
+  function getDuelSummonedUnitTemplate(summonSpec) {
+    var unitCardId = summonSpec?.unitCardId || summonSpec?.unitId || "";
+    if (!unitCardId) return null;
+    return getDuelCardTemplateIndex().cardById?.[unitCardId] || null;
+  }
+
+  function getDuelSummonControlLabel(control) {
+    var labels = {
+      player_controlled: "友方控制",
+      temporary_player_controlled: "临时友方控制",
+      neutral_uncontrolled: "中立失控",
+      neutral_berserk: "中立狂暴"
+    };
+    return labels[control] || control || "未指定";
+  }
+
   function buildDuelCardEffectPreview(actionOrCandidate, template, display, baseView) {
     var action = actionOrCandidate?.action || actionOrCandidate || {};
     var effects = getActionEffects(actionOrCandidate);
@@ -457,6 +473,20 @@
     if (domainLoadScale) addPreviewLine(preview.resourceLines, "领域负荷增长：" + domainLoadScale + "。");
     if (effects.activateDomain) addPreviewLine(preview.statusLines, "状态变化：展开己方领域，并开始计算领域负荷。");
     if (effects.releaseDomain) addPreviewLine(preview.statusLines, "状态变化：解除己方领域，降低领域崩解风险。");
+    var summonSpec = action.summonSpec || template?.summonSpec;
+    if (summonSpec) {
+      var summonedUnit = getDuelSummonedUnitTemplate(summonSpec);
+      var unitStats = summonedUnit?.unitStats || template?.unitStats || action.unitStats || {};
+      var unitName = summonedUnit?.name || summonSpec.unitName || summonSpec.unitCardId || "召唤单位";
+      var placement = summonSpec.placement || unitStats.placement || "未指定";
+      var control = summonSpec.control || unitStats.control || "";
+      var durationRounds = Number(summonSpec.durationRounds || unitStats.durationRounds || template?.durationRounds || action.durationRounds || 0);
+      addPreviewLine(preview.statusLines, "召唤：" + unitName + "，位置：" + placement + "，控制：" + getDuelSummonControlLabel(control) + (durationRounds > 0 ? "，持续 " + formatPlainNumber(durationRounds) + " 回合" : "") + "。");
+      if (Number(unitStats.maxHp || 0) > 0) addPreviewLine(preview.combatLines, "召唤单位：体势 " + formatPlainNumber(unitStats.maxHp) + "，基础伤害 " + formatPlainNumber(unitStats.baseDamage || summonedUnit?.baseDamage || 0) + "，破防 " + formatPlainNumber(unitStats.guardBreak || 0) + "。");
+      if (summonedUnit?.targetingRules?.neverCountsAsGuard || control === "neutral_berserk") addPreviewLine(preview.riskLines, "目标规则：该召唤物为狂暴 / 非守护单位，不会替任何一方承担攻击。");
+      if (summonedUnit?.guardRules?.interceptsOpponentAttacks) addPreviewLine(preview.statusLines, "守护规则：存活期间可优先承接对手攻击判定。");
+      if (summonSpec.requiresMaintenanceCardId) addPreviewLine(preview.conditionLines, "维持：生成或要求维持牌 " + summonSpec.requiresMaintenanceCardId + "。");
+    }
     addPreviewLine(preview.statusLines, buildStatusLine(effects.selfStatus, "可能获得"));
     addPreviewLine(preview.statusLines, buildStatusLine(effects.opponentStatus, "可能施加给对手"));
     var duration = Number(effects.durationRounds || effects.rounds || effects.duration || 0);
