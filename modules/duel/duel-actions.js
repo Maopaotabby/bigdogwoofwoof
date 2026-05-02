@@ -702,6 +702,9 @@
     var costCe = getDuelActionCost(action, actor);
     if (!actor || !opponent) return { available: false, reason: "资源状态缺失", costCe: costCe };
     if (actor.ce < costCe) return { available: false, reason: "咒力不足", costCe: costCe };
+    if (isTenShadowsUniqueShikigamiAction(action) && hasTenShadowsShikigamiBeenSummoned(battle, side, action)) {
+      return { available: false, reason: "该十种影式神本场已经召唤过", costCe: costCe };
+    }
     if (requirements.requiresMissingHp && actor.maxHp && Number(actor.hp || 0) >= Number(actor.maxHp || 0) - 0.5) {
       return { available: false, reason: "当前没有需要反转治疗的伤势", costCe: costCe };
     }
@@ -760,6 +763,74 @@
       return { available: false, reason: "咒具没收/封锁候选生效", costCe: costCe };
     }
     return { available: true, reason: "", costCe: costCe };
+  }
+
+  function collectDuelActionSearchText(action) {
+    if (!action) return "";
+    var parts = [
+      action.id,
+      action.actionId,
+      action.sourceActionId,
+      action.cardId,
+      action.name,
+      action.label,
+      action.displayName,
+      action.description,
+      action.effectSummary
+    ];
+    if (Array.isArray(action.tags)) parts = parts.concat(action.tags);
+    if (Array.isArray(action.specialHandTags)) parts = parts.concat(action.specialHandTags);
+    return parts.filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function isTenShadowsRabbitAction(action) {
+    var text = collectDuelActionSearchText(action);
+    return text.indexOf("rabbit") !== -1 || text.indexOf("脱兔") !== -1;
+  }
+
+  function isTenShadowsUniqueShikigamiAction(action) {
+    var text = collectDuelActionSearchText(action);
+    var isTenShadows = text.indexOf("ten_shadows") !== -1 || text.indexOf("十种影") !== -1;
+    return Boolean(action && action.summonSpec && action.summonSpec.unitCardId && isTenShadows && !isTenShadowsRabbitAction(action));
+  }
+
+  function getTenShadowsSummonKey(action) {
+    if (!action) return "";
+    return String(
+      (action.summonSpec && action.summonSpec.unitCardId) ||
+      action.cardId ||
+      action.sourceActionId ||
+      action.actionId ||
+      action.id ||
+      ""
+    );
+  }
+
+  function hasTenShadowsShikigamiBeenSummoned(battle, side, action) {
+    var key = getTenShadowsSummonKey(action);
+    if (!battle || !side || !key) return false;
+    var state = battle.tenShadowsSummonState && battle.tenShadowsSummonState[side];
+    if (state && state[key]) return true;
+    var logs = Array.isArray(battle.summonLog) ? battle.summonLog : [];
+    return logs.some(function matchSummon(entry) {
+      if (!entry || entry.actorSide !== side) return false;
+      return entry.unitCardId === key || entry.cardId === key || entry.sourceActionId === key || entry.actionId === key;
+    });
+  }
+
+  function markTenShadowsShikigamiSummoned(battle, side, action, unit) {
+    var key = getTenShadowsSummonKey(action);
+    if (!battle || !side || !key || !isTenShadowsUniqueShikigamiAction(action)) return;
+    if (!battle.tenShadowsSummonState || typeof battle.tenShadowsSummonState !== "object") battle.tenShadowsSummonState = {};
+    if (!battle.tenShadowsSummonState[side] || typeof battle.tenShadowsSummonState[side] !== "object") battle.tenShadowsSummonState[side] = {};
+    battle.tenShadowsSummonState[side][key] = {
+      unitId: unit && unit.id ? unit.id : "",
+      unitName: unit && unit.name ? unit.name : "",
+      actionId: action && action.id ? action.id : "",
+      cardId: action && action.cardId ? action.cardId : "",
+      sourceActionId: action && action.sourceActionId ? action.sourceActionId : "",
+      round: battle.round || 0
+    };
   }
 
   function toFeatureList(value) {
@@ -1906,11 +1977,16 @@
       round: round,
       actorSide: ownerSide,
       actionId: action.id || "",
+      sourceActionId: action.sourceActionId || "",
+      cardId: action.cardId || "",
+      unitCardId: summonSpec.unitCardId || "",
       unitId: unit.id,
       unitName: unit.name,
       control: control,
-      maintenanceActionId: maintenanceCard?.id || ""
+      maintenanceActionId: maintenanceCard?.id || "",
+      uniqueTenShadowsSummon: isTenShadowsUniqueShikigamiAction(action)
     });
+    markTenShadowsShikigamiSummoned(battle, ownerSide, action, unit);
     return { unit: unit, maintenanceCard: maintenanceCard };
   }
 

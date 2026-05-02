@@ -1050,6 +1050,84 @@
     return { discarded: true, reason: "", card: removed, side: side, pendingDiscardCount: hand.pendingDiscardCount };
   }
 
+  function getCandidateAction(candidate) {
+    return candidate?.action || candidate || {};
+  }
+
+  function collectCandidateSearchText(candidate) {
+    var action = getCandidateAction(candidate);
+    var parts = [
+      action.id,
+      action.actionId,
+      action.sourceActionId,
+      action.cardId,
+      action.name,
+      action.label,
+      action.displayName,
+      action.description,
+      action.effectSummary,
+      candidate?.id,
+      candidate?.actionId,
+      candidate?.sourceActionId,
+      candidate?.cardId,
+      candidate?.label,
+      candidate?.name
+    ];
+    if (Array.isArray(action.tags)) parts = parts.concat(action.tags);
+    if (Array.isArray(action.specialHandTags)) parts = parts.concat(action.specialHandTags);
+    if (Array.isArray(candidate?.tags)) parts = parts.concat(candidate.tags);
+    if (Array.isArray(candidate?.specialHandTags)) parts = parts.concat(candidate.specialHandTags);
+    return parts.filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function isTenShadowsRabbitCandidate(candidate) {
+    var text = collectCandidateSearchText(candidate);
+    return text.indexOf("rabbit") !== -1 || text.indexOf("脱兔") !== -1;
+  }
+
+  function isTenShadowsUniqueShikigamiCandidate(candidate) {
+    var action = getCandidateAction(candidate);
+    var text = collectCandidateSearchText(candidate);
+    var summonSpec = action?.summonSpec || candidate?.summonSpec || {};
+    var isTenShadows = text.indexOf("ten_shadows") !== -1 || text.indexOf("十种影") !== -1;
+    return Boolean(summonSpec.unitCardId && isTenShadows && !isTenShadowsRabbitCandidate(candidate));
+  }
+
+  function getTenShadowsCandidateSummonKey(candidate) {
+    var action = getCandidateAction(candidate);
+    var summonSpec = action?.summonSpec || candidate?.summonSpec || {};
+    return String(
+      summonSpec.unitCardId ||
+      action.cardId ||
+      candidate?.cardId ||
+      action.sourceActionId ||
+      candidate?.sourceActionId ||
+      action.actionId ||
+      candidate?.actionId ||
+      action.id ||
+      candidate?.id ||
+      ""
+    );
+  }
+
+  function isTenShadowsSummonSpent(candidate, battle, side) {
+    var key = getTenShadowsCandidateSummonKey(candidate);
+    if (!isTenShadowsUniqueShikigamiCandidate(candidate) || !battle || !side || !key) return false;
+    var state = battle.tenShadowsSummonState && battle.tenShadowsSummonState[side];
+    if (state && state[key]) return true;
+    var logs = Array.isArray(battle.summonLog) ? battle.summonLog : [];
+    return logs.some(function matchSummon(entry) {
+      if (!entry || entry.actorSide !== side) return false;
+      return entry.unitCardId === key || entry.cardId === key || entry.sourceActionId === key || entry.actionId === key;
+    });
+  }
+
+  function filterSpentTenShadowsSummons(candidates, battle, side) {
+    return (candidates || []).filter(function keepCandidate(candidate) {
+      return !isTenShadowsSummonSpent(candidate, battle, side);
+    });
+  }
+
   function reconcilePersistentHandCards(hand, fullCandidates, actor, opponent, battle, rules) {
     var byId = Object.create(null);
     (fullCandidates || []).forEach(function indexCandidate(candidate) {
@@ -1064,6 +1142,7 @@
       if (!isMaintenanceCardCurrentlyValid(card, battle)) return false;
       if (!getActiveTrialSubPhaseForActor(actor, battle) && isRuleTrialCardLike(card)) return false;
       if (!getActiveJackpotSubPhaseForActor(actor, battle) && isJackpotSubPhaseCardLike(card)) return false;
+      if (isTenShadowsSummonSpent(card, battle, getActorSide(actor, {}))) return false;
       return Boolean(getActionId(card));
     });
   }
@@ -1773,6 +1852,7 @@
     candidates = filterMeaningfulDuelHandCandidates(candidates);
     candidates = filterInactiveRuleSubphaseCards(candidates, actor, battle);
     candidates = filterStrictRuleSubphaseHandCandidates(candidates, actor, battle);
+    candidates = filterSpentTenShadowsSummons(candidates, battle, side);
     var filtered = filterDuelHandCandidatesByCharacter(candidates, actor, { rules: rules, profile: profile, battle: battle });
     return applyDuelCharacterCardWeights(filtered, actor, { rules: rules, profile: profile }).filter(function keepNormalHand(candidate) {
       return !isDomainHandCandidate(candidate);
@@ -1809,6 +1889,7 @@
     fullCandidates = filterMeaningfulDuelHandCandidates(fullCandidates);
     fullCandidates = filterInactiveRuleSubphaseCards(fullCandidates, actor, battle);
     fullCandidates = filterStrictRuleSubphaseHandCandidates(fullCandidates, actor, battle);
+    fullCandidates = filterSpentTenShadowsSummons(fullCandidates, battle, side);
     var splitPool = splitNormalAndDomainCandidates(fullCandidates);
     var actions = strictRuleSubphaseHand
       ? splitPool.normal.slice(0, choiceCount)
@@ -1877,6 +1958,7 @@
     });
     fullCandidates = filterMeaningfulDuelHandCandidates(fullCandidates);
     fullCandidates = filterInactiveRuleSubphaseCards(fullCandidates, actor, battle);
+    fullCandidates = filterSpentTenShadowsSummons(fullCandidates, battle, side);
     var domainCandidates = filterDomainCandidatesByPhase(splitNormalAndDomainCandidates(fullCandidates).domain, actor);
     var ranked = rankDuelHandCandidatesByCharacter(domainCandidates, [], actor, opponent, battle, maxDomainCards, {
       domainHand: true,
