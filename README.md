@@ -104,6 +104,24 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1 
 
 底层脚本是 `deploy-lighthouse.ps1`。它会打包当前项目、上传到服务器、执行 `npm ci --omit=dev`、重启 systemd 服务，并在需要时刷新 Nginx 配置。
 
+## Cloudflare 一键更新
+
+国外源使用 Cloudflare Pages direct upload，不从 GitHub 仓库读取代码。修改本地代码后，可用以下命令同时更新 Worker 和 Pages：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\update-cloudflare-server.ps1
+```
+
+常用参数：
+
+```powershell
+# 只更新 Pages 静态源
+powershell -NoProfile -ExecutionPolicy Bypass -File .\update-cloudflare-server.ps1 -SkipWorker
+
+# 只更新 Worker 后端
+powershell -NoProfile -ExecutionPolicy Bypass -File .\update-cloudflare-server.ps1 -SkipPages
+```
+
 ## AI 调用状态
 
 - 联机回合内的 AI 裁判已经取消。

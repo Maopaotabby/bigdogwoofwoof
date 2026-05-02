@@ -16,6 +16,9 @@ const AI_ADMIN_ID = process.env.AI_ADMIN_ID || "ADMIN";
 const AI_ADMIN_PASSWORD = process.env.AI_ADMIN_PASSWORD || "VOCALOIDKagamineMegurineLukaHatsuneMiku0831";
 const AI_DEFAULT_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
 const AI_DEFAULT_MODEL = "doubao-seed-2-0-lite-260215";
+const AI_FALLBACK_PROXY_URL = process.env.AI_FALLBACK_PROXY_URL || "";
+const AI_FALLBACK_PROXY_ORIGIN = (process.env.AI_FALLBACK_PROXY_ORIGIN || "https://bigdogwoofwoof.pages.dev").replace(/\/+$/, "");
+const AI_FALLBACK_PROXY_MODE = process.env.AI_FALLBACK_PROXY_MODE || "redirect";
 const AI_HENAN_EXEMPT_RATE_LIMIT = process.env.AI_HENAN_EXEMPT_RATE_LIMIT !== "false";
 const AI_HENAN_REGION_HEADERS = (process.env.AI_HENAN_REGION_HEADERS || "x-province,x-client-province,x-ip-region,x-real-region,x-forwarded-region,cf-region,cf-ipregion,cloudfront-viewer-country-region")
   .split(",")
@@ -114,16 +117,27 @@ class FileJsonStore {
 const aiRateStore = new FileJsonStore(AI_RATE_LIMIT_FILE);
 
 function buildEnv() {
+  const configuredBaseUrl = String(process.env.AI_BASE_URL || AI_DEFAULT_BASE_URL).replace(/\/responses\/?$/i, "");
   return {
     JJK_ONLINE_ROOMS: roomStore,
     AI_PROVIDER: process.env.AI_PROVIDER || "ark_ai",
-    AI_BASE_URL: process.env.AI_BASE_URL || AI_DEFAULT_BASE_URL,
+    AI_BASE_URL: configuredBaseUrl,
     AI_CHAT_COMPLETIONS_URL: process.env.AI_CHAT_COMPLETIONS_URL || process.env.AI_API_URL || "",
     AI_MODEL: process.env.AI_MODEL || AI_DEFAULT_MODEL,
     AI_MAX_TOKENS: process.env.AI_MAX_TOKENS || "700",
     AI_TEMPERATURE: process.env.AI_TEMPERATURE || "0.4",
     AI_TIMEOUT_MS: process.env.AI_TIMEOUT_MS || "30000",
-    AI_API_KEY: process.env.AI_API_KEY || ""
+    AI_API_KEY: process.env.AI_API_KEY || "",
+    AI_ALLOWED_ORIGINS: process.env.AI_ALLOWED_ORIGINS || "",
+    AI_ALLOW_LOCAL_ORIGIN: process.env.AI_ALLOW_LOCAL_ORIGIN || "",
+    AI_ALLOW_NO_ORIGIN: process.env.AI_ALLOW_NO_ORIGIN || "",
+    AI_ASSIST_DAILY_LIMIT: process.env.AI_ASSIST_DAILY_LIMIT || String(AI_ASSIST_DAILY_LIMIT),
+    AI_ASSIST_MAX_TEXT_BYTES: process.env.AI_ASSIST_MAX_TEXT_BYTES || String(AI_ASSIST_MAX_TEXT_BYTES),
+    AI_HENAN_EXEMPT_RATE_LIMIT: process.env.AI_HENAN_EXEMPT_RATE_LIMIT || String(AI_HENAN_EXEMPT_RATE_LIMIT),
+    AI_HENAN_REGION_HEADERS: process.env.AI_HENAN_REGION_HEADERS || AI_HENAN_REGION_HEADERS.join(","),
+    AI_HENAN_IP_CIDRS: process.env.AI_HENAN_IP_CIDRS || AI_HENAN_IP_CIDRS.join(","),
+    AI_ADMIN_ID: process.env.AI_ADMIN_ID || AI_ADMIN_ID,
+    AI_ADMIN_PASSWORD: process.env.AI_ADMIN_PASSWORD || AI_ADMIN_PASSWORD
   };
 }
 
@@ -208,6 +222,33 @@ function parseJsonBody(body) {
   } catch {
     return null;
   }
+}
+
+function shouldFallbackAiProxy(response, responseJson) {
+  if (!AI_FALLBACK_PROXY_URL || response?.status !== 401) return false;
+  return /api key|authorization|unauthorized|鉴权|认证|密钥/i.test(String(responseJson?.error || ""));
+}
+
+async function requestFallbackAiProxy(req, forwardedBody, ip, origin) {
+  const headers = new Headers();
+  headers.set("Content-Type", "application/json; charset=utf-8");
+  headers.set("Origin", AI_FALLBACK_PROXY_ORIGIN);
+  headers.set("Referer", `${AI_FALLBACK_PROXY_ORIGIN}/`);
+  headers.set("User-Agent", sanitizeHeaderValue(getHeader(req, "user-agent")) || "bigdogwoofwoof-lighthouse-fallback");
+  headers.set("X-Forwarded-For", [ip, sanitizeHeaderValue(getHeader(req, "x-forwarded-for"))].filter(Boolean).join(", "));
+  headers.set("X-Original-Origin", sanitizeHeaderValue(origin));
+  headers.set("X-Proxy-By", "bigdogwoofwoof-lighthouse");
+  const fallbackResponse = await fetch(AI_FALLBACK_PROXY_URL, {
+    method: "POST",
+    headers,
+    body: forwardedBody
+  });
+  const fallbackText = await fallbackResponse.text();
+  return {
+    response: fallbackResponse,
+    responseText: fallbackText,
+    responseJson: parseJsonBody(fallbackText) || {}
+  };
 }
 
 function sha256(value) {
@@ -446,9 +487,55 @@ async function handleAiRequest(req, res, rawBody) {
     headers: req.headers,
     body: forwardedBody
   });
-  const response = await worker.fetch(request, buildEnv());
-  const responseText = await response.text();
-  const responseJson = parseJsonBody(responseText) || {};
+  let response = await worker.fetch(request, buildEnv());
+  let responseText = await response.text();
+  let responseJson = parseJsonBody(responseText) || {};
+  let fallbackProxy = null;
+  if (shouldFallbackAiProxy(response, responseJson)) {
+    fallbackProxy = {
+      used: true,
+      mode: AI_FALLBACK_PROXY_MODE,
+      reason: "primary_ai_auth_failed",
+      primaryStatus: response.status,
+      primaryError: String(responseJson.error || "").slice(0, 240)
+    };
+    if (AI_FALLBACK_PROXY_MODE === "redirect") {
+      await appendAiAuditLog({
+        time: new Date().toISOString(),
+        ip,
+        origin,
+        promptTemplateId,
+        ...strictAudit,
+        admin: admin ? "yes" : "no",
+        henanExempt: henanExempt ? "yes" : "no",
+        limitPolicy: henanExempt ? "henan_ip_unlimited_strict_audit" : (admin ? "admin_unlimited" : "standard_ip_24h_limit"),
+        providerId: String(body.providerId || ""),
+        endpointType: String(body.endpointType || ""),
+        siteVersion: String(body.siteVersion || ""),
+        uploadedText,
+        uploadedTextBytes,
+        promptPayload: compactPromptPayload(body.payload),
+        fallbackProxy,
+        usage: null,
+        responseStatus: 307,
+        responseOk: true,
+        error: responseJson.error || "",
+        request: redactAdminAuth(body)
+      });
+      res.statusCode = 307;
+      res.setHeader("Location", AI_FALLBACK_PROXY_URL);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "no-store");
+      res.end();
+      return;
+    }
+    const fallbackResult = await requestFallbackAiProxy(req, forwardedBody, ip, origin);
+    response = fallbackResult.response;
+    responseText = fallbackResult.responseText;
+    responseJson = fallbackResult.responseJson;
+    fallbackProxy.fallbackStatus = response.status;
+    fallbackProxy.fallbackOk = response.ok;
+  }
   await appendAiAuditLog({
     time: new Date().toISOString(),
     ip,
@@ -464,6 +551,7 @@ async function handleAiRequest(req, res, rawBody) {
     uploadedText,
     uploadedTextBytes,
     promptPayload: compactPromptPayload(body.payload),
+    fallbackProxy,
     usage: normalizeUsage(responseJson.usage),
     responseStatus: response.status,
     responseOk: response.ok,

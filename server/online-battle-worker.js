@@ -600,7 +600,7 @@ function normalizeServerAiEndpoint(value) {
 function getServerAiChatCompletionsUrl(env) {
   const explicit = normalizeServerAiEndpoint(env.AI_CHAT_COMPLETIONS_URL || env.AI_API_URL || "");
   if (explicit) return explicit;
-  const base = normalizeServerAiEndpoint(env.AI_BASE_URL || "");
+  const base = normalizeServerAiEndpoint(env.AI_BASE_URL || "").replace(/\/responses$/i, "");
   if (!base) return DEFAULT_ARK_CHAT_COMPLETIONS_URL;
   if (/\/chat\/completions$/i.test(base)) return base;
   return `${base}/chat/completions`;
