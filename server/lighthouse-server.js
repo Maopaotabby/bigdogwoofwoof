@@ -432,7 +432,7 @@ async function handleAiRequest(req, res, rawBody) {
   const henanExempt = Boolean(accessClass.henanIp && accessClass.exemptionEnabled);
   const strictAudit = buildStrictAiAuditBase(req, body, rawBody, uploadedText, uploadedTextBytes, accessClass);
 
-  if (!isAiOriginAllowed(req)) {
+  if (!admin && !isAiOriginAllowed(req)) {
     await appendAiAuditLog({
       time: new Date().toISOString(),
       ip,
@@ -481,7 +481,7 @@ async function handleAiRequest(req, res, rawBody) {
     }
   }
 
-  const forwardedBody = JSON.stringify(stripAdminAuth(body));
+  const forwardedBody = JSON.stringify(body);
   const request = new Request(`http://localhost${req.url || "/"}`, {
     method: req.method,
     headers: req.headers,

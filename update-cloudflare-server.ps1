@@ -32,9 +32,9 @@ function Invoke-RequiredCommand {
 
 function Test-PagesDeployment {
   param([string]$BaseUrl)
-  $home = Invoke-WebRequest -Uri ($BaseUrl.TrimEnd("/") + "/") -UseBasicParsing -TimeoutSec 30
-  if ([int]$home.StatusCode -ne 200) {
-    throw "Cloudflare Pages home check failed: HTTP $($home.StatusCode)"
+  $homeResponse = Invoke-WebRequest -Uri ($BaseUrl.TrimEnd("/") + "/") -UseBasicParsing -TimeoutSec 30
+  if ([int]$homeResponse.StatusCode -ne 200) {
+    throw "Cloudflare Pages home check failed: HTTP $($homeResponse.StatusCode)"
   }
   $rules = Invoke-WebRequest -Uri ($BaseUrl.TrimEnd("/") + "/data/ai-provider-rules-v0.1-candidate.json") -UseBasicParsing -TimeoutSec 30
   if ([int]$rules.StatusCode -ne 200) {
@@ -44,7 +44,7 @@ function Test-PagesDeployment {
   if ($rulesText -notmatch "doubao-seed-2-0-lite-260215" -or $rulesText -notmatch "workers.dev/ai") {
     throw "Cloudflare Pages AI rules file does not contain the expected Cloudflare AI defaults."
   }
-  Write-Output ("Pages check OK: {0} bytes home, {1} bytes AI rules" -f ([string]$home.Content).Length, $rulesText.Length)
+  Write-Output ("Pages check OK: {0} bytes home, {1} bytes AI rules" -f ([string]$homeResponse.Content).Length, $rulesText.Length)
 }
 
 Push-Location $root
