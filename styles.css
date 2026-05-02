@@ -2091,6 +2091,27 @@ body.debug-mode .duel-debug-panel.debug-only {
   line-height: 1.5;
 }
 
+.duel-hand-execute-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, auto);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(255, 253, 247, 0.96));
+}
+
+.duel-hand-execute-control .duel-action-hint {
+  margin: 0;
+}
+
+.duel-hand-execute-control .primary {
+  min-width: 160px;
+  white-space: nowrap;
+}
+
 .duel-action-warning {
   margin: 0;
   padding: 8px 10px;

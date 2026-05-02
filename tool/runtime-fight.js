@@ -3237,6 +3237,55 @@ function getDuelHandPoolInfluenceText(battle = state.duelBattle) {
   return "手札池：普通手牌上限 8，每回合补 5 张；领域操控手札独立上限 3，每轮随机刷新，不占普通手牌。";
 }
 
+function getDuelTurnExecuteControlState(battle = state.duelBattle) {
+  const actorSide = getDuelControlledSide(battle);
+  const selectedCount = getDuelSelectedHandActions(battle, actorSide).length;
+  const pendingDiscardCount = Math.max(0, Number(battle?.handState?.[actorSide]?.pendingDiscardCount || 0));
+  const onlineMode = isOnlineDuelModeActive();
+  const onlineLocked = onlineMode && state.duelModeState.localLocked;
+  const needsAction = false;
+  const buttonText = onlineLocked
+    ? "已锁定，等待对手"
+    : pendingDiscardCount > 0
+      ? `先弃牌 ${formatNumber(pendingDiscardCount)} 张`
+    : onlineMode
+      ? (selectedCount ? "锁定行动" : "锁定待机")
+      : battle?.autoRunning
+    ? "生成阶段中..."
+    : (selectedCount ? "执行回合" : "待机过回合");
+  const resolveHint = onlineLocked
+    ? "联机行动已锁定；等待对方锁定后结算。"
+    : pendingDiscardCount > 0
+      ? "手牌超过上限；必须先从现有手牌和新增手牌中弃牌。"
+    : onlineMode
+      ? (selectedCount
+        ? "锁定后会提交到新版联机回合状态，不会触发单人结算。"
+        : "当前没有选择手札；将以 0 咒力待机行动锁定本回合，避免流程卡死。")
+      : needsAction
+        ? "未选择手札时不会推进战斗。"
+        : !selectedCount
+          ? "当前没有选择手札；将以 0 咒力待机行动推进回合，避免流程卡死。"
+        : "将按顺序结算已选手札；普通出牌以咒力预算为主。";
+  return {
+    id: onlineMode ? "duelOnlineLockFromHandBtn" : "duelAutoRunBtn",
+    buttonText,
+    resolveHint,
+    disabled: Boolean(battle?.autoRunning || battle?.resolved || needsAction || onlineLocked || pendingDiscardCount > 0)
+  };
+}
+
+function renderDuelTurnExecuteControl(battle = state.duelBattle) {
+  const control = getDuelTurnExecuteControlState(battle);
+  return `
+    <div class="duel-hand-execute-control">
+      <p class="duel-action-hint">${escapeHtml(control.resolveHint)}</p>
+      <button class="primary" id="${escapeHtml(control.id)}" type="button" ${control.disabled ? "disabled" : ""} title="${escapeHtml(control.resolveHint)}">
+        ${escapeHtml(control.buttonText)}
+      </button>
+    </div>
+  `;
+}
+
 function renderDuelActionChoices(battle = state.duelBattle) {
   if (!battle?.resourceState || battle.resolved) return "";
   if (!battle.actionChoices?.length || battle.actionRound !== battle.round + 1) updateDuelActionAvailability(battle);
@@ -3307,6 +3356,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
           <span class="duel-chip">已选择手札：${escapeHtml(formatNumber(selectedEntries.length))} / ${escapeHtml(formatNumber(maxSelections))}</span>
         </div>
       </div>
+      ${renderDuelTurnExecuteControl(battle)}
       <p class="duel-hand-pool-hint">${escapeHtml(getDuelHandPoolInfluenceText(battle))}</p>
       ${pendingDiscardCount > 0 ? `<p class="duel-action-warning">手牌溢出：请在下方手牌中选择 ${escapeHtml(formatNumber(pendingDiscardCount))} 张弃置，弃到 ${escapeHtml(formatNumber(maxHandSize))} 张或更少后才能出牌。</p>` : ""}
       ${sideHandState.lastInjected?.length ? `<p class="duel-action-message">本轮额外加入手牌：${escapeHtml(sideHandState.lastInjected.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
@@ -3874,35 +3924,7 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
   const latest = battle.log[0];
   const safetyRoundCap = battle.safetyRoundCap || getDuelSafetyRoundCap(battle);
   const progress = safetyRoundCap ? clamp((battle.round / safetyRoundCap) * 100, 0, 100) : 0;
-  const actorSide = getDuelControlledSide(battle);
-  const selectedCount = getDuelSelectedHandActions(battle, actorSide).length;
-  const pendingDiscardCount = Math.max(0, Number(battle.handState?.[actorSide]?.pendingDiscardCount || 0));
-  const apState = getDuelApState(battle, actorSide);
   const onlineMode = isOnlineDuelModeActive();
-  const needsAction = false;
-  const onlineLocked = onlineMode && state.duelModeState.localLocked;
-  const buttonText = onlineLocked
-    ? "已锁定，等待对手"
-    : pendingDiscardCount > 0
-      ? `先弃牌 ${formatNumber(pendingDiscardCount)} 张`
-    : onlineMode
-      ? (selectedCount ? "锁定行动" : "锁定待机")
-      : battle.autoRunning
-    ? "生成阶段中..."
-    : (selectedCount ? "执行回合" : "待机过回合");
-  const resolveHint = onlineLocked
-    ? "联机行动已锁定；等待对方锁定后结算。"
-    : pendingDiscardCount > 0
-      ? "手牌超过上限；必须先从现有手牌和新增手牌中弃牌。"
-    : onlineMode
-      ? (selectedCount
-        ? "锁定后会提交到新版联机回合状态，不会触发单人结算。"
-        : "当前没有选择手札；将以 0 咒力待机行动锁定本回合，避免流程卡死。")
-      : needsAction
-        ? "未选择手札时不会推进战斗。"
-        : !selectedCount
-          ? "当前没有选择手札；将以 0 咒力待机行动推进回合，避免流程卡死。"
-        : "将按顺序结算已选手札；普通出牌以咒力预算为主。";
   return `
     <div class="duel-auto-stage">
       <div class="duel-current-choice">
@@ -3921,10 +3943,6 @@ function renderDuelAutoPanel(battle, leftTactic, rightTactic) {
       ` : `
         <div class="duel-auto-empty">${onlineMode ? "选择联机手札后，点击锁定行动等待对方。" : "选择术式手札后，点击执行回合推进战斗阶段。"}</div>
       `}
-      <p class="duel-action-hint">${escapeHtml(resolveHint)}</p>
-      <button class="primary" id="${onlineMode ? "duelOnlineLockFromHandBtn" : "duelAutoRunBtn"}" type="button" ${battle.autoRunning || battle.resolved || needsAction || onlineLocked || pendingDiscardCount > 0 ? "disabled" : ""} title="${escapeHtml(resolveHint)}">
-        ${escapeHtml(buttonText)}
-      </button>
     </div>
   `;
 }
