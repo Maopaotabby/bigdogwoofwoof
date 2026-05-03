@@ -49,9 +49,9 @@
     Object.freeze({ grade: "grade4", min: 1.3, max: 2.2 }),
     Object.freeze({ grade: "grade3", min: 2.2, max: 3.2 }),
     Object.freeze({ grade: "grade2", min: 3.2, max: 4.6 }),
-    Object.freeze({ grade: "grade1", min: 4.6, max: 6.2 }),
-    Object.freeze({ grade: "semiSpecialGrade1", min: 6.2, max: 7.6 }),
-    Object.freeze({ grade: "specialGrade", min: 7.6, max: null })
+    Object.freeze({ grade: "grade1", min: 4.6, max: 6.8 }),
+    Object.freeze({ grade: "semiSpecialGrade1", min: 6.8, max: 8.6 }),
+    Object.freeze({ grade: "specialGrade", min: 8.6, max: null })
   ]);
   var metadata = Object.freeze({
     namespace: namespace,

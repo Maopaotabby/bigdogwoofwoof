@@ -3908,9 +3908,9 @@ function getDeterministicGradeRanges() {
     { grade: "grade4", min: 1.3, max: 2.2 },
     { grade: "grade3", min: 2.2, max: 3.2 },
     { grade: "grade2", min: 3.2, max: 4.6 },
-    { grade: "grade1", min: 4.6, max: 6.2 },
-    { grade: "semiSpecialGrade1", min: 6.2, max: 7.6 },
-    { grade: "specialGrade", min: 7.6, max: null }
+    { grade: "grade1", min: 4.6, max: 6.8 },
+    { grade: "semiSpecialGrade1", min: 6.8, max: 8.6 },
+    { grade: "specialGrade", min: 8.6, max: null }
   ];
   return ranges.map((item) => ({
     grade: item.grade,
@@ -3933,7 +3933,7 @@ function computeGradeEffectiveScore(scores, options = {}) {
     0.20 * (values[1] || 0) +
     0.14 * (values[2] || 0);
   const highCountBonus =
-    scores.highCounts.aPlus * 0.20 +
+    scores.highCounts.aPlus * 0.08 +
     scores.highCounts.sPlus * 0.18 +
     scores.highCounts.ssPlus * 0.15 +
       scores.highCounts.sssPlus * 0.12;

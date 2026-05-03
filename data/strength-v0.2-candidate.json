@@ -423,7 +423,7 @@
     "appliesToWheel": "legacy 59/126/142 grade wheels",
     "meaning": "历史版本使用等级评定抽取权重；当前版本改为 deterministicGradeRanges 直接判定等级。",
     "implementedInPrototype": true,
-    "effectiveScoreFormula": "0.38*basePowerScore + 0.28*top1Raw + 0.20*top2Raw + 0.14*top3Raw + highAttributeCountBonus, shifted into bell-like grade target bands centered on grade2/grade1",
+    "effectiveScoreFormula": "0.38*basePowerScore + 0.28*top1Raw + 0.20*top2Raw + 0.14*top3Raw + conservative highAttributeCountBonus, shifted into grade target bands where A-average anchors to grade1",
     "floorRules": {
       "martialSAndBodySS": "grade1 floor",
       "martialSSSAndBodySSS": "semiSpecialGrade1 floor",
@@ -440,7 +440,7 @@
     },
     "notes": [
       "This is a second playable weighting curve for review, not a final balance decision.",
-      "The curve now treats JJK grades as coarse bands: several A/S/SS attributes sharply raise grade1/semiSpecial/special probabilities.",
+      "The curve now treats JJK grades as coarse bands: A remains a grade1 anchor; S/SS/SSS packages are needed before semiSpecial/special becomes natural.",
       "A strong body package can carry grade even when cursed-energy-side stats are poor.",
       "Low control/resource still matters for domain and technique outcomes, but no longer erases physical monsters in grade assessment.",
       "Debug mode displays base weight and adjusted weight for each grade option.",
@@ -1010,21 +1010,21 @@
       {
         "grade": "grade1",
         "min": 4.6,
-        "max": 6.2
+        "max": 6.8
       },
       {
         "grade": "semiSpecialGrade1",
-        "min": 6.2,
-        "max": 7.6
+        "min": 6.8,
+        "max": 8.6
       },
       {
         "grade": "specialGrade",
-        "min": 7.6,
+        "min": 8.6,
         "max": null
       }
     ],
     "notes": [
-      "The center mass is intentionally shifted to grade1/semiSpecialGrade1 because this build favors stronger player characters.",
+      "A-average characters are anchored to grade1; semiSpecialGrade1 and specialGrade require S/SS-heavy packages or explicit exception mechanics.",
       "A single SS/SSS/EX base attribute still floors the final grade to semiSpecialGrade1, so high-end base stats do not collapse to grade1 or below.",
       "Special grade requires either a high effective score or strong build synergy rather than a lucky grade wheel result."
     ]
