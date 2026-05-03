@@ -1604,7 +1604,10 @@
       "scalingProfile": "hutian_black_flash_current_hp_power",
       "risk": "critical",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "yuji_after68_black_flash_user"
+      ]
     },
     {
       "cardId": "card_shikigami_intercept",
@@ -1636,7 +1639,10 @@
       "risk": "low",
       "mechanicId": "shikigami_intercept",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
     },
     {
       "cardId": "card_shadow_storage",
@@ -1668,7 +1674,10 @@
       "risk": "low",
       "mechanicId": "shadow_storage",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
     },
     {
       "cardId": "card_shadow_terrain_pressure",
@@ -1700,7 +1709,10 @@
       "risk": "medium",
       "mechanicId": "shadow_storage",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
     },
     {
       "cardId": "card_incomplete_domain_shadow_support",
@@ -1733,7 +1745,10 @@
       "mechanicId": "domain_instinct_resistance",
       "playableInHandBeta": true,
       "status": "CANDIDATE",
-      "baseDomainPressure": 16
+      "baseDomainPressure": 16,
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
     },
     {
       "cardId": "card_infinity_guard",
@@ -1774,6 +1789,9 @@
       ],
       "specialHandTags": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     {
@@ -1812,6 +1830,9 @@
       ],
       "specialHandTags": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     {
@@ -1850,6 +1871,9 @@
       ],
       "specialHandTags": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     {
@@ -1886,6 +1910,9 @@
       ],
       "specialHandTags": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     {
@@ -1917,7 +1944,10 @@
       "risk": "medium",
       "mechanicId": "shrine_slash_pressure",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
     },
     {
       "cardId": "card_cleave_adaptation",
@@ -1948,7 +1978,10 @@
       "risk": "high",
       "mechanicId": "shrine_slash_pressure",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
     },
     {
       "cardId": "card_shrine_slash_pressure",
@@ -1981,7 +2014,10 @@
       "risk": "high",
       "mechanicId": "shrine_slash_pressure",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
     },
     {
       "cardId": "card_open_domain_pressure",
@@ -2011,7 +2047,10 @@
       "risk": "critical",
       "mechanicId": "open_domain_pressure",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
     },
     {
       "cardId": "card_soul_touch_pressure",

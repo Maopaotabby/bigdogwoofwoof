@@ -433,7 +433,9 @@
   }
 
   function hasTenShadowsEvidence(text) {
-    return /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(String(text || ""));
+    var value = String(text || "");
+    if (/没有十种影|没有十影|无十种影|无十影|不具备十种影|不具备十影|不能使用十种影|不能使用十影|no\s+ten[_\s-]?shadows/i.test(value)) return false;
+    return /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(value);
   }
 
   function hasGenericSummonEvidence(text) {
@@ -482,6 +484,11 @@
       .concat(asList(customCard?.specialHandTags))
       .concat(asList(customCard?.["特殊手札"]))
       .concat(archetypes));
+    var variants = uniqueList([]
+      .concat(asList(source?.variants))
+      .concat(asList(source?.characterVariants))
+      .concat(asList(customCard?.variants))
+      .concat(asList(entry?.rules?.variants)));
     traits = uniqueList(traits.concat(specialHandTags));
     var text = traits.concat([
       source?.id,
@@ -499,6 +506,10 @@
       source?.techniqueText,
       source?.notes
     ]).join(" ");
+    if (archetypes.includes("ten_shadows") || /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭/i.test(text)) variants.push("ten_shadows_user");
+    if (/宿傩|sukuna/i.test(text) && /十影|十种影|魔虚罗|mahoraga|嵌合兽/i.test(text)) variants.push("sukuna_ten_shadows_user");
+    if (archetypes.includes("sukuna_slash") || /宿傩|御厨子|伏魔御厨子|shrine|sukuna/i.test(text)) variants.push("sukuna_shrine_user");
+    if (archetypes.includes("gojo_limitless") || /五条|无下限|六眼|limitless|six_eyes/i.test(text)) variants.push("gojo_limitless_user");
     var profile = {
       characterId: source?.characterId || source?.profileId || source?.id || entry?.id || "",
       displayName: source?.displayName || source?.name || "",
@@ -506,6 +517,7 @@
       domainScript: sourceDomainScript,
       traits: traits,
       archetypes: archetypes,
+      variants: uniqueList(variants),
       specialHandTags: specialHandTags,
       hasCe: !/零咒力|zero_ce/i.test(text),
       ceLimited: /零咒力|zero_ce|咒力受限|ce_limited/i.test(text),
@@ -577,6 +589,7 @@
       requiredTraits: uniqueList([].concat(asList(action.requiredTraits), asList(template.requiredTraits), asList(sourceRule.requiredTraits))),
       forbiddenTraits: uniqueList([].concat(asList(action.forbiddenTraits), asList(template.forbiddenTraits), asList(sourceRule.forbiddenTraits))),
       exclusiveToCharacters: uniqueList([].concat(asList(action.exclusiveToCharacters), asList(template.exclusiveToCharacters), asList(sourceRule.exclusiveToCharacters))),
+      exclusiveToVariants: uniqueList([].concat(asList(action.exclusiveToVariants), asList(template.exclusiveToVariants), asList(sourceRule.exclusiveToVariants))),
       exclusiveToArchetypes: uniqueList([].concat(asList(action.exclusiveToArchetypes), asList(template.exclusiveToArchetypes), asList(sourceRule.exclusiveToArchetypes))),
       specialHandTags: uniqueList([]
         .concat(asList(action.specialHandTags), asList(action["特殊手札"]))
@@ -651,6 +664,9 @@
     if (!forceAllowed && snapshot.exclusiveToCharacters.length) {
       var ids = uniqueList([profile.characterId, profile.ruleId, profile.displayName]);
       if (!includesAny(ids, snapshot.exclusiveToCharacters)) return { ok: false, reason: "需要指定角色专属术式", profile: profile, snapshot: snapshot };
+    }
+    if (!forceAllowed && snapshot.exclusiveToVariants.length && !includesAny(profile.variants, snapshot.exclusiveToVariants)) {
+      return { ok: false, reason: "需要对应角色形态", profile: profile, snapshot: snapshot };
     }
     if (!forceAllowed && snapshot.exclusiveToArchetypes.length && !includesAny(profile.archetypes, snapshot.exclusiveToArchetypes)) {
       return { ok: false, reason: "需要对应角色原型", profile: profile, snapshot: snapshot };

@@ -520,6 +520,9 @@
         "斩击",
         "伏魔御厨子",
         "开放领域"
+      ],
+      "variants": [
+        "sukuna_shrine_user"
       ]
     },
     "gojo_satoru_shinjuku": {
@@ -542,6 +545,9 @@
         "苍",
         "赫",
         "无量空处"
+      ],
+      "variants": [
+        "gojo_limitless_user"
       ]
     },
     "higuruma_hiromi_culling": {
@@ -613,8 +619,14 @@
           "weight": 999,
           "handSource": "fixed-injection",
           "retainedPermanent": false,
-          "condition": { "hpBelowRatio": 0.5 }
+          "condition": {
+            "hpBelowRatio": 0.5
+          }
         }
+      ],
+      "variants": [
+        "ten_shadows_user",
+        "megumi_ten_shadows_user"
       ]
     },
     "mahito_shibuya": {
@@ -815,7 +827,10 @@
           "黑闪",
           "特殊手札"
         ]
-      }
+      },
+      "variants": [
+        "yuji_after68_black_flash_user"
+      ]
     }
   },
   "sourceActionRules": {
@@ -1008,6 +1023,9 @@
       ],
       "特殊手札": [
         "sukuna_slash"
+      ],
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
       ]
     },
     "cleave_adaptation": {
@@ -1026,6 +1044,9 @@
       ],
       "特殊手札": [
         "sukuna_slash"
+      ],
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
       ]
     },
     "shrine_slash_pressure": {
@@ -1044,6 +1065,9 @@
       ],
       "特殊手札": [
         "sukuna_slash"
+      ],
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
       ]
     },
     "open_domain_pressure": {
@@ -1062,6 +1086,9 @@
       ],
       "特殊手札": [
         "sukuna_slash"
+      ],
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
       ]
     },
     "infinity_guard": {
@@ -1079,6 +1106,9 @@
       ],
       "特殊手札": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     "lapse_blue_pressure": {
@@ -1096,6 +1126,9 @@
       ],
       "特殊手札": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     "reversal_red_burst": {
@@ -1113,6 +1146,9 @@
       ],
       "特殊手札": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     "unlimited_void_suppression": {
@@ -1130,6 +1166,9 @@
       ],
       "特殊手札": [
         "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
       ]
     },
     "press_contradiction": {
@@ -1368,6 +1407,9 @@
       ],
       "特殊手札": [
         "ten_shadows"
+      ],
+      "exclusiveToVariants": [
+        "ten_shadows_user"
       ]
     },
     "shadow_storage": {
@@ -1383,6 +1425,9 @@
       ],
       "特殊手札": [
         "ten_shadows"
+      ],
+      "exclusiveToVariants": [
+        "ten_shadows_user"
       ]
     },
     "shadow_terrain_pressure": {
@@ -1398,6 +1443,9 @@
       ],
       "特殊手札": [
         "ten_shadows"
+      ],
+      "exclusiveToVariants": [
+        "ten_shadows_user"
       ]
     },
     "incomplete_domain_shadow_support": {
@@ -1414,6 +1462,9 @@
       ],
       "特殊手札": [
         "ten_shadows"
+      ],
+      "exclusiveToVariants": [
+        "ten_shadows_user"
       ]
     },
     "soul_touch_pressure": {
@@ -1698,7 +1749,10 @@
       "特殊手札": [
         "hutian_black_flash"
       ],
-      "requiresCe": true
+      "requiresCe": true,
+      "exclusiveToVariants": [
+        "yuji_after68_black_flash_user"
+      ]
     }
   }
 }
