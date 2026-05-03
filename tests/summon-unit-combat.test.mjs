@@ -41,8 +41,32 @@ assert.match(
 
 assert.match(
   actions,
-  /var damage\s*=\s*Math\.min\(36,\s*Math\.max\(3,\s*Math\.round\(rawDamage\s*\*\s*0\.35\)\)\)/,
-  "Summoned unit baseDamage should produce visible automatic assist damage."
+  /function resolveDuelSummonUnitAttack/,
+  "Summoned units should resolve independent attack events."
+);
+
+assert.match(
+  actions,
+  /var damage\s*=\s*Math\.round\(baseDamage\s*\*\s*Math\.max\(0,\s*Number\(profile\.damageScale\s*\|\|\s*1\)\)\)/,
+  "Summoned unit attacks should start from full baseDamage instead of reduced pooled assist damage."
+);
+
+assert.match(
+  actions,
+  /calculateDuelSummonUnitHitRate/,
+  "Summoned unit attacks should use the unit's own hit profile."
+);
+
+assert.match(
+  actions,
+  /resolveDuelDamageTarget\(action,\s*actor,\s*opponent,\s*battle,\s*{\s*damage:\s*evaded\s*\?\s*0\s*:\s*damage,\s*summonUnitAttack:\s*true\s*}\)/,
+  "Summoned unit attacks should still respect battlefield target and guard interception."
+);
+
+assert.match(
+  actions,
+  /attacks:\s*attacks\.slice\(0,\s*12\)/,
+  "Summon assist result should expose each independent summon attack."
 );
 
 assert.match(

@@ -2026,6 +2026,10 @@
       guardRules: guardRules,
       adaptationRules: cloneDuelPlain(unitTemplate?.adaptationRules || {}),
       matchupModifiers: cloneDuelPlain(unitTemplate?.matchupModifiers || {}),
+      baseStats: cloneDuelPlain(unitStats.baseStats || unitTemplate?.baseStats || {}),
+      raw: cloneDuelPlain(unitStats.raw || unitTemplate?.raw || {}),
+      axes: cloneDuelPlain(unitStats.axes || unitTemplate?.axes || {}),
+      attackProfile: cloneDuelPlain(unitStats.attackProfile || unitTemplate?.attackProfile || {}),
       maintenanceCeCost: Math.max(1, Number.isFinite(maintenanceCeCost) ? Math.round(maintenanceCeCost) : 1),
       lastMaintenanceRound: 0,
       active: true,
@@ -2137,25 +2141,30 @@
     if (Number(battle.summonAssistState[side] || 0) === round) return null;
     var units = getFriendlyAssistSummonUnits(battle, side);
     if (!units.length) return null;
-    var rawDamage = units.reduce(function sumDamage(total, unit) {
-      return total + Number(unit.baseDamage || unit.unitStats?.baseDamage || 0);
-    }, 0);
-    var damage = Math.min(36, Math.max(3, Math.round(rawDamage * 0.35)));
-    if (!damage) return null;
-    var beforeHp = Number(opponent?.hp || 0);
-    opponent.hp = Number(clamp(beforeHp - damage, 0, Number(opponent?.maxHp || beforeHp)).toFixed(1));
-    var stabilityShock = Math.min(0.05, Number((damage / 1000).toFixed(4)));
-    if (stabilityShock > 0) {
-      opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
-    }
+    var attacks = [];
+    var totalDamage = 0;
+    var totalStabilityShock = 0;
+    units.forEach(function attackWithUnit(unit) {
+      var count = Math.max(1, Math.min(3, Math.round(Number(unit.unitStats?.actionsPerRound || unit.actionsPerRound || 1))));
+      for (var index = 0; index < count; index += 1) {
+        var attack = resolveDuelSummonUnitAttack(unit, actor, opponent, battle, round, index);
+        if (attack) {
+          attacks.push(attack);
+          totalDamage += Number(attack.damageApplied || 0);
+          totalStabilityShock += Number(attack.stabilityShock || 0);
+        }
+      }
+    });
+    if (!attacks.length) return null;
     battle.summonAssistState[side] = round;
     var result = {
       round: round,
       side: side,
-      damage: Number((beforeHp - Number(opponent.hp || 0)).toFixed(1)),
-      stabilityShock: stabilityShock,
+      damage: Number(totalDamage.toFixed(1)),
+      stabilityShock: Number(totalStabilityShock.toFixed(4)),
+      attacks: attacks.slice(0, 12),
       units: units.map(function mapUnit(unit) {
-        return { id: unit.id || "", name: unit.name || unit.label || "", baseDamage: Number(unit.baseDamage || unit.unitStats?.baseDamage || 0) };
+        return { id: unit.id || "", name: unit.name || unit.label || "", baseDamage: Number(unit.baseDamage || unit.unitStats?.baseDamage || 0), actionsPerRound: Number(unit.unitStats?.actionsPerRound || unit.actionsPerRound || 1) };
       }).slice(0, 6)
     };
     battle.summonLog ||= [];
@@ -2164,9 +2173,80 @@
       actorSide: side,
       reason: "friendly-summon-assist",
       damage: result.damage,
+      attacks: result.attacks,
       units: result.units
     });
     return result;
+  }
+
+  function getDuelSummonUnitMartialScore(unit) {
+    var raw = unit?.raw || unit?.unitStats?.raw || {};
+    var axes = unit?.axes || unit?.unitStats?.axes || {};
+    return Math.max(0, Number(raw.martialScore ?? raw.bodyScore ?? axes.body ?? 0) || 0);
+  }
+
+  function calculateDuelSummonUnitHitRate(unit, opponent) {
+    var attackerMartial = getDuelSummonUnitMartialScore(unit);
+    var defenderMartial = getDuelMartialScoreForEvasion(opponent);
+    var profile = unit?.attackProfile || unit?.unitStats?.attackProfile || {};
+    var baseRate = getDuelHitRateFromMartialDiff(attackerMartial - defenderMartial);
+    var modifier = normalizeRate(profile.hitRateModifier, 0);
+    return {
+      hitRate: clamp(baseRate + modifier, 0.05, 0.96),
+      attackerMartial: attackerMartial,
+      defenderMartial: defenderMartial
+    };
+  }
+
+  function isDuelCurseTarget(resource) {
+    var text = [resource?.name, resource?.label, resource?.characterCardProfile?.name, resource?.characterCardProfile?.pool, resource?.characterCardProfile?.description].filter(Boolean).join(" ");
+    return Boolean(resource?.characterCardProfile?.isCurse || /咒灵|curse/i.test(text));
+  }
+
+  function resolveDuelSummonUnitAttack(unit, actor, opponent, battle, round, attackIndex) {
+    var baseDamage = Math.max(0, Number(unit?.baseDamage || unit?.unitStats?.baseDamage || 0));
+    if (!baseDamage || !opponent) return null;
+    var profile = unit?.attackProfile || unit?.unitStats?.attackProfile || {};
+    var damage = Math.round(baseDamage * Math.max(0, Number(profile.damageScale || 1)));
+    if (Number(profile.curseDamageMultiplier || 0) > 1 && isDuelCurseTarget(opponent)) {
+      damage = Math.round(damage * Number(profile.curseDamageMultiplier));
+    }
+    var hit = calculateDuelSummonUnitHitRate(unit, opponent);
+    var roll = rollDuelEvasionRandom(battle, "summon-unit:" + (unit.id || unit.cardId || unit.name || "unit") + ":" + round + ":" + attackIndex);
+    var evaded = roll > hit.hitRate;
+    var action = {
+      id: "summon_unit_attack_" + (unit.id || unit.cardId || "unit") + "_" + attackIndex,
+      label: (unit.name || unit.label || "式神") + "·独立攻击",
+      cardType: "summon_unit_attack",
+      damageType: unit.damageType || unit.unitStats?.damageType || "shikigami",
+      accuracyProfile: profile.accuracyProfile || "melee",
+      baseDamage: baseDamage,
+      effects: {},
+      targetPlan: unit.targetingRules || {}
+    };
+    var target = resolveDuelDamageTarget(action, actor, opponent, battle, { damage: evaded ? 0 : damage, summonUnitAttack: true });
+    var application = evaded ? null : applyDuelHpDamageToTarget(target, damage, battle);
+    var stabilityShock = evaded || target?.type === "unit" ? 0 : Math.min(0.08, Number((damage / 650).toFixed(4)));
+    if (stabilityShock > 0) {
+      opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
+    }
+    return {
+      unitId: unit.id || "",
+      unitName: unit.name || unit.label || "",
+      attackIndex: attackIndex + 1,
+      baseDamage: baseDamage,
+      damage: damage,
+      damageApplied: application ? Number(application.applied || 0) : 0,
+      evaded: evaded,
+      hitRate: Number(hit.hitRate.toFixed(4)),
+      roll: Number(roll.toFixed(4)),
+      attackerMartial: Number(hit.attackerMartial.toFixed(2)),
+      defenderMartial: Number(hit.defenderMartial.toFixed(2)),
+      target: target ? { type: target.type, id: target.id || "", name: target.name || "", intercepted: Boolean(target.intercepted), selectionMode: target.selectionMode || "" } : undefined,
+      damageApplication: application || undefined,
+      stabilityShock: Number(stabilityShock.toFixed(4)),
+      attackType: profile.attackType || ""
+    };
   }
 
   function isMahoragaTuningRitualAction(action) {

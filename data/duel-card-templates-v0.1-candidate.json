@@ -3336,7 +3336,35 @@
         "placement": "shadow_adjacent_flank",
         "control": "player_controlled",
         "controlResistance": "medium",
-        "domainResistance": "medium"
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "B",
+          "control": "B",
+          "efficiency": "B",
+          "body": "A",
+          "martial": "A+",
+          "talent": "B"
+        },
+        "raw": {
+          "cursedEnergyScore": 4.6,
+          "controlScore": 4.8,
+          "efficiencyScore": 4.6,
+          "bodyScore": 5.8,
+          "martialScore": 6.4,
+          "talentScore": 4.8
+        },
+        "axes": {
+          "jujutsu": 4.8,
+          "body": 6.2,
+          "insight": 5.2,
+          "build": 5.7
+        },
+        "attackProfile": {
+          "accuracyProfile": "melee",
+          "hitRateModifier": 0.04,
+          "damageScale": 1,
+          "attackType": "tracking_bite"
+        }
       },
       "targetingRules": {
         "default": "marked_or_lowest_guard_enemy",
@@ -3394,7 +3422,35 @@
         "placement": "air_shadow_lane",
         "control": "player_controlled",
         "controlResistance": "medium",
-        "domainResistance": "medium"
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "B+",
+          "control": "B+",
+          "efficiency": "B",
+          "body": "B",
+          "martial": "B+",
+          "talent": "B+"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.2,
+          "controlScore": 5.2,
+          "efficiencyScore": 4.8,
+          "bodyScore": 4.9,
+          "martialScore": 5.4,
+          "talentScore": 5.2
+        },
+        "axes": {
+          "jujutsu": 5.35,
+          "body": 5.1,
+          "insight": 5.6,
+          "build": 5.35
+        },
+        "attackProfile": {
+          "accuracyProfile": "technique_projectile",
+          "hitRateModifier": 0.03,
+          "damageScale": 1,
+          "attackType": "lightning_strike"
+        }
       },
       "targetingRules": {
         "default": "backline_or_casting_enemy",
@@ -3452,7 +3508,35 @@
         "placement": "frontline_shadow_lane",
         "control": "player_controlled",
         "controlResistance": "high",
-        "domainResistance": "medium"
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "A",
+          "control": "B",
+          "efficiency": "B-",
+          "body": "A+",
+          "martial": "B",
+          "talent": "B"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.8,
+          "controlScore": 4.8,
+          "efficiencyScore": 4.2,
+          "bodyScore": 6.5,
+          "martialScore": 5,
+          "talentScore": 4.8
+        },
+        "axes": {
+          "jujutsu": 5.35,
+          "body": 6.6,
+          "insight": 4.8,
+          "build": 6.2
+        },
+        "attackProfile": {
+          "accuracyProfile": "heavy_melee",
+          "hitRateModifier": -0.03,
+          "damageScale": 1,
+          "attackType": "pressure_crash"
+        }
       },
       "targetingRules": {
         "default": "frontline_cluster",
@@ -3558,7 +3642,35 @@
         "placement": "rear_shadow_support",
         "control": "player_controlled",
         "controlResistance": "medium",
-        "domainResistance": "high"
+        "domainResistance": "high",
+        "baseStats": {
+          "cursedEnergy": "A",
+          "control": "A",
+          "efficiency": "A",
+          "body": "B",
+          "martial": "C+",
+          "talent": "A"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.8,
+          "controlScore": 5.8,
+          "efficiencyScore": 5.8,
+          "bodyScore": 4.8,
+          "martialScore": 4.1,
+          "talentScore": 5.8
+        },
+        "axes": {
+          "jujutsu": 5.8,
+          "body": 4.45,
+          "insight": 5.8,
+          "build": 5.5
+        },
+        "attackProfile": {
+          "accuracyProfile": "support_touch",
+          "hitRateModifier": -0.04,
+          "damageScale": 1,
+          "attackType": "positive_energy_contact"
+        }
       },
       "supportRules": {
         "canCleanseTechniqueInterference": true,
@@ -3616,7 +3728,35 @@
         "placement": "far_shadow_line",
         "control": "player_controlled",
         "controlResistance": "medium",
-        "domainResistance": "medium"
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "B+",
+          "control": "B",
+          "efficiency": "B-",
+          "body": "A",
+          "martial": "B+",
+          "talent": "B"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.1,
+          "controlScore": 4.8,
+          "efficiencyScore": 4.3,
+          "bodyScore": 5.9,
+          "martialScore": 5.3,
+          "talentScore": 4.8
+        },
+        "axes": {
+          "jujutsu": 4.9,
+          "body": 5.9,
+          "insight": 4.6,
+          "build": 5.6
+        },
+        "attackProfile": {
+          "accuracyProfile": "charge",
+          "hitRateModifier": -0.02,
+          "damageScale": 1,
+          "attackType": "piercing_charge"
+        }
       },
       "chargeRules": {
         "requiresStraightLine": true,
@@ -3759,7 +3899,36 @@
         "placement": "battlefield_center",
         "control": "neutral_berserk",
         "controlResistance": "high",
-        "domainResistance": "high"
+        "domainResistance": "high",
+        "baseStats": {
+          "cursedEnergy": "SS",
+          "control": "A",
+          "efficiency": "A",
+          "body": "SSS",
+          "martial": "SSS",
+          "talent": "SS"
+        },
+        "raw": {
+          "cursedEnergyScore": 7.4,
+          "controlScore": 5.8,
+          "efficiencyScore": 5.8,
+          "bodyScore": 8.8,
+          "martialScore": 8.8,
+          "talentScore": 7.4
+        },
+        "axes": {
+          "jujutsu": 6.75,
+          "body": 8.8,
+          "insight": 7.4,
+          "build": 8.25
+        },
+        "attackProfile": {
+          "accuracyProfile": "melee",
+          "hitRateModifier": 0.08,
+          "damageScale": 1,
+          "attackType": "exorcism_blade",
+          "curseDamageMultiplier": 3
+        }
       },
       "targetingRules": {
         "default": "berserk_all_units_and_players",
@@ -3827,7 +3996,36 @@
         "placement": "frontline_guard",
         "control": "player_controlled",
         "controlResistance": "very_high",
-        "domainResistance": "high"
+        "domainResistance": "high",
+        "baseStats": {
+          "cursedEnergy": "SS",
+          "control": "S",
+          "efficiency": "S",
+          "body": "SSS",
+          "martial": "SSS",
+          "talent": "SS"
+        },
+        "raw": {
+          "cursedEnergyScore": 7.4,
+          "controlScore": 6.2,
+          "efficiencyScore": 6.2,
+          "bodyScore": 8.8,
+          "martialScore": 8.8,
+          "talentScore": 7.4
+        },
+        "axes": {
+          "jujutsu": 6.9,
+          "body": 8.8,
+          "insight": 7.55,
+          "build": 8.2
+        },
+        "attackProfile": {
+          "accuracyProfile": "melee",
+          "hitRateModifier": 0.1,
+          "damageScale": 1,
+          "attackType": "adapted_exorcism_blade",
+          "curseDamageMultiplier": 3
+        }
       },
       "guardRules": {
         "interceptsOpponentAttacks": true,
@@ -3947,7 +4145,35 @@
         "placement": "nearby_lane",
         "control": "temporary_player_controlled",
         "controlResistance": "low",
-        "domainResistance": "low"
+        "domainResistance": "low",
+        "baseStats": {
+          "cursedEnergy": "C",
+          "control": "C",
+          "efficiency": "C",
+          "body": "B",
+          "martial": "C+",
+          "talent": "C"
+        },
+        "raw": {
+          "cursedEnergyScore": 3.4,
+          "controlScore": 3.4,
+          "efficiencyScore": 3.4,
+          "bodyScore": 4.8,
+          "martialScore": 4.1,
+          "talentScore": 3.4
+        },
+        "axes": {
+          "jujutsu": 3.4,
+          "body": 4.55,
+          "insight": 3.2,
+          "build": 4.2
+        },
+        "attackProfile": {
+          "accuracyProfile": "charge",
+          "hitRateModifier": -0.04,
+          "damageScale": 1,
+          "attackType": "vehicle_impact"
+        }
       },
       "objectRules": {
         "countsAsShikigamiLikeObject": true,
@@ -4004,7 +4230,35 @@
         "placement": "frontline_lane",
         "control": "temporary_player_controlled",
         "controlResistance": "low",
-        "domainResistance": "low"
+        "domainResistance": "low",
+        "baseStats": {
+          "cursedEnergy": "C+",
+          "control": "C",
+          "efficiency": "C-",
+          "body": "B+",
+          "martial": "C",
+          "talent": "C"
+        },
+        "raw": {
+          "cursedEnergyScore": 3.8,
+          "controlScore": 3.4,
+          "efficiencyScore": 3,
+          "bodyScore": 5.2,
+          "martialScore": 3.6,
+          "talentScore": 3.4
+        },
+        "axes": {
+          "jujutsu": 3.4,
+          "body": 5.1,
+          "insight": 3.1,
+          "build": 4.9
+        },
+        "attackProfile": {
+          "accuracyProfile": "heavy_melee",
+          "hitRateModifier": -0.08,
+          "damageScale": 1,
+          "attackType": "heavy_machine_crush"
+        }
       },
       "objectRules": {
         "countsAsShikigamiLikeObject": true,
