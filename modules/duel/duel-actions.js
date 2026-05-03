@@ -2743,6 +2743,7 @@
     cleanupExpiredDuelBattlefieldUnits(battle);
     if (action.id === "online_pass_turn" || action.id === "duel_pass_turn" || action.type === "pass") {
       var passUpkeepResult = applyDuelSummonUpkeep(actor, battle);
+      var passSummonAssistResult = applyDuelSummonAssist(actor, opponent, battle);
       var passResult = {
         costCe: 0,
         actorCe: passUpkeepResult ? -passUpkeepResult.paid.reduce(function sumCost(total, entry) { return total + Number(entry.costCe || 0); }, 0) : 0,
@@ -2759,6 +2760,7 @@
         blackFlashLabel: "",
         mechanicsApplied: [],
         summonUpkeep: passUpkeepResult || undefined,
+        summonAssist: passSummonAssistResult || undefined,
         passTurn: true
       };
       appendDuelActionLog(action, actor, opponent, passResult, battle);

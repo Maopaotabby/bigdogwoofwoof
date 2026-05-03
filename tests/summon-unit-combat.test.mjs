@@ -75,4 +75,16 @@ assert.match(
   "Action results should expose summon upkeep feedback."
 );
 
+assert.match(
+  actions,
+  /var passSummonAssistResult\s*=\s*applyDuelSummonAssist\(actor,\s*opponent,\s*battle\)/,
+  "Passing a turn should still trigger controlled summon attacks for that round."
+);
+
+assert.match(
+  actions,
+  /summonAssist:\s*passSummonAssistResult\s*\|\|\s*undefined/,
+  "Pass results should expose summon attack events."
+);
+
 console.log("Summon unit combat regression checks passed.");
