@@ -1,38 +1,15 @@
 //--移动端顶栏与调试入口UI--//
 function initializeMobileTopbarBehavior() {
-  if (!els.topbar) return;
-
-  const syncForViewport = () => {
-    state.lastMobileScrollY = getWindowScrollY();
-    if (state.lastMobileScrollY <= getMobileTopbarHideAfter()) {
-      setMobileTopbarHidden(false);
-    }
-  };
-
-  window.addEventListener("scroll", updateMobileTopbarOnScroll, { passive: true });
-  window.addEventListener("resize", syncForViewport, { passive: true });
-  syncForViewport();
+  setMobileTopbarHidden(false);
 }
 
 function updateMobileTopbarOnScroll() {
-  const currentY = getWindowScrollY();
-  const hideAfter = getMobileTopbarHideAfter();
-  if (currentY <= hideAfter) {
-    state.lastMobileScrollY = currentY;
-    setMobileTopbarHidden(false);
-    return;
-  }
-
-  const delta = currentY - state.lastMobileScrollY;
-  if (Math.abs(delta) < MOBILE_TOPBAR_SCROLL_DELTA) return;
-
-  setMobileTopbarHidden(delta > 0 && currentY > hideAfter);
-  state.lastMobileScrollY = currentY;
+  setMobileTopbarHidden(false);
 }
 
 function setMobileTopbarHidden(hidden) {
-  state.mobileTopbarHidden = hidden;
-  document.body.classList.toggle("mobile-topbar-hidden", hidden);
+  state.mobileTopbarHidden = false;
+  document.body.classList.remove("mobile-topbar-hidden");
 }
 
 function getWindowScrollY() {

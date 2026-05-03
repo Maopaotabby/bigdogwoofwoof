@@ -1,7 +1,7 @@
 param(
   [string]$HostName = "119.91.224.223",
   [string]$User = "ubuntu",
-  [string]$KeyFile = "$env:USERPROFILE\.ssh\JJXXiivv666.pem",
+  [string]$KeyFile = (Join-Path $PSScriptRoot "..\server-key.pem"),
   [switch]$SkipNginx
 )
 

@@ -219,7 +219,10 @@
             "evidencePressureDelta": -1.2,
             "defensePressureDelta": 1
           },
-          "risk": "low"
+          "risk": "low",
+          "tags": [
+            "抗审判"
+          ]
         },
         {
           "id": "remain_silent",
@@ -236,7 +239,10 @@
             "selfIncriminationRiskDelta": -0.6,
             "heavyVerdictRiskDelta": -0.2
           },
-          "risk": "low"
+          "risk": "low",
+          "tags": [
+            "抗审判"
+          ]
         },
         {
           "id": "deny_charge",
@@ -251,7 +257,10 @@
           "effects": {
             "denyCharge": true
           },
-          "risk": "medium"
+          "risk": "medium",
+          "tags": [
+            "抗审判"
+          ]
         },
         {
           "id": "challenge_evidence",
@@ -272,7 +281,10 @@
               "value": 1
             }
           },
-          "risk": "medium"
+          "risk": "medium",
+          "tags": [
+            "抗审判"
+          ]
         },
         {
           "id": "delay_trial",
@@ -288,7 +300,10 @@
             "trialRoundDelta": -1,
             "ownerDomainLoadDelta": 5
           },
-          "risk": "high"
+          "risk": "high",
+          "tags": [
+            "抗审判"
+          ]
         }
       ],
       "resourceRules": {

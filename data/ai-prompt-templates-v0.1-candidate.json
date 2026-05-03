@@ -105,27 +105,13 @@
     "duel_character_assist": {
       "label": "斗蛐蛐角色卡辅助",
       "staticPrefix": [
-        "特殊手札必须基于角色的术式派生、咒具、特质、外部资源、反制动作或明确原创设定制作；领域本体不属于特殊手札。",
-        "你是咒术回战模式的自定义角色数据生成器。",
-        "你的任务是把玩家自然语言设定整理成可被本地战斗系统读取的候选角色数据、特殊领域描述和特殊手札草案。",
-        "你只能生成候选数据。你不得决定对战胜负，不得重算本地公式，不得绕过前端/本地规则引擎。",
-        "所有数值必须服务于角色数据草案；最终 HP、CE、AP、胜负、领域压力、伤害、格挡和资源结算由本地公式计算。",
-        "每张特殊手札都必须有稳定的 id、name、type、risk、apCost、ceCost、damage、block、stabilityDelta、domainLoadDelta、summary、tags、source 字段。",
-        "type 只能从 attack、technique、ce_burst、defense、domain、support、resource、counter、rule、soul_pressure 中选择；risk 只能从 low、medium、high、critical 中选择。",
-        "apCost、ceCost、damage、block、stabilityDelta、domainLoadDelta 必须是整数。",
-        "不得写 guaranteedWin、instantKill、ignoreAllDefense、unlimitedCostFree 等绝对效果。",
-        "必须只返回一个 JSON 对象，不要 Markdown，不要代码块，不要额外说明文字。",
-        "禁止生成无数据手札：damage 与 block 不能同时为 0 且 stabilityDelta、domainLoadDelta 也都为 0；控制、规则、反制、回血、铺场效果必须抽象成可执行数值。",
-        "如果角色有领域展开、开放领域、未完成领域或规则型领域，必须返回 suggestion.domainScript。",
-        "domainScript 必须是 declarative JSON：language=json-rule-v1，activation=onDomainResolved，不得输出 JavaScript、eval、函数体或任意可执行源码。",
-        "domainScript.effects 只能使用 damage、nextRoundDamage、skipOpponentNextCard、opponentStabilityDelta、opponentCeDamage、forceTrialHands、grantExecutionSword、placeholderDamage。",
-        "domainScript.blockedBy 必须包含领域对抗与反领域手段；对手展开领域或使用简易领域、弥虚葛笼、落花之情、零咒力绕过时，脚本不完整生效。",
-        "领域难以实现时使用 fallback.strategy=placeholder_plus_10_damage、fallback.damage=10，并说明降级原因。",
-        "禁止把领域名本身做成 specialHands：领域名称必须写入 domainProfile/domainScript.domainName。",
-        "禁止生成名为“领域展开”的特殊手札；领域展开由本地系统固定动作卡提供。",
-        "领域派生手札只能是领域维持、领域对抗、必中压迫、结界修补等功能性手札，名称不能等于领域名。",
-        "有领域角色的 domainProfile 必须使用“领域展开：领域名”“开放领域：领域名”或“未完成领域：领域名”的格式，不能只写领域名。",
-        "领域展开前不得生成审判、必中、领域本体、领域胜利类 specialHands；领域展开后的审判/领域专属手札由本地领域子阶段注入。"
+        "????????????????????????????????????????????",
+        "????????????? HP/CE/AP?????????????????????????",
+        "????????????? analysis ? warnings ????????????",
+        "??????? id/name/type/risk/apCost/ceCost/damage/block/stabilityDelta/domainLoadDelta/summary/tags/source?????????",
+        "???????guaranteedWin?instantKill?ignoreAllDefense?unlimitedCostFree????????? ceCost?domainLoadDelta?risk ? warnings?",
+        "????? domainProfile/domainScript?????????????????? specialHands?",
+        "????? JSON ????? Markdown??????????"
       ],
       "dynamicSections": [
         "description",
@@ -138,7 +124,7 @@
         "mechanismHints",
         "cardPrompt"
       ],
-      "maxOutputChars": 1800
+      "maxOutputChars": 800
     },
     "ai_free_analysis": {
       "label": "AI自由行动解析",

@@ -5,64 +5,42 @@
   var version = "0.1.1-candidate";
   var validModes = Object.freeze([
     "off",
-    "local_fallback",
-    "openai_byok_direct",
-    "deepseek_byok_direct",
-    "openai_compatible_byok_direct",
-    "user_proxy_endpoint"
+    "default",
+    "custom"
   ]);
+  var legacyModeMap = Object.freeze({
+    local_fallback: "off",
+    openai_byok_direct: "custom",
+    deepseek_byok_direct: "custom",
+    openai_compatible_byok_direct: "default",
+    user_proxy_endpoint: "custom"
+  });
   var defaultProviderRules = Object.freeze({
-    version: "0.1.1",
+    version: "0.1.2",
     status: "CANDIDATE",
-    defaultMode: "user_proxy_endpoint",
+    defaultMode: "default",
     defaultProviderId: "ark_ai",
-    defaultProxyEndpoint: "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev/ai",
     providers: Object.freeze([
       Object.freeze({
         providerId: "ark_ai",
         label: "ArkAI / 火山方舟",
-        modes: Object.freeze(["openai_compatible_byok_direct", "user_proxy_endpoint"]),
+        modes: Object.freeze(["default"]),
         endpointType: "chat_completions",
         baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
         defaultPath: "/chat/completions",
         defaultModel: "doubao-seed-2-0-lite-260215",
+        defaultApiKey: "09d6d696-dc76-4d99-a912-b15bec17c869",
         modelPresets: Object.freeze(["doubao-seed-2-0-lite-260215"]),
         allowCustomBaseUrl: false,
         allowCustomPath: false,
-        allowCustomModel: true,
-        securityWarningRequired: true,
-        status: "CANDIDATE"
-      }),
-      Object.freeze({
-        providerId: "openai",
-        label: "OpenAI",
-        modes: Object.freeze(["openai_byok_direct", "user_proxy_endpoint"]),
-        endpointType: "responses",
-        baseUrl: "https://api.openai.com",
-        defaultPath: "/v1/responses",
-        defaultModel: "gpt-5-mini",
-        modelPresets: Object.freeze(["gpt-5-mini"]),
-        allowCustomModel: true,
-        securityWarningRequired: true,
-        status: "CANDIDATE"
-      }),
-      Object.freeze({
-        providerId: "deepseek",
-        label: "DeepSeek",
-        modes: Object.freeze(["deepseek_byok_direct", "user_proxy_endpoint"]),
-        endpointType: "chat_completions",
-        baseUrl: "https://api.deepseek.com",
-        defaultPath: "/chat/completions",
-        defaultModel: "deepseek-chat",
-        modelPresets: Object.freeze(["deepseek-chat", "deepseek-reasoner", "deepseek-v4-flash", "deepseek-v4-pro"]),
-        allowCustomModel: true,
+        allowCustomModel: false,
         securityWarningRequired: true,
         status: "CANDIDATE"
       }),
       Object.freeze({
         providerId: "openai_compatible",
-        label: "自定义 OpenAI-compatible Provider",
-        modes: Object.freeze(["openai_compatible_byok_direct", "user_proxy_endpoint"]),
+        label: "自定义 AI（OpenAI-compatible）",
+        modes: Object.freeze(["custom"]),
         endpointType: "chat_completions",
         baseUrl: "",
         defaultPath: "/chat/completions",
@@ -73,23 +51,12 @@
         allowCustomModel: true,
         securityWarningRequired: true,
         status: "CANDIDATE"
-      }),
-      Object.freeze({
-        providerId: "user_proxy",
-        label: "玩家自托管 Proxy Endpoint（推荐）",
-        modes: Object.freeze(["user_proxy_endpoint"]),
-        endpointType: "proxy",
-        securityWarningRequired: true,
-        status: "CANDIDATE"
       })
     ]),
     modes: Object.freeze({
       off: Object.freeze({ enabled: true, label: "关闭 AI" }),
-      local_fallback: Object.freeze({ enabled: true, label: "本地叙事 fallback" }),
-      openai_byok_direct: Object.freeze({ enabled: true, label: "玩家自带 OpenAI API Key（实验性）", providerId: "openai", defaultStorage: "sessionStorage", allowLocalStorage: true }),
-      deepseek_byok_direct: Object.freeze({ enabled: true, label: "玩家自带 DeepSeek API Key（实验性）", providerId: "deepseek", defaultStorage: "sessionStorage", allowLocalStorage: true }),
-      openai_compatible_byok_direct: Object.freeze({ enabled: true, label: "ArkAI / OpenAI-compatible Provider（实验性）", providerId: "ark_ai", defaultStorage: "sessionStorage", allowLocalStorage: true }),
-      user_proxy_endpoint: Object.freeze({ enabled: true, label: "玩家自托管 Proxy Endpoint（推荐）", providerId: "user_proxy" })
+      default: Object.freeze({ enabled: true, label: "默认", providerId: "ark_ai", defaultStorage: "sessionStorage", allowLocalStorage: false }),
+      custom: Object.freeze({ enabled: true, label: "自定义", providerId: "openai_compatible", defaultStorage: "sessionStorage", allowLocalStorage: true })
     }),
     defaultModel: "doubao-seed-2-0-lite-260215",
     openAiResponsesEndpoint: "https://api.openai.com/v1/responses",
@@ -128,22 +95,48 @@
       battle_narration: Object.freeze({
         label: "战斗叙事",
         staticPrefix: Object.freeze([
-          "你是咒术回战风格的战斗叙事生成器。",
-          "你只能基于提供的 battleSummary、roundEvents、resources、domainState、handActions 进行叙事。",
-          "不得改写数值。",
-          "不得决定胜负。",
-          "不得新增不存在的技能。",
-          "不得把 CANDIDATE 当作最终 canon。",
-          "输出中文，简洁、有画面感。"
+          "写一段中文咒术战斗叙事，只能使用用户给出的字段。",
+          "必须依据 battleSummary、roundEvents、resources、domainState、handActions。",
+          "不得改数值、胜负、技能或新增不存在的设定。",
+          "300-600字，直接输出正文。"
         ]),
         dynamicSections: Object.freeze([
           "battleSummary",
-          "recentRoundEvents",
-          "resourceSnapshot",
-          "domainSnapshot",
-          "handActionSummary",
+          "roundEvents",
+          "resources",
+          "domainState",
+          "handActions",
           "trialOrJackpotState"
         ]),
+        maxOutputChars: 900
+      }),
+      article_summary: Object.freeze({
+        label: "AI人生经历",
+        staticPrefix: Object.freeze([
+          "基于给定记录生成中文人生经历总结。",
+          "只使用输入事实，不新增关键身份、胜负或能力。",
+          "结构清晰，语言简洁。"
+        ]),
+        dynamicSections: Object.freeze(["records", "recentRecords", "summary", "kind", "timeline"]),
+        maxOutputChars: 1200
+      }),
+      duel_character_assist: Object.freeze({
+        label: "自定义角色卡",
+        staticPrefix: Object.freeze([
+          "把玩家描述整理成咒术角色卡 JSON。",
+          "只输出 JSON；字段优先包含 suggestion/cardSuggestion。",
+          "不要编造描述中没有的核心术式、领域或咒具；不确定则留空或保守。"
+        ]),
+        dynamicSections: Object.freeze(["mode", "description", "draft", "language"]),
+        maxOutputChars: 1200
+      }),
+      ai_assist: Object.freeze({
+        label: "AI辅助",
+        staticPrefix: Object.freeze([
+          "解析玩家行动文字为倾向建议。",
+          "不能改变当前合法结果，只给后续权重、风险和叙事钩子。"
+        ]),
+        dynamicSections: Object.freeze(["task", "actionText", "anchorText", "selectedLegalResult", "legalCandidates", "recentRecords"]),
         maxOutputChars: 900
       })
     })
@@ -167,6 +160,7 @@
   function normalizeAiMode(mode, rules) {
     var text = String(mode || "").trim();
     var fallback = rules?.defaultMode || defaultProviderRules.defaultMode;
+    if (legacyModeMap[text]) return legacyModeMap[text];
     return validModes.indexOf(text) !== -1 ? text : fallback;
   }
 
@@ -180,10 +174,8 @@
     })) {
       return defaultProviderId;
     }
-    if (normalized === "openai_byok_direct") return "openai";
-    if (normalized === "deepseek_byok_direct") return "deepseek";
-    if (normalized === "openai_compatible_byok_direct") return "openai_compatible";
-    if (normalized === "user_proxy_endpoint") return "user_proxy";
+    if (normalized === "default") return "ark_ai";
+    if (normalized === "custom") return "openai_compatible";
     return "";
   }
 
@@ -704,7 +696,7 @@
   }
 
   function buildChatCompletionsPayload(settings, payload, provider) {
-    var model = String(settings?.model || payload?.model || provider?.defaultModel || "deepseek-chat").trim();
+    var model = String(settings?.model || payload?.model || provider?.defaultModel || defaultProviderRules.defaultModel).trim();
     return {
       model: model,
       messages: promptPayloadToMessages(payload),
@@ -723,51 +715,10 @@
     var endpoint;
     var body;
 
-    if (mode === "off" || mode === "local_fallback") {
+    if (mode === "off") {
       return { mode: mode, providerId: active.providerId, endpointType: "local", url: "", request: null, payload: null };
     }
-    if (mode === "user_proxy_endpoint") {
-      endpoint = String(settings?.proxyEndpoint || "").trim();
-      body = {
-        providerId: String(settings?.providerId || active.providerId || "user_proxy"),
-        endpointType: String(settings?.endpointType || provider?.endpointType || "proxy"),
-        payload: payload,
-        siteVersion: config.siteVersion || "",
-        promptTemplateId: config.promptTemplateId || payload?.metadata?.templateId || ""
-      };
-      return {
-        mode: mode,
-        providerId: active.providerId,
-        endpointType: "proxy",
-        url: endpoint,
-        request: {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        },
-        payload: body
-      };
-    }
-    if (mode === "openai_byok_direct") {
-      endpoint = settings?.openAiResponsesEndpoint || getProviderEndpoint(settings, provider) || rules.openAiResponsesEndpoint || defaultProviderRules.openAiResponsesEndpoint;
-      if (!apiKey) throw new Error("OpenAI API key is required for BYOK direct mode.");
-      return {
-        mode: mode,
-        providerId: active.providerId || "openai",
-        endpointType: "responses",
-        url: endpoint,
-        request: {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + apiKey
-          },
-          body: JSON.stringify(prepareOpenAiResponsesPayload(payload))
-        },
-        payload: prepareOpenAiResponsesPayload(payload)
-      };
-    }
-    if (mode === "deepseek_byok_direct" || mode === "openai_compatible_byok_direct") {
+    if (mode === "default" || mode === "custom") {
       if (!apiKey) throw new Error("API key is required for BYOK direct mode.");
       endpoint = getProviderEndpoint(settings, provider);
       if (!endpoint) throw new Error("OpenAI-compatible base URL is required.");
@@ -810,40 +761,8 @@
     return data;
   }
 
-  async function sendOpenAiResponsesRequest(settings, payload, options) {
-    var request = buildAiProviderRequest(Object.assign({ aiMode: "openai_byok_direct" }, settings || {}), payload, options);
-    var data;
-
-    data = await fetchJson(request.url, {
-      fetchImpl: options?.fetchImpl,
-      request: request.request
-    });
-    return {
-      provider: "openai_byok_direct",
-      text: parseProviderText(data),
-      usage: data.usage || null,
-      raw: options?.includeRaw ? data : undefined
-    };
-  }
-
-  async function sendDeepSeekChatCompletionsRequest(settings, payload, options) {
-    var request = buildAiProviderRequest(Object.assign({ aiMode: "deepseek_byok_direct", providerId: "deepseek" }, settings || {}), payload, options);
-    var data;
-
-    data = await fetchJson(request.url, {
-      fetchImpl: options?.fetchImpl,
-      request: request.request
-    });
-    return Object.assign(normalizeAiProviderResponse(data, {
-      provider: "deepseek_byok_direct",
-      includeRaw: options?.includeRaw
-    }), {
-      provider: "deepseek_byok_direct"
-    });
-  }
-
   async function sendOpenAiCompatibleChatRequest(settings, payload, options) {
-    var request = buildAiProviderRequest(Object.assign({ aiMode: "openai_compatible_byok_direct", providerId: "openai_compatible" }, settings || {}), payload, options);
+    var request = buildAiProviderRequest(settings || {}, payload, options);
     var data;
 
     data = await fetchJson(request.url, {
@@ -851,37 +770,11 @@
       request: request.request
     });
     return Object.assign(normalizeAiProviderResponse(data, {
-      provider: "openai_compatible_byok_direct",
+      provider: request.providerId || request.mode,
       includeRaw: options?.includeRaw
     }), {
-      provider: "openai_compatible_byok_direct"
+      provider: request.providerId || request.mode
     });
-  }
-
-  async function sendUserProxyRequest(settings, payload, options) {
-    var request = buildAiProviderRequest(Object.assign({ aiMode: "user_proxy_endpoint" }, settings || {}), payload, options);
-    var data;
-
-    if (!request.url) throw new Error("User proxy endpoint is required.");
-    data = await fetchJson(request.url, {
-      fetchImpl: options?.fetchImpl,
-      request: request.request
-    });
-    return {
-      provider: "user_proxy_endpoint",
-      text: parseProviderText(data),
-      usage: data.usage || null,
-      raw: options?.includeRaw ? data.raw || data : undefined,
-      response: data
-    };
-  }
-
-  function callOpenAiByokDirect(settings, payload, options) {
-    return sendOpenAiResponsesRequest(settings, payload, options || {});
-  }
-
-  function callUserProxyEndpoint(settings, payload, options) {
-    return sendUserProxyRequest(settings, payload, options || {});
   }
 
   async function sendAiProviderRequest(settings, payload, options) {
@@ -889,7 +782,7 @@
     var rules = normalizeProviderRules(config.providerRules || assets.providerRules);
     var mode = normalizeAiMode(settings?.aiMode, rules);
 
-    if (mode === "off" || mode === "local_fallback") {
+    if (mode === "off") {
       return {
         provider: mode,
         localFallback: true,
@@ -897,10 +790,7 @@
         usage: null
       };
     }
-    if (mode === "openai_byok_direct") return sendOpenAiResponsesRequest(settings, payload, config);
-    if (mode === "deepseek_byok_direct") return sendDeepSeekChatCompletionsRequest(settings, payload, config);
-    if (mode === "openai_compatible_byok_direct") return sendOpenAiCompatibleChatRequest(settings, payload, config);
-    if (mode === "user_proxy_endpoint") return sendUserProxyRequest(settings, payload, config);
+    if (mode === "default" || mode === "custom") return sendOpenAiCompatibleChatRequest(settings, payload, config);
     throw new Error("Unsupported AI mode: " + mode);
   }
 
@@ -913,22 +803,13 @@
     var rules = normalizeProviderRules(config.providerRules || assets.providerRules);
     var mode = normalizeAiMode(settings?.aiMode, rules);
     var active = getActiveAiProvider(settings, rules);
-    if (mode === "off" || mode === "local_fallback") {
+    if (mode === "off") {
       return { ok: true, remote: false, mode: mode, providerId: active.providerId, message: "local mode" };
-    }
-    if (mode === "user_proxy_endpoint") {
-      return {
-        ok: Boolean(String(settings?.proxyEndpoint || "").trim()),
-        remote: true,
-        mode: mode,
-        providerId: active.providerId,
-        message: String(settings?.proxyEndpoint || "").trim() ? "proxy endpoint configured" : "missing proxy endpoint"
-      };
     }
     if (!String(settings?.apiKey || "").trim()) {
       return { ok: false, remote: true, mode: mode, providerId: active.providerId, message: "missing api key" };
     }
-    if (mode === "openai_compatible_byok_direct" && !getProviderEndpoint(settings, active.provider)) {
+    if ((mode === "default" || mode === "custom") && !getProviderEndpoint(settings, active.provider)) {
       return { ok: false, remote: true, mode: mode, providerId: active.providerId, message: "missing compatible endpoint" };
     }
     return { ok: true, remote: true, mode: mode, providerId: active.providerId, message: "settings configured" };
@@ -979,13 +860,8 @@
     "buildLocalMechanicExplanationFallback",
     "buildLocalLifeNarrativeFallback",
     "callAiProvider",
-    "callOpenAiByokDirect",
-    "callUserProxyEndpoint",
     "sendAiProviderRequest",
-    "sendOpenAiResponsesRequest",
-    "sendDeepSeekChatCompletionsRequest",
     "sendOpenAiCompatibleChatRequest",
-    "sendUserProxyRequest",
     "normalizeAiProviderResponse",
     "testAiProviderConnection"
   ]);
@@ -1004,7 +880,7 @@
       mutatesCombat: false,
       decidesWinner: false,
       storesSecrets: false,
-      defaultMode: "local_fallback",
+      defaultMode: "default",
       status: "CANDIDATE"
     }),
     expectedExports: expectedExports,
@@ -1037,13 +913,8 @@
     buildLocalMechanicExplanationFallback: buildLocalMechanicExplanationFallback,
     buildLocalLifeNarrativeFallback: buildLocalLifeNarrativeFallback,
     callAiProvider: callAiProvider,
-    callOpenAiByokDirect: callOpenAiByokDirect,
-    callUserProxyEndpoint: callUserProxyEndpoint,
     sendAiProviderRequest: sendAiProviderRequest,
-    sendOpenAiResponsesRequest: sendOpenAiResponsesRequest,
-    sendDeepSeekChatCompletionsRequest: sendDeepSeekChatCompletionsRequest,
     sendOpenAiCompatibleChatRequest: sendOpenAiCompatibleChatRequest,
-    sendUserProxyRequest: sendUserProxyRequest,
     normalizeAiProviderResponse: normalizeAiProviderResponse,
     testAiProviderConnection: testAiProviderConnection
   };

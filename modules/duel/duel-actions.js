@@ -74,7 +74,7 @@
     mechanicLastInvalidatedAt: ""
   };
   var FEATURE_TECHNIQUE_ALIASES = Object.freeze({
-    ten_shadows: ["十种影法术", "十影", "伏黑惠", "伏黑", "嵌合暗翳庭", "shikigami"],
+    ten_shadows: ["十种影法术", "十种影", "十影", "伏黑惠", "megumi", "嵌合暗翳庭", "魔虚罗", "魔须罗", "mahoraga"],
     limitless: ["无下限术式", "无下限", "六眼", "五条悟", "五条", "无量空处", "limitless"],
     blood_manipulation: ["赤血操术", "胀相", "加茂宪纪", "虎杖悠仁", "blood"],
     curse_spirit_manipulation: ["咒灵操术", "夏油杰", "夏油", "羂索", "咒灵群"],
@@ -106,6 +106,14 @@
     moon_dregs: ["淀月", "吉野顺平", "顺平"],
     auspicious_beasts: ["来访瑞兽", "猪野琢真", "猪野"],
     manga_artist: ["漫画家", "查理", "贝尔纳"]
+  });
+  var FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS = Object.freeze({
+    limitless: ["gojo_limitless"],
+    shrine: ["sukuna_slash"],
+    ten_shadows: ["ten_shadows"],
+    idle_death_gamble: ["hakari_jackpot_owner"],
+    copy: ["okkotsu_rika_copy"],
+    idle_transfiguration: ["mahito_soul_transfiguration"]
   });
   var RCT_CHARACTER_IDS = new Set([
     "gojo_satoru_shinjuku",
@@ -993,6 +1001,12 @@
 
   function doesFeatureCardMatchActor(card, snapshot) {
     if (!snapshot?.normalizedText || snapshot.hasInnateTechnique === false) return false;
+    var requiredArchetypes = toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]);
+    if (requiredArchetypes.length && !requiredArchetypes.some(function hasRequiredArchetype(archetype) {
+      return snapshot.ids.some(function hasDirectId(id) {
+        return normalizeFeatureText(id) === normalizeFeatureText(archetype);
+      }) || snapshot.normalizedText.includes(normalizeFeatureText(archetype));
+    })) return false;
     if (snapshot.ids.some(function hasDirectTechnique(id) { return normalizeFeatureText(id) === normalizeFeatureText(card?.techniqueId); })) return true;
     return getFeatureCardAliases(card).some(function hasAlias(alias) {
       return isFeatureAliasMatch(snapshot, alias);
@@ -1115,7 +1129,8 @@
       techniqueName: card?.techniqueName || "",
       ownerOrRepresentative: card?.ownerOrRepresentative || "",
       tags: tags,
-      specialHandTags: [],
+      specialHandTags: uniqueFeatureList([].concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]))),
+      exclusiveToArchetypes: uniqueFeatureList([].concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]))),
       exclusiveToCharacters: snapshot?.ids || [],
       requiresCe: true,
       requiresInnateTechnique: true,
@@ -1337,6 +1352,38 @@
       templates.push(action);
       existingIds.add(id);
     });
+    // 手动注入魔虚罗调幅仪式（伏黑惠专属，不经过卡片模板）
+    if (!existingIds.has("mahoraga_tuning_ritual")) {
+      templates.push({
+        id: "mahoraga_tuning_ritual",
+        sourceActionId: "mahoraga_tuning_ritual",
+        label: "魔虚罗调幅仪式",
+        name: "魔虚罗调幅仪式",
+        cardType: "summon",
+        type: "ten_shadows_ritual",
+        normalHandOnly: true,
+        tags: ["十影", "魔虚罗", "调幅仪式", "召唤", "式神", "仪式"],
+        specialHandTags: ["ten_shadows"],
+        exclusiveToArchetypes: ["ten_shadows"],
+        requiresCe: true,
+        requirements: { domainActive: "any" },
+        apCost: 2,
+        baseCeCost: 0,
+        baseDamage: 0,
+        costType: "percentage",
+        ceCostRatio: 0.5,
+        risk: "critical",
+        effects: {
+          activateDomain: false,
+          summonMahoragaProxy: true,
+          stabilityDelta: 0,
+          weightDeltas: { ten_shadows_ritual: 5 }
+        },
+        effectSummary: "召来未调幅魔虚罗强制接手战斗。魔虚罗存活期间保护召唤者；魔虚罗死亡时召唤者落败。",
+        status: "CONFIRMED"
+      });
+      existingIds.add("mahoraga_tuning_ritual");
+    }
     return templates.filter(function filterIdentityScopedAction(template) {
       return isDuelActionAllowedByActorIdentity(template, actor, battle);
     }).map(function mapTemplate(template) {
@@ -1965,7 +2012,11 @@
       matchupModifiers: cloneDuelPlain(unitTemplate?.matchupModifiers || {}),
       active: true,
       spawnedBy: action.id || action.sourceActionId || "",
-      spawnedRound: round
+      spawnedRound: round,
+      durationRounds: Math.max(0, Number(summonSpec.durationRounds ?? unitTemplate?.durationRounds ?? action.durationRounds ?? 0) || 0),
+      expiresAfterRound: Math.max(0, Number(summonSpec.durationRounds ?? unitTemplate?.durationRounds ?? action.durationRounds ?? 0) || 0)
+        ? round + Math.max(0, Number(summonSpec.durationRounds ?? unitTemplate?.durationRounds ?? action.durationRounds ?? 0) || 0) - 1
+        : 0
     };
     getDuelBattlefieldUnits(battle).push(unit);
     var maintenanceCard = null;
@@ -1990,6 +2041,75 @@
     return { unit: unit, maintenanceCard: maintenanceCard };
   }
 
+  function cleanupExpiredDuelBattlefieldUnits(battle, round) {
+    var currentRound = Number(round || battle?.round || 0) + 1;
+    return getDuelBattlefieldUnits(battle).filter(function cleanup(unit) {
+      if (!unit?.active) return false;
+      var expiresAfterRound = Number(unit.expiresAfterRound || 0);
+      if (!expiresAfterRound || currentRound <= expiresAfterRound) return false;
+      unit.active = false;
+      unit.expiredRound = currentRound;
+      battle.summonLog ||= [];
+      battle.summonLog.unshift({
+        round: currentRound,
+        unitId: unit.id || "",
+        unitName: unit.name || unit.label || "",
+        ownerSide: unit.ownerSide || "",
+        reason: "duration-expired"
+      });
+      return true;
+    });
+  }
+
+  function getFriendlyAssistSummonUnits(battle, side) {
+    return getDuelBattlefieldUnits(battle).filter(function keepUnit(unit) {
+      if (!unit?.active || unit.side === "neutral") return false;
+      if ((unit.controllerSide || unit.ownerSide || unit.side) !== side) return false;
+      if (unit.control === "neutral_uncontrolled" || unit.control === "neutral_berserk") return false;
+      return Number(unit.baseDamage || unit.unitStats?.baseDamage || 0) > 0;
+    });
+  }
+
+  function applyDuelSummonAssist(actor, opponent, battle) {
+    var side = actor?.side || "";
+    if (!side || !battle) return null;
+    var round = Number(battle.round || 0) + 1;
+    battle.summonAssistState ||= {};
+    if (Number(battle.summonAssistState[side] || 0) === round) return null;
+    var units = getFriendlyAssistSummonUnits(battle, side);
+    if (!units.length) return null;
+    var rawDamage = units.reduce(function sumDamage(total, unit) {
+      return total + Number(unit.baseDamage || unit.unitStats?.baseDamage || 0);
+    }, 0);
+    var damage = Math.min(18, Math.max(1, Math.round(rawDamage * 0.18)));
+    if (!damage) return null;
+    var beforeHp = Number(opponent?.hp || 0);
+    opponent.hp = Number(clamp(beforeHp - damage, 0, Number(opponent?.maxHp || beforeHp)).toFixed(1));
+    var stabilityShock = Math.min(0.05, Number((damage / 1000).toFixed(4)));
+    if (stabilityShock > 0) {
+      opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
+    }
+    battle.summonAssistState[side] = round;
+    var result = {
+      round: round,
+      side: side,
+      damage: Number((beforeHp - Number(opponent.hp || 0)).toFixed(1)),
+      stabilityShock: stabilityShock,
+      units: units.map(function mapUnit(unit) {
+        return { id: unit.id || "", name: unit.name || unit.label || "", baseDamage: Number(unit.baseDamage || unit.unitStats?.baseDamage || 0) };
+      }).slice(0, 6)
+    };
+    battle.summonLog ||= [];
+    battle.summonLog.unshift({
+      round: round,
+      actorSide: side,
+      reason: "friendly-summon-assist",
+      damage: result.damage,
+      units: result.units
+    });
+    return result;
+  }
+
   function isMahoragaTuningRitualAction(action) {
     var text = [
       action?.id,
@@ -2005,7 +2125,7 @@
 
   function createMahoragaProxyProfile(sourceProfile, side) {
     var original = sourceProfile || {};
-    var name = "八握剑异戒神将 魔须罗";
+    var name = "八握剑异戒神将 魔虚罗";
     return {
       ...original,
       id: "builtin_mahoraga_proxy_" + (side || "side"),
@@ -2018,8 +2138,47 @@
         label: "内置式神 · 调幅代打",
         value: Math.max(Number(original?.combatPowerUnit?.value || 0), 300)
       },
-      traits: ["完全适应", "八握剑", "魔须罗代打中"],
+      traits: ["完全适应", "八握剑", "魔虚罗代打中"],
       description: "调幅仪式后替代术师参战。会记录对手攻击手札，同名手札每命中一次都会降低后续伤害，第 6 次起归零。"
+    };
+  }
+
+  function isUnfinishedTenShadowsDomainTarget(opponent, battle) {
+    if (!opponent || !isDomainActive(opponent)) return false;
+    var profile = getDuelProfileForSide(battle, opponent.side) || opponent.characterCardProfile || {};
+    var domainState = battle?.domainProfileStates?.[opponent.side] || {};
+    var text = [
+      profile?.id,
+      profile?.name,
+      profile?.displayName,
+      profile?.domainProfile,
+      profile?.techniqueText,
+      profile?.externalResource,
+      domainState?.domainName,
+      domainState?.barrierType,
+      domainState?.domainCompletion,
+      domainState?.effectSummary,
+      opponent.domain?.name,
+      opponent.domain?.label
+    ].filter(Boolean).join(" ");
+    return /伏黑惠|megumi|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭/i.test(text)
+      && /未完成|不完全|incomplete|incomplete_barrier|嵌合暗翳庭/i.test(text);
+  }
+
+  function applyRecontractUnfinishedTenShadowsResolution(action, actor, opponent, battle, directDamage) {
+    var rule = action?.specialResolution?.unfinishedTenShadowsDomainRule;
+    if (!rule) return null;
+    if (isDomainActive(actor)) return null;
+    if (!isUnfinishedTenShadowsDomainTarget(opponent, battle)) return null;
+    var multiplier = Number(rule.damageMultiplier || 1);
+    var adjustedDamage = Math.max(0, Math.round(Number(directDamage || 0) * (Number.isFinite(multiplier) ? multiplier : 1)));
+    return {
+      id: "recontract_unfinished_ten_shadows_domain",
+      treatedAsSureHit: Boolean(rule.treatedAsSureHit),
+      damageBefore: directDamage,
+      damageAfter: adjustedDamage,
+      damageMultiplier: Number((Number.isFinite(multiplier) ? multiplier : 1).toFixed(3)),
+      reason: rule.reason || "unfinished ten shadows domain special resolution"
     };
   }
 
@@ -2054,7 +2213,7 @@
       .filter(function removeDuplicate(effect) { return effect?.id !== "mahoragaSubstitute"; });
     actor.statusEffects.push({
       id: "mahoragaSubstitute",
-      label: "魔须罗代打中",
+      label: "魔虚罗代打中",
       rounds: 999,
       value: 1
     });
@@ -2121,6 +2280,43 @@
     };
   }
 
+
+  function handleMahoragaUnitDefeat(battle, defeatedUnit) {
+    if (!battle || !defeatedUnit || !battle.mahoragaProxy) return null;
+    var unitId = defeatedUnit.id;
+
+    for (var side in battle.mahoragaProxy) {
+        var state = battle.mahoragaProxy[side];
+        if (!state || !state.active || state.unitId !== unitId) continue;
+
+        var actor = callDependency("getDuelResourcePair", [battle, side]);
+        if (!actor) return null;
+
+        // 移除代打状态（解除 HP 锁定）
+        actor.statusEffects = (Array.isArray(actor.statusEffects) ? actor.statusEffects : [])
+            .filter(function(effect) { return effect.id !== "mahoragaSubstitute"; });
+
+        // 魔虚罗被击破后召唤者直接落败
+        actor.hp = 0;
+
+        // 关闭魔虚罗代理标记
+        state.active = false;
+        state.endedRound = Number(battle.round || 0) + 1;
+        battle.actionUiMessage = "魔虚罗代打结束，召唤者体势崩解。";
+
+        callDependency("recordDuelResourceChange", [battle, {
+            side: side,
+            title: "魔虚罗被击破",
+            detail: (side === "left" ? "我方" : "对方") + "召唤的魔虚罗已被击败，体势崩解。",
+            type: "mahoraga_defeat",
+            delta: { hp: -1, mahoragaProxyActive: false }
+        }]);
+
+        return { side: side, actorName: actor.name || "", hpBefore: 1, hpAfter: actor.hp, defeated: true };
+    }
+    return null;
+  }
+
   function getDuelTargetSide(resource, fallback) {
     return resource?.side || resource?.ownerSide || resource?.teamSide || fallback || "";
   }
@@ -2147,6 +2343,32 @@
     if (!unit || unit.defeated) return false;
     if (unit.active === false && getDuelUnitHp(unit) <= 0) return false;
     return getDuelUnitHp(unit) > 0;
+  }
+
+  function getMahoragaProxyUnit(battle, side) {
+    var state = battle?.mahoragaProxy?.[side];
+    if (!state?.active || !state.unitId) return null;
+    return getDuelBattlefieldUnits(battle).find(function findProxyUnit(unit) {
+      return unit?.id === state.unitId && isDuelUnitAlive(unit);
+    }) || null;
+  }
+
+  function isMahoragaProxyProtectingSide(battle, side) {
+    return Boolean(getMahoragaProxyUnit(battle, side));
+  }
+
+  function protectMahoragaSummonerHp(battle, side) {
+    if (!isMahoragaProxyProtectingSide(battle, side)) return false;
+    var actor = callDependency("getDuelResourcePair", [battle, side]);
+    if (!actor || Number(actor.hp || 0) > 0) return false;
+    actor.hp = 1;
+    battle.actionUiMessage = "魔虚罗仍在场，召唤者伤害由调幅仪式保护。";
+    return true;
+  }
+
+  function protectMahoragaSummoners(battle) {
+    protectMahoragaSummonerHp(battle, "left");
+    protectMahoragaSummonerHp(battle, "right");
   }
 
   function getDuelUnitTags(unit) {
@@ -2201,6 +2423,27 @@
   }
 
   function resolveDuelDamageTarget(action, actor, opponent, battle, options) {
+    if (opponent && battle) {
+      var oppSide = opponent.side || "";
+      if (getMahoragaProxyState(battle, oppSide)) {
+        var unit = getDuelBattlefieldUnits(battle).find(function(u) {
+          return u.id === battle.mahoragaProxy[oppSide].unitId && u.active;
+        });
+        if (unit) {
+          return {
+            type: "unit",
+            unit: unit,
+            id: unit.id,
+            name: unit.name,
+            side: "neutral",
+            explicit: false,
+            intercepted: true,
+            selectionMode: "mahoraga_proxy_guard",
+            isMahoragaProxy: true
+          };
+        }
+      }
+    }
     var targetPlan = action?.targetPlan || action?.targetingPlan || {};
     var defenderSide = targetPlan.primaryTargetSide || targetPlan.targetSide || opponent?.side || "";
     var explicitTarget = findDuelBattlefieldTargetById(battle, targetPlan.primaryTargetId || targetPlan.explicitTargetId || targetPlan.targetId, opponent);
@@ -2223,7 +2466,7 @@
     return { type: "character", resource: opponent, id: opponent?.id || opponent?.side || defenderSide, name: opponent?.name || opponent?.label || defenderSide, side: defenderSide, explicit: false, intercepted: false, selectionMode: targetPlan.selectionMode || "opponent_character" };
   }
 
-  function applyDuelHpDamageToTarget(target, amount) {
+  function applyDuelHpDamageToTarget(target, amount, battle) {
     var damage = Math.max(0, Number(amount || 0));
     if (!target || damage <= 0) return { applied: 0, overkill: 0, defeated: false, targetType: target?.type || "" };
     if (target.type === "unit") {
@@ -2231,7 +2474,7 @@
       var appliedToUnit = Math.min(beforeHp, damage);
       var afterHp = Math.max(0, beforeHp - appliedToUnit);
       setDuelUnitHp(target.unit, afterHp);
-      return {
+      var result = {
         targetType: "unit",
         targetId: target.id || "",
         targetName: target.name || "",
@@ -2241,6 +2484,11 @@
         overkill: Number(Math.max(0, damage - appliedToUnit).toFixed(1)),
         defeated: beforeHp > 0 && afterHp <= 0
       };
+      // 若魔虚罗单位被击败，触发召唤者体势归零
+      if (result.defeated && battle) {
+        handleMahoragaUnitDefeat(battle, target.unit);
+      }
+      return result;
     }
     var beforeCharacterHp = Number(target.resource?.hp || 0);
     target.resource.hp = beforeCharacterHp - damage;
@@ -2299,6 +2547,7 @@
   function applyDuelActionEffect(action, actor, opponent, duelState) {
     var battle = getBattle(duelState);
     if (!action || !actor || !opponent || !battle) return null;
+    cleanupExpiredDuelBattlefieldUnits(battle);
     if (action.id === "online_pass_turn" || action.id === "duel_pass_turn" || action.type === "pass") {
       var passResult = {
         costCe: 0,
@@ -2392,9 +2641,11 @@
     var damageTarget = null;
     var damageApplication = null;
     var summonResult = null;
+    var summonAssistResult = null;
     var maintenanceResult = null;
     var mahoragaProxyResult = null;
     var mahoragaAdaptation = null;
+    var specialResolutionResult = null;
     var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
@@ -2410,7 +2661,11 @@
       stabilityShock += 0.085;
       blackFlashStatus = { id: "blackFlashShock", label: actor?.characterCardProfile?.isZeroCe ? "极限打击冲击" : "黑闪冲击", rounds: 1, value: 1 };
     }
-    evasionResult = resolveDuelActionEvasion(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
+    specialResolutionResult = applyRecontractUnfinishedTenShadowsResolution(action, actor, opponent, battle, directDamage);
+    if (specialResolutionResult) directDamage = specialResolutionResult.damageAfter;
+    evasionResult = specialResolutionResult?.treatedAsSureHit
+      ? { checked: true, evaded: false, profile: "special_resolution_sure_hit", hitRate: 1, roll: 0 }
+      : resolveDuelActionEvasion(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
     if (evasionResult?.evaded) {
       showDuelFloatingCombatText(battle, "Miss!", "miss", opponentSide);
       battle.evasionLog ||= [];
@@ -2439,16 +2694,16 @@
     }
     if (!evasionResult?.evaded && instantKillOnHit) {
       directDamage = Math.max(directDamage, Math.ceil(damageTarget?.type === "unit" ? getDuelUnitHp(damageTarget.unit) : Number(opponent.hp || 0)));
-      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
+      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle);
     } else if (!evasionResult?.evaded && effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, {
         skipOpponentDamage: damageTarget?.type === "unit",
         skipOpponentStatus: damageTarget?.type === "unit"
       });
       directDamage = hutianBlackFlashResult.directDamage;
-      if (damageTarget?.type === "unit") damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
+      if (damageTarget?.type === "unit") damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle);
     } else if (!effects.hutianBlackFlash && directDamage > 0) {
-      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage);
+      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle);
     }
     if (!evasionResult?.evaded && blackFlashStatus && damageTarget?.type !== "unit") opponent.statusEffects.push(blackFlashStatus);
     if (!evasionResult?.evaded && damageTarget?.type !== "unit") {
@@ -2465,11 +2720,86 @@
       actualHealing = Math.max(0, Number((Number(actor.hp || 0) - beforeHealHp).toFixed(1)));
     }
     if (isMahoragaTuningRitualAction(action)) {
-      mahoragaProxyResult = activateMahoragaProxy(action, actor, battle);
+      // 魔虚罗调幅仪式：召唤未调幅魔虚罗独立单位，锁定召唤者体势为1
+      if (!battle.mahoragaProxy || !battle.mahoragaProxy[side]?.active) {
+        // 创建未调幅魔虚罗单位（中立，狂暴）
+        var unitId = "mahoraga_unsubdued_" + side + "_" + (Number(battle.round || 0) + 1);
+        var mahoragaUnit = {
+          id: unitId,
+          cardId: "mahoraga_unsubdued_unit",
+          sourceActionId: "mahoraga_unsubdued_unit",
+          name: "八握剑异戒神将 魔虚罗",
+          label: "八握剑异戒神将 魔虚罗（未调幅）",
+          side: "neutral",
+          ownerSide: side,
+          controllerSide: "neutral",
+          control: "neutral_berserk",
+          placement: "battlefield",
+          tags: ["魔虚罗", "狂暴", "适应"],
+          unitStats: {
+            maxHp: 300,
+            currentHp: 300,
+            baseDamage: 60,
+            damageType: "melee",
+            accuracyProfile: "melee",
+            evasionAllowed: false
+          },
+          hp: 300,
+          maxHp: 300,
+          baseDamage: 60,
+          damageType: "melee",
+          accuracyProfile: "melee",
+          evasionAllowed: false,
+          active: true,
+          spawnedBy: action.id,
+          spawnedRound: Number(battle.round || 0) + 1,
+          durationRounds: 0,
+          expiresAfterRound: 0,
+          adaptationMemory: {}
+        };
+        // 标记十影一次召唤（同满象）
+        if (!battle.tenShadowsSummonState) battle.tenShadowsSummonState = {};
+        if (!battle.tenShadowsSummonState[side]) battle.tenShadowsSummonState[side] = {};
+        battle.tenShadowsSummonState[side]["mahoraga_unsubdued_unit"] = {
+          unitId: unitId,
+          unitName: mahoragaUnit.name,
+          uniqueTenShadowsSummon: true
+        };
+        getDuelBattlefieldUnits(battle).push(mahoragaUnit);
+
+        // 锁定召唤者 HP = 1
+        actor.hp = 1;
+        actor.statusEffects = (actor.statusEffects || []).filter(function(e) {
+          return e.id !== "mahoragaSubstitute";
+        });
+        actor.statusEffects.push({
+          id: "mahoragaSubstitute",
+          label: "八握剑异戒神将 魔虚罗 代打中",
+          rounds: 999,
+          value: 1
+        });
+        battle.actionUiMessage = "八握剑异戒神将 魔虚罗 代打中";
+
+        // 建立 proxy 状态记录
+        battle.mahoragaProxy ||= {};
+        battle.mahoragaProxy[side] = {
+          active: true,
+          side: side,
+          unitId: unitId,
+          startedRound: Number(battle.round || 0) + 1,
+          ritualActionId: action.id
+        };
+
+        mahoragaProxyResult = { active: true, unitId: unitId, name: mahoragaUnit.name };
+      } else {
+        mahoragaProxyResult = { active: false, reason: "魔虚罗已经存在于战场" };
+      }
     } else {
       summonResult = applyDuelSummonAction(action, actor, battle);
     }
     maintenanceResult = applyDuelMaintenanceAction(action, actor, battle);
+    summonAssistResult = applyDuelSummonAssist(actor, opponent, battle);
+    protectMahoragaSummoners(battle);
 
     actorContext.outgoingScale *= Number(effects.outgoingScale || 1);
     actorContext.incomingHpScale *= Number(effects.incomingHpScale || 1);
@@ -2531,8 +2861,10 @@
         maintenanceActionId: summonResult.maintenanceCard?.id || ""
       } : undefined,
       maintenance: maintenanceResult || undefined,
+      summonAssist: summonAssistResult || undefined,
       mahoragaProxy: mahoragaProxyResult || undefined,
       mahoragaAdaptation: mahoragaAdaptation || undefined,
+      specialResolution: specialResolutionResult || undefined,
       numericPreview: numericPreview,
       mechanicsApplied: mechanicsApplied.map(function mapMechanic(mechanic) {
         return {
@@ -2582,6 +2914,43 @@
       pool.sort(function sortByScore(a, b) {
         return scoreDuelActionCandidate(b, actor, opponent, battle) - scoreDuelActionCandidate(a, actor, opponent, battle);
       })[0];
+  }
+
+  function resolveMahoragaTurnEndAttack(battle) {
+    if (!battle || !battle.mahoragaProxy) return null;
+    var results = [];
+    Object.keys(battle.mahoragaProxy).forEach(function(side) {
+      var state = battle.mahoragaProxy[side];
+      if (!state.active) return;
+      var unit = getDuelBattlefieldUnits(battle).find(function(u) {
+        return u.id === state.unitId && u.active;
+      });
+      if (!unit) return;
+      // 确定攻击目标：优先攻击十影召唤者（若未影中藏身）
+      
+      var targetSide;
+      // 简化：随机攻击对方角色
+      var opponentSide = side === "left" ? "right" : "left";
+      
+      if (!opponent) return;
+      // 执行 60 伤害攻击
+      var damage = 60;
+      // 魔虚罗对咒灵特攻
+      if (opponent.characterCardProfile?.isCurse || /咒灵/.test(opponent.name || "")) {
+        damage *= 3;
+      }
+      opponent.hp = Math.max(0, (opponent.hp || 0) - damage);
+      // 稳定性冲击
+      opponent.stability = Number(clamp((opponent.stability || 0) - 0.02, 0, 1).toFixed(4));
+      results.push({
+        side: side,
+        targetSide: opponentSide,
+        unitId: unit.id,
+        damage: damage,
+        targetHpAfter: opponent.hp
+      });
+    });
+    return results;
   }
 
   var implementations = {
@@ -2652,6 +3021,7 @@
     invalidateDuelMechanicTemplateCache: invalidateDuelMechanicTemplateCache,
     getDuelMechanicTemplateById: getDuelMechanicTemplateById,
     collectDuelMechanicsForAction: collectDuelMechanicsForAction,
+    resolveMahoragaTurnEndAttack: resolveMahoragaTurnEndAttack,
     getDuelActionCacheStats: function getDuelActionCacheStats() {
       return {
         actionIndexReady: Boolean(actionTemplateIndexCache),

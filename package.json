@@ -6,6 +6,10 @@
     "start:lighthouse": "node server/lighthouse-server.js"
   },
   "dependencies": {
-    "openai": "^6.9.1"
+    "openai": "^6.9.1",
+    "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.44.0"
   }
 }

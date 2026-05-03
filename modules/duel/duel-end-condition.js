@@ -121,6 +121,18 @@
     return Number.isFinite(number) ? number : 0;
   }
 
+  function getBattlefieldUnitHp(unit) {
+    return Math.max(0, numberOrZero(unit?.hp ?? unit?.currentHp ?? unit?.unitStats?.currentHp ?? unit?.unitStats?.maxHp));
+  }
+
+  function isMahoragaProxyProtectingSide(battle, side) {
+    var proxy = battle?.mahoragaProxy?.[side];
+    if (!proxy?.active || !proxy.unitId) return false;
+    return (Array.isArray(battle?.battlefieldUnits) ? battle.battlefieldUnits : []).some(function findActiveProxyUnit(unit) {
+      return unit?.id === proxy.unitId && unit.active !== false && unit.defeated !== true && getBattlefieldUnitHp(unit) > 0;
+    });
+  }
+
   function getSafetyCap(rules, options) {
     var normalized = getDuelEndRules(rules);
     return options?.debugMode
@@ -136,8 +148,8 @@
     if (survivalFloor > 0 && numberOrZero(battle?.round) < survivalFloor) {
       return null;
     }
-    var leftDown = numberOrZero(p1.hp) <= 0;
-    var rightDown = numberOrZero(p2.hp) <= 0;
+    var leftDown = numberOrZero(p1.hp) <= 0 && !isMahoragaProxyProtectingSide(battle, "left");
+    var rightDown = numberOrZero(p2.hp) <= 0 && !isMahoragaProxyProtectingSide(battle, "right");
     if (leftDown && rightDown) {
       return {
         ended: true,

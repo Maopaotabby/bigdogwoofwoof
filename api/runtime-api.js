@@ -1,6 +1,4 @@
 //--AI服务配置与叙事请求--//
-let aiAdminSession = null;
-
 function getAiPromptBuilder() {
   return globalThis.JJKAiPromptBuilder || globalThis.JJKAiPromptApi || null;
 }
@@ -20,7 +18,6 @@ function mergeCardPromptIntoPromptTemplates(promptTemplates, cardPrompt) {
       ...systemPrompt,
       ...(Array.isArray(cardPrompt.specialHandRules) ? ["特殊手札制作规则：", ...cardPrompt.specialHandRules] : []),
       ...(Array.isArray(cardPrompt.domainRules) ? ["特殊领域制作规则：", ...cardPrompt.domainRules] : []),
-      ...(cardPrompt.returnFormat ? ["返回 JSON 结构：", JSON.stringify(cardPrompt.returnFormat)] : []),
       ...(Array.isArray(cardPrompt.hardConstraints) ? ["返回格式硬约束：", ...cardPrompt.hardConstraints] : [])
     ],
     dynamicSections: Array.from(new Set([
@@ -35,7 +32,7 @@ function mergeCardPromptIntoPromptTemplates(promptTemplates, cardPrompt) {
       "mechanismHints",
       "cardPrompt"
     ])),
-    maxOutputChars: Math.max(Number(existing.maxOutputChars || 0), 3200)
+    maxOutputChars: Math.max(Number(existing.maxOutputChars || 0), 1800)
   };
   return next;
 }
@@ -84,16 +81,22 @@ function getAiDefaultProviderMode() {
   const builder = getAiPromptBuilder();
   const mode = state.aiProviderRules?.defaultMode ||
     builder?.getAiProviderRules?.().defaultMode ||
-    "local_fallback";
+    "default";
   return normalizeAiProviderMode(mode);
 }
 
 function normalizeAiProviderMode(mode) {
   const builder = getAiPromptBuilder();
   if (builder?.normalizeAiMode) return builder.normalizeAiMode(mode, state.aiProviderRules);
-  return ["off", "local_fallback", "openai_byok_direct", "deepseek_byok_direct", "openai_compatible_byok_direct", "user_proxy_endpoint"].includes(mode)
-    ? mode
-    : "local_fallback";
+  const text = String(mode || "").trim();
+  const legacyModes = {
+    local_fallback: "off",
+    openai_byok_direct: "custom",
+    deepseek_byok_direct: "custom",
+    openai_compatible_byok_direct: "default",
+    user_proxy_endpoint: "custom"
+  };
+  return legacyModes[text] || (["off", "default", "custom"].includes(text) ? text : "default");
 }
 
 function getAiProviderList() {
@@ -118,56 +121,23 @@ function inferAiProviderIdForMode(mode) {
   if (defaultProviderId && getAiProviderList().some((provider) => provider.providerId === defaultProviderId && (!Array.isArray(provider.modes) || provider.modes.includes(normalized)))) {
     return defaultProviderId;
   }
-  if (normalized === "openai_byok_direct") return "openai";
-  if (normalized === "deepseek_byok_direct") return "deepseek";
-  if (normalized === "openai_compatible_byok_direct") return "openai_compatible";
-  if (normalized === "user_proxy_endpoint") return "user_proxy";
+  if (normalized === "default") return "ark_ai";
+  if (normalized === "custom") return "openai_compatible";
   return "";
 }
 
-function getSameOriginAiProxyEndpoint() {
-  const location = globalThis.location;
-  const hostname = String(location?.hostname || "");
-  if (!hostname || ["localhost", "127.0.0.1", "::1"].includes(hostname) || hostname.endsWith("github.io") || hostname.endsWith("pages.dev")) return "";
-  if (!/^https?:$/.test(String(location?.protocol || ""))) return "";
-  try {
-    return normalizeAiEndpoint(new URL("/ai", location.href).href);
-  } catch {
-    return "";
-  }
-}
-
-function getAiDefaultProxyEndpoint() {
-  return getSameOriginAiProxyEndpoint() || normalizeAiEndpoint(state.aiProviderRules?.defaultProxyEndpoint || "");
-}
-
 function getDirectAiModes() {
-  return ["openai_byok_direct", "deepseek_byok_direct", "openai_compatible_byok_direct"];
+  return ["default", "custom"];
 }
 
 function getProviderModeForProviderId(providerId) {
   const id = String(providerId || "").trim();
-  const currentMode = getAiProviderMode();
-  const provider = getAiProviderConfig(id);
-  if (provider && Array.isArray(provider.modes) && provider.modes.includes(currentMode)) return currentMode;
-  if (id === state.aiProviderRules?.defaultProviderId && state.aiProviderRules?.defaultMode) return normalizeAiProviderMode(state.aiProviderRules.defaultMode);
-  if (id === "openai") return "openai_byok_direct";
-  if (id === "deepseek") return "deepseek_byok_direct";
-  if (id === "openai_compatible" || id === "ark_ai") return "openai_compatible_byok_direct";
-  if (id === "user_proxy") return "user_proxy_endpoint";
+  if (id === "ark_ai") return "default";
+  if (id === "openai_compatible") return "custom";
   return getAiProviderMode();
 }
 
 function initializeAiNarrativePanel() {
-  if (els.aiEndpointInput) {
-    els.aiEndpointInput.value = readSafeStorage(window.localStorage, AI_ENDPOINT_STORAGE_KEY, DEFAULT_AI_ENDPOINT);
-  }
-  if (els.aiCnEndpointInput) {
-    els.aiCnEndpointInput.value = readSafeStorage(window.localStorage, AI_CN_ENDPOINT_STORAGE_KEY, DEFAULT_CN_AI_ENDPOINT);
-  }
-  if (els.aiEndpointMode) {
-    els.aiEndpointMode.value = getStoredAiEndpointMode();
-  }
   if (els.aiProviderMode) {
     els.aiProviderMode.value = getStoredAiProviderMode();
   }
@@ -175,9 +145,6 @@ function initializeAiNarrativePanel() {
     els.aiProviderIdInput.value = readSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, inferAiProviderIdForMode(getStoredAiProviderMode()) || state.aiProviderRules?.defaultProviderId || "ark_ai");
   }
   syncAiProviderForMode(false);
-  if (els.aiProxyEndpointInput) {
-    els.aiProxyEndpointInput.value = readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, getAiDefaultProxyEndpoint());
-  }
   const activeProvider = getAiProviderConfig(els.aiProviderIdInput?.value || getStoredAiProviderMode());
   if (els.aiBaseUrlInput) {
     els.aiBaseUrlInput.value = readSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, activeProvider?.baseUrl || "");
@@ -195,9 +162,8 @@ function initializeAiNarrativePanel() {
     els.aiByokPersistLocal.checked = readSafeStorage(window.localStorage, AI_BYOK_PERSIST_LOCAL_STORAGE_KEY, "no") === "yes";
   }
   if (els.aiByokKeyInput) {
-    els.aiByokKeyInput.value = readAiByokKey() || activeProvider?.defaultApiKey ? "••••••••••••" : "";
+    els.aiByokKeyInput.value = (readAiByokKey() || activeProvider?.defaultApiKey) ? "••••••••••••" : "";
   }
-  updateAiAdminStatus();
   updateAiProviderUi();
   updateAiNarrativeStatus(getAiEndpointModeHint());
 }
@@ -216,29 +182,10 @@ function isDuelAiAssistEnabled() {
   return window.localStorage.getItem(DUEL_AI_ASSIST_STORAGE_KEY) === "yes";
 }
 
-function saveAiEndpoint() {
-  const endpoint = normalizeAiEndpoint(els.aiEndpointInput?.value || "");
-  const cnEndpoint = normalizeAiEndpoint(els.aiCnEndpointInput?.value || "");
-  if (!endpoint && !cnEndpoint) {
-    window.localStorage.removeItem(AI_ENDPOINT_STORAGE_KEY);
-    window.localStorage.removeItem(AI_CN_ENDPOINT_STORAGE_KEY);
-    if (els.aiEndpointInput) els.aiEndpointInput.value = "";
-    if (els.aiCnEndpointInput) els.aiCnEndpointInput.value = "";
-    updateAiNarrativeStatus("已清空调试服务地址。");
-    return;
-  }
-  if (endpoint) window.localStorage.setItem(AI_ENDPOINT_STORAGE_KEY, endpoint);
-  else window.localStorage.removeItem(AI_ENDPOINT_STORAGE_KEY);
-  if (cnEndpoint) window.localStorage.setItem(AI_CN_ENDPOINT_STORAGE_KEY, cnEndpoint);
-  else window.localStorage.removeItem(AI_CN_ENDPOINT_STORAGE_KEY);
-  saveAiEndpointMode();
-  if (els.aiEndpointInput) els.aiEndpointInput.value = endpoint;
-  if (els.aiCnEndpointInput) els.aiCnEndpointInput.value = cnEndpoint;
-  updateAiNarrativeStatus("调试服务地址已保存。");
-}
-
 function getAiProviderId() {
   const mode = getAiProviderMode();
+  if (mode === "off") return "";
+  if (mode === "default") return "ark_ai";
   const explicit = String(els.aiProviderIdInput?.value || readSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, "")).trim();
   return explicit || inferAiProviderIdForMode(mode);
 }
@@ -253,11 +200,7 @@ function getAiProviderMaxOutputTokens() {
 }
 
 function getStoredAiProviderMode() {
-  const storedMode = normalizeAiProviderMode(readSafeStorage(window.localStorage, AI_PROVIDER_MODE_STORAGE_KEY, getAiDefaultProviderMode()));
-  if (getDirectAiModes().includes(storedMode) && !readAiByokKey() && getAiDefaultProviderMode() === "user_proxy_endpoint") {
-    return "user_proxy_endpoint";
-  }
-  return storedMode;
+  return normalizeAiProviderMode(readSafeStorage(window.localStorage, AI_PROVIDER_MODE_STORAGE_KEY, getAiDefaultProviderMode()));
 }
 
 function getAiProviderMode() {
@@ -269,13 +212,16 @@ function getAiProviderBaseUrl() {
   const provider = getAiProviderConfig(getAiProviderId() || mode);
   const stored = readSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, "");
   const input = String(els.aiBaseUrlInput?.value || stored || "").trim();
-  if (mode === "openai_compatible_byok_direct") return normalizeAiEndpoint(input);
+  if (mode === "custom") return normalizeAiEndpoint(input);
   return provider?.baseUrl || normalizeAiEndpoint(input);
 }
 
 function getAiProviderPath() {
   const provider = getAiProviderConfig(getAiProviderId() || getAiProviderMode());
-  return String(els.aiPathInput?.value || readSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, provider?.defaultPath || "") || provider?.defaultPath || "").trim();
+  if (getAiProviderMode() === "custom") {
+    return String(els.aiPathInput?.value || readSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, provider?.defaultPath || "") || provider?.defaultPath || "").trim();
+  }
+  return String(provider?.defaultPath || "").trim();
 }
 
 function syncAiProviderForMode(shouldUpdateModel = false) {
@@ -286,10 +232,10 @@ function syncAiProviderForMode(shouldUpdateModel = false) {
   const providerId = currentSupportsMode ? currentProviderId : inferAiProviderIdForMode(mode);
   if (els.aiProviderIdInput && providerId && els.aiProviderIdInput.value !== providerId) els.aiProviderIdInput.value = providerId;
   const provider = getAiProviderConfig(providerId || mode);
-  if (els.aiBaseUrlInput && provider?.baseUrl && mode !== "openai_compatible_byok_direct") {
+  if (els.aiBaseUrlInput && provider?.baseUrl && mode !== "custom") {
     els.aiBaseUrlInput.value = provider.baseUrl;
   }
-  if (els.aiPathInput && provider?.defaultPath && mode !== "openai_compatible_byok_direct") {
+  if (els.aiPathInput && provider?.defaultPath && mode !== "custom") {
     els.aiPathInput.value = provider.defaultPath;
   }
   if (shouldUpdateModel && els.aiModelInput && provider?.defaultModel) {
@@ -330,61 +276,23 @@ function clearAiByokKey() {
   updateAiNarrativeStatus("已清除本机保存的 API Key。其他 AI 设置未被删除。");
 }
 
-function clearAiProxyEndpoint() {
-  removeSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY);
-  if (els.aiProxyEndpointInput) els.aiProxyEndpointInput.value = getAiDefaultProxyEndpoint();
-  updateAiProviderUi();
-  updateAiNarrativeStatus("已清除本机保存的 Proxy Endpoint，当前使用服务器默认 AI 代理。");
-}
-
 function clearAllAiProviderSettings() {
   [
     AI_PROVIDER_MODE_STORAGE_KEY,
     AI_PROVIDER_ID_STORAGE_KEY,
     AI_BASE_URL_STORAGE_KEY,
     AI_PATH_STORAGE_KEY,
-    AI_PROXY_ENDPOINT_STORAGE_KEY,
     AI_MODEL_STORAGE_KEY,
     AI_OUTPUT_TOKENS_STORAGE_KEY,
     AI_BYOK_PERSIST_LOCAL_STORAGE_KEY
   ].forEach((key) => removeSafeStorage(window.localStorage, key));
   clearAiByokKey();
-  clearAiProxyEndpoint();
   if (els.aiProviderMode) els.aiProviderMode.value = getAiDefaultProviderMode();
   if (els.aiProviderIdInput) els.aiProviderIdInput.value = inferAiProviderIdForMode(getAiProviderMode()) || state.aiProviderRules?.defaultProviderId || "ark_ai";
-  if (els.aiProxyEndpointInput) els.aiProxyEndpointInput.value = getAiDefaultProxyEndpoint();
   if (els.aiModelInput) els.aiModelInput.value = getAiProviderDefaultModel();
   if (els.aiOutputTokenInput) els.aiOutputTokenInput.value = String(getAiProviderMaxOutputTokens());
   updateAiProviderUi();
-  updateAiNarrativeStatus("已清除全部 AI Provider 设置；当前回到服务器默认 AI 代理。");
-}
-
-function getAiAdminAuth() {
-  return aiAdminSession && aiAdminSession.id && aiAdminSession.password ? { ...aiAdminSession } : null;
-}
-
-function updateAiAdminStatus(message) {
-  if (!els.aiAdminStatus) return;
-  els.aiAdminStatus.textContent = message || (getAiAdminAuth() ? "管理员已登录，本标签页 AI辅助角色生成不受普通 IP 限制。" : "管理员未登录。");
-}
-
-function loginAiAdmin() {
-  const id = String(els.aiAdminIdInput?.value || "").trim();
-  const password = String(els.aiAdminPasswordInput?.value || "");
-  if (!id || !password) {
-    updateAiAdminStatus("请输入管理员 ID 和密码。");
-    return;
-  }
-  aiAdminSession = { id, password };
-  if (els.aiAdminPasswordInput) els.aiAdminPasswordInput.value = "";
-  updateAiAdminStatus("管理员凭据已载入本标签页；下一次服务器代理请求会进行服务器校验。");
-}
-
-function logoutAiAdmin() {
-  aiAdminSession = null;
-  if (els.aiAdminIdInput) els.aiAdminIdInput.value = "";
-  if (els.aiAdminPasswordInput) els.aiAdminPasswordInput.value = "";
-  updateAiAdminStatus("管理员已退出。");
+  updateAiNarrativeStatus("已清除全部 AI Provider 设置；当前回到默认 ArkAI 路径。");
 }
 
 function saveAiProviderSettings() {
@@ -392,13 +300,14 @@ function saveAiProviderSettings() {
   const providerId = getAiProviderId() || inferAiProviderIdForMode(mode);
   writeSafeStorage(window.localStorage, AI_PROVIDER_MODE_STORAGE_KEY, mode);
   writeSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, providerId);
-  writeSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, mode === "openai_compatible_byok_direct" ? getAiProviderBaseUrl() : "");
-  writeSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, mode === "openai_compatible_byok_direct" ? getAiProviderPath() : "");
-  writeSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, normalizeAiEndpoint(els.aiProxyEndpointInput?.value || getAiDefaultProxyEndpoint()));
-  writeSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, String(els.aiModelInput?.value || getAiProviderDefaultModel()).trim() || getAiProviderDefaultModel());
-  writeSafeStorage(window.localStorage, AI_OUTPUT_TOKENS_STORAGE_KEY, String(clamp(Number(els.aiOutputTokenInput?.value || getAiProviderMaxOutputTokens()), 64, 4000)));
-  writeSafeStorage(window.localStorage, AI_BYOK_PERSIST_LOCAL_STORAGE_KEY, els.aiByokPersistLocal?.checked ? "yes" : "no");
-  if (els.aiByokKeyInput?.value && !/^•+$/.test(els.aiByokKeyInput.value.trim())) {
+  if (mode === "custom") {
+    writeSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, getAiProviderBaseUrl());
+    writeSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, getAiProviderPath());
+    writeSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, String(els.aiModelInput?.value || getAiProviderDefaultModel()).trim() || getAiProviderDefaultModel());
+    writeSafeStorage(window.localStorage, AI_OUTPUT_TOKENS_STORAGE_KEY, String(clamp(Number(els.aiOutputTokenInput?.value || getAiProviderMaxOutputTokens()), 64, 4000)));
+    writeSafeStorage(window.localStorage, AI_BYOK_PERSIST_LOCAL_STORAGE_KEY, els.aiByokPersistLocal?.checked ? "yes" : "no");
+  }
+  if (mode === "custom" && els.aiByokKeyInput?.value && !/^•+$/.test(els.aiByokKeyInput.value.trim())) {
     saveAiByokKey(els.aiByokKeyInput.value, Boolean(els.aiByokPersistLocal?.checked));
     els.aiByokKeyInput.value = "••••••••••••";
   }
@@ -410,16 +319,18 @@ function getAiProviderSettings() {
   const aiMode = getAiProviderMode();
   const providerId = getAiProviderId() || inferAiProviderIdForMode(aiMode);
   const provider = getAiProviderConfig(providerId || aiMode);
+  const model = aiMode === "default"
+    ? (provider?.defaultModel || state.aiProviderRules?.defaultModel || getAiProviderDefaultModel())
+    : String(els.aiModelInput?.value || readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, getAiProviderDefaultModel())).trim() || getAiProviderDefaultModel();
   return {
     aiMode,
     providerId,
-    endpointType: provider?.endpointType || (aiMode === "openai_byok_direct" ? "responses" : aiMode === "user_proxy_endpoint" ? "proxy" : "chat_completions"),
+    endpointType: provider?.endpointType || "chat_completions",
     baseUrl: getAiProviderBaseUrl(),
     path: getAiProviderPath(),
-    model: String(els.aiModelInput?.value || readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, getAiProviderDefaultModel())).trim() || getAiProviderDefaultModel(),
+    model,
     maxOutputTokens,
     maxPromptTokens: Number(state.aiProviderRules?.maxPromptTokens || state.aiProviderRules?.tokenBudget?.maxPromptTokens || 6000),
-    proxyEndpoint: normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, getAiDefaultProxyEndpoint())),
     byokPersistLocal: Boolean(els.aiByokPersistLocal?.checked),
     apiKey: getDirectAiModes().includes(aiMode) ? (readAiByokKey() || provider?.defaultApiKey || state.aiProviderRules?.defaultApiKey || "") : ""
   };
@@ -437,49 +348,46 @@ function updateAiProviderUi() {
   const providerId = getAiProviderId() || inferAiProviderIdForMode(mode);
   const provider = getAiProviderConfig(providerId || mode);
   const isDirect = getDirectAiModes().includes(mode);
-  const isCompatible = mode === "openai_compatible_byok_direct";
+  const isCustom = mode === "custom";
   if (els.aiProviderWarning) {
-    const warning = isDirect
-      ? (provider?.defaultApiKey
-        ? "安全提示：当前版本内置了默认 Provider API Key，仅适合本地或私有测试；公开部署会暴露调用额度。"
-        : "安全提示：官方不建议在浏览器中暴露 API Key。此模式仅适合个人本地使用。Key 只保存在你的浏览器中，不会上传到本站服务器。请自行承担泄露与调用费用风险。")
-      : mode === "user_proxy_endpoint"
-        ? (providerId === "ark_ai"
-          ? "服务器 ArkAI 代理：网站只发送 prompt payload，API Key 保存在服务器端。"
-          : "推荐模式：请填写你自己部署的 Proxy Endpoint。网站只发送 prompt payload，真实 API key 应保存在你的 proxy。")
-        : "当前不会调用远程 AI，也不会消耗任何 API token。";
+    const warning = mode === "off"
+      ? "AI 已关闭：三个 AI 入口都会使用本地 fallback，不调用远程服务。"
+      : mode === "default"
+        ? "默认模式：使用内置 ArkAI Base URL、Path、Model 和默认 Key；自定义窗口已隐藏。"
+        : "自定义模式：请填写 Base URL、Path、Model 和 API Key；这些设置只保存在你的浏览器中。";
     els.aiProviderWarning.textContent = warning;
-    els.aiProviderWarning.classList.toggle("error-text", isDirect);
+    els.aiProviderWarning.classList.toggle("error-text", isCustom);
   }
   document.querySelectorAll("[data-ai-mode-panel]").forEach((panel) => {
     const panelModes = String(panel.dataset.aiModePanel || "").split(/\s+/);
     panel.hidden = !panelModes.includes(mode);
   });
+  document.querySelectorAll("[data-ai-custom-setting]").forEach((panel) => {
+    panel.hidden = !isCustom;
+  });
   document.querySelectorAll("[data-ai-provider-panel]").forEach((panel) => {
     const panelProviders = String(panel.dataset.aiProviderPanel || "").split(/\s+/);
-    panel.hidden = !panelProviders.includes(providerId);
+    panel.hidden = !isCustom || !panelProviders.includes(providerId);
   });
   if (els.aiProviderIdInput && providerId && els.aiProviderIdInput.value !== providerId) {
     els.aiProviderIdInput.value = providerId;
   }
   if (els.aiBaseUrlInput) {
-    els.aiBaseUrlInput.disabled = !isCompatible || provider?.allowCustomBaseUrl === false;
-    els.aiBaseUrlInput.placeholder = isCompatible ? "https://your-compatible-provider.example/v1" : (provider?.baseUrl || "");
+    els.aiBaseUrlInput.disabled = !isCustom || provider?.allowCustomBaseUrl === false;
+    els.aiBaseUrlInput.placeholder = isCustom ? "https://your-compatible-provider.example/v1" : (provider?.baseUrl || "");
   }
   if (els.aiPathInput) {
-    els.aiPathInput.disabled = !isCompatible || provider?.allowCustomPath === false;
+    els.aiPathInput.disabled = !isCustom || provider?.allowCustomPath === false;
     els.aiPathInput.placeholder = provider?.defaultPath || "/chat/completions";
   }
+  if (els.aiModelInput) els.aiModelInput.disabled = !isCustom || provider?.allowCustomModel === false;
+  if (els.aiOutputTokenInput) els.aiOutputTokenInput.disabled = !isCustom;
   if (els.aiFallbackStatus) {
     els.aiFallbackStatus.textContent = mode === "off"
-      ? "AI 已关闭：所有 AI 入口都只返回本地规则说明。"
-      : mode === "local_fallback"
-        ? "本地 fallback：不调用 API，适合零成本使用。"
-      : mode === "user_proxy_endpoint"
-          ? (providerId === "ark_ai"
-            ? "服务器 ArkAI 代理：无需在网页输入 API Key。"
-            : "User proxy：只向你的 endpoint 发送 prompt payload，不需要在网页输入 API Key。")
-          : `BYOK direct：只在请求时把你的 key 发送给 ${provider?.label || providerId || "所选 Provider"}。`;
+      ? "AI 已关闭：AI生成对战过程、角色经历、自定义角色辅助都不会调用远程服务。"
+      : mode === "default"
+        ? "默认：三个 AI 入口统一走 ArkAI 路径。"
+        : `自定义：三个 AI 入口统一走 ${provider?.label || providerId || "自定义 Provider"} 路径。`;
   }
   if (els.globalSettingsStatus) {
     els.globalSettingsStatus.textContent = `当前 AI：${getAiEndpointModeHint()} 模型：${getAiProviderSettings().model || "未设置"}`;
@@ -499,7 +407,7 @@ function updateAiCostEstimate(payload = null) {
       : `估算 prompt token：待生成；最大输出 token：${maxOutputTokens}`;
   }
   if (els.aiCostNotice) {
-    els.aiCostNotice.textContent = "玩家自行承担 API 费用；local fallback / off 不消耗 token。";
+    els.aiCostNotice.textContent = "关闭模式不消耗 token；默认 / 自定义模式会调用统一 AI Provider 路径。";
   }
 }
 
@@ -510,20 +418,16 @@ async function testAiProviderConnection() {
   const localCheck = builder?.testAiProviderConnection
     ? builder.testAiProviderConnection(settings, { providerRules: state.aiProviderRules })
     : null;
-  if (settings.aiMode === "off" || settings.aiMode === "local_fallback") {
-    updateAiNarrativeStatus("当前为本地模式：不会发起远程连接测试。");
+  if (settings.aiMode === "off") {
+    updateAiNarrativeStatus("当前为关闭模式：不会发起远程连接测试。");
     return;
   }
   if (getDirectAiModes().includes(settings.aiMode) && !settings.apiKey) {
     updateAiNarrativeStatus("请先输入你自己的 Provider API Key。", true);
     return;
   }
-  if (settings.aiMode === "openai_compatible_byok_direct" && (!settings.baseUrl || !settings.model)) {
-    updateAiNarrativeStatus("请先填写自定义兼容 Provider 的 Base URL 和 Model。", true);
-    return;
-  }
-  if (settings.aiMode === "user_proxy_endpoint" && !settings.proxyEndpoint) {
-    updateAiNarrativeStatus("请先输入你的 Proxy endpoint。", true);
+  if (settings.aiMode === "custom" && (!settings.baseUrl || !settings.model)) {
+    updateAiNarrativeStatus("请先填写自定义 Provider 的 Base URL、Path 和 Model。", true);
     return;
   }
   updateAiNarrativeStatus(localCheck?.ok === false
@@ -566,9 +470,9 @@ async function generateAiNarrative() {
   }
 
   els.generateAiNarrativeBtn.disabled = true;
-  updateAiNarrativeStatus(getAiProviderMode() === "local_fallback" || getAiProviderMode() === "off"
+  updateAiNarrativeStatus(getAiProviderMode() === "off"
     ? "正在使用本地 fallback 整理记录，不会调用 API。"
-    : "正在按 token 预算构造 prompt 并调用你配置的 AI Provider。");
+    : "正在通过统一 AI 路径构造 prompt 并调用当前 Provider。");
   renderAiNarrativeOutput("生成中...");
 
   try {
@@ -603,12 +507,6 @@ async function generateAiNarrative() {
 }
 
 async function requestAiNarrative(endpoint, payload) {
-  if (endpoint) {
-    return requestUserProxyAiPayload(endpoint, buildAiPromptPayload("article_summary", payload), {
-      promptTemplateId: "article_summary",
-      timeoutMs: AI_REQUEST_TIMEOUT_MS
-    });
-  }
   return requestAiGoverned("article_summary", payload, {
     timeoutMs: AI_REQUEST_TIMEOUT_MS,
     localFallbackText: buildLocalLifeNarrativeFallback(payload)
@@ -652,48 +550,27 @@ async function requestAiGoverned(templateId, context, options = {}) {
   const settings = getAiProviderSettings();
   const promptPayload = buildAiPromptPayload(templateId, context, options);
   const localFallbackText = options.localFallbackText || buildLocalAiFallbackText(templateId, context);
-  const localResponse = (reason, error) => ({
-    provider: settings.aiMode || "local_fallback",
+  const localResponse = (reason) => ({
+    provider: settings.aiMode || "off",
     model: settings.model,
     text: localFallbackText,
     markdown: localFallbackText,
     localFallback: true,
     fallbackUsed: true,
     fallbackReason: reason || "",
-    rateLimit: error?.rateLimit || null,
-    remoteError: error?.message || "",
-    remoteStatus: error?.status || null,
     promptMetadata: promptPayload.metadata || null
   });
 
-  if (settings.aiMode === "off" || settings.aiMode === "local_fallback") {
+  if (settings.aiMode === "off") {
     return localResponse("mode:" + settings.aiMode);
   }
   if (getDirectAiModes().includes(settings.aiMode) && !settings.apiKey) {
     return localResponse("missing-byok-key");
   }
-  if (settings.aiMode === "openai_compatible_byok_direct" && (!settings.baseUrl || !settings.model)) {
+  if (settings.aiMode === "custom" && (!settings.baseUrl || !settings.model)) {
     return localResponse("missing-compatible-provider-config");
   }
-  if (settings.aiMode === "user_proxy_endpoint" && !settings.proxyEndpoint) {
-    return localResponse("missing-proxy-endpoint");
-  }
   try {
-    if (settings.aiMode === "user_proxy_endpoint") {
-      const data = await requestUserProxyAiPayload(settings.proxyEndpoint, promptPayload, {
-        promptTemplateId: templateId,
-        timeoutMs: options.timeoutMs || AI_REQUEST_TIMEOUT_MS,
-        clientRequest: options.clientRequest || undefined
-      });
-      const text = data.text || data.markdown || "";
-      return {
-        ...(data || {}),
-        text,
-        markdown: data.markdown || text,
-        localFallback: false,
-        usage: data.usage || null
-      };
-    }
     if (!builder?.callAiProvider) throw new Error("AI prompt builder is unavailable.");
     const result = await callAiProviderWithTimeout(builder, settings, promptPayload, {
       promptTemplateId: templateId,
@@ -712,7 +589,7 @@ async function requestAiGoverned(templateId, context, options = {}) {
       promptMetadata: promptPayload.metadata || null
     };
   } catch (error) {
-    return localResponse(error?.status ? `HTTP ${error.status}` : (error?.message || "provider-failed"), error);
+    return localResponse(error?.status ? `HTTP ${error.status}` : (error?.message || "provider-failed"));
   }
 }
 
@@ -736,36 +613,6 @@ async function callAiProviderWithTimeout(builder, settings, promptPayload, optio
   }
 }
 
-async function requestUserProxyAiPayload(endpoint, promptPayload, options = {}) {
-  const normalized = normalizeAiEndpoint(endpoint);
-  if (!normalized) throw new Error("Proxy endpoint 无效。");
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), options.timeoutMs || AI_REQUEST_TIMEOUT_MS);
-  const response = await fetch(normalized, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      providerId: options.providerId || getAiProviderSettings().providerId || "user_proxy",
-      endpointType: options.endpointType || getAiProviderSettings().endpointType || "proxy",
-      payload: promptPayload,
-      siteVersion: APP_BUILD_VERSION,
-      promptTemplateId: options.promptTemplateId || promptPayload.metadata?.templateId || "",
-      clientRequest: options.clientRequest || undefined,
-      adminAuth: getAiAdminAuth() || undefined
-    }),
-    signal: controller.signal
-  }).finally(() => window.clearTimeout(timeoutId));
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(data.error || `HTTP ${response.status}`);
-    error.status = response.status;
-    error.rateLimit = data.rateLimit || null;
-    error.responseData = data;
-    throw error;
-  }
-  return data;
-}
-
 function buildLocalAiFallbackText(templateId, context) {
   if (templateId === "life_narrative" || templateId === "article_summary") return buildLocalLifeNarrativeFallback(context);
   if (templateId === "battle_narration") return buildLocalDuelBattleNarrativeAssist({ battle: context?.battle || context })?.battleText ||
@@ -785,60 +632,12 @@ function buildLocalLifeNarrativeFallback(context) {
   return `AI 未调用。本地摘要：${records.map((record) => `【${record.title || record.nodeId || "节点"}】${record.result || "已记录"}`).join("；")}。`;
 }
 
-function getAiEndpointCandidates() {
-  if (getAiProviderMode() === "user_proxy_endpoint") {
-    const proxyEndpoint = normalizeAiEndpoint(els.aiProxyEndpointInput?.value || readSafeStorage(window.localStorage, AI_PROXY_ENDPOINT_STORAGE_KEY, getAiDefaultProxyEndpoint()));
-    return proxyEndpoint ? [{ id: "user_proxy_endpoint", label: "玩家自托管 Proxy", endpoint: proxyEndpoint }] : [];
-  }
-  const mode = getAiEndpointMode();
-  const globalEndpoint = normalizeAiEndpoint(els.aiEndpointInput?.value || readSafeStorage(window.localStorage, AI_ENDPOINT_STORAGE_KEY, DEFAULT_AI_ENDPOINT));
-  const cnEndpoint = normalizeAiEndpoint(els.aiCnEndpointInput?.value || readSafeStorage(window.localStorage, AI_CN_ENDPOINT_STORAGE_KEY, DEFAULT_CN_AI_ENDPOINT));
-  const routeSets = {
-    global: [{ id: "global", label: "海外线路", endpoint: globalEndpoint }],
-    cn: [{ id: "cn", label: "国内备用线路", endpoint: cnEndpoint }],
-    auto: [
-      { id: "global", label: "海外线路", endpoint: globalEndpoint },
-      { id: "cn", label: "国内备用线路", endpoint: cnEndpoint }
-    ]
-  };
-  const seen = new Set();
-  return (routeSets[mode] || routeSets.auto)
-    .filter((item) => item.endpoint)
-    .filter((item) => {
-      if (seen.has(item.endpoint)) return false;
-      seen.add(item.endpoint);
-      return true;
-    });
-}
-
-function getStoredAiEndpointMode() {
-  const mode = readSafeStorage(window.localStorage, AI_ENDPOINT_MODE_STORAGE_KEY, "auto");
-  return ["auto", "global", "cn"].includes(mode) ? mode : "auto";
-}
-
-function getAiEndpointMode() {
-  const mode = els.aiEndpointMode?.value || getStoredAiEndpointMode();
-  return ["auto", "global", "cn"].includes(mode) ? mode : "auto";
-}
-
-function saveAiEndpointMode() {
-  writeSafeStorage(window.localStorage, AI_ENDPOINT_MODE_STORAGE_KEY, getAiEndpointMode());
-}
-
 function getAiEndpointModeHint() {
   const providerMode = getAiProviderMode();
   if (providerMode === "off") return "AI 已关闭：不会调用任何远程服务。";
-  if (providerMode === "local_fallback") return "当前为本地 fallback：不调用 API，也不消耗 token。";
-  if (providerMode === "openai_byok_direct") return "当前为玩家自带 OpenAI API Key（实验性）：请确认 key 只保存在本机。";
-  if (providerMode === "deepseek_byok_direct") return "当前为玩家自带 DeepSeek API Key（实验性）：DeepSeek 可选，key 只保存在本机。";
-  if (providerMode === "openai_compatible_byok_direct") {
-    const provider = getAiProviderConfig(getAiProviderId() || providerMode);
-    return provider?.providerId === "ark_ai"
-      ? "当前为 ArkAI / 火山方舟 OpenAI-compatible 调用：请在 AI 设置中填写 Ark API Key，模型使用 Ark endpoint/model ID。"
-      : "当前为自定义 OpenAI-compatible Provider：请确认 Base URL、Path、Model 和 key 均来自你信任的服务。";
-  }
-  if (providerMode === "user_proxy_endpoint") return "当前为玩家自托管 Proxy Endpoint（推荐）：网站只发送 prompt payload。";
-  return "当前 AI 模式未识别，已回退到本地 fallback。";
+  if (providerMode === "default") return "当前为默认模式：AI生成对战过程、角色经历、自定义角色辅助统一使用 ArkAI 路径。";
+  if (providerMode === "custom") return "当前为自定义模式：三个 AI 入口统一使用你填写的 OpenAI-compatible 路径。";
+  return "当前 AI 模式未识别，已回退到默认 ArkAI 路径。";
 }
 
 function shouldTryNextAiEndpoint(error) {
@@ -853,10 +652,9 @@ function buildAiFailureMessage(error) {
   if (error?.status === 429) {
     return error?.message || "AI 生成次数暂时达到限制，请稍后再试。";
   }
-  if (getDirectAiModes().includes(mode) && !readAiByokKey()) return "未配置玩家自己的 Provider API Key，已回退到本地叙事。";
-  if (mode === "openai_compatible_byok_direct" && !getAiProviderSettings().baseUrl) return "未配置自定义兼容 Provider 的 Base URL，已回退到本地叙事。";
-  if (mode === "user_proxy_endpoint" && !getAiProviderSettings().proxyEndpoint) return "未配置玩家自己的 Proxy endpoint，已回退到本地叙事。";
-  if (mode === "off" || mode === "local_fallback") return "当前没有调用远程 AI。";
+  if (mode === "custom" && !readAiByokKey()) return "未配置自定义 Provider API Key，已回退到本地叙事。";
+  if (mode === "custom" && !getAiProviderSettings().baseUrl) return "未配置自定义 Provider 的 Base URL，已回退到本地叙事。";
+  if (mode === "off") return "当前没有调用远程 AI。";
   if (state.debugMode) return error?.message || "人生经历记录生成失败。";
   return "AI Provider 暂时不可用，已回退到本地叙事。";
 }
@@ -1218,7 +1016,9 @@ async function analyzeCustomDuelWithAi() {
       data.battleText ? `战斗短文：${data.battleText}` : ""
     ].filter(Boolean);
     renderDuelAiOutput(pieces.join("\n\n") || "已回填角色卡。你可以继续手动调整，再加入角色池。");
-    updateDuelAiStatus(buildDuelAiAssistStatusMessage(data));
+    updateDuelAiStatus(data.localFallback
+      ? "AI线路不可用，已使用本地规则解析并回填到自定义角色表单。"
+      : "AI解析完成，已回填到自定义角色表单。");
   } catch (error) {
     renderDuelAiOutput("AI解析失败。可以继续手动填写角色卡。");
     updateDuelAiStatus(buildDuelAiFailureMessage(error), true);
@@ -1292,7 +1092,7 @@ function getDuelGeneratedTermTemplatesForAi() {
 
 async function requestDuelAiAssistWithFallback(payload) {
   const failures = [];
-  if (getAiProviderMode() === "off" || getAiProviderMode() === "local_fallback") {
+  if (getAiProviderMode() === "off") {
     const localOnly = buildLocalDuelAssistFallback(payload, [`mode:${getAiProviderMode()}`]);
     if (localOnly) return localOnly;
   }
@@ -1306,63 +1106,19 @@ async function requestDuelAiAssistWithFallback(payload) {
   throw new Error(failures.join("；") || "AI服务不可用。");
 }
 
-function buildDuelAiAssistStatusMessage(data = {}) {
-  if (!data.localFallback) return `AI解析完成，已回填到自定义角色表单。${formatAiAssistRateLimit(data.rateLimit)}`;
-  const limitText = formatAiAssistRateLimit(data.rateLimit);
-  if (data.remoteStatus === 429 || data.rateLimit) {
-    return `今日 AI辅助角色生成次数已达上限，已使用本地规则解析并回填到自定义角色表单。${limitText}`;
-  }
-  return "远程 AI 解析线路不可用，已使用本地规则解析并回填到自定义角色表单。";
-}
-
-function formatAiAssistRateLimit(rateLimit) {
-  if (!rateLimit || typeof rateLimit !== "object") return "";
-  const remaining = rateLimit.remaining === "admin" || rateLimit.remaining === "henan_exempt"
-    ? "不限"
-    : String(Number.isFinite(Number(rateLimit.remaining)) ? Math.max(0, Number(rateLimit.remaining)) : "未知");
-  const resetText = rateLimit.resetAt ? `；预计 ${formatAiAssistResetTime(rateLimit.resetAt)} 后恢复` : "";
-  return ` 今日剩余次数：${remaining}${resetText}。`;
-}
-
-function formatAiAssistResetTime(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "稍后";
-  return date.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-}
-
 async function requestDuelAiAssist(endpoint, payload) {
   const templateId = payload?.mode === "characterBuild" ? "duel_character_assist" : "battle_narration";
-  if (endpoint) {
-    return requestUserProxyAiPayload(endpoint, buildAiPromptPayload(templateId, payload), {
-      promptTemplateId: templateId,
-      timeoutMs: AI_REQUEST_TIMEOUT_MS,
-      clientRequest: templateId === "duel_character_assist" ? {
-        kind: "duel_character_assist",
-        uploadedText: payload?.description || ""
-      } : undefined
-    });
-  }
   const data = await requestAiGoverned(templateId, payload, {
     timeoutMs: AI_REQUEST_TIMEOUT_MS,
-    localFallbackText: buildLocalAiFallbackText(templateId, payload),
-    clientRequest: templateId === "duel_character_assist" ? {
-      kind: "duel_character_assist",
-      uploadedText: payload?.description || ""
-    } : undefined
+    localFallbackText: buildLocalAiFallbackText(templateId, payload)
   });
   const parsedData = payload?.mode === "characterBuild" ? parseDuelAiStructuredJson(data) : data;
   if (payload?.mode === "battleNarrative" && !data.battleText && (data.text || data.markdown)) {
     data.battleText = data.text || data.markdown;
   }
   if (payload?.mode === "characterBuild" && !parsedData.suggestion && !parsedData.cardSuggestion) {
-    const reason = data.remoteStatus === 429 ? "HTTP 429" : (data.fallbackReason || "AI did not return structured suggestion");
-    const fallback = buildLocalDuelAssistFallback(payload, [reason]);
-    if (fallback) return {
-      ...fallback,
-      rateLimit: data.rateLimit || null,
-      remoteStatus: data.remoteStatus || null,
-      remoteError: data.remoteError || ""
-    };
+    const fallback = buildLocalDuelAssistFallback(payload, [data.fallbackReason || "AI did not return structured suggestion"]);
+    if (fallback) return fallback;
   }
   return parsedData;
 }
@@ -1376,23 +1132,6 @@ function parseDuelAiStructuredJson(data) {
     .replace(/^```(?:json)?/i, "")
     .replace(/```$/i, "")
     .trim();
-  const candidates = [cleaned];
-  const firstBrace = cleaned.indexOf("{");
-  const lastBrace = cleaned.lastIndexOf("}");
-  if (firstBrace >= 0 && lastBrace > firstBrace) candidates.push(cleaned.slice(firstBrace, lastBrace + 1));
-  for (const candidate of candidates) {
-    try {
-      const parsed = JSON.parse(candidate);
-      return {
-        ...data,
-        ...parsed,
-        text: data.text,
-        markdown: data.markdown
-      };
-    } catch (error) {
-      // try next candidate
-    }
-  }
   try {
     const parsed = JSON.parse(cleaned);
     return {
@@ -1444,15 +1183,12 @@ function buildLocalDuelCharacterAssist(payload, failures = []) {
     baseStats: inferLocalDuelBaseStats(sourceText, draft.stats || {})
   };
 
-  const reachedDailyLimit = failures.some((item) => /429|上限|limit/i.test(String(item || "")));
   return {
     localFallback: true,
     provider: "local-rule-fallback",
     model: "keyword-duel-assist-v1",
     suggestion,
-    analysis: reachedDailyLimit
-      ? "本日 AI辅助角色生成限额已达上限，已按本地关键词规则回填。该结果可参与战力计算，但复杂原创设定仍建议人工复核。"
-      : "远程 AI 解析线路不可用，已按本地关键词规则回填。该结果可参与战力计算，但复杂原创设定仍建议人工复核。"
+    analysis: "远程 AI 解析线路不可用，已按本地关键词规则回填。该结果可参与战力计算，但复杂原创设定仍建议人工复核。"
   };
 }
 
@@ -1691,12 +1427,7 @@ function normalizeDuelAiSuggestion(raw, externalGeneratedTerms = []) {
   if (!raw || typeof raw !== "object") return null;
   const baseStats = raw.baseStats && typeof raw.baseStats === "object" ? raw.baseStats : {};
   const generatedTerms = normalizeDuelGeneratedTerms(raw.generatedTerms || raw.mechanicDefinitions || externalGeneratedTerms);
-  const domainScript = normalizeDuelAiDomainScript(raw.domainScript || raw.domainEffectScript || raw.domain?.script || null);
-  const domain = normalizeCustomDuelText(raw.domainProfile || raw.domain || domainScript?.domainName || "");
-  const specialHands = normalizeDuelAiSpecialHands(raw.specialHands || raw.specialHandCards || raw.cards || [], {
-    domain,
-    domainScript
-  });
+  const specialHands = normalizeDuelAiSpecialHands(raw.specialHands || raw.specialHandCards || raw.cards || [], raw);
   const normalizedStats = {};
   for (const key of Object.keys(DUEL_DEFAULT_CUSTOM_STATS)) {
     normalizedStats[key] = DUEL_RANKS.includes(baseStats[key]) ? baseStats[key] : (DUEL_DEFAULT_CUSTOM_STATS[key] || "B");
@@ -1709,129 +1440,56 @@ function normalizeDuelAiSuggestion(raw, externalGeneratedTerms = []) {
     stage: getValidDuelStage(raw.stage || ""),
     techniquePower,
     technique: normalizeCustomDuelText(raw.technique || raw.techniqueName || ""),
-    domain,
+    domain: normalizeCustomDuelText(raw.domainProfile || raw.domain || ""),
     tools: Array.isArray(raw.loadout) ? raw.loadout.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(raw.tools || ""),
     traits: Array.isArray(raw.innateTraits) ? raw.innateTraits.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(raw.traits || ""),
     externalResource: normalizeCustomDuelText(raw.externalResource || ""),
     notes: normalizeCustomDuelText(raw.notes || ""),
-    domainScript,
     generatedTerms,
     specialHands,
     stats: normalizedStats
   };
 }
 
-function normalizeDuelAiDomainScript(rawScript) {
-  if (!rawScript || typeof rawScript !== "object") return null;
-  const allowedScriptTypes = new Set(["sure_hit", "auto_attack", "self_buff", "technique_buff", "soul_pressure", "hard_control", "rule_trial_execution", "jackpot_rule", "placeholder_damage"]);
-  const scriptTypeAliases = {
-    rule_trial: "rule_trial_execution",
-    trial: "rule_trial_execution",
-    judgment: "rule_trial_execution",
-    jackpot: "jackpot_rule",
-    probability_loop: "jackpot_rule",
-    control: "hard_control",
-    placeholder: "placeholder_damage"
-  };
-  const requestedType = normalizeCustomDuelText(rawScript.scriptType || rawScript.type || "placeholder_damage").slice(0, 50);
-  const scriptType = allowedScriptTypes.has(requestedType) ? requestedType : (scriptTypeAliases[requestedType] || "placeholder_damage");
-  const effects = rawScript.effects && typeof rawScript.effects === "object" ? rawScript.effects : {};
-  const fallback = rawScript.fallback && typeof rawScript.fallback === "object" ? rawScript.fallback : {};
-  const rawTags = Array.isArray(rawScript.effectTags || rawScript.tags)
-    ? (rawScript.effectTags || rawScript.tags).map(normalizeCustomDuelText).filter(Boolean).slice(0, 12)
-    : splitCustomDuelList(rawScript.effectTags || rawScript.tags || "");
-  const tagAliases = {
-    surehit: "sure_hit",
-    sure_hit: "sure_hit",
-    information_overload: "information_overload",
-    unlimited_void: "information_overload",
-    slash_auto_attack: "slash_auto_attack",
-    malevolent_shrine: "slash_auto_attack",
-    soul_touch: "soul_touch",
-    soul_pressure: "soul_touch",
-    shikigami_auto_attack: "shikigami_auto_attack",
-    summon_auto_attack: "shikigami_auto_attack",
-    rule_trial: "rule_trial",
-    judgment: "rule_trial",
-    trial: "rule_trial",
-    jackpot_rule: "jackpot_rule",
-    jackpot: "jackpot_rule",
-    placeholder: "placeholder"
-  };
-  const allowedTags = new Set(["sure_hit", "information_overload", "slash_auto_attack", "soul_touch", "shikigami_auto_attack", "rule_trial", "jackpot_rule", "placeholder"]);
-  const tags = rawTags.map((tag) => tagAliases[tag] || tag).filter((tag) => allowedTags.has(tag));
-  if (scriptType === "rule_trial_execution") tags.push("rule_trial");
-  if (scriptType === "jackpot_rule") tags.push("jackpot_rule");
-  if (scriptType === "placeholder_damage" && !tags.length) tags.push("placeholder");
-  if ((scriptType === "sure_hit" || scriptType === "hard_control") && !tags.length) tags.push("sure_hit");
-  if (scriptType === "soul_pressure" && !tags.length) tags.push("soul_touch");
-  const blockedBy = Array.from(new Set([
-    ...(Array.isArray(rawScript.blockedBy) ? rawScript.blockedBy.map(normalizeCustomDuelText).filter(Boolean) : []),
-    "domain_clash",
-    "simple_domain_guard",
-    "hollow_wicker_basket_guard",
-    "falling_blossom_emotion",
-    "zero_ce_domain_bypass"
-  ]));
-  const harmfulStability = Number(effects.opponentStabilityDelta || 0);
-  const normalizedStabilityDelta = harmfulStability > 0 ? -harmfulStability : harmfulStability;
-  const normalizedEffects = {
-    damage: clamp(Math.round(Number(effects.damage || 0) || 0), 0, 120),
-    nextRoundDamage: clamp(Math.round(Number(effects.nextRoundDamage || 0) || 0), 0, 120),
-    skipOpponentNextCard: Boolean(effects.skipOpponentNextCard),
-    opponentStabilityDelta: clamp(Math.round(normalizedStabilityDelta || 0), -100, 0),
-    opponentCeDamage: clamp(Math.round(Number(effects.opponentCeDamage || 0) || 0), 0, 120),
-    grantExecutionSword: Boolean(effects.grantExecutionSword),
-    forceTrialHands: Boolean(effects.forceTrialHands),
-    placeholderDamage: clamp(Math.round(Number(effects.placeholderDamage || 0) || 0), 0, 120)
-  };
-  if (scriptType === "rule_trial_execution" || tags.includes("rule_trial")) {
-    normalizedEffects.forceTrialHands = true;
-    normalizedEffects.grantExecutionSword = false;
-    normalizedEffects.damage = 0;
-    normalizedEffects.nextRoundDamage = 0;
-    normalizedEffects.skipOpponentNextCard = false;
-  }
-  if (scriptType === "jackpot_rule" || tags.includes("jackpot_rule")) {
-    normalizedEffects.damage = 0;
-    normalizedEffects.nextRoundDamage = 0;
-    normalizedEffects.skipOpponentNextCard = false;
-    normalizedEffects.forceTrialHands = false;
-    normalizedEffects.grantExecutionSword = false;
-  }
-  if (!normalizedEffects.damage && !normalizedEffects.nextRoundDamage && !normalizedEffects.opponentCeDamage && !normalizedEffects.opponentStabilityDelta && !normalizedEffects.skipOpponentNextCard && !normalizedEffects.forceTrialHands && !normalizedEffects.placeholderDamage && scriptType === "placeholder_damage") {
-    normalizedEffects.placeholderDamage = clamp(Math.round(Number(fallback.damage ?? 10) || 10), 0, 120);
-  }
-  const barrierType = normalizeCustomDuelText(rawScript.barrierType || "").slice(0, 40);
-  const domainCompletion = normalizeCustomDuelText(rawScript.domainCompletion || "").slice(0, 40);
-  return {
-    id: normalizeCustomDuelText(rawScript.id || `custom-domain-${Date.now().toString(36)}`).toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "custom-domain-script",
-    language: "json-rule-v1",
-    domainName: normalizeCustomDuelText(rawScript.domainName || rawScript.name || "").slice(0, 40),
-    scriptType,
-    activation: "onDomainResolved",
-    blockedBy,
-    barrierType,
-    domainCompletion,
-    effectTags: Array.from(new Set(tags)).slice(0, 8),
-    effectSummary: normalizeCustomDuelLongText(rawScript.effectSummary || rawScript.summary || "").slice(0, 360),
-    effects: normalizedEffects,
-    fallback: {
-      strategy: normalizeCustomDuelText(fallback.strategy || "placeholder_plus_10_damage"),
-      damage: clamp(Math.round(Number(fallback.damage ?? 10) || 10), 0, 120),
-      reason: normalizeCustomDuelLongText(fallback.reason || "领域效果无法完整脚本化时，降级为固定候选伤害。").slice(0, 220)
-    },
-    source: normalizeCustomDuelText(rawScript.source || "ai")
-  };
+const RISK_TAG_VALUES = new Set(["low", "medium", "high", "critical", "extreme"]);
+
+function getDuelAiCharacterNameTag(context) {
+  const name = normalizeCustomDuelText(context?.name || context?.displayName || "").slice(0, 20);
+  return name ? `角色:${name}` : "";
+}
+
+function inferDuelAiSpecialHandMechanismTags(cardType, text) {
+  const tags = [];
+  const source = `${cardType} ${text || ""}`;
+  if (/domain|领域/.test(source)) tags.push("领域");
+  if (/counter|反击|应对/.test(source)) tags.push("反击");
+  if (/defense|防御|护盾|格挡/.test(source)) tags.push("防御");
+  if (/resource|资源|库存|召唤|式神|咒灵/.test(source)) tags.push("资源");
+  if (/attack|damage|斩|打击|攻击|伤害/.test(source)) tags.push("攻击");
+  if (/support|辅助|恢复|增益/.test(source)) tags.push("支援");
+  return tags;
+}
+
+function filterDuelAiSpecialHandTags(tags = [], context = {}) {
+  const characterTag = getDuelAiCharacterNameTag(context);
+  const seen = new Set();
+  return [characterTag, ...tags]
+    .map(normalizeCustomDuelText)
+    .filter((tag) => {
+      const normalized = String(tag || "").trim();
+      const lower = normalized.toLowerCase();
+      if (!normalized || RISK_TAG_VALUES.has(lower) || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    })
+    .slice(0, 14);
 }
 
 function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
   const source = Array.isArray(rawHands) ? rawHands : [];
   const allowedTypes = new Set(["attack", "technique", "ce_burst", "defense", "domain", "support", "resource", "counter", "rule", "soul_pressure"]);
-  const allowedAccuracyProfiles = new Set(["melee", "weapon", "technique_projectile", "technique_area", "unavoidable", "none"]);
   const riskMap = { extreme: "critical", critical: "critical", high: "high", medium: "medium", low: "low" };
   const seen = new Set();
-  const forbiddenDomainNames = getDuelForbiddenDomainHandNames(context);
   return source
     .map((hand, index) => {
       if (!hand || typeof hand !== "object") return null;
@@ -1843,52 +1501,21 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
       const id = idSource.replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `ai-special-hand-${index + 1}`;
       if (seen.has(id)) return null;
       seen.add(id);
-      if (isDuelAiDomainNameHand(name, cardType, forbiddenDomainNames, hand)) return null;
-      if (isDuelAiRuleSubphaseOnlyHand(name, hand, context)) return null;
       const apCost = clamp(Math.round(Number(hand.apCost ?? hand.ap ?? 1) || 1), 0, 9);
       const ceCost = clamp(Math.round(Number(hand.ceCost ?? hand.cost ?? 10) || 10), 0, 999);
       const damage = clamp(Math.round(Number(hand.damage ?? hand.baseDamage ?? 0) || 0), 0, 999);
       const block = clamp(Math.round(Number(hand.block ?? hand.baseBlock ?? 0) || 0), 0, 999);
       const stabilityDelta = clamp(Math.round(Number(hand.stabilityDelta ?? hand.stability ?? 0) || 0), -100, 100);
       const domainLoadDelta = clamp(Math.round(Number(hand.domainLoadDelta ?? hand.domainLoad ?? 0) || 0), 0, 999);
-      let summary = normalizeCustomDuelText(hand.summary || hand.description || `${name}：AI 生成特殊手札。`);
-      const tags = Array.isArray(hand.tags) ? hand.tags.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(hand.tags || "");
-      const rawAccuracyProfile = normalizeCustomDuelText(hand.accuracyProfile || "").toLowerCase();
-      const inferredAccuracyProfile = cardType === "attack"
-        ? "melee"
-        : cardType === "ce_burst" || cardType === "soul_pressure"
-          ? "technique_projectile"
-          : cardType === "technique"
-            ? "technique_projectile"
-            : "none";
-      const accuracyProfile = allowedAccuracyProfiles.has(rawAccuracyProfile) ? rawAccuracyProfile : inferredAccuracyProfile;
-      const evasionAllowed = hand.evasionAllowed === false || ["defense", "support", "resource", "domain", "rule"].includes(cardType) ? false : accuracyProfile !== "none" && accuracyProfile !== "unavoidable";
-      const hitRateModifier = clamp(Number(hand.hitRateModifier ?? hand.accuracyModifier ?? 0) || 0, -0.45, 0.45);
-      const missDamageScale = clamp(Number(hand.onMiss?.damageScale ?? hand.missDamageScale ?? (accuracyProfile === "technique_area" ? 0.38 : accuracyProfile === "technique_projectile" ? 0.12 : 0)) || 0, 0, 0.75);
-      const hasExecutableEffect = damage > 0
-        || block > 0
-        || stabilityDelta !== 0
-        || domainLoadDelta > 0
-        || ["domain", "support", "resource", "counter", "rule", "soul_pressure"].includes(cardType)
-        || tags.some((tag) => /domain|领域|control|stun|trial|judgment|buff|debuff|counter|resource|soul|必中|审判|压制|回复|反制/i.test(tag));
-      if (!hasExecutableEffect) return null;
-      let normalizedDamage = damage;
-      let normalizedBlock = block;
-      let normalizedStabilityDelta = stabilityDelta;
-      let normalizedDomainLoadDelta = domainLoadDelta;
-      if (!normalizedDamage && !normalizedBlock && !normalizedStabilityDelta && !normalizedDomainLoadDelta) {
-        if (["defense", "counter"].includes(cardType)) {
-          normalizedBlock = 8;
-        } else if (["domain", "rule", "support", "resource"].includes(cardType)) {
-          normalizedStabilityDelta = cardType === "support" || cardType === "resource" ? 8 : -8;
-          normalizedDomainLoadDelta = cardType === "domain" ? 8 : 0;
-        } else {
-          normalizedDamage = 8;
-        }
-      }
-      if (!/攻|damage|伤害|防|block|消耗|CE|AP|修正|基础/.test(summary)) {
-        summary += ` 攻=${normalizedDamage}，防=${normalizedBlock}，AP=${apCost}，CE=${ceCost}；数值由角色基础数值、术式强度、风险和效果类型交给本地公式修正。`;
-      }
+      const summary = normalizeCustomDuelText(hand.summary || hand.description || `${name}：AI 生成特殊手札。`);
+      const rawTags = Array.isArray(hand.tags) ? hand.tags.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(hand.tags || "");
+      const tags = filterDuelAiSpecialHandTags([
+        "自定义",
+        "特殊手札",
+        "AI生成",
+        ...inferDuelAiSpecialHandMechanismTags(cardType, `${name} ${summary}`),
+        ...rawTags
+      ], context);
       return {
         id,
         label: name,
@@ -1900,77 +1527,30 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
         ceCost,
         costType: "flat",
         cost: { flatCe: ceCost, minCe: ceCost },
-        baseDamage: normalizedDamage,
-        baseBlock: normalizedBlock,
-        baseStabilityRestore: Math.max(0, normalizedStabilityDelta),
-        baseDomainLoadDelta: normalizedDomainLoadDelta,
+        baseDamage: damage,
+        baseBlock: block,
+        baseStabilityRestore: Math.max(0, stabilityDelta),
+        baseDomainLoadDelta: domainLoadDelta,
         durationRounds: 1,
         damageType: typeof inferCustomHandDamageType === "function" ? inferCustomHandDamageType(cardType) : (cardType === "defense" ? "none" : "technique"),
         scalingProfile: typeof inferCustomHandScalingProfile === "function" ? inferCustomHandScalingProfile(cardType) : "balanced",
-        accuracyProfile,
-        evasionAllowed,
-        hitRateModifier,
-        onMiss: { damageScale: missDamageScale, ceDamageScale: missDamageScale, stabilityScale: missDamageScale, keepCard: false },
         rarity: "special",
         weight: 1,
         allowedContexts: ["normal", "domain", "trial_allowed"],
         effects: {
-          stabilityDelta: Number((normalizedStabilityDelta / 100).toFixed(4)),
-          domainLoadDelta: normalizedDomainLoadDelta,
-          weightDeltas: typeof buildCustomHandWeightDeltas === "function" ? buildCustomHandWeightDeltas(cardType, normalizedDamage, normalizedBlock) : {}
+          stabilityDelta: Number((stabilityDelta / 100).toFixed(4)),
+          domainLoadDelta,
+          weightDeltas: typeof buildCustomHandWeightDeltas === "function" ? buildCustomHandWeightDeltas(cardType, damage, block) : {}
         },
         effectSummary: summary,
         risk: riskMap[String(hand.risk || "medium").trim()] || "medium",
-        tags: Array.from(new Set(["自定义", "特殊手札", "AI生成", ...tags].filter(Boolean))),
+        tags,
         logTemplate: summary,
         source: normalizeCustomDuelText(hand.source || "ai")
       };
     })
     .filter(Boolean)
     .slice(0, 6);
-}
-
-function getDuelForbiddenDomainHandNames(context = {}) {
-  const names = new Set();
-  const collect = (value) => {
-    splitCustomDuelList(value || "").forEach((part) => {
-      const cleaned = part.replace(/^(领域展开|开放领域|顶级领域|未完成领域|领域)[:：]?/, "").trim();
-      if (cleaned && !/无明确领域|无领域|没有领域|不具备领域|未知|未公开/.test(cleaned)) names.add(cleaned);
-    });
-  };
-  collect(context.domain);
-  collect(context.domainScript?.domainName);
-  return names;
-}
-
-function isDuelAiDomainNameHand(name, cardType, forbiddenNames, rawHand = {}) {
-  const text = [
-    name,
-    rawHand.summary,
-    rawHand.description,
-    ...(Array.isArray(rawHand.tags) ? rawHand.tags : splitCustomDuelList(rawHand.tags || ""))
-  ].filter(Boolean).join(" ");
-  if (/^(领域展开|展开领域|domain expansion)$/i.test(name)) return true;
-  if (/^(领域展开|展开领域)[·:：\-\s]/i.test(name)) return true;
-  if (/领域展开本体|领域本体|展开完整领域/.test(text)) return true;
-  if (forbiddenNames.has(name)) return true;
-  if (cardType === "domain" && /领域名|领域本体|领域展开本体|domainProfile|domainScript/i.test(text)) return true;
-  if (cardType === "domain" && forbiddenNames.size && Array.from(forbiddenNames).some((domainName) => name.includes(domainName) || domainName.includes(name))) return true;
-  return false;
-}
-
-function isDuelAiRuleSubphaseOnlyHand(name, rawHand = {}, context = {}) {
-  const domainScript = context.domainScript || {};
-  const text = [
-    name,
-    rawHand.summary,
-    rawHand.description,
-    rawHand.id,
-    ...(Array.isArray(rawHand.tags) ? rawHand.tags : splitCustomDuelList(rawHand.tags || ""))
-  ].filter(Boolean).join(" ");
-  if (/处刑人之剑|死刑判决|请求判决|证据提出|指控推进|辩护|审判牌|trial-replacement|request_verdict|present_evidence|press_charge|advance_trial|rule_pressure|challenge_evidence|deny_charge|delay_trial/i.test(text)) return true;
-  if ((domainScript.scriptType === "rule_trial_execution" || (domainScript.effectTags || []).includes("rule_trial")) && /审判|裁判|判决|证据|指控|没收|死刑|处刑/.test(text)) return true;
-  return false;
 }
 
 function normalizeDuelGeneratedTerms(rawTerms = []) {
@@ -2101,7 +1681,7 @@ async function requestAiFreeInfluenceForTask(task, actionText, anchorText) {
   const payload = buildAiFreeAnalysisPayload(task, actionText, anchorText);
   const failures = [];
   const statuses = [];
-  if (getAiProviderMode() === "off" || getAiProviderMode() === "local_fallback") {
+  if (getAiProviderMode() === "off") {
     return buildLocalAiFreeInfluence(task, actionText, anchorText, [`mode:${getAiProviderMode()}`]);
   }
   try {
@@ -2182,12 +1762,6 @@ function buildAiFreeAnalysisPayload(task, actionText, anchorText) {
 }
 
 async function requestAiFreeAnalysis(endpoint, payload) {
-  if (endpoint) {
-    return requestUserProxyAiPayload(endpoint, buildAiPromptPayload("ai_assist", payload), {
-      promptTemplateId: "ai_assist",
-      timeoutMs: AI_FREE_ANALYSIS_TIMEOUT_MS
-    });
-  }
   return requestAiGoverned("ai_assist", payload, {
     timeoutMs: AI_FREE_ANALYSIS_TIMEOUT_MS,
     localFallbackText: "AI 未调用。本地 fallback 仅保留玩家行动文字，不改变当前合法结果。"
@@ -2250,8 +1824,7 @@ function normalizeRemoteAiFreeInfluence(data, task, actionText, anchorText) {
       expansionHooks,
       riskControl,
       boundary: remote.boundary || AI_FREE_BOUNDARY_TEXT,
-      rawSummary: remote.summary || "",
-      rateLimit: data?.rateLimit || null
+      rawSummary: remote.summary || ""
     }
   };
 }
@@ -2562,7 +2135,7 @@ function shouldSyncGlobalUsageCounter() {
   if (!hostname) return false;
   const allowedHosts = Array.isArray(GLOBAL_USAGE_COUNTER.allowedHosts)
     ? GLOBAL_USAGE_COUNTER.allowedHosts
-    : ["bigdogwoofwoof.pages.dev"];
+    : ["maopaotabby.github.io"];
   return allowedHosts.includes(hostname);
 }
 

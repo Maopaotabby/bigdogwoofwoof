@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>咒术转盘 2.13 对战 UI 与特殊手札更新！</title>
+    <title>咒术转盘V2.2 AI路线整理</title>
     <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="./styles.css?v=20260502-v2.13-duel-ui-special-hands">
+  <link rel="stylesheet" href="./styles.css?v=20260503-v2.2-ai-route-cleanup">
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <h1>咒术转盘 2.13 对战 UI 与特殊手札更新！</h1>
+          <h1>咒术转盘V2.2 AI路线整理</h1>
           <p id="modeHint">一键抽取 · 自动跳转</p>
           <button id="feedbackContactBtn" class="feedback-contact" type="button">问题反馈 QQ：3429672291</button>
         </div>
@@ -55,54 +55,42 @@
               <span>AI 模式</span>
               <select id="aiProviderMode">
                 <option value="off">关闭 AI</option>
-                <option value="local_fallback">本地 fallback</option>
-                <option value="openai_byok_direct">玩家自带 OpenAI API Key（实验性）</option>
-                <option value="deepseek_byok_direct">玩家自带 DeepSeek API Key（实验性）</option>
-                <option value="openai_compatible_byok_direct">ArkAI / OpenAI-compatible Provider（实验性）</option>
-                <option value="user_proxy_endpoint" selected>服务器 ArkAI 代理（默认）</option>
+                <option value="default" selected>默认</option>
+                <option value="custom">自定义</option>
               </select>
             </label>
-            <label class="field">
+            <label class="field" data-ai-custom-setting>
               <span>Provider</span>
               <select id="aiProviderIdInput">
-                <option value="ark_ai" selected>ArkAI / 火山方舟</option>
-                <option value="openai">OpenAI</option>
-                <option value="deepseek">DeepSeek</option>
-                <option value="openai_compatible">自定义 OpenAI-compatible Provider</option>
-                <option value="user_proxy">玩家自托管 Proxy Endpoint（推荐）</option>
+                <option value="openai_compatible" selected>自定义 AI（OpenAI-compatible）</option>
               </select>
             </label>
-            <label class="field">
+            <label class="field" data-ai-custom-setting>
               <span>当前模型</span>
               <input id="aiModelInput" type="text" value="doubao-seed-2-0-lite-260215" autocomplete="off" list="aiModelPresets">
               <datalist id="aiModelPresets">
                 <option value="doubao-seed-2-0-lite-260215"></option>
-                <option value="gpt-5-mini"></option>
-                <option value="deepseek-chat"></option>
-                <option value="deepseek-reasoner"></option>
-                <option value="deepseek-v4-flash"></option>
-                <option value="deepseek-v4-pro"></option>
               </datalist>
             </label>
-            <label class="field">
+            <label class="field" data-ai-custom-setting>
               <span>最大输出 token</span>
               <input id="aiOutputTokenInput" type="number" min="64" max="4000" step="50" value="1800">
             </label>
-            <label class="field" data-ai-provider-panel="ark_ai openai_compatible">
+            <label class="field" data-ai-custom-setting data-ai-provider-panel="openai_compatible">
               <span>Base URL</span>
               <input id="aiBaseUrlInput" type="url" placeholder="https://ark.cn-beijing.volces.com/api/v3">
             </label>
-            <label class="field" data-ai-provider-panel="ark_ai openai_compatible">
+            <label class="field" data-ai-custom-setting data-ai-provider-panel="openai_compatible">
               <span>Path</span>
               <input id="aiPathInput" type="text" placeholder="/chat/completions">
             </label>
           </div>
           <p id="aiProviderWarning" class="muted">
-            当前默认使用服务器 ArkAI 代理；API Key 保存在服务器端，网页不再需要填写默认 Key。
+            默认模式使用内置 ArkAI 路径；自定义模式才会显示并允许修改访问路径、模型和 Key。
           </p>
-          <div class="ai-mode-panel" data-ai-mode-panel="openai_byok_direct deepseek_byok_direct openai_compatible_byok_direct" hidden>
+          <div class="ai-mode-panel" data-ai-mode-panel="custom" hidden>
             <p class="error-text">
-              安全提示：官方不建议在浏览器中暴露 API Key。此模式仅适合个人本地使用。Key 只保存在你的浏览器中，不会上传到本站服务器。请自行承担泄露与调用费用风险。
+              安全提示：自定义 AI 会把 Key 保存在你的浏览器中。请只填写你信任的 OpenAI-compatible Base URL、Path、Model 和 Key。
             </p>
             <div class="creator-grid">
               <label class="field">
@@ -119,42 +107,10 @@
               <button id="clearAiKeyBtn" class="secondary" type="button">清除 API Key</button>
             </div>
           </div>
-          <div class="ai-mode-panel" data-ai-mode-panel="user_proxy_endpoint" hidden>
-            <p class="muted">
-              推荐：使用自托管 Proxy Endpoint，由你的后端保存 API Key，网页只发送 prompt payload。协议：POST /ai，body 为 { providerId, endpointType, payload, siteVersion, promptTemplateId }，response 为 { text, usage?, raw? }。
-            </p>
-            <label class="field">
-              <span>Proxy endpoint</span>
-              <input id="aiProxyEndpointInput" type="url" placeholder="https://your-domain.example/ai">
-            </label>
-            <div class="action-row compact">
-              <button id="clearAiProxyBtn" class="secondary" type="button">清除 Proxy Endpoint</button>
-            </div>
-          </div>
-          <div class="ai-mode-panel" data-ai-mode-panel="user_proxy_endpoint" hidden>
-            <p class="muted">
-              管理员凭据只随服务器代理请求发送，用于跳过 AI辅助角色生成的 IP 限流与输入字节限制。
-            </p>
-            <div class="creator-grid">
-              <label class="field">
-                <span>管理员 ID</span>
-                <input id="aiAdminIdInput" type="text" autocomplete="username">
-              </label>
-              <label class="field">
-                <span>管理员密码</span>
-                <input id="aiAdminPasswordInput" type="password" autocomplete="current-password">
-              </label>
-            </div>
-            <div class="action-row compact">
-              <button id="aiAdminLoginBtn" class="secondary" type="button">管理员登录</button>
-              <button id="aiAdminLogoutBtn" class="secondary" type="button">退出管理员</button>
-            </div>
-            <p id="aiAdminStatus" class="muted">管理员未登录。</p>
-          </div>
           <div class="ai-provider-meta">
             <span id="aiPromptEstimate">估算 prompt token：待生成；最大输出 token：1800</span>
-            <span id="aiCostNotice">玩家自行承担 API 费用；local fallback / off 不消耗 token。</span>
-            <span id="aiFallbackStatus">本地 fallback：不调用 API，适合零成本使用。</span>
+            <span id="aiCostNotice">关闭模式不消耗 token；默认 / 自定义会调用当前 Provider。</span>
+            <span id="aiFallbackStatus">默认：使用 ArkAI 内置路径，设置项保持隐藏。</span>
           </div>
           <div class="action-row compact">
             <button id="testAiProviderBtn" class="secondary" type="button">测试连接设置</button>
@@ -954,22 +910,6 @@
               </p>
             </section>
             <div class="creator-grid">
-              <label class="field debug-only">
-                <span>AI线路</span>
-                <select id="aiEndpointMode">
-                  <option value="auto" selected>自动切换</option>
-                  <option value="global">海外线路</option>
-                  <option value="cn">国内备用</option>
-                </select>
-              </label>
-              <label class="field debug-only">
-                <span>海外服务地址（调试）</span>
-                <input id="aiEndpointInput" type="url" placeholder="仅调试模式使用">
-              </label>
-              <label class="field debug-only">
-                <span>国内备用服务地址（调试）</span>
-                <input id="aiCnEndpointInput" type="url" placeholder="部署国内中转后填入">
-              </label>
               <label class="field">
                 <span>记录类型</span>
                 <select id="aiNarrativeKind">
@@ -980,7 +920,6 @@
               </label>
             </div>
             <div class="action-row">
-              <button id="saveAiEndpointBtn" class="secondary debug-only" type="button">保存调试地址</button>
               <button id="generateAiNarrativeBtn" class="primary" type="button">生成你的人生经历记录</button>
             </div>
             <p id="aiNarrativeStatus" class="muted">流程结束后可以生成你的人生经历记录。</p>
@@ -1020,10 +959,13 @@
           <div class="panel notes-panel">
             <h2>更新日志</h2>
               <ul>
-          <li>2.13（对战 UI 与特殊手札更新）：双方资源栏中间改为上一回合纪要，显示 Miss、数值变化和新增异常状态；资源栏新增中文异常状态 UI，复现标识移动到日志区，战场单位 / 式神栏会显示中立单位、召唤物和魔须罗代打状态；调幅魔须罗仪式改为清空手牌并切换为内置魔须罗代打，后续每回合后台随机锁定行动，并按同名攻击手札记录适应减伤，第 6 次起归零；雷吉会稳定识别为再契象角色并抽取自身收据 / 实物具现特殊手札；执行回合按钮移动到术式手札上方。</li>
-          <li>2.12（召唤手札与开战稳定性修复）：十种影法术与再契象召唤牌进入正式手札池，补入未调幅 / 调幅后魔虚罗、玉犬·浑、鵺、满象、圆鹿、贯牛、桑塔纳轿车、挖掘机和一户建等召唤 / 具现化规则；魔虚罗区分狂暴中立单位与调幅后友方守护单位，对咒灵特攻和守护优先承伤逻辑已接入；手札 UI 增加召唤牌预览，并修复召唤预览缓存导致点击开战无响应的问题。</li>
-          <li>2.11（单牌伤害结算与反转术式实装）：新增反转术式疗伤手札，治疗量按基础治疗值与角色咒力操控、效率、术式能力和输出修正生成；咒灵不会抽到或使用反转术式，受伤时改走咒灵再生；手札直接伤害、黑闪和闪避改为逐张独立结算，黑闪窗口只会附加到符合近身/体术/咒具判定的单张手札，苍、赫、解、捌等远程术式不会消耗黑闪窗口；回合资源事件不再吃多张手札的输出叠乘。</li>
-          <li>2.1（领域效果实装）：重制领域展开流程，内置角色领域脚本接入对战结算；领域命中统一经过领域对抗 / 抗领域手段判定；自定义角色 AI 生成规则补充领域脚本、特殊手札和有效标签约束。</li>
+          <li>V2.2（AI调用降级）：AI 调用流程回退到历史版本 V2 的直连 / Proxy 调用逻辑，移除后续新增的 IP 围栏、剩余次数、管理员模式和状态查询显示；保留简化后的 ArkAI / 自定义兼容 / 自托管 Proxy 基础设置。</li>
+          <li>2.19（日车审判刷新修复）：抗审判牌不再因式神、咒具等目标类型被直接拦截；审判子阶段跨回合刷新时会重新从领域模板发放审判 / 抗审判牌，避免空候选池覆盖手牌。</li>
+          <li>2.18（日车领域重写）：日车领域展开后直接清空双方手牌，给日车发审判牌、给对方发抗审判牌；5 张对方审判应对牌统一标记为“抗审判”；判决流程保持不变，但处刑人之剑获取门槛降低。</li>
+          <li>2.17（日车审判手札修复）：修复日车领域生效后对方常规手札被清空但未补发辩护、沉默、否认指控等抗审判手札的问题；当审判子阶段已激活但 action pool 缺失审判牌时，会从领域资料兜底生成替换手札。</li>
+          <li>2.16（AI路线降级）：辅助自定义角色改用和 AI 人生经历一致的 prompt payload 路线，不再额外传入上传文本、客户端请求信息或管理员字段，避免 IP 护栏误伤角色卡片 AI。</li>
+          <li>2.15（AI护栏修复 / 管理员 UI）：AI Proxy 改为按模板分桶统计剩余次数，缺失服务端 Key 不再消耗额度，自定义角色解析使用更宽的输入与 prompt 上限；AI 设置新增管理员登录 / 退出、剩余次数显示和 Proxy 状态查询，默认模型改为 doubao-seed-2-0-lite-260215。</li>
+          <li>2.1（AI护栏 / prompt 精简）：AI 角色解析恢复 2.2 的 OpenAI-compatible 发送基础，并补回服务端 IP 读取、24 小时次数限制、输入字节与估算 token 限制、管理员绕过模式；自定义角色 prompt 精简为少量硬约束，减少无效上下文。</li>
           <li>2.0-hotfix（腾讯统计 / 东八区）：腾讯云入口计入全站使用统计，统计请求携带 Asia/Shanghai / UTC+8 换日参数。</li>
           <li>2.0-hotfix（单人 / 联机待机过回合）：允许未选择手札时执行或锁定 0 咒力待机行动，解决咒力归零或无可用手札时无法过回合的问题；双方锁定后仍由本地规则引擎同步结算。</li>
           <li>2.0-hotfix（联机结算去 AI 裁判）：双方锁定行动后不再请求 AI 裁判，服务器只保留 1 秒锁定反馈并交由本地规则引擎快速进入下一回合；AI 功能保留到对战结束后的“AI生成对战过程”。</li>
@@ -1118,6 +1060,6 @@
       </main>
     </div>
 
-  <script type="module" src="./modules/main.js?v=20260502-v2.13-duel-ui-special-hands&esm=14"></script>
+  <script type="module" src="./modules/main.js?v=20260503-v2.2-ai-route-cleanup&esm=8"></script>
 </body>
 </html>

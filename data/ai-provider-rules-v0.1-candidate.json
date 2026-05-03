@@ -1,55 +1,29 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "status": "CANDIDATE",
-  "defaultMode": "user_proxy_endpoint",
+  "defaultMode": "default",
   "defaultProviderId": "ark_ai",
-  "defaultProxyEndpoint": "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev/ai",
   "providers": [
     {
       "providerId": "ark_ai",
       "label": "ArkAI / 火山方舟",
-      "modes": ["openai_compatible_byok_direct", "user_proxy_endpoint"],
+      "modes": ["default"],
       "endpointType": "chat_completions",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
       "defaultPath": "/chat/completions",
       "defaultModel": "doubao-seed-2-0-lite-260215",
+      "defaultApiKey": "09d6d696-dc76-4d99-a912-b15bec17c869",
       "modelPresets": ["doubao-seed-2-0-lite-260215"],
       "allowCustomBaseUrl": false,
       "allowCustomPath": false,
-      "allowCustomModel": true,
-      "securityWarningRequired": true,
-      "status": "CANDIDATE"
-    },
-    {
-      "providerId": "openai",
-      "label": "OpenAI",
-      "modes": ["openai_byok_direct", "user_proxy_endpoint"],
-      "endpointType": "responses",
-      "baseUrl": "https://api.openai.com",
-      "defaultPath": "/v1/responses",
-      "defaultModel": "gpt-5-mini",
-      "modelPresets": ["gpt-5-mini", "gpt-5.1-mini", "gpt-4.1-mini"],
-      "allowCustomModel": true,
-      "securityWarningRequired": true,
-      "status": "CANDIDATE"
-    },
-    {
-      "providerId": "deepseek",
-      "label": "DeepSeek",
-      "modes": ["deepseek_byok_direct", "user_proxy_endpoint"],
-      "endpointType": "chat_completions",
-      "baseUrl": "https://api.deepseek.com",
-      "defaultPath": "/chat/completions",
-      "defaultModel": "deepseek-chat",
-      "modelPresets": ["deepseek-chat", "deepseek-reasoner", "deepseek-v4-flash", "deepseek-v4-pro"],
-      "allowCustomModel": true,
+      "allowCustomModel": false,
       "securityWarningRequired": true,
       "status": "CANDIDATE"
     },
     {
       "providerId": "openai_compatible",
-      "label": "自定义 OpenAI-compatible Provider",
-      "modes": ["openai_compatible_byok_direct", "user_proxy_endpoint"],
+      "label": "自定义 AI（OpenAI-compatible）",
+      "modes": ["custom"],
       "endpointType": "chat_completions",
       "baseUrl": "",
       "defaultPath": "/chat/completions",
@@ -60,14 +34,6 @@
       "allowCustomModel": true,
       "securityWarningRequired": true,
       "status": "CANDIDATE"
-    },
-    {
-      "providerId": "user_proxy",
-      "label": "玩家自托管 Proxy Endpoint（推荐）",
-      "modes": ["user_proxy_endpoint"],
-      "endpointType": "proxy",
-      "securityWarningRequired": true,
-      "status": "CANDIDATE"
     }
   ],
   "modes": {
@@ -75,43 +41,24 @@
       "enabled": true,
       "label": "关闭 AI"
     },
-    "local_fallback": {
+    "default": {
       "enabled": true,
-      "label": "本地叙事 fallback"
-    },
-    "openai_byok_direct": {
-      "enabled": true,
-      "label": "玩家自带 OpenAI API Key（实验性）",
-      "providerId": "openai",
-      "securityWarningRequired": true,
-      "defaultStorage": "sessionStorage",
-      "allowLocalStorage": true
-    },
-    "deepseek_byok_direct": {
-      "enabled": true,
-      "label": "玩家自带 DeepSeek API Key（实验性）",
-      "providerId": "deepseek",
-      "securityWarningRequired": true,
-      "defaultStorage": "sessionStorage",
-      "allowLocalStorage": true
-    },
-    "openai_compatible_byok_direct": {
-      "enabled": true,
-      "label": "ArkAI / OpenAI-compatible Provider（实验性）",
+      "label": "默认",
       "providerId": "ark_ai",
       "securityWarningRequired": true,
       "defaultStorage": "sessionStorage",
-      "allowLocalStorage": true
+      "allowLocalStorage": false
     },
-    "user_proxy_endpoint": {
+    "custom": {
       "enabled": true,
-      "label": "玩家自托管 Proxy Endpoint（推荐）",
-      "providerId": "user_proxy",
-      "securityWarningRequired": true
+      "label": "自定义",
+      "providerId": "openai_compatible",
+      "securityWarningRequired": true,
+      "defaultStorage": "sessionStorage",
+      "allowLocalStorage": true
     }
   },
   "defaultModel": "doubao-seed-2-0-lite-260215",
-  "openAiResponsesEndpoint": "https://api.openai.com/v1/responses",
   "tokenBudget": {
     "maxPromptTokens": 6000,
     "maxOutputTokens": 1800,
@@ -139,15 +86,10 @@
     "allowLocalStorage": true,
     "neverExportSecrets": true
   },
-  "proxyProtocol": {
-    "method": "POST",
-    "bodyShape": "{ providerId, endpointType, payload, siteVersion, promptTemplateId }",
-    "responseShape": "{ text, usage?, raw? }"
-  },
   "privacy": {
     "neverExportApiKey": true,
     "neverLogApiKey": true,
     "neverPutApiKeyInUrl": true,
-    "serverProxyKeepsApiKeyPrivate": true
+    "siteOwnerDoesNotPayPlayerTokens": false
   }
 }

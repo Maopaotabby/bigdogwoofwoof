@@ -1172,9 +1172,8 @@ function syncPreparingRoomView(room) {
   globalThis.JJKDuelRuntime?.clearOnlineDuelBattle?.(room.roomId);
   if (!globalThis.JJKBattlePage) return;
   const pageState = globalThis.JJKBattlePage.getBattlePageState?.() || {};
-  if (pageState.mode === "online" || pageState.activeRoomId === room.roomId || pageState.activePage !== "online") {
+  if (pageState.mode === "online" || pageState.activeRoomId === room.roomId) {
     globalThis.JJKBattlePage.clearBattleMode?.("none");
-    globalThis.JJKBattlePage.activateBattlePage?.("online", { primeMode: false });
   }
 }
 
@@ -1308,7 +1307,7 @@ function enterBattleView(room, side) {
   const currentRight = currentBattle?.right?.id || currentBattle?.right?.characterId || "";
   const currentSeed = currentBattle?.onlineBattleSeed || currentBattle?.seed || "";
   const nextSeed = room.battleState?.battleSeed || "";
-  const canReuseCurrentBattle = currentBattle?.onlineRoomId === room.roomId && currentLeft === left && currentRight === right && !currentBattle?.resolved && !currentBattle?.battleEnded && (!nextSeed || currentSeed === nextSeed);
+  const canReuseCurrentBattle = currentBattle?.onlineRoomId === room.roomId && currentLeft === left && currentRight === right && (!nextSeed || currentSeed === nextSeed);
   if (typeof starter === "function" && canReuseCurrentBattle) return;
   if (typeof starter === "function") {
     try {

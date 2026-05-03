@@ -291,6 +291,38 @@
     });
   }
 
+  var exclusiveHandTagArchetypeRules = [
+    { archetype: "gojo_limitless", tokens: ["gojo_limitless", "gojo", "五条", "六眼", "无下限", "无限", "不可侵", "苍", "赫", "茈", "紫", "虚式", "无限虚式", "无量空处", "limitless", "six_eyes", "infinity", "blue", "red", "hollow_purple", "unlimited_void"] },
+    { archetype: "sukuna_slash", tokens: ["sukuna_slash", "sukuna", "宿傩", "两面宿傩", "御厨子", "伏魔御厨子", "捌", "斩击", "切割", "火箭", "slash", "cleave", "dismantle", "shrine", "malevolent_shrine", "open_domain"] },
+    { archetype: "higuruma_trial_owner", tokens: ["higuruma_trial_owner", "日车", "审判", "裁判", "没收", "处刑人之剑", "judgeman", "confiscation", "executioner"] },
+    { archetype: "hakari_jackpot_owner", tokens: ["hakari_jackpot_owner", "秤金次", "坐杀博徒", "大中奖", "jackpot", "hakari", "pachinko", "idle_death_gamble"] },
+    { archetype: "ten_shadows", tokens: ["ten_shadows", "十种影法术", "十影", "玉犬", "鵺", "满象", "脱兔", "魔虚罗", "八握剑", "mahoraga", "shadow_garden"] },
+    { archetype: "mahito_soul_transfiguration", tokens: ["mahito_soul_transfiguration", "真人", "无为转变", "灵魂改造", "自闭圆顿裹", "mahito", "idle_transfiguration"] },
+    { archetype: "okkotsu_rika_copy", tokens: ["okkotsu_rika_copy", "乙骨", "里香", "纯爱", "复制术式", "rika", "okkotsu", "copy_technique"] },
+    { archetype: "zero_ce_heavenly_restriction", tokens: ["zero_ce_heavenly_restriction", "天与咒缚", "零咒力", "甚尔", "真希", "heavenly_restriction", "zero_ce"] },
+    { archetype: "recontract_icon", tokens: ["recontract_icon", "再契象征", "契约再现", "reggie", "receipt_contract"] }
+  ];
+
+  function getExclusiveArchetypesFromHandTags(snapshot) {
+    var scanText = uniqueList([]
+      .concat(asList(snapshot?.tags))
+      .concat(asList(snapshot?.specialHandTags))
+      .concat(asList(snapshot?.exclusiveToArchetypes))
+      .concat(asList(snapshot?.sourceTechniqueFamily))
+      .concat(asList(snapshot?.sourceActionId))
+      .concat(asList(snapshot?.cardId))
+      .concat(asList(snapshot?.label))).join(" ").toLowerCase();
+    if (!scanText) return [];
+    return uniqueList(exclusiveHandTagArchetypeRules.filter(function matchesRule(rule) {
+      return rule.tokens.some(function hasToken(token) {
+        var normalized = String(token || "").trim().toLowerCase();
+        return normalized && scanText.includes(normalized);
+      });
+    }).map(function toArchetype(rule) {
+      return rule.archetype;
+    }));
+  }
+
   function normalizeCharacterKey(value) {
     return String(value || "").trim().toLowerCase();
   }
@@ -364,7 +396,8 @@
     if (/日车|诛伏赐死|审判|规则类/i.test(text)) traits.push("trial", "judgment", "日车", "审判");
     if (/秤|坐杀搏徒|中奖/i.test(text)) traits.push("jackpot", "hakari", "秤");
     if (/虎杖|虎天帝|itadori|逕庭拳|黑闪|灵魂打击|半人半咒/i.test(text)) traits.push("yuji", "itadori", "虎杖", "体术", "灵魂打击", "black_flash_window");
-    if (/伏黑|十种影|式神|嵌合暗翳庭/i.test(text)) traits.push("ten_shadows", "shikigami", "shadow", "伏黑", "式神", "影");
+    if (hasTenShadowsEvidence(text)) traits.push("ten_shadows", "shikigami", "shadow", "伏黑惠", "式神", "影");
+    else if (hasGenericSummonEvidence(text)) traits.push("summon", "shikigami", "式神", "召唤物");
     if (/真人|灵魂|无为转变|自闭圆顿裹/i.test(text)) traits.push("mahito", "soul", "真人", "灵魂");
     if (/乙骨|里香|真赝相爱|复制/i.test(text)) traits.push("okkotsu", "rika", "copy_candidate", "乙骨", "里香");
     if (/雷吉|レジィ|reggie|再契象|契约再现|收据|receipt|recontract/i.test(text)) traits.push("recontract_icon", "recontract", "receipt", "再契象", "收据", "实物具现");
@@ -391,12 +424,20 @@
     if (/日车|诛伏赐死|审判/i.test(text) && !archetypes.includes("higuruma_trial_owner")) archetypes.push("higuruma_trial_owner");
     if (/秤|坐杀搏徒|中奖/i.test(text) && !archetypes.includes("hakari_jackpot_owner")) archetypes.push("hakari_jackpot_owner");
     if (/虎杖|虎天帝|itadori|逕庭拳|黑闪|灵魂打击|半人半咒/i.test(text) && !archetypes.includes("yuji_soul_melee")) archetypes.push("yuji_soul_melee");
-    if (/伏黑|十种影|式神|嵌合暗翳庭/i.test(text) && !archetypes.includes("ten_shadows")) archetypes.push("ten_shadows");
+    if (hasTenShadowsEvidence(text) && !archetypes.includes("ten_shadows")) archetypes.push("ten_shadows");
     if (/真人|无为转变|灵魂/i.test(text) && !archetypes.includes("mahito_soul_transfiguration")) archetypes.push("mahito_soul_transfiguration");
     if (/乙骨|里香|复制/i.test(text) && !archetypes.includes("okkotsu_rika_copy")) archetypes.push("okkotsu_rika_copy");
     if (/咒灵之躯|灾害咒灵|咒灵/i.test(text) && !archetypes.includes("curse_spirit_general")) archetypes.push("curse_spirit_general");
     if (/雷吉|レジィ|reggie|再契象|契约再现|收据|receipt|recontract/i.test(text) && !archetypes.includes("recontract_icon")) archetypes.push("recontract_icon");
     return uniqueList(archetypes);
+  }
+
+  function hasTenShadowsEvidence(text) {
+    return /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(String(text || ""));
+  }
+
+  function hasGenericSummonEvidence(text) {
+    return /式神|召唤|召喚|咒灵操术|咒灵库存|傀儡|外部资源/i.test(String(text || ""));
   }
 
   function applyProfilePatch(profile, patch) {
@@ -602,6 +643,10 @@
     var forceAllowed = policy.forceAllowSourceActionIds.includes(sourceActionId);
     if (policy.forceDenySourceActionIds.includes(sourceActionId)) {
       return { ok: false, reason: "不符合当前角色特性", profile: profile, snapshot: snapshot };
+    }
+    var impliedExclusiveArchetypes = getExclusiveArchetypesFromHandTags(snapshot);
+    if (!forceAllowed && impliedExclusiveArchetypes.length && !includesAny(profile.archetypes, impliedExclusiveArchetypes)) {
+      return { ok: false, reason: "需要对应专属术式原型", profile: profile, snapshot: snapshot };
     }
     if (!forceAllowed && snapshot.exclusiveToCharacters.length) {
       var ids = uniqueList([profile.characterId, profile.ruleId, profile.displayName]);
@@ -894,6 +939,81 @@
     return shouldReplaceHandWithTrialCards(actor, battle) || shouldReplaceHandWithJackpotCards(actor, battle);
   }
 
+  function getCurrentTrialReplacementHandCards(actor, battle, side, rules) {
+    var hand;
+    if (!shouldReplaceHandWithTrialCards(actor, battle)) return [];
+    hand = getPersistentHandState(battle, side || actor?.side || "left", rules);
+    if (Number(hand?.round || 0) !== getTurnNumber(battle)) return [];
+    return (hand.cards || []).filter(function keepTrialReplacement(card) {
+      return card?.handSource === "trial-replacement" && (card?.domainClass === "rule_trial" || card?.domainSpecific);
+    });
+  }
+
+  function normalizeRefreshedTrialHandAction(template, profile, subPhase, side, round) {
+    var isDefender = side === subPhase?.defender;
+    if (!template?.id || !profile || !subPhase) return null;
+    return {
+      ...template,
+      action: null,
+      actionId: template.id,
+      sourceActionId: template.id,
+      status: "CANDIDATE",
+      cost: template.cost || { ceRatio: 0.03, minCe: 0 },
+      effects: template.effects || {},
+      requirements: { ...(template.requirements || {}), domainSpecific: true },
+      domainSpecific: true,
+      domainProfileId: profile.id || subPhase.domainId || "",
+      domainName: profile.domainName || subPhase.domainName || "",
+      domainClass: profile.domainClass || "rule_trial",
+      domainRole: template.role || "",
+      trialEligibility: template.trialEligibility || subPhase.trialEligibility || null,
+      trialSubjectType: template.trialSubjectType || subPhase.trialSubjectType || "",
+      canDefend: template.canDefend ?? subPhase.canDefend,
+      canRemainSilent: template.canRemainSilent ?? subPhase.canRemainSilent,
+      verdictVocabulary: template.verdictVocabulary || subPhase.verdictVocabulary || null,
+      tags: isDefender ? ["抗审判"] : ["审判"],
+      handSource: "trial-replacement",
+      drawnRound: round,
+      selectedRound: 0
+    };
+  }
+
+  function rebuildTrialReplacementHandCards(actor, battle, side, rules) {
+    var subPhase = getActiveTrialSubPhaseForActor(actor, battle);
+    var stateEntry = subPhase ? battle?.domainProfileStates?.[subPhase.owner] : null;
+    var profile = stateEntry?.profile || (battle?.domainProfileState?.ownerSide === subPhase?.owner ? battle.domainProfileState.profile : null);
+    var actorSide = side || actor?.side || "left";
+    var templates;
+    var round;
+    var cards;
+    var hand;
+    if (!subPhase || !profile) return [];
+    if (actorSide === subPhase.owner) {
+      templates = profile.domainActions || [];
+    } else if (actorSide === subPhase.defender) {
+      templates = profile.opponentActions || [];
+    } else {
+      return [];
+    }
+    round = getTurnNumber(battle);
+    cards = templates.map(function mapTrialTemplate(template) {
+      return normalizeRefreshedTrialHandAction(template, profile, subPhase, actorSide, round);
+    }).filter(Boolean);
+    hand = getPersistentHandState(battle, actorSide, rules);
+    hand.cards = cards;
+    hand.round = round;
+    hand.lastDrawn = cards.map(function summarize(card) {
+      return { actionId: getActionId(card), label: card.label || card.id || getActionId(card) };
+    });
+    hand.lastInjected = cards.map(function summarize(card) {
+      return { actionId: getActionId(card), label: card.label || card.id || getActionId(card), source: actorSide === subPhase.defender ? "anti-trial" : "trial" };
+    });
+    hand.lastDiscarded = [];
+    hand.pendingDiscardCount = 0;
+    hand.overflowDiscardRequired = false;
+    return cards;
+  }
+
   function filterStrictRuleSubphaseHandCandidates(candidates, actor, battle) {
     if (shouldReplaceHandWithTrialCards(actor, battle)) return filterStrictTrialHandCandidates(candidates, actor, battle);
     if (shouldReplaceHandWithJackpotCards(actor, battle)) return filterStrictJackpotHandCandidates(candidates, actor, battle);
@@ -1154,6 +1274,28 @@
     return asList(entry?.rules?.randomHandInjections).concat(asList(entry?.rules?.rules?.randomHandInjections));
   }
 
+  function getFixedHandInjectionsForActor(actor) {
+    var characterRules = getDuelCharacterCardRules();
+    var profile = buildDuelCharacterCardProfile(actor, { rules: characterRules });
+    var entry = getCharacterRuleEntry({ id: profile.characterId, name: profile.displayName }, characterRules);
+    return asList(entry?.rules?.fixedHandInjections).concat(asList(entry?.rules?.rules?.fixedHandInjections));
+  }
+
+  function shouldApplyFixedHandInjection(injection, actor, battle, round) {
+    var condition = injection?.condition || injection?.conditions || {};
+    if (!condition || typeof condition !== "object" || !Object.keys(condition).length) return true;
+    var hpBelowRatio = Number(condition.hpBelowRatio ?? condition.requiresHpBelowRatio);
+    if (Number.isFinite(hpBelowRatio)) {
+      var maxHp = Number(actor?.maxHp || 0);
+      if (maxHp <= 0) return false;
+      var hpRatio = Number(actor?.hp || 0) / maxHp;
+      if (!(hpRatio < hpBelowRatio)) return false;
+    }
+    var minRound = Number(condition.minRound || 0);
+    if (Number.isFinite(minRound) && minRound > 0 && Number(round || 0) < minRound) return false;
+    return true;
+  }
+
   function rollRandomHandInjection(injection, actor, battle, round) {
     var chance = Number(injection?.probability ?? injection?.chance ?? 0);
     if (!Number.isFinite(chance) || chance <= 0) return false;
@@ -1192,6 +1334,37 @@
     return injected;
   }
 
+  function injectFixedHandCards(hand, fullCandidates, actor, battle, rules, round) {
+    var injections = getFixedHandInjectionsForActor(actor);
+    if (!injections.length) return [];
+    var byId = Object.create(null);
+    (fullCandidates || []).forEach(function indexCandidate(candidate) {
+      var id = getActionId(candidate);
+      if (id) byId[id] = candidate;
+    });
+    var existingIds = new Set((hand.cards || []).map(getActionId).filter(Boolean));
+    var injected = [];
+    injections.forEach(function injectFixed(injection) {
+      var id = injection?.sourceActionId || injection?.actionId || injection?.id || "";
+      if (!id || existingIds.has(id)) return;
+      if (!shouldApplyFixedHandInjection(injection, actor, battle, round)) return;
+      var candidate = byId[id];
+      if (!candidate) return;
+      var card = normalizePersistentHandCard({
+        ...(candidate || {}),
+        fixedHandInjection: true,
+        retainedPermanent: injection.retainedPermanent !== false,
+        characterWeight: Math.max(Number(candidate.characterWeight || candidate.selectionWeight || 0), Number(injection.weight || 999)),
+        selectionWeight: Math.max(Number(candidate.selectionWeight || candidate.characterWeight || 0), Number(injection.weight || 999)),
+        handSource: injection.handSource || "fixed-injection"
+      }, round, injection.handSource || "fixed-injection");
+      hand.cards.unshift(card);
+      existingIds.add(id);
+      injected.push(card);
+    });
+    return injected;
+  }
+
   function updatePersistentDuelHand(actor, opponent, battle, rankedCandidates, rules, options) {
     var side = getActorSide(actor, options);
     var hand = getPersistentHandState(battle, side, rules);
@@ -1218,7 +1391,13 @@
         updatePersistentHandOverflow(hand, maxHandSize);
         return hand.cards;
       }
+      var fixedSameRound = injectFixedHandCards(hand, options?.fullCandidates || rankedCandidates, actor, battle, rules, round);
       updatePersistentHandOverflow(hand, maxHandSize);
+      if (fixedSameRound.length) {
+        hand.lastInjected = fixedSameRound.map(function summarize(card) {
+          return { actionId: getActionId(card), label: card.label || card.id || getActionId(card), reason: "fixed" };
+        }).concat(hand.lastInjected || []).slice(0, 8);
+      }
       return hand.cards;
     }
 
@@ -1253,7 +1432,9 @@
     hand.cards = (hand.cards || []).map(function markRetained(card) {
       return normalizePersistentHandCard(card, card.drawnRound || round, "retained");
     }).concat(drawn);
-    var injected = injectRandomHandCards(hand, options?.fullCandidates || rankedCandidates, actor, battle, rules, round);
+    var fixedInjected = injectFixedHandCards(hand, options?.fullCandidates || rankedCandidates, actor, battle, rules, round);
+    var randomInjected = injectRandomHandCards(hand, options?.fullCandidates || rankedCandidates, actor, battle, rules, round);
+    var injected = fixedInjected.concat(randomInjected);
 
     if (hand.cards.length > maxHandSize) {
       updatePersistentHandOverflow(hand, maxHandSize);
@@ -1266,7 +1447,7 @@
       return { actionId: getActionId(card), label: card.label || card.id || getActionId(card) };
     });
     hand.lastInjected = injected.map(function summarize(card) {
-      return { actionId: getActionId(card), label: card.label || card.id || getActionId(card), chance: card.randomHandInjectionChance || "" };
+      return { actionId: getActionId(card), label: card.label || card.id || getActionId(card), chance: card.randomHandInjectionChance || "", reason: card.fixedHandInjection ? "fixed" : "random" };
     });
     if (!hand.overflowDiscardRequired) hand.lastDiscarded = [];
     return hand.cards;
@@ -1867,6 +2048,22 @@
     var rawPool = callDependency("buildDuelActionPool", [actor, opponent, battle]) || [];
     var side = actor?.side || "left";
     var strictRuleSubphaseHand = shouldReplaceHandWithRuleSubphaseCards(actor, battle);
+    var currentTrialReplacement = getCurrentTrialReplacementHandCards(actor, battle, side, rules);
+    if (currentTrialReplacement.length) {
+      if (battle && actor?.side === "left") {
+        battle.handCandidates = currentTrialReplacement;
+        buildDuelHandCandidateCache(battle);
+      }
+      return currentTrialReplacement;
+    }
+    if (shouldReplaceHandWithTrialCards(actor, battle)) {
+      var rebuiltTrialReplacement = rebuildTrialReplacementHandCards(actor, battle, side, rules);
+      if (battle && actor?.side === "left") {
+        battle.handCandidates = rebuiltTrialReplacement;
+        buildDuelHandCandidateCache(battle);
+      }
+      return rebuiltTrialReplacement;
+    }
     if (consumeDomainScriptNoCard(actor, battle, side)) {
       initializeDuelHandState(battle, rules);
       battle.handState[side] = {
@@ -2390,15 +2587,6 @@
     var totalCeCost = 0;
     var results = [];
     var selectedIds = new Set(entries.map(getActionId).filter(Boolean));
-    var mandatoryMaintenance = (getPersistentHandState(battle, side, options?.rules)?.cards || []).filter(function findMandatory(card) {
-      return isSkipTurnMaintenance(card) && isMaintenanceCardCurrentlyValid(card, battle);
-    });
-    if (mandatoryMaintenance.length && !mandatoryMaintenance.some(function selectedMandatory(card) { return selectedIds.has(getActionId(card)); })) {
-      return { applied: false, ok: false, reason: "未调幅魔虚罗在场时，本轮必须先打出「影中藏身」。", side: side, actions: entries.map(getActionFromEntry), results: results, totalCeCost: totalCeCost };
-    }
-    if (entries.some(isSkipTurnMaintenance) && entries.length > 1) {
-      return { applied: false, ok: false, reason: "影中藏身会消耗全部行动点，不能与其他手札同回合结算。", side: side, actions: entries.map(getActionFromEntry), results: results, totalCeCost: totalCeCost };
-    }
     for (var index = 0; index < entries.length; index += 1) {
       var entry = entries[index];
       var action = getActionFromEntry(entry);

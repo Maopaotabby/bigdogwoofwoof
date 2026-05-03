@@ -15,6 +15,11 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $parent = Split-Path -Parent $root
 $staging = Join-Path $parent ("cf-pages-{0}-upload" -f $ProjectName)
+$wranglerCmd = Join-Path $root "node_modules\.bin\wrangler.cmd"
+
+if ([string]::IsNullOrWhiteSpace($env:CLOUDFLARE_API_TOKEN)) {
+  throw "CLOUDFLARE_API_TOKEN is required for Cloudflare takeover and deploy."
+}
 
 function Remove-StagingDirectory {
   if ($KeepStaging) { return }
@@ -41,21 +46,24 @@ function Test-PagesDeployment {
     throw "Cloudflare Pages AI rules check failed: HTTP $($rules.StatusCode)"
   }
   $rulesText = [string]$rules.Content
-  if ($rulesText -notmatch "doubao-seed-2-0-lite-260215" -or $rulesText -notmatch "workers.dev/ai") {
-    throw "Cloudflare Pages AI rules file does not contain the expected Cloudflare AI defaults."
+  if ($rulesText -notmatch "doubao-seed-2-0-lite-260215") {
+    throw "Cloudflare Pages AI rules file does not contain the expected AI model default."
   }
   Write-Output ("Pages check OK: {0} bytes home, {1} bytes AI rules" -f ([string]$homeResponse.Content).Length, $rulesText.Length)
 }
 
 Push-Location $root
 try {
-  if (-not (Test-Path ".\node_modules\openai")) {
+  if (-not (Test-Path ".\node_modules\openai") -or -not (Test-Path -LiteralPath $wranglerCmd)) {
     Invoke-RequiredCommand -Description "Installing npm dependencies..." -Command { npm.cmd ci }
+  }
+  if (-not (Test-Path -LiteralPath $wranglerCmd)) {
+    throw "Local wrangler not found. Run npm ci before deploying Cloudflare."
   }
 
   if (-not $SkipWorker) {
     Invoke-RequiredCommand -Description "Deploying Cloudflare Worker..." -Command {
-      npx.cmd wrangler deploy --config $WorkerConfig
+      & $wranglerCmd deploy --config $WorkerConfig
     }
   }
 
@@ -85,7 +93,7 @@ try {
       throw "robocopy failed with exit code $LASTEXITCODE"
     }
     Invoke-RequiredCommand -Description "Deploying Cloudflare Pages direct upload..." -Command {
-      npx.cmd wrangler pages deploy $staging --project-name $ProjectName --branch $Branch --commit-dirty=true
+      & $wranglerCmd pages deploy $staging --project-name $ProjectName --branch $Branch --commit-dirty=true
     }
     Test-PagesDeployment -BaseUrl $PagesUrl
   }

@@ -1064,6 +1064,7 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
   const expectedLocalTurn = battle.round + 1;
   if (Number(turn.turn) !== expectedLocalTurn) return false;
 
+  const beforeMemoSnapshot = snapshotDuelMemoState(battle);
   const leftActions = normalizeOnlineResolvedActions(turn.actions?.left, "left", battle);
   const rightActions = normalizeOnlineResolvedActions(turn.actions?.right, "right", battle);
   appendDuelHandBatchLog(battle, "left", leftActions, { phase: "selected" });
@@ -1097,6 +1098,7 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
       delta: { aiSource: turn.source || turn.result?.source || "", leftEffect: turn.result?.leftEffect || "", rightEffect: turn.result?.rightEffect || "" }
     });
   }
+  battle.lastRoundMemo = buildDuelRoundMemo(battle, beforeMemoSnapshot, snapshotDuelMemoState(battle), leftResult, rightResult);
   battle.onlineAppliedTurns.push(turnKey);
   battle.currentOptions = [];
   battle.pendingAction = null;
@@ -1107,7 +1109,7 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
 
 function getActiveDuelHandLockMessage(battle = state.duelBattle, side = getDuelControlledSide(battle)) {
   if (!battle || !side) return "";
-  if (battle.mahoragaProxy?.[side]?.active) return "魔须罗代打中";
+  if (battle.mahoragaProxy?.[side]?.active) return "魔虚罗代打中";
   const lockEntry = battle.handLockMessages?.[side];
   return lockEntry && Number(lockEntry.round || 0) === battle.round + 1 ? String(lockEntry.message || "") : "";
 }
@@ -1367,11 +1369,12 @@ function startDuelBattle(options = {}) {
   battle.resourceState.replayKey = battle.replayKey;
   updateDuelActionAvailability(battle);
   state.duelBattle = battle;
+  const currentBattlePage = getBattlePageModule()?.getBattlePageState?.().activePage || state.duelModeState.activePage || "";
   setDuelBattleMode(mode, {
     activeBattleId: battle.battleId,
     activeRoomId: battle.onlineRoomId || state.duelModeState.activeRoomId || "",
     playerSide: battle.onlinePlayerSide || state.duelModeState.playerSide || null,
-    activePage: mode === "online" ? "online" : "solo"
+    activePage: mode === "online" ? (currentBattlePage || "online") : "solo"
   });
   renderDuelMode();
 }
@@ -2148,7 +2151,7 @@ function updateDuelActionAvailability(battle = state.duelBattle) {
     battle.domainHandCandidates = [];
     battle.actionRound = battle.round + 1;
     battle.pendingAction = null;
-    battle.actionUiMessage = "魔须罗代打中";
+    battle.actionUiMessage = "魔虚罗代打中";
     return battle.actionChoices;
   }
   battle.actionChoices = pickDuelHandCandidates(actor, opponent, battle, handChoiceCount);
@@ -2804,8 +2807,8 @@ function lockMahoragaHandForTurn(battle, side) {
   battle.handLockMessages ||= {};
   battle.handLockMessages[side] = {
     round: battle.round + 1,
-    message: "魔须罗代打中",
-    sourceDomainName: "魔须罗"
+    message: "魔虚罗代打中",
+    sourceDomainName: "魔虚罗"
   };
   const action = createMahoragaAutoAction(battle, side);
   battle.mahoragaProxy[side].lastLockedAction = {
@@ -2821,14 +2824,14 @@ function createMahoragaAutoAction(battle, side) {
   const variants = [
     {
       id: "mahoraga_eight_handled_sword",
-      label: "魔须罗·八握剑斩击",
+      label: "魔虚罗·八握剑斩击",
       baseDamage: 68,
       baseStabilityDamage: 22,
-      effectSummary: "魔须罗自主代打，以八握剑进行强压斩击。"
+      effectSummary: "魔虚罗自主代打，以八握剑进行强压斩击。"
     },
     {
       id: "mahoraga_adaptive_counter",
-      label: "魔须罗·适应反击",
+      label: "魔虚罗·适应反击",
       baseDamage: 54,
       baseStabilityDamage: 18,
       effects: { incomingHpScale: 0.92 },
@@ -2836,7 +2839,7 @@ function createMahoragaAutoAction(battle, side) {
     },
     {
       id: "mahoraga_guard_break_step",
-      label: "魔须罗·破防踏碎",
+      label: "魔虚罗·破防踏碎",
       baseDamage: 46,
       baseStabilityDamage: 28,
       effects: { opponentStabilityDelta: -0.045 },
@@ -2858,11 +2861,11 @@ function createMahoragaAutoAction(battle, side) {
     scalingProfile: "mahoraga_proxy",
     accuracyProfile: "weapon",
     evasionAllowed: true,
-    tags: ["魔须罗", "代打", "适应"],
+    tags: ["魔虚罗", "代打", "适应"],
     playableInHandBeta: true,
     available: true,
     handSource: "mahoraga-proxy",
-    logTemplate: `${side === "right" ? "对方" : "我方"}魔须罗代替术师自主行动。`
+    logTemplate: `${side === "right" ? "对方" : "我方"}魔虚罗代替术师自主行动。`
   };
 }
 
@@ -2873,11 +2876,11 @@ function processMahoragaProxyAfterHandResult(battle, handResult) {
     if (!proxy?.active || !proxy.side) return;
     clearMahoragaHandState(battle, proxy.side);
     lockMahoragaHandForTurn(battle, proxy.side);
-    battle.actionUiMessage = "魔须罗代打中";
+    battle.actionUiMessage = "魔虚罗代打中";
     recordDuelResourceChange(battle, {
       side: proxy.side,
       title: "调幅仪式完成",
-      detail: `${getDuelResourceSideLabel(proxy.side)}角色栏切换为${proxy.name}，手牌区清空并进入魔须罗代打中。`,
+      detail: `${getDuelResourceSideLabel(proxy.side)}角色栏切换为${proxy.name}，手牌区清空并进入魔虚罗代打中。`,
       type: "action",
       delta: { mahoragaProxy: true, side: proxy.side }
     });
@@ -2956,27 +2959,6 @@ function getVisibleDuelBattlefieldUnits(battle = state.duelBattle) {
   const units = (Array.isArray(battle?.battlefieldUnits) ? battle.battlefieldUnits : [])
     .filter((unit) => unit && unit.active !== false && getDuelUnitHpValue(unit) > 0)
     .map((unit) => ({ ...unit, displayType: "unit" }));
-  ["left", "right"].forEach((side) => {
-    const proxy = battle?.mahoragaProxy?.[side];
-    const resource = side === "right" ? battle?.resourceState?.p2 : battle?.resourceState?.p1;
-    if (!proxy?.active || !resource) return;
-    units.push({
-      id: `mahoraga_proxy_${side}`,
-      name: resource.name || "八握剑异戒神将 魔须罗",
-      label: resource.name || "八握剑异戒神将 魔须罗",
-      side,
-      ownerSide: side,
-      controllerSide: side,
-      control: "mahoraga_proxy",
-      placement: "角色栏代打",
-      hp: resource.hp,
-      maxHp: resource.maxHp,
-      baseDamage: 60,
-      spawnedRound: proxy.startedRound,
-      displayType: "proxy",
-      attackMemory: proxy.attackMemory || {}
-    });
-  });
   return units;
 }
 
@@ -3322,7 +3304,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   const selectionHint = pendingDiscardCount > 0
     ? `手牌超过上限，请先弃置 ${formatNumber(pendingDiscardCount)} 张。弃牌范围包含原有手牌与本轮新增手牌。`
     : mahoragaProxyActive
-    ? "魔须罗已经接管行动；手牌区每回合后台随机锁定，由魔须罗自行行动。"
+    ? "魔虚罗已经接管行动；手牌区每回合后台随机锁定，由魔虚罗自行行动。"
     : onlineLocked
     ? "联机行动已锁定；等待对方锁定或结算。"
     : onlineMode
@@ -3363,7 +3345,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
       ${sideHandState.lastDiscarded?.length ? `<p class="duel-action-message">已弃置：${escapeHtml(sideHandState.lastDiscarded.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
       ${warning ? `<p class="duel-action-warning">${escapeHtml(warning)}</p>` : ""}
       ${battle.actionUiMessage ? `<p class="duel-action-message">${escapeHtml(battle.actionUiMessage)}</p>` : ""}
-      ${mahoragaProxyActive ? `<div class="duel-mahoraga-banner">魔须罗代打中</div>` : ""}
+      ${mahoragaProxyActive ? `<div class="duel-mahoraga-banner">魔虚罗代打中</div>` : ""}
       ${handLockMessage ? `<div class="duel-hand-lock-message">${escapeHtml(handLockMessage)}</div>` : ""}
       <div class="duel-action-toolbar">
         <div class="duel-selected-hand-summary">
@@ -3692,8 +3674,21 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
   const readablePreview = getDuelReadableEffectPreview(view, action);
   const numericBrief = getDuelCardNumericBrief(view);
   const cardTypeClass = String(view.cardType || "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+  const identityText = [
+    view.actionId,
+    view.id,
+    view.sourceActionId,
+    view.displayName,
+    view.label,
+    view.name,
+    action?.id,
+    action?.sourceActionId,
+    action?.label,
+    action?.name
+  ].filter(Boolean).join(" ");
+  const specialCardClass = /mahoraga_tuning_ritual|魔虚罗调幅仪式/.test(identityText) ? " mahoraga-ritual" : "";
   return `
-    <article class="duel-hand-card ${escapeHtml(cardTypeClass)}${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
+    <article class="duel-hand-card ${escapeHtml(cardTypeClass)}${specialCardClass}${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
       <button class="duel-action-choice duel-hand-main${selected ? " active" : ""}" data-duel-action="${escapeHtml(view.actionId)}" type="button" ${onlineLocked || discardMode || selected || !view.available ? "disabled" : ""}>
         <span class="duel-action-title">${escapeHtml(titleText)}</span>
         ${subtitleText ? `<span class="duel-action-subtitle">${escapeHtml(subtitleText)}</span>` : ""}
@@ -4130,6 +4125,48 @@ function buildDuelBattleAssistPayload(battle) {
   const winner = battle.winnerSide === "left" ? battle.left : battle.winnerSide === "right" ? battle.right : null;
   const leftTactic = getDuelTacticDefinition(battle.selectedTactic);
   const rightTactic = getDuelTacticDefinition(battle.opponentTactic);
+  const resources = summarizeDuelResourceStateForAi(battle);
+  const roundEvents = battle.log.slice().reverse().map((entry) => ({
+    round: entry.round,
+    title: entry.title,
+    detail: entry.detail
+  }));
+  const handActions = (battle.resourceState?.resourceLog || [])
+    .filter((entry) => String(entry.title || "").includes("手法") || String(entry.title || "").includes("鎵嬫硶"))
+    .slice(0, 12)
+    .reverse()
+    .map((entry) => ({
+      round: entry.round,
+      title: entry.title,
+      detail: entry.detail,
+      delta: entry.delta
+    }));
+  const domainState = {
+    final: battle.finalDomainState || null,
+    trial: battle.domainTrialContext || null,
+    subPhase: battle.domainSubPhase || null,
+    profiles: battle.domainProfileActivations || []
+  };
+  const battleSummary = {
+    left: summarizeDuelProfileForAi(battle.left),
+    right: summarizeDuelProfileForAi(battle.right),
+    winnerSide: battle.winnerSide,
+    winnerName: winner?.name || (battle.winnerSide === "draw" ? "平局 / 长期僵持" : ""),
+    battleEnded: Boolean(battle.resolved || battle.battleEnded),
+    endReason: battle.endReason || battle.resolutionReason || "ongoing",
+    endingRound: battle.endingRound || battle.round,
+    finalRate: roundForPayload(battle.finalRate),
+    leftScore: roundForPayload(battle.leftScore),
+    rightScore: roundForPayload(battle.rightScore),
+    battleId: battle.battleId,
+    seed: battle.seed,
+    replayKey: battle.replayKey,
+    roundRule: getDuelRoundRuleText(battle.left, battle.right),
+    tactics: {
+      left: { id: leftTactic.id, label: leftTactic.label, description: leftTactic.description },
+      right: { id: rightTactic.id, label: rightTactic.label, description: rightTactic.description }
+    }
+  };
   return {
     schema: "jjk-duel-assist-request",
     version: 1,
@@ -4137,6 +4174,12 @@ function buildDuelBattleAssistPayload(battle) {
     mode: "battleNarrative",
     language: "zh-CN",
     customSpecialTerms: getDuelSpecialTermsForAi(),
+    battleSummary,
+    roundEvents,
+    resources,
+    domainState,
+    handActions,
+    trialOrJackpotState: battle.domainSubPhase || battle.domainTrialContext || null,
     battle: {
       left: summarizeDuelProfileForAi(battle.left),
       right: summarizeDuelProfileForAi(battle.right),

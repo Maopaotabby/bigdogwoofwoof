@@ -1768,7 +1768,13 @@
       "mechanicId": "infinity_guard",
       "playableInHandBeta": true,
       "status": "CANDIDATE",
-      "baseDomainPressure": 16
+      "baseDomainPressure": 16,
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ]
     },
     {
       "cardId": "card_lapse_blue_pressure",
@@ -1800,7 +1806,13 @@
       "risk": "medium",
       "mechanicId": "soul_touch_pressure",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ]
     },
     {
       "cardId": "card_reversal_red_burst",
@@ -1832,7 +1844,13 @@
       "risk": "high",
       "mechanicId": "binding_vow_overclock",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ]
     },
     {
       "cardId": "card_unlimited_void_suppression",
@@ -1862,7 +1880,13 @@
       "risk": "critical",
       "mechanicId": "domain_anchor_spike",
       "playableInHandBeta": true,
-      "status": "CANDIDATE"
+      "status": "CANDIDATE",
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ]
     },
     {
       "cardId": "card_dismantle_pressure",
@@ -3569,14 +3593,14 @@
     {
       "cardId": "card_ten_shadows_mahoraga_tuning_ritual",
       "sourceActionId": "ten_shadows_mahoraga_tuning_ritual",
-      "name": "调幅魔须罗仪式",
+      "name": "魔虚罗调幅仪式",
       "cardType": "summon",
       "apCost": 3,
       "ceCostMode": "fixed",
       "baseCeCost": 70,
       "tags": [
         "十种影法术",
-        "魔须罗",
+        "魔虚罗",
         "调幅仪式",
         "代打",
         "完全适应",
@@ -3585,32 +3609,33 @@
         "ten_shadows"
       ],
       "rarity": "special",
-      "weight": 0.2,
+      "weight": 0.6,
       "allowedContexts": [
         "normal",
         "domain"
       ],
-      "effectSummary": "清除手牌并切换为魔须罗代打中；之后每回合手牌区后台随机锁定，由魔须罗自主行动。同名攻击手札每次命中都会被记录并降低后续伤害，第 6 次起归零。",
+      "effectSummary": "清除手牌并切换为魔虚罗代打中；之后每回合手牌区后台随机锁定，由魔虚罗自主行动。同名攻击手札每次命中都会被记录并降低后续伤害，第 6 次起归零。",
       "baseDamage": 0,
       "baseBlock": 0,
       "baseDomainLoadDelta": 0,
       "durationRounds": 0,
       "damageType": "none",
       "scalingProfile": "ten_shadows_mahoraga_proxy",
-      "risk": "extreme",
+      "risk": "critical",
       "status": "CONFIRMED",
       "playableInHandBeta": true,
       "mahoragaProxySpec": {
         "unitCardId": "card_unit_mahoraga_tuned",
-        "displayName": "八握剑异戒神将 魔须罗",
-        "handLockMessage": "魔须罗代打中",
+        "displayName": "八握剑异戒神将 魔虚罗",
+        "handLockMessage": "魔虚罗代打中",
         "adaptationLimit": 6,
         "sameAttackDamageRule": "同名攻击手札每命中一次降低 1/6 伤害，第 6 次起归零。"
       },
       "specialHandTags": [
         "ten_shadows",
         "mahoraga_tuning_ritual"
-      ]
+      ],
+      "selectionWeight": 0.6
     },
     {
       "cardId": "card_ten_shadows_shadow_hide",
@@ -3682,7 +3707,7 @@
       "durationRounds": 0,
       "damageType": "shikigami_exorcism_blade",
       "scalingProfile": "mahoraga_unattuned_unit",
-      "risk": "extreme",
+      "risk": "critical",
       "status": "CONFIRMED",
       "playableInHandBeta": false,
       "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
@@ -4021,7 +4046,7 @@
       "durationRounds": 0,
       "damageType": "materialized_house_crush",
       "scalingProfile": "recontract_massive_object_finisher",
-      "risk": "extreme",
+      "risk": "critical",
       "status": "CONFIRMED",
       "playableInHandBeta": true,
       "accuracyProfile": "huge_slow_object",

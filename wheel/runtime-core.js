@@ -140,9 +140,6 @@ const els = {
   templateFinalEvaluation: document.querySelector("#templateFinalEvaluation"),
   generateTemplateBtn: document.querySelector("#generateTemplateBtn"),
   templatePreview: document.querySelector("#templatePreview"),
-  aiEndpointInput: document.querySelector("#aiEndpointInput"),
-  aiCnEndpointInput: document.querySelector("#aiCnEndpointInput"),
-  aiEndpointMode: document.querySelector("#aiEndpointMode"),
   globalSettingsBtn: document.querySelector("#globalSettingsBtn"),
   globalSettingsPanel: document.querySelector("#globalSettingsPanel"),
   globalSettingsCloseBtn: document.querySelector("#globalSettingsCloseBtn"),
@@ -154,7 +151,6 @@ const els = {
   aiByokKeyInput: document.querySelector("#aiByokKeyInput"),
   aiByokRevealToggle: document.querySelector("#aiByokRevealToggle"),
   aiByokPersistLocal: document.querySelector("#aiByokPersistLocal"),
-  aiProxyEndpointInput: document.querySelector("#aiProxyEndpointInput"),
   aiModelInput: document.querySelector("#aiModelInput"),
   aiOutputTokenInput: document.querySelector("#aiOutputTokenInput"),
   aiProviderWarning: document.querySelector("#aiProviderWarning"),
@@ -162,16 +158,9 @@ const els = {
   aiCostNotice: document.querySelector("#aiCostNotice"),
   aiFallbackStatus: document.querySelector("#aiFallbackStatus"),
   clearAiKeyBtn: document.querySelector("#clearAiKeyBtn"),
-  clearAiProxyBtn: document.querySelector("#clearAiProxyBtn"),
   clearAiAllSettingsBtn: document.querySelector("#clearAiAllSettingsBtn"),
   testAiProviderBtn: document.querySelector("#testAiProviderBtn"),
-  aiAdminIdInput: document.querySelector("#aiAdminIdInput"),
-  aiAdminPasswordInput: document.querySelector("#aiAdminPasswordInput"),
-  aiAdminLoginBtn: document.querySelector("#aiAdminLoginBtn"),
-  aiAdminLogoutBtn: document.querySelector("#aiAdminLogoutBtn"),
-  aiAdminStatus: document.querySelector("#aiAdminStatus"),
   aiNarrativeKind: document.querySelector("#aiNarrativeKind"),
-  saveAiEndpointBtn: document.querySelector("#saveAiEndpointBtn"),
   generateAiNarrativeBtn: document.querySelector("#generateAiNarrativeBtn"),
   aiNarrativeStatus: document.querySelector("#aiNarrativeStatus"),
   aiNarrativeOutput: document.querySelector("#aiNarrativeOutput"),
@@ -260,7 +249,7 @@ const els = {
 
 const DEBUG_ACCESS_CODE = "258079";
 const DEBUG_SUMMON_SEQUENCE = "258079";
-const APP_BUILD_VERSION = "20260502-v2.11-per-card-damage-v1";
+const APP_BUILD_VERSION = "20260503-v2.15-ai-guardrail-ui";
 const MOBILE_TOPBAR_QUERY = "(max-width: 640px)";
 const MOBILE_TOPBAR_SCROLL_DELTA = 8;
 const MOBILE_TOPBAR_MIN_HIDE_AFTER = 72;
@@ -268,14 +257,10 @@ const MOBILE_DEBUG_RESTART_TAPS = 3;
 const MOBILE_DEBUG_FEEDBACK_TAPS = 8;
 const MOBILE_DEBUG_LIFE_FILE_TAPS = 2;
 const USAGE_STATS_KEY = "jjk-wheel-usage-stats-v1";
-const AI_ENDPOINT_STORAGE_KEY = "jjk-life-ai-worker-endpoint-v1";
-const AI_CN_ENDPOINT_STORAGE_KEY = "jjk-life-ai-cn-endpoint-v1";
-const AI_ENDPOINT_MODE_STORAGE_KEY = "jjk-life-ai-endpoint-mode-v1";
 const AI_PROVIDER_MODE_STORAGE_KEY = "jjk-ai-provider-mode-v1";
 const AI_PROVIDER_ID_STORAGE_KEY = "jjk-ai-provider-id-v1";
 const AI_BASE_URL_STORAGE_KEY = "jjk-ai-base-url-v1";
 const AI_PATH_STORAGE_KEY = "jjk-ai-path-v1";
-const AI_PROXY_ENDPOINT_STORAGE_KEY = "jjk-ai-user-proxy-endpoint-v1";
 const AI_MODEL_STORAGE_KEY = "jjk-ai-model-v1";
 const AI_OUTPUT_TOKENS_STORAGE_KEY = "jjk-ai-output-tokens-v1";
 const AI_BYOK_SESSION_KEY = "jjk-ai-byok-key-session-v1";
@@ -286,8 +271,6 @@ const WHEEL_SETTINGS_STORAGE_KEY = "jjk-wheel-player-settings-v1";
 const LIFE_WHEEL_RUN_DRAFT_STORAGE_KEY = "jjk-life-wheel-run-draft-v1";
 const LIFE_WHEEL_RUN_DRAFT_SCHEMA = "jjk-life-wheel-run-draft";
 const DIRECT_SUKUNA_COMBAT_WHEEL_IDS = new Set([39, 129, 62, 40, 108, 41, 109, 131]);
-const DEFAULT_AI_ENDPOINT = "";
-const DEFAULT_CN_AI_ENDPOINT = "";
 const AI_REQUEST_TIMEOUT_MS = 150000;
 const AI_FREE_ANALYSIS_TIMEOUT_MS = 60000;
 const AI_FREE_ANALYSIS_DEBOUNCE_MS = 700;
@@ -1089,11 +1072,6 @@ function bindEvents() {
   els.debugEntryAddBtn?.addEventListener("click", addDebugEntry);
   els.debugEntrySaveBtn?.addEventListener("click", saveDebugEntry);
   els.debugEntryDeleteBtn?.addEventListener("click", deleteDebugEntry);
-  els.saveAiEndpointBtn?.addEventListener("click", saveAiEndpoint);
-  els.aiEndpointMode?.addEventListener("change", () => {
-    saveAiEndpointMode();
-    updateAiNarrativeStatus(getAiEndpointModeHint());
-  });
   els.aiProviderMode?.addEventListener("change", () => {
     syncAiProviderForMode(true);
     saveAiProviderSettings();
@@ -1107,18 +1085,14 @@ function bindEvents() {
   });
   els.aiBaseUrlInput?.addEventListener("change", saveAiProviderSettings);
   els.aiPathInput?.addEventListener("change", saveAiProviderSettings);
-  els.aiProxyEndpointInput?.addEventListener("change", saveAiProviderSettings);
   els.aiModelInput?.addEventListener("change", saveAiProviderSettings);
   els.aiOutputTokenInput?.addEventListener("change", saveAiProviderSettings);
   els.aiByokPersistLocal?.addEventListener("change", saveAiProviderSettings);
   els.aiByokKeyInput?.addEventListener("change", saveAiProviderSettings);
   els.aiByokRevealToggle?.addEventListener("click", toggleAiByokKeyVisibility);
   els.clearAiKeyBtn?.addEventListener("click", clearAiByokKey);
-  els.clearAiProxyBtn?.addEventListener("click", clearAiProxyEndpoint);
   els.clearAiAllSettingsBtn?.addEventListener("click", clearAllAiProviderSettings);
   els.testAiProviderBtn?.addEventListener("click", testAiProviderConnection);
-  els.aiAdminLoginBtn?.addEventListener("click", loginAiAdmin);
-  els.aiAdminLogoutBtn?.addEventListener("click", logoutAiAdmin);
   els.globalSettingsBtn?.addEventListener("click", () => toggleGlobalSettingsPanel());
   els.globalSettingsCloseBtn?.addEventListener("click", () => toggleGlobalSettingsPanel(false));
   els.generateAiNarrativeBtn?.addEventListener("click", generateAiNarrative);

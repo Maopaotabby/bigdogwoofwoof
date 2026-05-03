@@ -1,7 +1,7 @@
 param(
   [string]$Endpoint = "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev",
   [string]$ExpectedBuild = "20260430-online-pass-turn-v1",
-  [int]$ExpectedAiTimeoutMs = 150000,
+  [int]$ExpectedAiTimeoutMs = 30000,
   [int]$Count = 1,
   [int]$IntervalSeconds = 10
 )

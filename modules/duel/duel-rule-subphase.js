@@ -359,6 +359,89 @@
     return callOptionalDependency("invalidateDuelActionChoices", [battle], null);
   }
 
+  function getTrialTurnNumber(battle) {
+    return Number(battle?.round || 0) + 1;
+  }
+
+  function normalizeTrialHandAction(template, profile, subPhase, side) {
+    var isDefender = side === subPhase?.defender;
+    if (!template?.id) return null;
+    return {
+      ...template,
+      action: null,
+      actionId: template.id,
+      sourceActionId: template.id,
+      status: "CANDIDATE",
+      cost: template.cost || { ceRatio: 0.03, minCe: 0 },
+      effects: template.effects || {},
+      requirements: { ...(template.requirements || {}), domainSpecific: true },
+      domainSpecific: true,
+      domainProfileId: profile?.id || subPhase?.domainId || "",
+      domainName: profile?.domainName || subPhase?.domainName || "",
+      domainClass: profile?.domainClass || "rule_trial",
+      domainRole: template.role || "",
+      trialEligibility: template.trialEligibility || subPhase?.trialEligibility || null,
+      trialSubjectType: template.trialSubjectType || subPhase?.trialSubjectType || "",
+      canDefend: template.canDefend ?? subPhase?.canDefend,
+      canRemainSilent: template.canRemainSilent ?? subPhase?.canRemainSilent,
+      verdictVocabulary: template.verdictVocabulary || subPhase?.verdictVocabulary || null,
+      tags: isDefender ? ["抗审判"] : ["审判"],
+      handSource: "trial-replacement"
+    };
+  }
+
+  function buildTrialHandCardsForSide(profile, subPhase, side) {
+    var templates;
+    if (!profile || !subPhase || !side) return [];
+    if (side === subPhase.owner) {
+      templates = profile.domainActions || [];
+    } else if (side === subPhase.defender) {
+      templates = profile.opponentActions || [];
+    } else {
+      return [];
+    }
+    return templates.map(function mapTemplate(template) {
+      return normalizeTrialHandAction(template, profile, subPhase, side);
+    }).filter(Boolean);
+  }
+
+  function replaceDuelTrialHands(duelBattle, profile, subPhase) {
+    var round = getTrialTurnNumber(duelBattle);
+    if (!duelBattle || !profile || !subPhase) return;
+    duelBattle.handState ||= {};
+    [subPhase.owner, subPhase.defender].forEach(function replaceSide(side) {
+      var previous = duelBattle.handState[side] || {};
+      var cards = buildTrialHandCardsForSide(profile, subPhase, side).map(function markCard(card) {
+        return {
+          ...card,
+          action: { ...card, action: undefined },
+          drawnRound: round,
+          selectedRound: 0
+        };
+      });
+      duelBattle.handState[side] = {
+        ...previous,
+        cards: cards,
+        round: round,
+        lastDrawn: cards.map(function summarize(card) {
+          return { actionId: card.id, label: card.label || card.id };
+        }),
+        lastInjected: cards.map(function summarize(card) {
+          return { actionId: card.id, label: card.label || card.id, source: side === subPhase.defender ? "anti-trial" : "trial" };
+        }),
+        lastDiscarded: [],
+        pendingDiscardCount: 0,
+        overflowDiscardRequired: false,
+        maxHandSize: Math.max(8, cards.length),
+        drawPerTurn: cards.length
+      };
+    });
+    if (subPhase.owner === "left") duelBattle.handCandidates = duelBattle.handState.left.cards;
+    if (subPhase.defender === "left") duelBattle.handCandidates = duelBattle.handState.left.cards;
+    duelBattle.domainHandCandidates = [];
+    delete duelBattle.handCandidateCache;
+  }
+
   function appendDomainProfileLog(battle, entry) {
     return callOptionalDependency("appendDuelDomainProfileLog", [battle, entry], null);
   }
@@ -764,6 +847,7 @@
       trialEndReason: "",
       status: "CANDIDATE"
     };
+    replaceDuelTrialHands(duelBattle, profile, duelBattle.domainSubPhase);
     updateDuelDomainTrialContext(duelBattle, {
       trialStatus: duelBattle.domainSubPhase.trialStatus,
       trialEndReason: "",
@@ -1188,7 +1272,7 @@
     verdict = getDuelTrialVerdictLabel(subPhase, "insufficient", "证据不足");
     detail = "证据压力不足，判决未形成实质惩罚。";
     verdictKey = "insufficient";
-    if (eligibility !== "object_confiscation" && adjustedPressure >= 6.2) {
+    if (eligibility !== "object_confiscation" && adjustedPressure >= 5.0) {
       verdictKey = "execution";
       verdict = getDuelTrialVerdictLabel(subPhase, "execution", "处刑状态候选");
       if (vocabulary === "exorcism") {

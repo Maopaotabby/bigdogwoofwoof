@@ -606,6 +606,15 @@
         "式神",
         "影",
         "未完成领域"
+      ],
+      "fixedHandInjections": [
+        {
+          "sourceActionId": "mahoraga_tuning_ritual",
+          "weight": 999,
+          "handSource": "fixed-injection",
+          "retainedPermanent": false,
+          "condition": { "hpBelowRatio": 0.5 }
+        }
       ]
     },
     "mahito_shibuya": {
