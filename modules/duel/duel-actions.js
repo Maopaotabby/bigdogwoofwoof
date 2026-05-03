@@ -1989,6 +1989,22 @@
     var unitId = [summonSpec.unitCardId, ownerSide || "neutral", round, getDuelBattlefieldUnits(battle).length + 1].join("_");
     var control = summonSpec.control || unitStats.control || "player_controlled";
     var side = control === "neutral_uncontrolled" || control === "neutral_berserk" ? "neutral" : ownerSide;
+    var baseDamage = Number(unitStats.baseDamage || unitTemplate?.baseDamage || 0);
+    var maxHp = Number(unitStats.maxHp || unitStats.currentHp || unitTemplate?.baseHp || 0);
+    var guardRules = cloneDuelPlain(unitTemplate?.guardRules || {});
+    var targetingRules = cloneDuelPlain(unitTemplate?.targetingRules || {});
+    var isFriendlyControlled = side !== "neutral" && control !== "neutral_uncontrolled" && control !== "neutral_berserk";
+    if (isFriendlyControlled && targetingRules.neverCountsAsGuard !== true && guardRules.neverCountsAsGuard !== true) {
+      guardRules.protectOwner = guardRules.protectOwner !== false;
+      guardRules.interceptsOpponentAttacks = guardRules.interceptsOpponentAttacks !== false;
+      guardRules.priority = Number(guardRules.priority ?? unitStats.guardPriority ?? 10);
+    }
+    var maintenanceCeCost = Number(
+      summonSpec.maintenanceCeCost ??
+      unitStats.maintenanceCeCost ??
+      unitTemplate?.maintenanceCeCost ??
+      Math.ceil(baseDamage * 0.32 + maxHp * 0.035)
+    );
     var unit = {
       id: unitId,
       cardId: unitTemplate?.cardId || summonSpec.unitCardId,
@@ -2002,14 +2018,16 @@
       placement: summonSpec.placement || unitStats.placement || "battlefield",
       tags: Array.isArray(unitTemplate?.tags) ? unitTemplate.tags.slice() : [],
       unitStats: unitStats,
-      hp: Number(unitStats.currentHp || unitStats.maxHp || unitTemplate?.baseHp || 0),
-      maxHp: Number(unitStats.maxHp || unitStats.currentHp || unitTemplate?.baseHp || 0),
-      baseDamage: Number(unitStats.baseDamage || unitTemplate?.baseDamage || 0),
+      hp: maxHp,
+      maxHp: maxHp,
+      baseDamage: baseDamage,
       damageType: unitTemplate?.damageType || "",
-      targetingRules: cloneDuelPlain(unitTemplate?.targetingRules || {}),
-      guardRules: cloneDuelPlain(unitTemplate?.guardRules || {}),
+      targetingRules: targetingRules,
+      guardRules: guardRules,
       adaptationRules: cloneDuelPlain(unitTemplate?.adaptationRules || {}),
       matchupModifiers: cloneDuelPlain(unitTemplate?.matchupModifiers || {}),
+      maintenanceCeCost: Math.max(1, Number.isFinite(maintenanceCeCost) ? Math.round(maintenanceCeCost) : 1),
+      lastMaintenanceRound: 0,
       active: true,
       spawnedBy: action.id || action.sourceActionId || "",
       spawnedRound: round,
@@ -2035,6 +2053,7 @@
       unitName: unit.name,
       control: control,
       maintenanceActionId: maintenanceCard?.id || "",
+      maintenanceCeCost: unit.maintenanceCeCost,
       uniqueTenShadowsSummon: isTenShadowsUniqueShikigamiAction(action)
     });
     markTenShadowsShikigamiSummoned(battle, ownerSide, action, unit);
@@ -2070,6 +2089,46 @@
     });
   }
 
+  function applyDuelSummonUpkeep(actor, battle) {
+    var side = actor?.side || "";
+    if (!side || !battle) return null;
+    var round = Number(battle.round || 0) + 1;
+    var units = getDuelBattlefieldUnits(battle).filter(function keepUnit(unit) {
+      if (!unit?.active || unit.side === "neutral") return false;
+      if ((unit.controllerSide || unit.ownerSide || unit.side) !== side) return false;
+      if (unit.control === "neutral_uncontrolled" || unit.control === "neutral_berserk") return false;
+      if (Number(unit.lastMaintenanceRound || 0) === round) return false;
+      return Number(unit.maintenanceCeCost || unit.unitStats?.maintenanceCeCost || 0) > 0;
+    });
+    if (!units.length) return null;
+    var paid = [];
+    var dismissed = [];
+    units.forEach(function maintainUnit(unit) {
+      var cost = Math.max(1, Number(unit.maintenanceCeCost || unit.unitStats?.maintenanceCeCost || 1));
+      var beforeCe = Number(actor.ce || 0);
+      if (beforeCe >= cost) {
+        actor.ce = Number((beforeCe - cost).toFixed(1));
+        unit.lastMaintenanceRound = round;
+        paid.push({ id: unit.id || "", name: unit.name || unit.label || "", costCe: cost });
+      } else {
+        unit.active = false;
+        unit.dismissedRound = round;
+        unit.dismissedReason = "maintenance-ce-shortage";
+        dismissed.push({ id: unit.id || "", name: unit.name || unit.label || "", requiredCe: cost, availableCe: beforeCe });
+      }
+    });
+    if (!paid.length && !dismissed.length) return null;
+    battle.summonLog ||= [];
+    battle.summonLog.unshift({
+      round: round,
+      actorSide: side,
+      reason: "summon-maintenance-upkeep",
+      paid: paid,
+      dismissed: dismissed
+    });
+    return { round: round, side: side, paid: paid, dismissed: dismissed };
+  }
+
   function applyDuelSummonAssist(actor, opponent, battle) {
     var side = actor?.side || "";
     if (!side || !battle) return null;
@@ -2081,7 +2140,7 @@
     var rawDamage = units.reduce(function sumDamage(total, unit) {
       return total + Number(unit.baseDamage || unit.unitStats?.baseDamage || 0);
     }, 0);
-    var damage = Math.min(18, Math.max(1, Math.round(rawDamage * 0.18)));
+    var damage = Math.min(36, Math.max(3, Math.round(rawDamage * 0.35)));
     if (!damage) return null;
     var beforeHp = Number(opponent?.hp || 0);
     opponent.hp = Number(clamp(beforeHp - damage, 0, Number(opponent?.maxHp || beforeHp)).toFixed(1));
@@ -2123,21 +2182,71 @@
       && /mahoraga|魔虚罗|魔须罗/.test(text);
   }
 
+  var MAHORAGA_PROXY_BASE_STATS = Object.freeze({
+    cursedEnergy: "SS",
+    control: "S",
+    efficiency: "S",
+    body: "SSS",
+    martial: "SSS",
+    talent: "SS"
+  });
+
+  var MAHORAGA_PROXY_BASE_RAW = Object.freeze({
+    cursedEnergyScore: 7.4,
+    controlScore: 6.2,
+    efficiencyScore: 6.2,
+    bodyScore: 8.8,
+    martialScore: 8.8,
+    talentScore: 7.4
+  });
+
+  var MAHORAGA_PROXY_AXES = Object.freeze({
+    jujutsu: 6.9,
+    body: 8.8,
+    insight: 7.55,
+    build: 8.2
+  });
+
   function createMahoragaProxyProfile(sourceProfile, side) {
     var original = sourceProfile || {};
     var name = "八握剑异戒神将 魔虚罗";
+    var originalFlags = Array.isArray(original.flags) ? original.flags : [];
+    var originalTags = Array.isArray(original.tags) ? original.tags : [];
     return {
       ...original,
       id: "builtin_mahoraga_proxy_" + (side || "side"),
       characterId: "builtin_mahoraga_proxy_" + (side || "side"),
       name: name,
       displayName: name,
-      visibleGrade: "S",
-      grade: "S",
+      officialGrade: "特级式神",
+      visibleGrade: "specialGrade",
+      grade: "specialGrade",
+      powerTier: "specialGrade",
+      baseStats: { ...MAHORAGA_PROXY_BASE_STATS },
+      raw: { ...MAHORAGA_PROXY_BASE_RAW },
+      axes: { ...MAHORAGA_PROXY_AXES },
+      combatScore: 8.8,
       combatPowerUnit: {
-        label: "内置式神 · 调幅代打",
-        value: Math.max(Number(original?.combatPowerUnit?.value || 0), 300)
+        label: "5,200",
+        value: 5200,
+        band: "special",
+        scoreBasis: 8.8,
+        formula: "mahoraga builtin proxy profile"
       },
+      disruptionScore: Math.max(8.2, Number(original?.disruptionScore || 0)),
+      disruptionUnit: {
+        label: "特级适应压制",
+        value: Math.max(4200, Number(original?.disruptionUnit?.value || 0))
+      },
+      pool: "builtin_shikigami",
+      flags: Array.from(new Set(originalFlags.concat([
+        "mahoragaProxy",
+        "shikigami",
+        "ten_shadows",
+        "adaptive",
+        "physicalMonster"
+      ]))),
+      tags: Array.from(new Set(originalTags.concat(["十影", "魔虚罗", "式神", "调幅代打"]))),
       traits: ["完全适应", "八握剑", "魔虚罗代打中"],
       description: "调幅仪式后替代术师参战。会记录对手攻击手札，同名手札每命中一次都会降低后续伤害，第 6 次起归零。"
     };
@@ -2209,6 +2318,10 @@
     actor.ceRegen = Math.max(18, Number(actor.ceRegen || 0));
     actor.stability = Math.max(0.92, Number(actor.stability || 0));
     actor.characterCardProfile = proxyProfile;
+    actor.combatPowerUnit = proxyProfile.combatPowerUnit;
+    actor.baseStats = { ...proxyProfile.baseStats };
+    actor.raw = { ...proxyProfile.raw };
+    actor.axes = { ...proxyProfile.axes };
     actor.statusEffects = (Array.isArray(actor.statusEffects) ? actor.statusEffects : [])
       .filter(function removeDuplicate(effect) { return effect?.id !== "mahoragaSubstitute"; });
     actor.statusEffects.push({
@@ -2549,9 +2662,10 @@
     if (!action || !actor || !opponent || !battle) return null;
     cleanupExpiredDuelBattlefieldUnits(battle);
     if (action.id === "online_pass_turn" || action.id === "duel_pass_turn" || action.type === "pass") {
+      var passUpkeepResult = applyDuelSummonUpkeep(actor, battle);
       var passResult = {
         costCe: 0,
-        actorCe: 0,
+        actorCe: passUpkeepResult ? -passUpkeepResult.paid.reduce(function sumCost(total, entry) { return total + Number(entry.costCe || 0); }, 0) : 0,
         actorHp: 0,
         actorStability: 0,
         actorDomainLoad: 0,
@@ -2564,6 +2678,7 @@
         blackFlashTriggered: false,
         blackFlashLabel: "",
         mechanicsApplied: [],
+        summonUpkeep: passUpkeepResult || undefined,
         passTurn: true
       };
       appendDuelActionLog(action, actor, opponent, passResult, battle);
@@ -2587,6 +2702,7 @@
       opponentStability: opponent.stability,
       opponentDomainLoad: opponent.domain?.load || 0
     };
+    var summonUpkeepResult = applyDuelSummonUpkeep(actor, battle);
     var numericPreview = calculateActionNumericPreview(action, actor);
     var blackFlashWindow = null;
     var costCe = Math.min(actor.ce, Number(action.costCe ?? getDuelActionCost(action, actor)));
@@ -2861,6 +2977,7 @@
         maintenanceActionId: summonResult.maintenanceCard?.id || ""
       } : undefined,
       maintenance: maintenanceResult || undefined,
+      summonUpkeep: summonUpkeepResult || undefined,
       summonAssist: summonAssistResult || undefined,
       mahoragaProxy: mahoragaProxyResult || undefined,
       mahoragaAdaptation: mahoragaAdaptation || undefined,
