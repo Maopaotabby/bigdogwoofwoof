@@ -746,7 +746,7 @@
             <div class="duel-debug-panel debug-only">
               <div class="debug-entry-head">
                 <strong>对战调试覆盖</strong>
-                <span id="duelDebugStatus" class="muted">空白则使用公式；胜率填 0-100 或 0-1。</span>
+                <span id="duelDebugStatus" class="muted">空白则使用角色公式；战斗结算由术式手札与体势系统推进。</span>
               </div>
               <div class="duel-debug-grid">
                 <label class="field">
@@ -758,20 +758,12 @@
                   <input id="duelDebugLeftUnit" type="number" min="1" step="1" placeholder="空白=公式">
                 </label>
                 <label class="field">
-                  <span>我方胜率</span>
-                  <input id="duelDebugLeftRate" type="number" min="0" max="100" step="0.1" placeholder="例：62 或 0.62">
-                </label>
-                <label class="field">
                   <span>对方战力分</span>
                   <input id="duelDebugRightScore" type="number" min="0" max="12" step="0.01" placeholder="空白=公式">
                 </label>
                 <label class="field">
                   <span>对方战力单位</span>
                   <input id="duelDebugRightUnit" type="number" min="1" step="1" placeholder="空白=公式">
-                </label>
-                <label class="field">
-                  <span>对方胜率</span>
-                  <input id="duelDebugRightRate" type="number" min="0" max="100" step="0.1" placeholder="例：38 或 0.38">
                 </label>
               </div>
               <div class="action-row">

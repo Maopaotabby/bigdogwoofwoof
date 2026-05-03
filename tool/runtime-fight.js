@@ -872,41 +872,7 @@ function applyDuelManualCombatOverride(profile, override = {}) {
   return next;
 }
 
-function computeDuelRates(left, right) {
-  const manualLeftRate = getDuelManualLeftRate();
-  if (Number.isFinite(manualLeftRate)) {
-    return {
-      leftRate: manualLeftRate,
-      rightRate: clamp(1 - manualLeftRate, 0.001, 0.999),
-      manualRate: true
-    };
-  }
-  return {
-    leftRate: estimateWinRateByCombatUnit(left, right),
-    rightRate: estimateWinRateByCombatUnit(right, left),
-    manualRate: false
-  };
-}
-
-function getDuelManualLeftRate() {
-  if (!state.debugMode) return NaN;
-  const leftRate = parseOptionalDuelRate(els.duelDebugLeftRate?.value);
-  if (Number.isFinite(leftRate)) return leftRate;
-  const rightRate = parseOptionalDuelRate(els.duelDebugRightRate?.value);
-  if (Number.isFinite(rightRate)) return clamp(1 - rightRate, 0.001, 0.999);
-  return NaN;
-}
-
-function parseOptionalDuelRate(value) {
-  const text = String(value ?? "").trim();
-  if (!text) return NaN;
-  const raw = Number(text);
-  if (!Number.isFinite(raw)) return NaN;
-  const normalized = raw > 1 ? raw / 100 : raw;
-  return clamp(normalized, 0.001, 0.999);
-}
-
-function renderDuelDebugStatus(left, right, rates) {
+function renderDuelDebugStatus(left, right) {
   if (!els.duelDebugStatus) return;
   if (!state.debugMode) {
     els.duelDebugStatus.textContent = "";
@@ -915,18 +881,15 @@ function renderDuelDebugStatus(left, right, rates) {
   const pieces = [];
   if (left.manualCombatSource) pieces.push(`我方战力：${left.manualCombatSource}`);
   if (right.manualCombatSource) pieces.push(`对方战力：${right.manualCombatSource}`);
-  if (rates.manualRate) pieces.push("胜率：调试直填");
-  els.duelDebugStatus.textContent = pieces.length ? pieces.join("；") : "空白则使用公式；胜率填 0-100 或 0-1。";
+  els.duelDebugStatus.textContent = pieces.length ? pieces.join("；") : "空白则使用角色公式；战斗结算由术式手札与体势系统推进。";
 }
 
 function clearDuelDebugOverrides() {
   [
     els.duelDebugLeftScore,
     els.duelDebugLeftUnit,
-    els.duelDebugLeftRate,
     els.duelDebugRightScore,
-    els.duelDebugRightUnit,
-    els.duelDebugRightRate
+    els.duelDebugRightUnit
   ].forEach((input) => {
     if (input) input.value = "";
   });
@@ -1253,23 +1216,22 @@ function renderDuelMode() {
   const rightCard = cards.find((item) => item.characterId === els.duelRightSelect.value) || cards[1] || cards[0];
   const left = applyDuelSideDebugOverride(evaluateDuelCharacterCard(leftCard), "left");
   const right = applyDuelSideDebugOverride(evaluateDuelCharacterCard(rightCard), "right");
-  const rates = computeDuelRates(left, right);
 
   els.duelSummary.innerHTML = `
-    <div class="duel-rate">
-      <span>${escapeHtml(left.name)} 胜率</span>
-      <strong>${formatPercent(rates.leftRate)}</strong>
-      <small class="muted">${escapeHtml(gradeLabel(left.visibleGrade))} · ${escapeHtml(left.combatPowerUnit.label)}</small>
+    <div class="duel-match-summary-card">
+      <span>我方</span>
+      <strong>${escapeHtml(left.name)}</strong>
+      <small>${escapeHtml(getDuelDisplayGrade(left))} · ${escapeHtml(getDuelPowerTierLabel(left))}</small>
     </div>
     <div class="duel-versus">VS</div>
-    <div class="duel-rate right">
-      <span>${escapeHtml(right.name)} 胜率</span>
-      <strong>${formatPercent(rates.rightRate)}</strong>
-      <small class="muted">${escapeHtml(gradeLabel(right.visibleGrade))} · ${escapeHtml(right.combatPowerUnit.label)}</small>
+    <div class="duel-match-summary-card right">
+      <span>对方</span>
+      <strong>${escapeHtml(right.name)}</strong>
+      <small>${escapeHtml(getDuelDisplayGrade(right))} · ${escapeHtml(getDuelPowerTierLabel(right))}</small>
     </div>
   `;
-  renderDuelDebugStatus(left, right, rates);
-  renderDuelBattlePanel(left, right, rates.leftRate);
+  renderDuelDebugStatus(left, right);
+  renderDuelBattlePanel(left, right, 0.5);
   els.duelCards.innerHTML = `${renderDuelCharacterCard(left, "我方")}${renderDuelCharacterCard(right, "对方")}`;
   syncDuelModeIsolation();
 }
@@ -1281,11 +1243,10 @@ function getCurrentDuelProfiles() {
   if (!leftCard || !rightCard) return null;
   const left = applyDuelSideDebugOverride(evaluateDuelCharacterCard(leftCard), "left");
   const right = applyDuelSideDebugOverride(evaluateDuelCharacterCard(rightCard), "right");
-  const rates = computeDuelRates(left, right);
   return {
     left,
     right,
-    leftRate: rates.leftRate
+    leftRate: 0.5
   };
 }
 
@@ -1297,7 +1258,7 @@ function startDuelBattle(options = {}) {
     return;
   }
   const profiles = options.left && options.right
-    ? { left: options.left, right: options.right, leftRate: computeDuelRates(options.left, options.right).leftRate }
+    ? { left: options.left, right: options.right, leftRate: 0.5 }
     : getCurrentDuelProfiles();
   if (!profiles) return;
   const mode = options.mode === "online" ? "online" : "solo";
@@ -3849,12 +3810,11 @@ function renderDuelBattlePanel(left, right, baseRate) {
 
   const leftTactic = getDuelTacticDefinition(battle.selectedTactic);
   const rightTactic = getDuelTacticDefinition(battle.opponentTactic);
-  const finalRate = computeDuelBattleFinalRate(battle);
   const safetyRoundCap = battle.safetyRoundCap || getDuelSafetyRoundCap(battle);
   const roundBadge = battle.resolved
     ? `第 ${formatNumber(battle.round)} 回合结束`
     : `第 ${formatNumber(battle.round + 1)} 回合 / 安全上限 ${formatNumber(safetyRoundCap)}`;
-  const statusRows = renderDuelBattleStatus(battle, finalRate);
+  const statusRows = renderDuelBattleStatus(battle);
   const tacticButtons = getDuelTactics().map((tactic) => `
     <button class="duel-tactic${battle.selectedTactic === tactic.id ? " active" : ""}" data-duel-tactic="${escapeHtml(tactic.id)}" type="button" ${battle.autoRunning || battle.resolved || battle.round > 0 ? "disabled" : ""}>
       <strong>${escapeHtml(tactic.label)}</strong>
@@ -4032,7 +3992,7 @@ function bindDuelBattleControls() {
   });
 }
 
-function renderDuelBattleStatus(battle, finalRate) {
+function renderDuelBattleStatus(battle) {
   const diff = battle.leftScore - battle.rightScore;
   const leftWidth = clamp(50 + diff * 5, 8, 92);
   const rightWidth = 100 - leftWidth;
@@ -4049,10 +4009,6 @@ function renderDuelBattleStatus(battle, finalRate) {
       <div class="duel-side-score right">
         <strong>${escapeHtml(battle.right.name)}</strong>
         <span>${formatNumber(battle.rightScore)} 点</span>
-      </div>
-      <div class="duel-live-rate">
-        <span>当前结算倾向</span>
-        <strong>${formatPercent(finalRate)}</strong>
       </div>
     </div>
   `;
@@ -4083,8 +4039,8 @@ function renderDuelBattleResult(battle) {
   const endReasonLabel = getDuelEndReasonLabel(endReason);
   const resultTitle = isDraw ? "战斗未自然分出胜负" : `${winner.name} 胜出`;
   const resultDetail = isDraw
-    ? `第 ${formatNumber(battle.endingRound || battle.round)} 回合：战斗没有被旧回合数胜率开奖收束。结束原因：${endReasonLabel}。当前结算倾向 ${formatPercent(battle.finalRate)} 仅作局势参考。`
-    : `第 ${formatNumber(battle.endingRound || battle.round)} 回合：${loser.name} 体势被压到无法继续战斗。胜者：${winner.name}。结束原因：${endReasonLabel}。当前结算倾向 ${formatPercent(battle.finalRate)} 仅作局势参考。`;
+    ? `第 ${formatNumber(battle.endingRound || battle.round)} 回合：战斗没有被旧回合数开奖收束。结束原因：${endReasonLabel}。`
+    : `第 ${formatNumber(battle.endingRound || battle.round)} 回合：${loser.name} 体势被压到无法继续战斗。胜者：${winner.name}。结束原因：${endReasonLabel}。`;
   const aiMarkup = `
     <div class="duel-ai-battle">
       <button class="secondary" id="duelAiBattleTextBtn" type="button" ${battle.aiNarrativeLoading ? "disabled" : ""}>${battle.aiNarrativeLoading ? "生成中..." : "AI生成对战过程"}</button>
@@ -4757,7 +4713,8 @@ function renderDuelCharacterCard(profile, sideLabel) {
       <span class="badge">${escapeHtml(sideLabel)}</span>
       <h3>${escapeHtml(profile.name)}</h3>
       <div class="duel-meta">
-        <span class="duel-chip">${escapeHtml(gradeLabel(profile.visibleGrade))}</span>
+        <span class="duel-chip">${escapeHtml(getDuelDisplayGrade(profile))}</span>
+        <span class="duel-chip">${escapeHtml(getDuelPowerTierLabel(profile))}</span>
         <span class="duel-chip">${escapeHtml(profile.pool)}</span>
         <span class="duel-chip">战力 ${escapeHtml(profile.combatPowerUnit.label)}</span>
         <span class="duel-chip">扰动 ${escapeHtml(profile.disruptionUnit.label)}</span>
@@ -4775,6 +4732,37 @@ function renderDuelCharacterCard(profile, sideLabel) {
       </dl>
     </article>
   `;
+}
+
+function getDuelDisplayGrade(profile = {}) {
+  return profile.officialGrade || gradeLabel(profile.visibleGrade) || "未记录评级";
+}
+
+function getDuelPowerTierLabel(profile = {}) {
+  const labels = {
+    canonCeiling: "原作天花板",
+    postCanonException: "后日谈例外级",
+    postCanonCeiling: "后日谈天花板",
+    haxException: "规则例外型",
+    topTierPhysical: "顶级肉体系",
+    specialGrade: "特级战力",
+    specialGradeCurse: "特级咒灵",
+    topTier: "顶级战力",
+    topTierSustain: "顶级续航",
+    topTierMinus: "顶级下位",
+    supportHax: "辅助规则型",
+    newGenerationTop: "新世代顶级",
+    civilianOrSupport: "民间/辅助",
+    disasterCurse: "灾害咒灵",
+    cursedSpiritSpecial: "特级咒灵",
+    grade1Plus: "一级以上",
+    grade1: "一级",
+    grade2Plus: "二级以上",
+    grade1Trickster: "一级技巧型",
+    sendaiTop: "仙台顶级",
+    custom: "自定义"
+  };
+  return labels[profile.powerTier] || profile.powerTier || profile.pool || "战力层级未记录";
 }
 
 function evaluateDuelCharacterCard(card) {
