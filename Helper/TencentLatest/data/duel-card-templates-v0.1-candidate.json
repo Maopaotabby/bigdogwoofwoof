@@ -1,0 +1,4415 @@
+{
+  "schema": "jjk-duel-card-templates",
+  "version": "0.1.1",
+  "status": "CANDIDATE",
+  "description": "Card-like template metadata layered over existing duel action templates. This is display and structure metadata only, not a full deck system.",
+  "notes": [
+    "Card templates wrap existing duel action templates by sourceActionId.",
+    "Card templates do not define combat effects, resource costs, selection behavior, or outcomes.",
+    "No pile lifecycle, collection, editor, or animation rules are defined in this candidate data.",
+    "1.389A adds action-backed CANDIDATE hand templates plus futureTemplate metadata; future templates are not playable in hand beta.",
+    "Card templates remain metadata only and must not define combat effects.",
+    "Base numeric fields on action-backed cards are CANDIDATE display/balance hints; source action resolution remains authoritative."
+  ],
+  "cardTypeLabels": {
+    "basic": "基础",
+    "defense": "防御",
+    "technique": "术式",
+    "domain": "领域",
+    "domain_response": "领域应对",
+    "domain_maintenance": "领域维持",
+    "rule_trial": "审判推进",
+    "rule_defense": "审判防御",
+    "jackpot": "坐杀搏徒",
+    "resource": "资源",
+    "support": "支援",
+    "summon": "召唤",
+    "maintenance": "维持",
+    "unit": "单位",
+    "curse_tool": "咒具",
+    "special": "特殊"
+  },
+  "rarityLabels": {
+    "common": "common",
+    "uncommon": "uncommon",
+    "rare": "rare",
+    "special": "special",
+    "domain": "domain",
+    "rule": "rule"
+  },
+  "cards": [
+    {
+      "cardId": "card_ce_reinforcement",
+      "sourceActionId": "ce_reinforcement",
+      "name": "咒力强化",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "强化",
+        "体术",
+        "咒力"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "将咒力集中于近身压制，本回合输出上升。",
+      "baseDamage": 12,
+      "baseDomainLoadDelta": 1.5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_defensive_frame",
+      "sourceActionId": "defensive_frame",
+      "name": "防御构筑",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "防御",
+        "稳定",
+        "体势"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "构成咒力防线，降低本回合体势损耗。",
+      "baseBlock": 24,
+      "baseStabilityRestore": 18,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "defense",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_technique_interference",
+      "sourceActionId": "technique_interference",
+      "name": "术式干涉",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "干涉",
+        "术式",
+        "领域负荷"
+      ],
+      "rarity": "uncommon",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "扰乱对方术式与回流节奏，推高领域负荷。",
+      "baseStabilityDamage": 26,
+      "baseCeDamage": 22,
+      "baseDomainPressure": 7,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_residue_reading",
+      "sourceActionId": "residue_reading",
+      "name": "残秽读解",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "读解",
+        "稳定",
+        "反制"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "读取对手咒力流向，提高后续反制判断。",
+      "baseStabilityRestore": 24,
+      "baseDefensePressure": 4,
+      "durationRounds": 2,
+      "baseCeCost": 4,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_forced_output",
+      "sourceActionId": "forced_output",
+      "name": "强制输出",
+      "cardType": "technique",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "爆发",
+        "术式",
+        "高风险"
+      ],
+      "rarity": "rare",
+      "weight": 0.85,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "强行拉高术式输出，换取更高收束上限。",
+      "baseDamage": 26,
+      "baseDomainLoadDelta": 6,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_ce_compression",
+      "sourceActionId": "ce_compression",
+      "name": "压缩咒力",
+      "cardType": "resource",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "收束",
+        "稳定",
+        "低负荷"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "收束咒力流动，降低过载与领域负担。",
+      "baseStabilityRestore": 42,
+      "baseDomainLoadDelta": -5,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 6,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_domain_expand",
+      "sourceActionId": "domain_expand",
+      "name": "领域展开",
+      "cardType": "domain",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "展开",
+        "高压"
+      ],
+      "rarity": "domain",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal"
+      ],
+      "effectSummary": "展开领域，把战局拖入高压结界状态。",
+      "baseDamage": 12,
+      "baseDomainLoadDelta": 18,
+      "durationRounds": 1,
+      "baseCeCost": 34,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "baseDomainPressure": 24
+    },
+    {
+      "cardId": "card_domain_compress",
+      "sourceActionId": "domain_compress",
+      "name": "压缩领域",
+      "cardType": "domain_maintenance",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "收束",
+        "稳定"
+      ],
+      "rarity": "domain",
+      "weight": 1,
+      "allowedContexts": [
+        "domain_active"
+      ],
+      "effectSummary": "主动收束领域边界，降低维持负荷。",
+      "baseStabilityRestore": 30,
+      "baseDomainLoadDelta": -10,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16
+    },
+    {
+      "cardId": "card_domain_force_sustain",
+      "sourceActionId": "domain_force_sustain",
+      "name": "强行维持领域",
+      "cardType": "domain_maintenance",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "维持",
+        "领域崩解风险"
+      ],
+      "rarity": "domain",
+      "weight": 0.55,
+      "allowedContexts": [
+        "domain_active"
+      ],
+      "effectSummary": "不顾负荷继续扩大领域压制。",
+      "baseDamage": 20,
+      "baseDomainLoadDelta": 16,
+      "durationRounds": 1,
+      "baseCeCost": 24,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "critical",
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16
+    },
+    {
+      "cardId": "card_domain_release",
+      "sourceActionId": "domain_release",
+      "name": "主动解除领域",
+      "cardType": "domain_maintenance",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "解除",
+        "回稳"
+      ],
+      "rarity": "domain",
+      "weight": 1,
+      "allowedContexts": [
+        "domain_active"
+      ],
+      "effectSummary": "主动撤去领域，避免领域崩解 / 术式烧断反噬。",
+      "baseStabilityRestore": 35,
+      "baseDomainLoadDelta": -8,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "none",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16
+    },
+    {
+      "cardId": "card_domain_clash",
+      "sourceActionId": "domain_clash",
+      "name": "领域对抗",
+      "cardType": "domain_response",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域应对",
+        "对抗",
+        "高阶"
+      ],
+      "rarity": "domain",
+      "weight": 0.75,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "以领域或高阶结界干涉正面对撞对方领域。",
+      "baseShield": 54,
+      "baseDomainPressure": 16,
+      "baseDomainLoadDelta": 8,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 28,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_simple_domain_guard",
+      "sourceActionId": "simple_domain_guard",
+      "name": "简易领域防御",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域应对",
+        "必中削弱",
+        "防御"
+      ],
+      "rarity": "uncommon",
+      "weight": 1,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "以简易领域削弱必中，拖住对方领域压制。",
+      "baseBlock": 18,
+      "baseShield": 65,
+      "baseDomainPressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_hollow_wicker_basket_guard",
+      "sourceActionId": "hollow_wicker_basket_guard",
+      "name": "弥虚葛笼",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域应对",
+        "必中抵消",
+        "架势限制"
+      ],
+      "rarity": "uncommon",
+      "weight": 1,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "抵消必中，但行动和输出受到明显限制。",
+      "baseBlock": 14,
+      "baseShield": 72,
+      "baseDomainPressure": 1,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_falling_blossom_emotion",
+      "sourceActionId": "falling_blossom_emotion",
+      "name": "落花之情",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域应对",
+        "自动迎击",
+        "防御"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "以自动迎击削弱必中，是预留的反必中防线。",
+      "baseBlock": 12,
+      "baseShield": 52,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16
+    },
+    {
+      "cardId": "card_zero_ce_domain_bypass",
+      "sourceActionId": "zero_ce_domain_bypass",
+      "name": "零咒力必中规避",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "零咒力",
+        "必中规避",
+        "特殊"
+      ],
+      "rarity": "special",
+      "weight": 0.65,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "对必中规则有强抵抗，但不免疫领域压力或手动攻击。",
+      "baseDamage": 2,
+      "baseBlock": 12,
+      "baseShield": 92,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "domain",
+      "scalingProfile": "zero_ce",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "requiresZeroCe": true
+    },
+    {
+      "cardId": "card_domain_survival_guard",
+      "sourceActionId": "domain_survival_guard",
+      "name": "域内求生",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域应对",
+        "求生",
+        "高风险"
+      ],
+      "rarity": "common",
+      "weight": 0.8,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "没有正式反制时，通过移动与防御降低直接损伤。",
+      "baseBlock": 8,
+      "baseShield": 14,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "ce_ratio",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16
+    },
+    {
+      "cardId": "card_present_evidence",
+      "sourceActionId": "present_evidence",
+      "name": "提出证据",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "证据",
+        "日车"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial_owner"
+      ],
+      "effectSummary": "提出证据，提高审判侧推进压力。",
+      "baseEvidencePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 6,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_press_charge",
+      "sourceActionId": "press_charge",
+      "name": "推进指控",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "指控",
+        "日车"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial_owner"
+      ],
+      "effectSummary": "推进指控方向，压缩对方辩护空间。",
+      "baseEvidencePressure": 10,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_advance_trial",
+      "sourceActionId": "advance_trial",
+      "name": "推进审判",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "阶段推进",
+        "日车"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial_owner"
+      ],
+      "effectSummary": "推进审判子阶段，使裁定更接近结算。",
+      "baseEvidencePressure": 7,
+      "durationRounds": 1,
+      "baseCeCost": 5,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_rule_pressure",
+      "sourceActionId": "rule_pressure",
+      "name": "规则压制",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "规则",
+        "压制"
+      ],
+      "rarity": "rule",
+      "weight": 0.9,
+      "allowedContexts": [
+        "trial_owner"
+      ],
+      "effectSummary": "利用规则子阶段压制对手行动空间。",
+      "baseStabilityDamage": 8,
+      "baseEvidencePressure": 9,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_request_verdict",
+      "sourceActionId": "request_verdict",
+      "name": "申请判决",
+      "cardType": "rule_trial",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "判决",
+        "终局"
+      ],
+      "rarity": "rule",
+      "weight": 0.65,
+      "allowedContexts": [
+        "trial_owner",
+        "verdict_ready"
+      ],
+      "effectSummary": "在合适条件下申请判决，结算审判结果。",
+      "baseEvidencePressure": 14,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_finisher",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_defend",
+      "sourceActionId": "defend",
+      "name": "辩护",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "辩护",
+        "防御"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial_defender"
+      ],
+      "effectSummary": "进行辩护，降低证据压力或延缓裁定。",
+      "baseBlock": 12,
+      "baseDefensePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 5,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "trial_defense",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_remain_silent",
+      "sourceActionId": "remain_silent",
+      "name": "沉默",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "沉默",
+        "保守"
+      ],
+      "rarity": "rule",
+      "weight": 0.9,
+      "allowedContexts": [
+        "trial_defender"
+      ],
+      "effectSummary": "保持沉默，避免扩大指控但难以主动反制。",
+      "baseBlock": 8,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "none",
+      "damageType": "none",
+      "scalingProfile": "trial_defense",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_deny_charge",
+      "sourceActionId": "deny_charge",
+      "name": "否认指控",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "否认",
+        "辩护"
+      ],
+      "rarity": "rule",
+      "weight": 0.9,
+      "allowedContexts": [
+        "trial_defender"
+      ],
+      "effectSummary": "否认指控，尝试削弱当前审判压力。",
+      "baseDefensePressure": 9,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_defense",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_challenge_evidence",
+      "sourceActionId": "challenge_evidence",
+      "name": "反驳证据",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "证据",
+        "反驳"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial_defender"
+      ],
+      "effectSummary": "反驳证据，干扰审判侧推进节奏。",
+      "baseEvidencePressure": 4,
+      "baseDefensePressure": 10,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_defense",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_delay_trial",
+      "sourceActionId": "delay_trial",
+      "name": "拖延审理",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "拖延",
+        "防御"
+      ],
+      "rarity": "rule",
+      "weight": 0.85,
+      "allowedContexts": [
+        "trial_defender"
+      ],
+      "effectSummary": "拖延审理，争取脱离不利裁定窗口。",
+      "baseBlock": 10,
+      "baseDefensePressure": 12,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "trial_defense",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_advance_jackpot",
+      "sourceActionId": "advance_jackpot",
+      "name": "推进演出",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "坐杀搏徒",
+        "演出",
+        "推进"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "jackpot"
+      ],
+      "effectSummary": "推进演出进度，累积 jackpot 期待度。",
+      "baseJackpotGauge": 9,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_raise_probability",
+      "sourceActionId": "raise_probability",
+      "name": "提高期待度",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "坐杀搏徒",
+        "期待度",
+        "资源"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "jackpot"
+      ],
+      "effectSummary": "提高中奖期待度，但仍需承受领域压力。",
+      "baseDomainPressure": 3,
+      "baseJackpotGauge": 10,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_risk_spin",
+      "sourceActionId": "risk_spin",
+      "name": "高风险推进",
+      "cardType": "jackpot",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "坐杀搏徒",
+        "高风险",
+        "推进"
+      ],
+      "rarity": "rule",
+      "weight": 0.7,
+      "allowedContexts": [
+        "jackpot"
+      ],
+      "effectSummary": "冒险推进 jackpot，但失败压力更高。",
+      "baseDomainLoadDelta": 4,
+      "baseJackpotGauge": 14,
+      "durationRounds": 1,
+      "baseCeCost": 13,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_burst",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_stabilize_cycle",
+      "sourceActionId": "stabilize_cycle",
+      "name": "稳定循环",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "坐杀搏徒",
+        "稳定",
+        "循环"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "jackpot"
+      ],
+      "effectSummary": "稳定演出循环，降低未中奖前的压力。",
+      "baseBlock": 8,
+      "baseStabilityRestore": 18,
+      "baseJackpotGauge": 6,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_claim_jackpot",
+      "sourceActionId": "claim_jackpot",
+      "name": "结算中奖",
+      "cardType": "jackpot",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "坐杀搏徒",
+        "结算",
+        "中奖"
+      ],
+      "rarity": "rule",
+      "weight": 0.65,
+      "allowedContexts": [
+        "jackpot_ready"
+      ],
+      "effectSummary": "在合适条件下结算 jackpot 状态。",
+      "baseHealing": 12,
+      "baseJackpotGauge": 18,
+      "durationRounds": 1,
+      "baseCeCost": 16,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_finisher",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_maintain_information_overload",
+      "sourceActionId": "maintain_information_overload",
+      "name": "维持信息压制",
+      "cardType": "domain_maintenance",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "信息",
+        "维持"
+      ],
+      "rarity": "domain",
+      "weight": 0.9,
+      "allowedContexts": [
+        "domain_owner",
+        "domain_profile"
+      ],
+      "effectSummary": "延长行动压制并提高领域权重。",
+      "baseStabilityDamage": 22,
+      "baseDomainPressure": 10,
+      "baseDomainLoadDelta": 6,
+      "durationRounds": 1,
+      "baseCeCost": 18,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_sustain_open_slash",
+      "sourceActionId": "sustain_open_slash",
+      "name": "维持开放斩击",
+      "cardType": "domain_maintenance",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "开放结界",
+        "斩击"
+      ],
+      "rarity": "domain",
+      "weight": 0.75,
+      "allowedContexts": [
+        "domain_owner",
+        "domain_profile"
+      ],
+      "effectSummary": "维持开放领域中的斩击压力。",
+      "baseDamage": 16,
+      "baseStabilityDamage": 18,
+      "baseDomainPressure": 12,
+      "baseDomainLoadDelta": 8,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_force_soul_touch",
+      "sourceActionId": "force_soul_touch",
+      "name": "强迫灵魂接触",
+      "cardType": "domain_maintenance",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "灵魂",
+        "接触"
+      ],
+      "rarity": "domain",
+      "weight": 0.75,
+      "allowedContexts": [
+        "domain_owner",
+        "domain_profile"
+      ],
+      "effectSummary": "强化灵魂接触压力，使对方稳定和体势承受变差。",
+      "baseStabilityDamage": 28,
+      "baseDomainPressure": 9,
+      "baseDomainLoadDelta": 7,
+      "durationRounds": 1,
+      "baseCeCost": 20,
+      "costType": "ce_ratio_min",
+      "damageType": "soul",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_shikigami_surge",
+      "sourceActionId": "shikigami_surge",
+      "name": "式神洪流",
+      "cardType": "domain_maintenance",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "式神",
+        "压制"
+      ],
+      "rarity": "domain",
+      "weight": 0.85,
+      "allowedContexts": [
+        "domain_owner",
+        "domain_profile"
+      ],
+      "effectSummary": "持续自动攻击和环境压制共同消耗对方体势。",
+      "baseDamage": 10,
+      "baseStabilityDamage": 16,
+      "baseDomainPressure": 7,
+      "baseDomainLoadDelta": 5,
+      "durationRounds": 1,
+      "baseCeCost": 16,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_expand_shadow_garden",
+      "sourceActionId": "expand_shadow_garden",
+      "name": "扩张嵌合暗翳庭",
+      "cardType": "domain_maintenance",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "领域",
+        "影",
+        "式神"
+      ],
+      "rarity": "domain",
+      "weight": 0.7,
+      "allowedContexts": [
+        "domain_owner",
+        "domain_profile"
+      ],
+      "effectSummary": "扩大影子环境与式神压制，但未完成领域会推高负荷。",
+      "baseDamage": 12,
+      "baseStabilityDamage": 20,
+      "baseDomainPressure": 9,
+      "baseDomainLoadDelta": 9,
+      "durationRounds": 1,
+      "baseCeCost": 24,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_curse_argument",
+      "sourceActionId": "curse_argument",
+      "name": "咒灵抗辩",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒灵",
+        "抗辩"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "用语言、术式理解或自我认知反驳指控，降低证据压力。",
+      "baseDefensePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 5,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_defense",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_distort_residue",
+      "sourceActionId": "distort_residue",
+      "name": "扭曲残秽",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "残秽",
+        "扰乱"
+      ],
+      "rarity": "rule",
+      "weight": 0.95,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "搅乱咒力残秽和现场因果，使证据链变得不稳定。",
+      "baseDefensePressure": 9,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_defense",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_curse_pressure",
+      "sourceActionId": "curse_pressure",
+      "name": "咒压顶撞",
+      "cardType": "rule_defense",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒压",
+        "高风险"
+      ],
+      "rarity": "rule",
+      "weight": 0.75,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "以咒力压迫顶撞审判子阶段，短期压低控诉推进但提高重判风险。",
+      "baseStabilityDamage": 8,
+      "baseDomainLoadDelta": 3,
+      "baseDefensePressure": 12,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_defense",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_instinctive_struggle",
+      "sourceActionId": "instinctive_struggle",
+      "name": "本能挣扎",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒灵",
+        "本能"
+      ],
+      "rarity": "rule",
+      "weight": 0.9,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "以本能抵抗审判压力，略微降低证据压力但容易暴露攻击意图。",
+      "baseBlock": 6,
+      "baseDefensePressure": 7,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "trial_defense",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_curse_fluctuation",
+      "sourceActionId": "curse_fluctuation",
+      "name": "咒力波动",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒力",
+        "扰乱"
+      ],
+      "rarity": "rule",
+      "weight": 0.9,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "不稳定咒力扰乱残秽读解，效果有限但成本较低。",
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 6,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_defense",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_flee_exorcism",
+      "sourceActionId": "flee_exorcism",
+      "name": "逃避祓除",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "祓除",
+        "生存"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "优先逃离审判和祓除压力，牺牲反击权重换取生存窗口。",
+      "baseBlock": 14,
+      "baseDefensePressure": 7,
+      "durationRounds": 1,
+      "baseCeCost": 4,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "trial_defense",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_controller_redirect",
+      "sourceActionId": "controller_redirect",
+      "name": "转向操作者",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "式神",
+        "操作者"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial",
+        "trial_control"
+      ],
+      "effectSummary": "把审判焦点从式神行为转向操作者命令与维持责任。",
+      "baseEvidencePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_summon_suppression",
+      "sourceActionId": "summon_suppression",
+      "name": "召唤压制",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "式神",
+        "压制"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial",
+        "trial_control"
+      ],
+      "effectSummary": "压低式神召唤、维持和自动攻击质量。",
+      "baseStabilityDamage": 8,
+      "baseEvidencePressure": 7,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_proxy_denial",
+      "sourceActionId": "proxy_denial",
+      "name": "代理否认",
+      "cardType": "rule_defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "式神",
+        "代理"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial",
+        "trial_defense"
+      ],
+      "effectSummary": "主张式神只是术式代理，降低式神本体责任但不解除操作者风险。",
+      "baseDefensePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 5,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "trial_defense",
+      "risk": "low",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_object_confiscation",
+      "sourceActionId": "object_confiscation",
+      "name": "物件没收",
+      "cardType": "curse_tool",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒具",
+        "没收"
+      ],
+      "rarity": "rule",
+      "weight": 1,
+      "allowedContexts": [
+        "trial",
+        "trial_control",
+        "cursed_tool"
+      ],
+      "effectSummary": "把咒具列为可没收对象，削弱持有者构筑而非直接审判物件人格。",
+      "baseCeDamage": 8,
+      "baseEvidencePressure": 9,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "curse_tool",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_wielder_liability",
+      "sourceActionId": "wielder_liability",
+      "name": "持有者归责",
+      "cardType": "curse_tool",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒具",
+        "归责"
+      ],
+      "rarity": "rule",
+      "weight": 0.9,
+      "allowedContexts": [
+        "trial",
+        "trial_control",
+        "cursed_tool"
+      ],
+      "effectSummary": "将咒具造成的结果归入持有者行为链，推进审判证据。",
+      "baseEvidencePressure": 10,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_tool_function_lock",
+      "sourceActionId": "tool_function_lock",
+      "name": "功能封锁",
+      "cardType": "curse_tool",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "审判",
+        "咒具",
+        "封锁"
+      ],
+      "rarity": "rule",
+      "weight": 0.75,
+      "allowedContexts": [
+        "trial",
+        "trial_control",
+        "cursed_tool"
+      ],
+      "effectSummary": "短暂压低咒具的术式破坏、灵魂伤害或物理兑现质量。",
+      "baseStabilityDamage": 10,
+      "baseCeDamage": 14,
+      "baseEvidencePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 13,
+      "costType": "ce_ratio_min",
+      "damageType": "curse_tool",
+      "scalingProfile": "trial_rule",
+      "risk": "high",
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_divergent_fist_delay",
+      "sourceActionId": "divergent_fist_delay",
+      "name": "逕庭拳延迟",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "虎杖",
+        "体术",
+        "延迟"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "体术命中先于咒力冲击，当前压制较稳并留下延迟震荡。",
+      "baseDamage": 6,
+      "baseStabilityDamage": 12,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "divergent_fist_delay",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_melee_chain_pressure",
+      "sourceActionId": "melee_chain_pressure",
+      "name": "连续打击",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "虎杖",
+        "体术",
+        "连击"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以短距离连打压迫对手动作选择。",
+      "baseDamage": 10,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "melee_chain_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_ce_burst_strike",
+      "sourceActionId": "ce_burst_strike",
+      "name": "咒力爆发打击",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "虎杖",
+        "咒力",
+        "爆发"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "瞬间拉高咒力贴合打击，换取短促爆发。",
+      "baseDamage": 16,
+      "baseDomainLoadDelta": 3,
+      "durationRounds": 1,
+      "baseCeCost": 13,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "mechanicId": "ce_burst_strike",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_impact_timing_window",
+      "sourceActionId": "impact_timing_window",
+      "name": "爆发窗口",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "虎杖",
+        "窗口",
+        "爆发"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "建立下一次 strike 类动作的爆发机会；这不是主动暴击卡。",
+      "baseDamage": 5,
+      "baseStabilityRestore": 12,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "support_stability",
+      "risk": "medium",
+      "mechanicId": "timing_window_candidate",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_hutian_black_flash",
+      "sourceActionId": "hutian_black_flash",
+      "name": "黑闪！",
+      "cardType": "special",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "虎天帝",
+        "虎杖",
+        "黑闪",
+        "体术",
+        "爆发",
+        "特殊手札"
+      ],
+      "specialHandTags": [
+        "hutian_black_flash"
+      ],
+      "特殊手札": [
+        "hutian_black_flash"
+      ],
+      "exclusiveToCharacters": [
+        "yuji_itadori_after68",
+        "虎天帝 / 虎杖悠仁（68年后）",
+        "虎天帝"
+      ],
+      "rarity": "special",
+      "weight": 30,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "消耗40咒力；以当前体势的3%为基础伤害并取2.5次方造成最终伤害。命中后恢复当前生命8%、当前咒力4%、稳定+1%，并使下次基础体势百分比+0.5%，可重复。",
+      "baseDamage": 0,
+      "durationRounds": 1,
+      "baseCeCost": 40,
+      "costType": "flat_ce",
+      "damageType": "black_flash",
+      "scalingProfile": "hutian_black_flash_current_hp_power",
+      "risk": "critical",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "yuji_after68_black_flash_user"
+      ]
+    },
+    {
+      "cardId": "card_shikigami_intercept",
+      "sourceActionId": "shikigami_intercept",
+      "name": "式神牵制",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "伏黑",
+        "式神",
+        "防御"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "让式神切入承接第一波压力并打乱路线。",
+      "baseBlock": 18,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "defense",
+      "risk": "low",
+      "mechanicId": "shikigami_intercept",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
+    },
+    {
+      "cardId": "card_shadow_storage",
+      "sourceActionId": "shadow_storage",
+      "name": "影中收纳",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "伏黑",
+        "影",
+        "资源"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "把武器或节奏藏入影中，保存一次低成本反击窗口。",
+      "baseStabilityRestore": 18,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "low",
+      "mechanicId": "shadow_storage",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
+    },
+    {
+      "cardId": "card_shadow_terrain_pressure",
+      "sourceActionId": "shadow_terrain_pressure",
+      "name": "影域地形压迫",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "伏黑",
+        "影",
+        "地形"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "扩大影子地形，限制对手路线。",
+      "baseStabilityDamage": 20,
+      "baseDomainLoadDelta": 2,
+      "durationRounds": 1,
+      "baseCeCost": 13,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "shadow_storage",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
+    },
+    {
+      "cardId": "card_incomplete_domain_shadow_support",
+      "sourceActionId": "incomplete_domain_shadow_support",
+      "name": "未完成领域支援",
+      "cardType": "domain",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "伏黑",
+        "领域",
+        "影"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "用不完整领域的影子结构提供压制辅助。",
+      "baseDamage": 12,
+      "baseDomainLoadDelta": 7,
+      "durationRounds": 1,
+      "baseCeCost": 20,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "mechanicId": "domain_instinct_resistance",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16,
+      "exclusiveToVariants": [
+        "ten_shadows_user"
+      ]
+    },
+    {
+      "cardId": "card_infinity_guard",
+      "sourceActionId": "infinity_guard",
+      "name": "无下限防线",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "五条",
+        "无下限",
+        "防御"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以无下限间隔削弱近身与手动追击，但消耗咒力稳定。",
+      "baseBlock": 32,
+      "baseShield": 26,
+      "baseDomainLoadDelta": 4,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 60,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "mechanicId": "infinity_guard",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16,
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
+      ]
+    },
+    {
+      "cardId": "card_lapse_blue_pressure",
+      "sourceActionId": "lapse_blue_pressure",
+      "name": "苍压缩",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "五条",
+        "苍",
+        "术式"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以收束吸引打乱对方体势和路线。",
+      "baseDamage": 14,
+      "baseStabilityDamage": 24,
+      "durationRounds": 1,
+      "baseCeCost": 17,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "soul_touch_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
+      ]
+    },
+    {
+      "cardId": "card_reversal_red_burst",
+      "sourceActionId": "reversal_red_burst",
+      "name": "赫反转",
+      "cardType": "technique",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "五条",
+        "赫",
+        "反转"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "释放高消耗反转爆发。",
+      "baseDamage": 24,
+      "baseDomainLoadDelta": 6,
+      "durationRounds": 1,
+      "baseCeCost": 24,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "mechanicId": "binding_vow_overclock",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
+      ]
+    },
+    {
+      "cardId": "card_unlimited_void_suppression",
+      "sourceActionId": "unlimited_void_suppression",
+      "name": "无量空处压制",
+      "cardType": "domain",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "五条",
+        "领域",
+        "压制"
+      ],
+      "rarity": "special",
+      "weight": 0.55,
+      "allowedContexts": [
+        "domain"
+      ],
+      "effectSummary": "在自身领域中提高信息压制，不直接决定胜负。",
+      "baseStabilityDamage": 35,
+      "baseDomainLoadDelta": 10,
+      "durationRounds": 1,
+      "baseCeCost": 28,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "burst",
+      "risk": "critical",
+      "mechanicId": "domain_anchor_spike",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToArchetypes": [
+        "gojo_limitless"
+      ],
+      "specialHandTags": [
+        "gojo_limitless"
+      ],
+      "exclusiveToVariants": [
+        "gojo_limitless_user"
+      ]
+    },
+    {
+      "cardId": "card_dismantle_pressure",
+      "sourceActionId": "dismantle_pressure",
+      "name": "解：远距压迫",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "宿傩",
+        "解",
+        "斩击"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以斩击压力限制对手行动。",
+      "baseDamage": 11,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "shrine_slash_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
+    },
+    {
+      "cardId": "card_cleave_adaptation",
+      "sourceActionId": "cleave_adaptation",
+      "name": "捌：适应斩击",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "宿傩",
+        "捌",
+        "斩击"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "根据阻抗调节斩击输出。",
+      "baseDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 16,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "mechanicId": "shrine_slash_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
+    },
+    {
+      "cardId": "card_shrine_slash_pressure",
+      "sourceActionId": "shrine_slash_pressure",
+      "name": "伏魔斩压",
+      "cardType": "technique",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "宿傩",
+        "伏魔御厨子",
+        "领域压制"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以领域或准领域斩压施加持续压力。",
+      "baseDamage": 16,
+      "baseStabilityDamage": 22,
+      "baseDomainPressure": 14,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "high",
+      "mechanicId": "shrine_slash_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
+    },
+    {
+      "cardId": "card_open_domain_pressure",
+      "sourceActionId": "open_domain_pressure",
+      "name": "开放领域压制",
+      "cardType": "domain",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "宿傩",
+        "开放领域",
+        "压制"
+      ],
+      "rarity": "special",
+      "weight": 0.55,
+      "allowedContexts": [
+        "domain"
+      ],
+      "effectSummary": "开放结界压制，区分必中、领域压力与手动追击。",
+      "baseDomainPressure": 18,
+      "baseDomainLoadDelta": 12,
+      "durationRounds": 1,
+      "baseCeCost": 30,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "critical",
+      "mechanicId": "open_domain_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "exclusiveToVariants": [
+        "sukuna_shrine_user"
+      ]
+    },
+    {
+      "cardId": "card_soul_touch_pressure",
+      "sourceActionId": "soul_touch_pressure",
+      "name": "灵魂触碰压力",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "真人",
+        "灵魂",
+        "术式"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以灵魂边界威胁削弱稳定。",
+      "baseStabilityDamage": 40,
+      "durationRounds": 1,
+      "baseCeCost": 18,
+      "costType": "ce_ratio_min",
+      "damageType": "soul",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "mechanicId": "soul_touch_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_body_morph_guard",
+      "sourceActionId": "body_morph_guard",
+      "name": "躯体变形防御",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "真人",
+        "躯体",
+        "防御"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "临时变形躯体分散伤害路线。",
+      "baseBlock": 22,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "defense",
+      "risk": "medium",
+      "mechanicId": "soul_touch_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_transfigured_swarm",
+      "sourceActionId": "transfigured_swarm",
+      "name": "改造人牵制",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "真人",
+        "改造人",
+        "牵制"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以改造人群压迫路线，不写死伤害。",
+      "baseStabilityDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "curse_miasma",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_self_embodiment_pressure",
+      "sourceActionId": "self_embodiment_pressure",
+      "name": "自闭圆顿裹压制",
+      "cardType": "domain",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "真人",
+        "领域",
+        "灵魂"
+      ],
+      "rarity": "special",
+      "weight": 0.55,
+      "allowedContexts": [
+        "domain"
+      ],
+      "effectSummary": "在领域中提高灵魂触碰压迫。",
+      "baseStabilityDamage": 45,
+      "baseDomainPressure": 12,
+      "baseDomainLoadDelta": 9,
+      "durationRounds": 1,
+      "baseCeCost": 26,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "critical",
+      "mechanicId": "soul_touch_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_zero_ce_entry",
+      "sourceActionId": "zero_ce_entry",
+      "name": "零咒力突入",
+      "cardType": "curse_tool",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "零咒力",
+        "突入",
+        "体术"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以零咒力盲区切入，不消耗 CE。",
+      "baseDamage": 4,
+      "baseBlock": 10,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "physical",
+      "scalingProfile": "zero_ce",
+      "risk": "low",
+      "mechanicId": "zero_ce_entry",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "requiresZeroCe": true
+    },
+    {
+      "cardId": "card_sure_hit_bypass_counter",
+      "sourceActionId": "sure_hit_bypass_counter",
+      "name": "必中规避反击",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "零咒力",
+        "必中",
+        "反击"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "只规避 sure-hit 捕捉，仍承受领域压制与手动攻击。",
+      "baseShield": 88,
+      "baseDomainPressure": 2,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "melee",
+      "scalingProfile": "zero_ce",
+      "risk": "medium",
+      "mechanicId": "sure_hit_bypass_counter",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "requiresZeroCe": true
+    },
+    {
+      "cardId": "card_cursed_tool_combo",
+      "sourceActionId": "cursed_tool_combo",
+      "name": "咒具连击",
+      "cardType": "curse_tool",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "咒具",
+        "连击",
+        "零咒力"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "用咒具多段角度撬动对手体势。",
+      "baseDamage": 13,
+      "baseStabilityDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "physical",
+      "scalingProfile": "cursed_tool",
+      "risk": "medium",
+      "mechanicId": "tool_breakthrough",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "requiresZeroCe": true,
+      "requiresCursedTool": true
+    },
+    {
+      "cardId": "card_barrier_boundary_break",
+      "sourceActionId": "barrier_boundary_break",
+      "name": "结界边界突破",
+      "cardType": "curse_tool",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "零咒力",
+        "结界",
+        "突破"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "寻找结界边界并尝试突破或脱出。",
+      "baseShield": 12,
+      "baseDomainPressure": 8,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 0,
+      "costType": "zero_ce",
+      "damageType": "physical",
+      "scalingProfile": "zero_ce",
+      "risk": "high",
+      "mechanicId": "zero_ce_entry",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "requiresZeroCe": true
+    },
+    {
+      "cardId": "card_rika_assist",
+      "sourceActionId": "rika_assist",
+      "name": "里香援护",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "乙骨",
+        "里香",
+        "支援"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "以里香援护防守或反压，产生冷却候选。",
+      "baseDamage": 5,
+      "baseBlock": 24,
+      "baseDefensePressure": 6,
+      "durationRounds": 1,
+      "baseCeCost": 15,
+      "costType": "ce_ratio_min",
+      "damageType": "cursed_energy",
+      "scalingProfile": "defense",
+      "risk": "high",
+      "mechanicId": "rika_assist",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_reverse_output_support",
+      "sourceActionId": "reverse_output_support",
+      "name": "反转输出支援",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "乙骨",
+        "反转术式",
+        "支援"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "输出反转术式进行支援或压制咒灵恢复。",
+      "baseBlock": 14,
+      "baseStabilityRestore": 26,
+      "baseCeDamage": 22,
+      "baseHealing": 10,
+      "durationRounds": 1,
+      "baseCeCost": 18,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "support_stability",
+      "risk": "medium",
+      "mechanicId": "rika_assist",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_copy_stock_candidate",
+      "sourceActionId": "copy_stock_candidate",
+      "name": "术式复制候选",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "乙骨",
+        "复制",
+        "候选"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "临时调整行动权重，不建立无限复制系统。",
+      "baseStabilityRestore": 18,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "support_stability",
+      "risk": "medium",
+      "mechanicId": "copy_stock_candidate",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_ce_reserve_release",
+      "sourceActionId": "ce_reserve_release",
+      "name": "咒力储备释放",
+      "cardType": "support",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "乙骨",
+        "咒力储备",
+        "爆发"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "释放储备咒力提高一段压制。",
+      "baseDamage": 20,
+      "durationRounds": 1,
+      "baseCeCost": 22,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "burst",
+      "risk": "high",
+      "mechanicId": "rika_assist",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_press_contradiction",
+      "sourceActionId": "press_contradiction",
+      "name": "追问矛盾",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "日车",
+        "审判",
+        "证据"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "审判中追问矛盾，推动证据压力。",
+      "baseStabilityDamage": 14,
+      "baseEvidencePressure": 8,
+      "durationRounds": 1,
+      "baseCeCost": 6,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "low",
+      "mechanicId": "enforce_confiscation",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_lock_charge",
+      "sourceActionId": "lock_charge",
+      "name": "锁定罪状",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "日车",
+        "审判",
+        "罪状"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "固定当前罪状方向，增加后续判决准备。",
+      "baseEvidencePressure": 10,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "trial_rule",
+      "risk": "medium",
+      "mechanicId": "enforce_confiscation",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_organize_evidence_chain",
+      "sourceActionId": "organize_evidence_chain",
+      "name": "证据链整理",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "日车",
+        "审判",
+        "证据链"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "整理证据链，提高审判稳定。",
+      "baseStabilityRestore": 22,
+      "baseEvidencePressure": 7,
+      "baseDefensePressure": 2,
+      "durationRounds": 1,
+      "baseCeCost": 5,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "low",
+      "mechanicId": "enforce_confiscation",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_enforce_confiscation",
+      "sourceActionId": "enforce_confiscation",
+      "name": "没收执行",
+      "cardType": "rule_trial",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "日车",
+        "审判",
+        "没收"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "与没收候选状态联动，限制术式或咒具。",
+      "baseEvidencePressure": 9,
+      "durationRounds": 1,
+      "baseCeCost": 12,
+      "costType": "ce_ratio_min",
+      "damageType": "rule_pressure",
+      "scalingProfile": "trial_rule",
+      "risk": "high",
+      "mechanicId": "enforce_confiscation",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_accelerate_reach",
+      "sourceActionId": "accelerate_reach",
+      "name": "演出加速",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "秤",
+        "jackpot",
+        "演出"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "推动 jackpot 演出期待度，不直接中奖。",
+      "baseJackpotGauge": 9,
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "medium",
+      "mechanicId": "jackpot_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_stabilize_probability",
+      "sourceActionId": "stabilize_probability",
+      "name": "期待度稳定",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "秤",
+        "jackpot",
+        "稳定"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "稳定 jackpot 期待度，降低高风险波动。",
+      "baseBlock": 10,
+      "baseStabilityRestore": 24,
+      "baseDefensePressure": 2,
+      "baseJackpotGauge": 6,
+      "durationRounds": 1,
+      "baseCeCost": 7,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "low",
+      "mechanicId": "jackpot_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_risky_reach_loop",
+      "sourceActionId": "risky_reach_loop",
+      "name": "高风险再演出",
+      "cardType": "jackpot",
+      "apCost": 2,
+      "ceCostMode": "from_action",
+      "tags": [
+        "秤",
+        "jackpot",
+        "高风险"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "高风险再演出，压高期待但消耗稳定。",
+      "baseDamage": 10,
+      "baseDomainLoadDelta": 4,
+      "baseJackpotGauge": 11,
+      "durationRounds": 1,
+      "baseCeCost": 14,
+      "costType": "ce_ratio_min",
+      "damageType": "jackpot",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "high",
+      "mechanicId": "jackpot_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_jackpot_pressure",
+      "sourceActionId": "jackpot_pressure",
+      "name": "中奖后压制",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "秤",
+        "jackpot",
+        "压制"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "在 jackpot 候选状态下增强持续压迫。",
+      "baseDamage": 13,
+      "baseBlock": 12,
+      "baseDefensePressure": 3,
+      "durationRounds": 1,
+      "baseCeCost": 9,
+      "costType": "ce_ratio_min",
+      "damageType": "melee",
+      "scalingProfile": "jackpot_cycle",
+      "risk": "medium",
+      "mechanicId": "jackpot_pressure",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_curse_miasma",
+      "sourceActionId": "curse_miasma",
+      "name": "咒力瘴气",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "咒灵",
+        "瘴气",
+        "扰乱"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "咒灵类单位释放瘴气扰乱对方回流。",
+      "baseStabilityDamage": 14,
+      "baseCeDamage": 18,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "technique",
+      "scalingProfile": "balanced",
+      "risk": "medium",
+      "mechanicId": "curse_miasma",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_residue_distortion",
+      "sourceActionId": "residue_distortion",
+      "name": "残秽扰乱",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "咒灵",
+        "残秽",
+        "扰乱"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "扭曲残秽路线，使对手读解失准。",
+      "durationRounds": 1,
+      "baseCeCost": 8,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "balanced",
+      "risk": "low",
+      "mechanicId": "curse_miasma",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "baseStabilityDamage": 4
+    },
+    {
+      "cardId": "card_domain_instinct_resistance",
+      "sourceActionId": "domain_instinct_resistance",
+      "name": "领域本能反抗",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "咒灵",
+        "领域应对",
+        "本能"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "opponent_domain"
+      ],
+      "effectSummary": "智能咒灵在领域压制下凭本能反抗。",
+      "baseBlock": 10,
+      "baseShield": 18,
+      "baseStabilityRestore": 12,
+      "baseDefensePressure": 5,
+      "durationRounds": 1,
+      "baseCeCost": 10,
+      "costType": "ce_ratio_min",
+      "damageType": "domain",
+      "scalingProfile": "domain_pressure",
+      "risk": "medium",
+      "mechanicId": "domain_instinct_resistance",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE",
+      "baseDomainPressure": 16
+    },
+    {
+      "cardId": "card_curse_regen_candidate",
+      "sourceActionId": "curse_regen_candidate",
+      "name": "咒灵再生候选",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "咒灵",
+        "再生",
+        "候选"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "咒灵类单位小幅回复稳定，受术式干涉限制。",
+      "baseBlock": 16,
+      "baseStabilityRestore": 34,
+      "baseHealing": 12,
+      "baseDefensePressure": 4,
+      "durationRounds": 1,
+      "baseCeCost": 11,
+      "costType": "ce_ratio_min",
+      "damageType": "none",
+      "scalingProfile": "defense",
+      "risk": "medium",
+      "mechanicId": "curse_regen_candidate",
+      "playableInHandBeta": true,
+      "status": "CANDIDATE"
+    },
+    {
+      "cardId": "card_future_open_barrier_variant",
+      "sourceActionId": "future_open_barrier_variant",
+      "name": "开放结界变体占位",
+      "cardType": "domain",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "领域",
+        "开放结界"
+      ],
+      "rarity": "domain",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来开放结界领域模板占位，只记录展示分类。",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_closed_barrier_variant",
+      "sourceActionId": "future_closed_barrier_variant",
+      "name": "封闭结界变体占位",
+      "cardType": "domain",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "领域",
+        "封闭结界"
+      ],
+      "rarity": "domain",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来封闭结界领域模板占位，只记录展示分类。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_pseudo_domain_variant",
+      "sourceActionId": "future_pseudo_domain_variant",
+      "name": "伪领域占位",
+      "cardType": "domain_response",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "伪领域",
+        "反制"
+      ],
+      "rarity": "domain",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来伪领域或不完整领域应对模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_barrier_rule_shift",
+      "sourceActionId": "future_barrier_rule_shift",
+      "name": "结界规则转写占位",
+      "cardType": "domain_maintenance",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "结界",
+        "规则"
+      ],
+      "rarity": "domain",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来结界规则切换展示模板占位。",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_trial_target_human",
+      "sourceActionId": "future_trial_target_human",
+      "name": "人类审判目标占位",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "审判",
+        "人类"
+      ],
+      "rarity": "rule",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来人类目标审判分支模板占位。",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_trial_target_incarnated",
+      "sourceActionId": "future_trial_target_incarnated",
+      "name": "受肉体审判占位",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "审判",
+        "受肉"
+      ],
+      "rarity": "rule",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来受肉体审判解释分支模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_verdict_confiscation",
+      "sourceActionId": "future_verdict_confiscation",
+      "name": "没收判决占位",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "审判",
+        "没收"
+      ],
+      "rarity": "rule",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来没收类判决展示模板占位，不定义判决结果。",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_execution_state",
+      "sourceActionId": "future_execution_state",
+      "name": "处刑状态占位",
+      "cardType": "rule_trial",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "审判",
+        "处刑"
+      ],
+      "rarity": "rule",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来处刑状态展示模板占位，不定义最终惩罚。",
+      "risk": "critical",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_jackpot_retry",
+      "sourceActionId": "future_jackpot_retry",
+      "name": "再演出占位",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "坐杀搏徒",
+        "再演出"
+      ],
+      "rarity": "rule",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来 jackpot 再演出或演出分支展示模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_jackpot_bonus_state",
+      "sourceActionId": "future_jackpot_bonus_state",
+      "name": "中奖增益占位",
+      "cardType": "jackpot",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "坐杀搏徒",
+        "增益"
+      ],
+      "rarity": "rule",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来中奖后状态展示模板占位，不定义资源循环。",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_hand_cycle_candidate",
+      "sourceActionId": "future_hand_cycle_candidate",
+      "name": "手札循环候选占位",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "手札",
+        "循环"
+      ],
+      "rarity": "common",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来手札循环 UI 元数据模板占位，不创建牌堆。",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_hand_pressure_candidate",
+      "sourceActionId": "future_hand_pressure_candidate",
+      "name": "手札压力候选占位",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "手札",
+        "压力"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来手札压力展示模板占位，不创建弃牌区。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_resource_overflow",
+      "sourceActionId": "future_resource_overflow",
+      "name": "资源溢出占位",
+      "cardType": "resource",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "资源",
+        "溢出"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来资源溢出提示卡模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_resource_lock",
+      "sourceActionId": "future_resource_lock",
+      "name": "资源封锁占位",
+      "cardType": "resource",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "资源",
+        "封锁"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来资源封锁展示模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_status_cleanse",
+      "sourceActionId": "future_status_cleanse",
+      "name": "状态清除占位",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "状态",
+        "清除"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来状态清除或降压展示模板占位。",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_status_amplify",
+      "sourceActionId": "future_status_amplify",
+      "name": "状态放大占位",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "状态",
+        "放大"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来状态放大展示模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_loadout_synergy",
+      "sourceActionId": "future_loadout_synergy",
+      "name": "构筑联动占位",
+      "cardType": "special",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "构筑",
+        "联动"
+      ],
+      "rarity": "special",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来角色构筑联动模板占位。",
+      "risk": "medium",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_scenario_hazard",
+      "sourceActionId": "future_scenario_hazard",
+      "name": "场景危机占位",
+      "cardType": "special",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "场景",
+        "危机"
+      ],
+      "rarity": "special",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来场景压力或环境危机展示模板占位。",
+      "risk": "high",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_ai_narration_hook",
+      "sourceActionId": "future_ai_narration_hook",
+      "name": "叙事钩子占位",
+      "cardType": "support",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "叙事",
+        "AI"
+      ],
+      "rarity": "common",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来本地结算后叙事提示模板占位，不提供结算逻辑。",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_future_audit_placeholder",
+      "sourceActionId": "future_audit_placeholder",
+      "name": "审计占位卡",
+      "cardType": "special",
+      "apCost": 1,
+      "ceCostMode": "from_action",
+      "tags": [
+        "futureTemplate",
+        "审计",
+        "占位"
+      ],
+      "rarity": "special",
+      "weight": 0.5,
+      "allowedContexts": [
+        "future_template"
+      ],
+      "effectSummary": "未来模板覆盖率审计占位，不绑定实战效果。",
+      "risk": "low",
+      "status": "CANDIDATE",
+      "futureTemplate": true,
+      "playableInHandBeta": false
+    },
+    {
+      "cardId": "card_ten_shadows_divine_dog_totality",
+      "sourceActionId": "ten_shadows_divine_dog_totality",
+      "name": "玉犬·浑",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 32,
+      "tags": [
+        "十种影法术",
+        "玉犬",
+        "浑",
+        "式神",
+        "追踪",
+        "夹击",
+        "ten_shadows"
+      ],
+      "rarity": "rare",
+      "weight": 0.75,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "从影子中召出玉犬·浑，作为己方追踪单位持续撕咬、夹击并压迫目标退路。",
+      "baseDamage": 28,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_melee",
+      "scalingProfile": "ten_shadows_controlled_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_divine_dog_totality",
+        "placement": "shadow_adjacent_flank",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 90,
+        "currentHp": 90,
+        "baseDamage": 28,
+        "guardBreak": 14,
+        "actionsPerRound": 1,
+        "placement": "shadow_adjacent_flank",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "B",
+          "control": "B",
+          "efficiency": "B",
+          "body": "A",
+          "martial": "A+",
+          "talent": "B"
+        },
+        "raw": {
+          "cursedEnergyScore": 4.6,
+          "controlScore": 4.8,
+          "efficiencyScore": 4.6,
+          "bodyScore": 5.8,
+          "martialScore": 6.4,
+          "talentScore": 4.8
+        },
+        "axes": {
+          "jujutsu": 4.8,
+          "body": 6.2,
+          "insight": 5.2,
+          "build": 5.7
+        },
+        "attackProfile": {
+          "accuracyProfile": "melee",
+          "hitRateModifier": 0.04,
+          "damageScale": 1,
+          "attackType": "tracking_bite"
+        }
+      },
+      "targetingRules": {
+        "default": "marked_or_lowest_guard_enemy",
+        "bonus": "追踪已被影子标记或被夹击的目标"
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "cardId": "card_ten_shadows_nue",
+      "sourceActionId": "ten_shadows_nue",
+      "name": "鵺",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 36,
+      "tags": [
+        "十种影法术",
+        "鵺",
+        "式神",
+        "飞行",
+        "雷击",
+        "牵制",
+        "ten_shadows"
+      ],
+      "rarity": "rare",
+      "weight": 0.7,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出飞行式神鵺，拥有独立血条，可进行雷击牵制并干扰敌方行动线路。",
+      "baseDamage": 24,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_lightning",
+      "scalingProfile": "ten_shadows_controlled_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_nue",
+        "placement": "air_shadow_lane",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 70,
+        "currentHp": 70,
+        "baseDamage": 24,
+        "guardBreak": 8,
+        "controlValue": 10,
+        "actionsPerRound": 1,
+        "placement": "air_shadow_lane",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "B+",
+          "control": "B+",
+          "efficiency": "B",
+          "body": "B",
+          "martial": "B+",
+          "talent": "B+"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.2,
+          "controlScore": 5.2,
+          "efficiencyScore": 4.8,
+          "bodyScore": 4.9,
+          "martialScore": 5.4,
+          "talentScore": 5.2
+        },
+        "axes": {
+          "jujutsu": 5.35,
+          "body": 5.1,
+          "insight": 5.6,
+          "build": 5.35
+        },
+        "attackProfile": {
+          "accuracyProfile": "technique_projectile",
+          "hitRateModifier": 0.03,
+          "damageScale": 1,
+          "attackType": "lightning_strike"
+        }
+      },
+      "targetingRules": {
+        "default": "backline_or_casting_enemy",
+        "bonus": "优先牵制正在蓄力、展开或维持术式的目标"
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "cardId": "card_ten_shadows_max_elephant",
+      "sourceActionId": "ten_shadows_max_elephant",
+      "name": "满象",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 42,
+      "tags": [
+        "十种影法术",
+        "满象",
+        "式神",
+        "大型单位",
+        "压制",
+        "冲散",
+        "ten_shadows"
+      ],
+      "rarity": "rare",
+      "weight": 0.6,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出大型式神满象，以体型和水压冲散阵位，作为高耐久战场单位存在。",
+      "baseDamage": 34,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_pressure",
+      "scalingProfile": "ten_shadows_heavy_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_max_elephant",
+        "placement": "frontline_shadow_lane",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 160,
+        "currentHp": 160,
+        "baseDamage": 34,
+        "guardBreak": 26,
+        "areaPressure": 18,
+        "actionsPerRound": 1,
+        "placement": "frontline_shadow_lane",
+        "control": "player_controlled",
+        "controlResistance": "high",
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "A",
+          "control": "B",
+          "efficiency": "B-",
+          "body": "A+",
+          "martial": "B",
+          "talent": "B"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.8,
+          "controlScore": 4.8,
+          "efficiencyScore": 4.2,
+          "bodyScore": 6.5,
+          "martialScore": 5,
+          "talentScore": 4.8
+        },
+        "axes": {
+          "jujutsu": 5.35,
+          "body": 6.6,
+          "insight": 4.8,
+          "build": 6.2
+        },
+        "attackProfile": {
+          "accuracyProfile": "heavy_melee",
+          "hitRateModifier": -0.03,
+          "damageScale": 1,
+          "attackType": "pressure_crash"
+        }
+      },
+      "targetingRules": {
+        "default": "frontline_cluster",
+        "bonus": "对站位集中或被影子限制路线的目标提高冲散收益"
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "cardId": "card_ten_shadows_rabbit_escape",
+      "sourceActionId": "ten_shadows_rabbit_escape",
+      "name": "脱兔烟幕",
+      "cardType": "defense",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 22,
+      "tags": [
+        "十种影法术",
+        "脱兔",
+        "扰乱",
+        "遮蔽",
+        "防御",
+        "目标偏移",
+        "ten_shadows"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "释放脱兔群形成遮蔽与目标扰乱。本牌不生成独立血条单位，主要用于防御、撤位和打乱索敌。",
+      "baseDamage": 0,
+      "baseBlock": 32,
+      "baseDefensePressure": 12,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 1,
+      "damageType": "none",
+      "scalingProfile": "ten_shadows_disruption",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "mechanismSpec": {
+        "createsUnit": false,
+        "grantsState": "rabbit_screen",
+        "targetingDisruption": 22,
+        "evasionModifier": 0.18,
+        "breaksSingleTargetLock": true
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "cardId": "card_ten_shadows_round_deer",
+      "sourceActionId": "ten_shadows_round_deer",
+      "name": "圆鹿",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 45,
+      "tags": [
+        "十种影法术",
+        "圆鹿",
+        "式神",
+        "反转术式",
+        "净化",
+        "辅助",
+        "ten_shadows"
+      ],
+      "rarity": "special",
+      "weight": 0.45,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出圆鹿，作为辅助单位提供反转术式性质的恢复、净化与术式干扰缓解。",
+      "baseDamage": 8,
+      "baseBlock": 0,
+      "baseStabilityRestore": 28,
+      "baseDomainLoadDelta": -4,
+      "durationRounds": 0,
+      "damageType": "reverse_cursed_technique",
+      "scalingProfile": "ten_shadows_support_unit",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_round_deer",
+        "placement": "rear_shadow_support",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 110,
+        "currentHp": 110,
+        "baseDamage": 8,
+        "guardBreak": 4,
+        "stabilityRestore": 28,
+        "techniqueDisruptionCleanse": 16,
+        "actionsPerRound": 1,
+        "placement": "rear_shadow_support",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "high",
+        "baseStats": {
+          "cursedEnergy": "A",
+          "control": "A",
+          "efficiency": "A",
+          "body": "B",
+          "martial": "C+",
+          "talent": "A"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.8,
+          "controlScore": 5.8,
+          "efficiencyScore": 5.8,
+          "bodyScore": 4.8,
+          "martialScore": 4.1,
+          "talentScore": 5.8
+        },
+        "axes": {
+          "jujutsu": 5.8,
+          "body": 4.45,
+          "insight": 5.8,
+          "build": 5.5
+        },
+        "attackProfile": {
+          "accuracyProfile": "support_touch",
+          "hitRateModifier": -0.04,
+          "damageScale": 1,
+          "attackType": "positive_energy_contact"
+        }
+      },
+      "supportRules": {
+        "canCleanseTechniqueInterference": true,
+        "canReduceDomainLoad": true,
+        "antiCursePositiveEnergyRoute": true
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "cardId": "card_ten_shadows_piercing_ox",
+      "sourceActionId": "ten_shadows_piercing_ox",
+      "name": "贯牛",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 40,
+      "tags": [
+        "十种影法术",
+        "贯牛",
+        "式神",
+        "直线冲锋",
+        "破防",
+        "距离增伤",
+        "ten_shadows"
+      ],
+      "rarity": "rare",
+      "weight": 0.55,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "召出贯牛作为直线冲锋单位。移动距离越长，冲撞伤害和破防越高。",
+      "baseDamage": 22,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_charge",
+      "scalingProfile": "ten_shadows_linear_charge",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_ten_shadows_piercing_ox",
+        "placement": "far_shadow_line",
+        "control": "player_controlled"
+      },
+      "unitStats": {
+        "maxHp": 130,
+        "currentHp": 130,
+        "baseDamage": 22,
+        "guardBreak": 18,
+        "actionsPerRound": 1,
+        "placement": "far_shadow_line",
+        "control": "player_controlled",
+        "controlResistance": "medium",
+        "domainResistance": "medium",
+        "baseStats": {
+          "cursedEnergy": "B+",
+          "control": "B",
+          "efficiency": "B-",
+          "body": "A",
+          "martial": "B+",
+          "talent": "B"
+        },
+        "raw": {
+          "cursedEnergyScore": 5.1,
+          "controlScore": 4.8,
+          "efficiencyScore": 4.3,
+          "bodyScore": 5.9,
+          "martialScore": 5.3,
+          "talentScore": 4.8
+        },
+        "axes": {
+          "jujutsu": 4.9,
+          "body": 5.9,
+          "insight": 4.6,
+          "build": 5.6
+        },
+        "attackProfile": {
+          "accuracyProfile": "charge",
+          "hitRateModifier": -0.02,
+          "damageScale": 1,
+          "attackType": "piercing_charge"
+        }
+      },
+      "chargeRules": {
+        "requiresStraightLine": true,
+        "damagePerDistanceStep": 12,
+        "guardBreakPerDistanceStep": 4,
+        "maxBonusDamage": 48,
+        "blockedByHardTerrainOrLineBreak": true
+      },
+      "specialHandTags": [
+        "ten_shadows"
+      ]
+    },
+    {
+      "cardId": "card_ten_shadows_mahoraga_tuning_ritual",
+      "sourceActionId": "ten_shadows_mahoraga_tuning_ritual",
+      "name": "魔虚罗调幅仪式",
+      "cardType": "summon",
+      "apCost": 3,
+      "ceCostMode": "fixed",
+      "baseCeCost": 70,
+      "tags": [
+        "十种影法术",
+        "魔虚罗",
+        "调幅仪式",
+        "代打",
+        "完全适应",
+        "式神",
+        "高风险",
+        "ten_shadows"
+      ],
+      "rarity": "special",
+      "weight": 0.6,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "清除手牌并切换为魔虚罗代打中；之后每回合手牌区后台随机锁定，由魔虚罗自主行动。同名攻击手札每次命中都会被记录并降低后续伤害，第 6 次起归零。",
+      "baseDamage": 0,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "none",
+      "scalingProfile": "ten_shadows_mahoraga_proxy",
+      "risk": "critical",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "mahoragaProxySpec": {
+        "unitCardId": "card_unit_mahoraga_tuned_guard",
+        "summonMode": "guard_shikigami",
+        "displayName": "八握剑异戒神将 魔虚罗",
+        "handLockMessage": "魔虚罗代打中",
+        "adaptationLimit": 6,
+        "sameAttackDamageRule": "同名攻击手札每命中一次降低 1/6 伤害，第 6 次起归零。"
+      },
+      "specialHandTags": [
+        "ten_shadows",
+        "mahoraga_tuning_ritual"
+      ],
+      "selectionWeight": 0.6
+    },
+    {
+      "cardId": "card_ten_shadows_shadow_hide",
+      "sourceActionId": "ten_shadows_shadow_hide",
+      "name": "影中藏身",
+      "cardType": "maintenance",
+      "apCost": "all",
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "十种影法术",
+        "影藏",
+        "强制维持",
+        "跳过回合",
+        "魔虚罗"
+      ],
+      "rarity": "special",
+      "weight": 0,
+      "allowedContexts": [
+        "mahoraga_unattuned_active"
+      ],
+      "effectSummary": "每轮开始时必须打出；消耗全部 AP 并跳过主动行动，使自身不被未调幅魔虚罗优先选为目标。",
+      "baseDamage": 0,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 1,
+      "damageType": "none",
+      "scalingProfile": "forced_maintenance",
+      "risk": "high",
+      "status": "CONFIRMED",
+      "playableInHandBeta": false,
+      "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
+      "maintenanceSpec": {
+        "mandatoryWhileUnitActive": "card_unit_mahoraga_unattuned",
+        "timing": "round_start",
+        "apCostMode": "all_remaining_ap",
+        "skipActiveTurn": true,
+        "grantsState": "shadow_hidden_from_unattuned_mahoraga",
+        "missedPaymentConsequence": "user_becomes_valid_mahoraga_target"
+      }
+    },
+    {
+      "cardId": "card_unit_mahoraga_unattuned",
+      "sourceActionId": "unit_mahoraga_unattuned",
+      "name": "八握剑异戒神将 魔虚罗",
+      "cardType": "unit",
+      "apCost": 0,
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "魔虚罗",
+        "式神",
+        "中立单位",
+        "狂暴单位",
+        "未调幅",
+        "自动行动",
+        "适应",
+        "咒灵特攻"
+      ],
+      "rarity": "special",
+      "weight": 0,
+      "allowedContexts": [
+        "battlefield_unit"
+      ],
+      "effectSummary": "战场中央出现的未调幅魔虚罗。拥有独立血条与数值，每轮自动行动；对咒灵目标基础伤害乘以 3。",
+      "baseDamage": 60,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_exorcism_blade",
+      "scalingProfile": "mahoraga_unattuned_unit",
+      "risk": "critical",
+      "status": "CONFIRMED",
+      "playableInHandBeta": false,
+      "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
+      "unitStats": {
+        "maxHp": 300,
+        "currentHp": 300,
+        "baseDamage": 60,
+        "guardBreak": 24,
+        "actionsPerRound": 1,
+        "placement": "battlefield_center",
+        "control": "neutral_berserk",
+        "controlResistance": "high",
+        "domainResistance": "high",
+        "baseStats": {
+          "cursedEnergy": "SS",
+          "control": "A",
+          "efficiency": "A",
+          "body": "SSS",
+          "martial": "SSS",
+          "talent": "SS"
+        },
+        "raw": {
+          "cursedEnergyScore": 7.4,
+          "controlScore": 5.8,
+          "efficiencyScore": 5.8,
+          "bodyScore": 8.8,
+          "martialScore": 8.8,
+          "talentScore": 7.4
+        },
+        "axes": {
+          "jujutsu": 6.75,
+          "body": 8.8,
+          "insight": 7.4,
+          "build": 8.25
+        },
+        "attackProfile": {
+          "accuracyProfile": "melee",
+          "hitRateModifier": 0.08,
+          "damageScale": 1,
+          "attackType": "exorcism_blade",
+          "curseDamageMultiplier": 3
+        }
+      },
+      "targetingRules": {
+        "default": "berserk_all_units_and_players",
+        "hostileTo": "all_sides",
+        "ownerPriority": "highest_unless_shadow_hidden",
+        "ownerStateToAvoidPriority": "shadow_hidden_from_unattuned_mahoraga",
+        "whileOwnerHidden": "target_other_valid_combatants_by_threat",
+        "userIsValidTargetUnlessState": "shadow_hidden_from_unattuned_mahoraga",
+        "neverCountsAsGuard": true
+      },
+      "adaptationRules": {
+        "tracksThreatTags": true,
+        "initialThreshold": 2,
+        "strongThreshold": 3,
+        "initialEffect": "reduce_next_same_tag_effect",
+        "strongEffect": "major_reduction_and_counter_modifier"
+      },
+      "matchupModifiers": {
+        "againstCurse": {
+          "baseDamageMultiplier": 3,
+          "reason": "mahoraga_exorcism_blade_curse_special_attack"
+        }
+      }
+    },
+    {
+      "cardId": "card_unit_mahoraga_tuned",
+      "sourceActionId": "unit_mahoraga_tuned",
+      "name": "八握剑异戒神将 魔虚罗",
+      "cardType": "unit",
+      "apCost": 0,
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "魔虚罗",
+        "式神",
+        "友方单位",
+        "调幅后",
+        "守护",
+        "适应",
+        "咒灵特攻"
+      ],
+      "rarity": "special",
+      "weight": 0,
+      "allowedContexts": [
+        "battlefield_unit",
+        "mahoraga_tuned_active"
+      ],
+      "effectSummary": "调幅后的友方魔虚罗。拥有独立血条与数值；在其未被击破前，对手攻击优先判定到魔虚罗身上。对咒灵目标基础伤害乘以 3。",
+      "baseDamage": 60,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "shikigami_exorcism_blade",
+      "scalingProfile": "mahoraga_tuned_guard_unit",
+      "risk": "high",
+      "status": "CONFIRMED",
+      "playableInHandBeta": false,
+      "generatedBy": "ten_shadows_mahoraga_tuning_success",
+      "unitStats": {
+        "maxHp": 600,
+        "currentHp": 600,
+        "baseDamage": 60,
+        "guardBreak": 24,
+        "actionsPerRound": 1,
+        "placement": "frontline_guard",
+        "control": "player_controlled",
+        "controlResistance": "very_high",
+        "domainResistance": "high",
+        "baseStats": {
+          "cursedEnergy": "SS",
+          "control": "S",
+          "efficiency": "S",
+          "body": "SSS",
+          "martial": "SSS",
+          "talent": "SS"
+        },
+        "raw": {
+          "cursedEnergyScore": 7.4,
+          "controlScore": 6.2,
+          "efficiencyScore": 6.2,
+          "bodyScore": 8.8,
+          "martialScore": 8.8,
+          "talentScore": 7.4
+        },
+        "axes": {
+          "jujutsu": 6.9,
+          "body": 8.8,
+          "insight": 7.55,
+          "build": 8.2
+        },
+        "attackProfile": {
+          "accuracyProfile": "melee",
+          "hitRateModifier": 0.1,
+          "damageScale": 1,
+          "attackType": "adapted_exorcism_blade",
+          "curseDamageMultiplier": 3
+        }
+      },
+      "guardRules": {
+        "interceptsOpponentAttacks": true,
+        "protectsSide": "owner",
+        "priority": 100,
+        "untilDefeated": true,
+        "scope": "single_or_team_side"
+      },
+      "targetingRules": {
+        "default": "protect_owner_then_highest_threat",
+        "interceptsOpponentAttacks": true,
+        "teamTargetingReady": true
+      },
+      "adaptationRules": {
+        "tracksThreatTags": true,
+        "initialThreshold": 2,
+        "strongThreshold": 3,
+        "initialEffect": "reduce_next_same_tag_effect",
+        "strongEffect": "major_reduction_and_counter_modifier"
+      },
+      "matchupModifiers": {
+        "againstCurse": {
+          "baseDamageMultiplier": 3,
+          "reason": "mahoraga_exorcism_blade_curse_special_attack"
+        }
+      }
+    },
+    {
+      "cardId": "card_recontract_receipt_stock",
+      "sourceActionId": "recontract_receipt_stock",
+      "name": "收据库存",
+      "cardType": "resource",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 6,
+      "tags": [
+        "再契象",
+        "收据",
+        "库存",
+        "资源",
+        "recontract_icon"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.9,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "整理可再现的收据库存，为后续实物具现或服务再现降低调度压力。",
+      "baseDamage": 0,
+      "baseBlock": 8,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 2,
+      "damageType": "none",
+      "scalingProfile": "recontract_resource_setup",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "resourceSpec": {
+        "addsReceiptStock": 2,
+        "reducesNextRecontractCeCost": 8,
+        "validForTags": [
+          "receipt_materialization",
+          "object_shikigami",
+          "service_receipt"
+        ]
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
+    },
+    {
+      "cardId": "card_recontract_santana_sedan",
+      "sourceActionId": "recontract_santana_sedan",
+      "name": "桑塔纳轿车",
+      "cardType": "summon",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 24,
+      "tags": [
+        "再契象",
+        "桑塔纳轿车",
+        "实物式神",
+        "冲撞",
+        "临时单位",
+        "recontract_icon"
+      ],
+      "rarity": "uncommon",
+      "weight": 0.8,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再现桑塔纳轿车作为低血量实物式神，短暂冲撞并占位阻挡路线。",
+      "baseDamage": 24,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 2,
+      "damageType": "materialized_object_impact",
+      "scalingProfile": "recontract_object_shikigami",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_recontract_santana_sedan",
+        "placement": "nearby_lane",
+        "control": "temporary_player_controlled",
+        "durationRounds": 2
+      },
+      "unitStats": {
+        "maxHp": 55,
+        "currentHp": 55,
+        "baseDamage": 24,
+        "guardBreak": 12,
+        "actionsPerRound": 1,
+        "placement": "nearby_lane",
+        "control": "temporary_player_controlled",
+        "controlResistance": "low",
+        "domainResistance": "low",
+        "baseStats": {
+          "cursedEnergy": "C",
+          "control": "C",
+          "efficiency": "C",
+          "body": "B",
+          "martial": "C+",
+          "talent": "C"
+        },
+        "raw": {
+          "cursedEnergyScore": 3.4,
+          "controlScore": 3.4,
+          "efficiencyScore": 3.4,
+          "bodyScore": 4.8,
+          "martialScore": 4.1,
+          "talentScore": 3.4
+        },
+        "axes": {
+          "jujutsu": 3.4,
+          "body": 4.55,
+          "insight": 3.2,
+          "build": 4.2
+        },
+        "attackProfile": {
+          "accuracyProfile": "charge",
+          "hitRateModifier": -0.04,
+          "damageScale": 1,
+          "attackType": "vehicle_impact"
+        }
+      },
+      "objectRules": {
+        "countsAsShikigamiLikeObject": true,
+        "expiresWhenDestroyedOrDurationEnds": true
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
+    },
+    {
+      "cardId": "card_recontract_excavator",
+      "sourceActionId": "recontract_excavator",
+      "name": "挖掘机",
+      "cardType": "summon",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 38,
+      "tags": [
+        "再契象",
+        "挖掘机",
+        "实物式神",
+        "重型单位",
+        "破防",
+        "recontract_icon"
+      ],
+      "rarity": "rare",
+      "weight": 0.55,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再现挖掘机作为低机动重型实物式神，血量不高但破防和地形压制较强。",
+      "baseDamage": 36,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 2,
+      "damageType": "materialized_heavy_machine",
+      "scalingProfile": "recontract_heavy_object",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "summonSpec": {
+        "unitCardId": "card_recontract_excavator",
+        "placement": "frontline_lane",
+        "control": "temporary_player_controlled",
+        "durationRounds": 2
+      },
+      "unitStats": {
+        "maxHp": 85,
+        "currentHp": 85,
+        "baseDamage": 36,
+        "guardBreak": 30,
+        "actionsPerRound": 1,
+        "placement": "frontline_lane",
+        "control": "temporary_player_controlled",
+        "controlResistance": "low",
+        "domainResistance": "low",
+        "baseStats": {
+          "cursedEnergy": "C+",
+          "control": "C",
+          "efficiency": "C-",
+          "body": "B+",
+          "martial": "C",
+          "talent": "C"
+        },
+        "raw": {
+          "cursedEnergyScore": 3.8,
+          "controlScore": 3.4,
+          "efficiencyScore": 3,
+          "bodyScore": 5.2,
+          "martialScore": 3.6,
+          "talentScore": 3.4
+        },
+        "axes": {
+          "jujutsu": 3.4,
+          "body": 5.1,
+          "insight": 3.1,
+          "build": 4.9
+        },
+        "attackProfile": {
+          "accuracyProfile": "heavy_melee",
+          "hitRateModifier": -0.08,
+          "damageScale": 1,
+          "attackType": "heavy_machine_crush"
+        }
+      },
+      "objectRules": {
+        "countsAsShikigamiLikeObject": true,
+        "movement": "slow",
+        "terrainPressure": 20,
+        "expiresWhenDestroyedOrDurationEnds": true
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
+    },
+    {
+      "cardId": "card_recontract_kitchen_knife",
+      "sourceActionId": "recontract_kitchen_knife",
+      "name": "菜刀",
+      "cardType": "technique",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 14,
+      "tags": [
+        "再契象",
+        "菜刀",
+        "实物具现",
+        "投掷",
+        "近身",
+        "recontract_icon"
+      ],
+      "rarity": "common",
+      "weight": 1,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "再现菜刀进行投掷或近身切割，消耗低，适合补刀、牵制和逼闪避。",
+      "baseDamage": 18,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "materialized_blade",
+      "scalingProfile": "recontract_small_object",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "accuracyProfile": "small_object_projectile",
+      "evasionAllowed": true,
+      "hitRateModifier": 0.08,
+      "specialHandTags": [
+        "recontract_icon"
+      ]
+    },
+    {
+      "cardId": "card_recontract_detached_house",
+      "sourceActionId": "recontract_detached_house",
+      "name": "一户建",
+      "cardType": "special",
+      "apCost": 3,
+      "ceCostMode": "fixed",
+      "baseCeCost": 85,
+      "tags": [
+        "再契象",
+        "一户建",
+        "房产再具象化",
+        "巨大质量",
+        "慢速压杀",
+        "recontract_icon"
+      ],
+      "rarity": "special",
+      "weight": 0.18,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再具象化曾购买的房产并砸向目标，造成巨量慢速压杀伤害；体型巨大，通常容易被闪避。",
+      "baseDamage": 360,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 8,
+      "durationRounds": 0,
+      "damageType": "materialized_house_crush",
+      "scalingProfile": "recontract_massive_object_finisher",
+      "risk": "critical",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "accuracyProfile": "huge_slow_object",
+      "evasionAllowed": true,
+      "hitRateModifier": -0.35,
+      "specialResolution": {
+        "baseDamage": 360,
+        "normalRule": "slow_huge_object_evasion_check",
+        "unfinishedTenShadowsDomainRule": {
+          "condition": "target_has_unfinished_ten_shadows_domain && caster_has_no_active_domain",
+          "damageMultiplier": 0.8,
+          "treatedAsSureHit": true,
+          "reason": "未完成领域提供影中战场但未建立完整必中防御，巨大房产再具象化可直接落入领域内。",
+          "escapeOverride": {
+            "condition": "ten_shadows_user_releases_domain_next_round_after_this_card",
+            "resolution": "use_normal_slow_huge_object_evasion_check"
+          }
+        }
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
+    },
+    {
+      "cardId": "card_recontract_five_star_resort_week",
+      "sourceActionId": "recontract_five_star_resort_week",
+      "name": "五星级度假村7日套餐",
+      "cardType": "resource",
+      "apCost": 2,
+      "ceCostMode": "fixed",
+      "baseCeCost": 18,
+      "tags": [
+        "再契象",
+        "服务收据",
+        "度假套餐",
+        "恢复",
+        "补给",
+        "recontract_icon"
+      ],
+      "rarity": "rare",
+      "weight": 0.45,
+      "allowedContexts": [
+        "normal",
+        "domain"
+      ],
+      "effectSummary": "再现服务类收据效果，大幅恢复生命与咒力，但需要脱离直接压制或拥有足够调度窗口。",
+      "baseDamage": 0,
+      "baseBlock": 18,
+      "baseStabilityRestore": 55,
+      "baseCeRestore": 50,
+      "baseHpRestore": 60,
+      "baseDomainLoadDelta": -6,
+      "durationRounds": 1,
+      "damageType": "none",
+      "scalingProfile": "recontract_service_receipt_restore",
+      "risk": "medium",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "serviceReceiptRules": {
+        "requiresNotHardControlled": true,
+        "canBeInterruptedByImmediateMeleePressure": true,
+        "restoresHp": 60,
+        "restoresCe": 50,
+        "restoresStability": 55,
+        "reducesDomainLoad": 6
+      },
+      "specialHandTags": [
+        "recontract_icon"
+      ]
+    }
+  ]
+}
