@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>咒术转盘V2.2 AI路线整理</title>
+    <title>咒术转盘V2.23 最强之魔虚罗，震撼登场！</title>
     <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="./styles.css?v=20260503-v2.2-ai-route-cleanup">
+  <link rel="stylesheet" href="./styles.css?v=20260504-v2.23-ai-route-cleanup">
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <h1>咒术转盘V2.2 AI路线整理</h1>
+          <h1>咒术转盘V2.23 最强之魔虚罗，震撼登场</h1>
           <p id="modeHint">一键抽取 · 自动跳转</p>
           <button id="feedbackContactBtn" class="feedback-contact" type="button">问题反馈 QQ：3429672291</button>
         </div>
@@ -401,8 +401,12 @@
                 </div>
                 <div class="online-alpha-actions online-prepare-actions">
                   <button id="onlineLockCharacterBtn" class="primary" type="button">锁定角色</button>
+                  <button id="onlineWatchRoomBtn" class="secondary" type="button">观战</button>
                   <button id="onlineUnlockCharacterBtn" class="secondary" type="button">取消角色锁定</button>
                 </div>
+              </div>
+              <div id="onlineSpectatorTopbar" class="online-spectator-topbar" hidden>
+                <button id="onlineExitSpectatorBtn" class="secondary" type="button">退出观战</button>
               </div>
               <div class="online-alpha-section online-battle-section">
                 <div class="online-section-title">
@@ -951,6 +955,7 @@
           <div class="panel notes-panel">
             <h2>更新日志</h2>
               <ul>
+          <li>2.23（魔虚罗机制修复）：同步「调幅后魔虚罗」状态与「八握剑异戒神将魔虚罗」卡牌生成口径，修复代打机制与调试日志入口一致性；保留原 2.2 AI 调用与防护路径。</li>
           <li>V2.2（AI调用降级）：AI 调用流程回退到历史版本 V2 的直连 / Proxy 调用逻辑，移除后续新增的 IP 围栏、剩余次数、管理员模式和状态查询显示；保留简化后的 ArkAI / 自定义兼容 / 自托管 Proxy 基础设置。</li>
           <li>2.19（日车审判刷新修复）：抗审判牌不再因式神、咒具等目标类型被直接拦截；审判子阶段跨回合刷新时会重新从领域模板发放审判 / 抗审判牌，避免空候选池覆盖手牌。</li>
           <li>2.18（日车领域重写）：日车领域展开后直接清空双方手牌，给日车发审判牌、给对方发抗审判牌；5 张对方审判应对牌统一标记为“抗审判”；判决流程保持不变，但处刑人之剑获取门槛降低。</li>
@@ -1052,6 +1057,6 @@
       </main>
     </div>
 
-  <script type="module" src="./modules/main.js?v=20260503-v2.2-ai-route-cleanup&esm=8"></script>
+  <script type="module" src="./modules/main.js?v=20260504-v2.23-ai-route-cleanup&esm=8"></script>
 </body>
 </html>
