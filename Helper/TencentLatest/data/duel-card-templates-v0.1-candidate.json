@@ -3892,8 +3892,8 @@
       "playableInHandBeta": false,
       "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
       "unitStats": {
-        "maxHp": 300,
-        "currentHp": 300,
+        "maxHp": 600,
+        "currentHp": 600,
         "baseDamage": 60,
         "guardBreak": 24,
         "actionsPerRound": 1,
