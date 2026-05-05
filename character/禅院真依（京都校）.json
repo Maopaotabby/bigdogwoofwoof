@@ -16,10 +16,12 @@
   "officialGrade": "三级术师",
   "powerTier": "grade3",
   "specialHandTags": [
-    "construction_low_output",
-    "firearm"
+    "construction"
   ],
   "domainProfile": "无",
   "notes": "不按牺牲/双生子结局拆分。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "construction"
+  ]
 }

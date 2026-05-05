@@ -11,9 +11,7 @@
   "特殊手札": [
     "curse_spirit_general"
   ],
-  "specialHandTags": [
-    "curse_spirit_general"
-  ],
+  "specialHandTags": [],
   "characterId": "smallpox_deity_shibuya",
   "displayName": "疱疮神（涩谷）",
   "stage": "shibuya",
@@ -92,5 +90,6 @@
       "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
     },
     "source": "v2.3-domain-remake"
-  }
+  },
+  "????": []
 }

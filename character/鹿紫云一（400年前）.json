@@ -9,7 +9,10 @@
     "构筑": 3.28
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "mythical_beast_amber",
+    "kashimo_mythical_beast"
+  ],
   "characterId": "kashimo_hajime_ancient",
   "displayName": "鹿紫云一（400年前）",
   "stage": "ancient400",
@@ -48,5 +51,9 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "mythical_beast_amber",
+    "kashimo_mythical_beast"
   ]
 }

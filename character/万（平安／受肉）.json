@@ -9,7 +9,9 @@
     "构筑": 3.3
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "construction"
+  ],
   "characterId": "yorozu_heian_vessel",
   "displayName": "万（平安/受肉）",
   "stage": "cullingGame",
@@ -87,5 +89,8 @@
       "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
     },
     "source": "v2.3-domain-remake"
-  }
+  },
+  "????": [
+    "construction"
+  ]
 }

@@ -12,10 +12,7 @@
     "yuji_soul_melee",
     "hutian_black_flash"
   ],
-  "specialHandTags": [
-    "yuji_soul_melee",
-    "hutian_black_flash"
-  ],
+  "specialHandTags": [],
   "characterId": "yuji_itadori_after68",
   "displayName": "虎天帝 / 虎杖悠仁（68年后）",
   "stage": "after68",
@@ -57,5 +54,6 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "????": []
 }

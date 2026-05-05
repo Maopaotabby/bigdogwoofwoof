@@ -12,7 +12,7 @@
     "okkotsu_rika_copy"
   ],
   "specialHandTags": [
-    "okkotsu_rika_copy"
+    "copy"
   ],
   "characterId": "okkotsu_tsurugi_modulo",
   "displayName": "乙骨真剑（Modulo）",
@@ -54,5 +54,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "copy"
   ]
 }

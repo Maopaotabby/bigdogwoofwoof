@@ -16,10 +16,12 @@
   "officialGrade": "诅咒师",
   "powerTier": "support_preparation",
   "specialHandTags": [
-    "seance",
-    "preparation"
+    "seance_technique"
   ],
   "domainProfile": "无",
   "notes": "不拆分伏黑甚尔降灵结果；降灵对象由机制/事件模拟。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "seance_technique"
+  ]
 }

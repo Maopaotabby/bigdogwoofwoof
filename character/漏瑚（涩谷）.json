@@ -12,7 +12,7 @@
     "curse_spirit_general"
   ],
   "specialHandTags": [
-    "curse_spirit_general"
+    "disaster_flames"
   ],
   "characterId": "jogo_shibuya",
   "displayName": "漏瑚（涩谷）",
@@ -92,5 +92,8 @@
       "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
     },
     "source": "v2.3-domain-remake"
-  }
+  },
+  "????": [
+    "disaster_flames"
+  ]
 }

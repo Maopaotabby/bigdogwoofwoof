@@ -9,7 +9,9 @@
     "构筑": 0
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "chaos_and_harmony"
+  ],
   "characterId": "cross_modulo",
   "displayName": "克罗斯（Modulo）",
   "stage": "modulo",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "chaos_and_harmony"
   ]
 }

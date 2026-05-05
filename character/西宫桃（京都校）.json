@@ -16,9 +16,12 @@
   "officialGrade": "二级术师",
   "powerTier": "grade2_support",
   "specialHandTags": [
-    "mobility_support"
+    "tool_manipulation"
   ],
   "domainProfile": "无",
   "notes": "按机动/支援角色锚定，正面输出较低。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "tool_manipulation"
+  ]
 }

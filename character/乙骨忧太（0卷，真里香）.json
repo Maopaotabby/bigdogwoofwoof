@@ -12,7 +12,7 @@
     "okkotsu_rika_copy"
   ],
   "specialHandTags": [
-    "okkotsu_rika_copy"
+    "copy"
   ],
   "characterId": "yuta_okkotsu_volume0_true_rika",
   "displayName": "乙骨忧太（0卷，真里香）",
@@ -52,5 +52,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "copy"
   ]
 }

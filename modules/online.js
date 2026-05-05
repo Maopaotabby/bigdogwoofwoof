@@ -128,10 +128,12 @@ function normalizeRoomId(value) {
 }
 
 function normalizeSide(value) {
+  if (value === "spectator") return "spectator";
   return value === "right" ? "right" : "left";
 }
 
 function otherSide(side) {
+  if (side === "spectator") return "";
   return normalizeSide(side) === "left" ? "right" : "left";
 }
 
@@ -287,6 +289,16 @@ function createEmptyPlayer(side) {
   };
 }
 
+function makeSpectator(options = {}) {
+  return {
+    playerId: options.playerId || getOrCreatePlayerId(),
+    displayName: String(options.displayName || "观战者").slice(0, 40),
+    connected: true,
+    lastSeenAt: nowMs(),
+    role: "spectator"
+  };
+}
+
 function getCharacterCards() {
   try {
     return globalThis.JJKCharacter?.getDuelCharacterCards?.() || globalThis.getDuelCharacterCards?.() || [];
@@ -366,6 +378,7 @@ function normalizeRoom(room) {
     left: { ...createEmptyPlayer("left"), ...(room.players?.left || {}) },
     right: { ...createEmptyPlayer("right"), ...(room.players?.right || {}) }
   };
+  room.spectators = Array.isArray(room.spectators) ? room.spectators.slice(0, 1).map((item) => ({ ...makeSpectator(), ...item, role: "spectator" })) : [];
   room.readyState = {
     leftCharacterLocked: Boolean(room.readyState?.leftCharacterLocked || room.players.left.characterLocked),
     rightCharacterLocked: Boolean(room.readyState?.rightCharacterLocked || room.players.right.characterLocked)
@@ -525,6 +538,7 @@ function getPlayerSide(room, playerId) {
   if (!room || !playerId) return "";
   if (room.players.left.playerId === playerId) return "left";
   if (room.players.right.playerId === playerId) return "right";
+  if ((room.spectators || []).some((spectator) => spectator.playerId === playerId)) return "spectator";
   return "";
 }
 
@@ -583,6 +597,22 @@ function joinRoom(roomId, options = {}) {
   return Promise.resolve(snapshot(saved, "right"));
 }
 
+function watchRoom(roomId, options = {}) {
+  const settings = getBackendSettings(options);
+  const playerId = options.playerId || getOrCreatePlayerId();
+  if (shouldUseRemote(settings)) return remoteOperation("watchRoom", { roomId, payload: { spectator: makeSpectator({ ...options, playerId }) } }, settings);
+  const room = readLocalRoom(roomId);
+  if (!room) return Promise.reject(new Error("房间不存在。"));
+  const existingSide = getPlayerSide(room, playerId);
+  if (existingSide && existingSide !== "spectator") return Promise.resolve(snapshot(room, existingSide));
+  room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== playerId).slice(0, 0);
+  room.spectators.push(makeSpectator({ ...options, playerId }));
+  appendLog(room, "spectator_joined", "观战者已进入房间。", { playerId });
+  const saved = writeLocalRoom(room);
+  remember(saved.roomId, playerId, "spectator", settings);
+  return Promise.resolve(snapshot(saved, "spectator"));
+}
+
 function selectCharacter(roomId, side, characterId, options = {}) {
   const settings = getBackendSettings(options);
   if (shouldUseRemote(settings)) return remoteOperation("selectCharacter", { roomId, side, payload: { characterId, characterSnapshot: sanitizeCharacterSnapshot(getCharacterById(characterId)) } }, settings);
@@ -601,7 +631,20 @@ function selectCharacter(roomId, side, characterId, options = {}) {
 
 function lockCharacter(roomId, side, options = {}) {
   const settings = getBackendSettings(options);
-  if (shouldUseRemote(settings)) return remoteOperation("lockCharacter", { roomId, side }, settings);
+  if (shouldUseRemote(settings)) {
+    const currentCharacterId = side === "right"
+      ? $("#onlineJoinCharacterSelect")?.value
+      : $("#onlineCreateCharacterSelect")?.value;
+    const characterId = options.characterId || currentCharacterId || "";
+    return remoteOperation("lockCharacter", {
+      roomId,
+      side,
+      payload: {
+        characterId,
+        characterSnapshot: sanitizeCharacterSnapshot(getCharacterById(characterId))
+      }
+    }, settings);
+  }
   const room = requireLocalRoom(roomId);
   const actorSide = authorizeSide(room, side, options);
   if (room.phase !== "preparing") throw new Error("当前不是准备阶段。");
@@ -736,9 +779,14 @@ function leaveRoom(roomId, options = {}) {
   const room = readLocalRoom(roomId);
   if (room) {
     const side = getPlayerSide(room, options.playerId || uiState.playerId) || normalizeSide(options.side || uiState.side);
-    room.players[side].connected = false;
-    room.phase = "ended";
+    if (side === "spectator") {
+      room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== (options.playerId || uiState.playerId));
+      appendLog(room, "spectator_left", "观战者已退出观战。");
+    } else {
+      room.players[side].connected = false;
+      room.phase = "ended";
     appendLog(room, "room_ended", `${side === "left" ? "房主" : "加入者"}离开，房间结束。`);
+    }
     writeLocalRoom(room);
   }
   clearRemembered();
@@ -755,6 +803,7 @@ function requireLocalRoom(roomId) {
 function authorizeSide(room, side, options = {}) {
   const playerId = options.playerId || uiState.playerId || getOrCreatePlayerId();
   const actual = getPlayerSide(room, playerId) || normalizeSide(side);
+  if (actual === "spectator") throw new Error("观战者不能执行对战操作。");
   if (!room.players[actual]?.playerId || room.players[actual].playerId !== playerId) throw new Error("当前玩家不在房间内。");
   return actual;
 }
@@ -866,7 +915,7 @@ function setLocalLockPending(locked) {
 function snapshot(room, viewerSide = "") {
   const copy = redactSecrets(cloneJson(normalizeRoom(room)));
   copy.viewerSide = viewerSide || getPlayerSide(copy, uiState.playerId) || "";
-  if (copy.phase === "turn_selecting" && copy.viewerSide && !hasBothLockedActions(copy)) {
+  if (viewerSide !== "spectator" && copy.phase === "turn_selecting" && copy.viewerSide && !hasBothLockedActions(copy)) {
     copy.turnState.actions[otherSide(copy.viewerSide)] = [];
   }
   return copy;
@@ -1036,7 +1085,7 @@ async function remoteOperation(operation, request = {}, options = {}) {
   const room = normalizeRoom(data.room || data.snapshot);
   const actualSide = getPlayerSide(room, body.playerId);
   const side = data.side || actualSide || (operation === "getRoom" ? "" : body.side);
-  if (room?.roomId && actualSide) remember(room.roomId, body.playerId, actualSide, settings);
+  if (room?.roomId && (actualSide || side === "spectator")) remember(room.roomId, body.playerId, actualSide || side, settings);
   return snapshot(room, side);
 }
 
@@ -1133,12 +1182,19 @@ function render(room = {}) {
   if (handleRemovedFromRoom(room)) return;
   const opponent = side ? otherSide(side) : "right";
   const onlinePageActive = isOnlinePageActive();
+  const spectatorMode = side === "spectator";
+  document.body.classList.toggle("online-spectator-mode", spectatorMode);
+  const spectatorTopbar = $("#onlineSpectatorTopbar");
+  if (spectatorTopbar) spectatorTopbar.hidden = !spectatorMode;
   if (room?.phase === "preparing") {
-    syncPreparingRoomView(room);
+    if (!spectatorMode) syncPreparingRoomView(room);
   } else {
     syncBattlePageLockState(room, side);
     syncDuelRuntimeRoomState(room, side);
-    if (onlinePageActive) maybeEnterBattleView(room, side);
+    if (onlinePageActive) {
+      if (spectatorMode) maybeEnterBattleView(room, "spectator");
+      else maybeEnterBattleView(room, side);
+    }
   }
   setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
   setText("#onlineRoomCode", room.roomId || "未创建");
@@ -1164,6 +1220,7 @@ function render(room = {}) {
 
 function syncDuelRuntimeRoomState(room, side) {
   if (!room?.roomId || !side) return;
+  if (side === "spectator") globalThis.JJKDuelRuntime?.syncOnlineSpectatorActions?.(room);
   globalThis.JJKDuelRuntime?.syncOnlineRoomState?.(room, side);
 }
 
@@ -1217,6 +1274,7 @@ function maybeEnterBattleView(room = {}, side = "") {
   if (!room?.roomId || !side) return;
   if (!["turn_selecting", "turn_resolving", "reviewing"].includes(room.phase)) return;
   if (!room.players?.left?.characterId || !room.players?.right?.characterId) return;
+  if (side === "spectator") return enterBattleView(room, "spectator");
   enterBattleView(room, side);
 }
 
@@ -1228,6 +1286,15 @@ function syncBattlePageLockState(room, side) {
   }
   if (typeof globalThis.JJKBattlePage.setBattleMode !== "function") return;
   const currentPage = globalThis.JJKBattlePage.getBattlePageState?.().activePage || "online";
+  if (side === "spectator") {
+    globalThis.JJKBattlePage.setBattleMode("online", {
+      activeRoomId: room.roomId,
+      playerSide: "spectator",
+      activePage: currentPage,
+      localLocked: true
+    });
+    return;
+  }
   globalThis.JJKBattlePage.setBattleMode("online", {
     activeRoomId: room.roomId,
     playerSide: side,
@@ -1256,17 +1323,20 @@ function getOnlineResourceForDisplay(room, side) {
 
 function updateButtons(room, side) {
   const hasRoom = Boolean(room?.roomId);
+  const spectatorMode = side === "spectator";
   const isOwner = side === "left" || room?.ownerPlayerId === uiState.playerId;
+  const bothLocked = hasBothLockedCharacters(room);
   setDisabled("#onlineCopyRoomCodeBtn", !hasRoom);
   setDisabled("#onlineCopyInviteBtn", !hasRoom);
-  setDisabled("#onlineLockCharacterBtn", !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterId || room.players?.[side]?.characterLocked);
-  setDisabled("#onlineUnlockCharacterBtn", !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterLocked);
-  setDisabled("#onlineLockTurnBtn", !hasRoom || room.phase !== "turn_selecting" || room.turnState?.locks?.[side]);
-  setDisabled("#onlineUnlockTurnBtn", !hasRoom || room.phase !== "turn_selecting" || !room.turnState?.locks?.[side] || hasBothLockedActions(room));
+  setDisabled("#onlineWatchRoomBtn", spectatorMode || (hasRoom && (room.spectators || []).length >= 1));
+  setDisabled("#onlineLockCharacterBtn", spectatorMode || bothLocked || !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterId || room.players?.[side]?.characterLocked);
+  setDisabled("#onlineUnlockCharacterBtn", spectatorMode || !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterLocked);
+  setDisabled("#onlineLockTurnBtn", spectatorMode || !hasRoom || room.phase !== "turn_selecting" || room.turnState?.locks?.[side]);
+  setDisabled("#onlineUnlockTurnBtn", spectatorMode || !hasRoom || room.phase !== "turn_selecting" || !room.turnState?.locks?.[side] || hasBothLockedActions(room));
   setDisabled("#onlineResolveTurnBtn", true);
-  setDisabled("#onlineRematchBtn", !hasRoom || !["reviewing", "turn_selecting"].includes(room.phase));
-  setDisabled("#onlineResetPrepareBtn", !hasRoom || !isOwner || !["reviewing", "turn_selecting", "preparing"].includes(room.phase));
-  setDisabled("#onlineKickRightPlayerBtn", !hasRoom || !isOwner || !room.players?.right?.playerId || !["preparing", "reviewing"].includes(room.phase));
+  setDisabled("#onlineRematchBtn", spectatorMode || !hasRoom || !["reviewing", "turn_selecting"].includes(room.phase));
+  setDisabled("#onlineResetPrepareBtn", spectatorMode || !hasRoom || !isOwner || !["reviewing", "turn_selecting", "preparing"].includes(room.phase));
+  setDisabled("#onlineKickRightPlayerBtn", spectatorMode || !hasRoom || !isOwner || !room.players?.right?.playerId || !["preparing", "reviewing"].includes(room.phase));
   setDisabled("#onlineLeaveRoomBtn", !hasRoom);
   setText("#onlineLockTurnBtn", room.phase === "turn_selecting" ? "锁定行动" : "等待对战阶段");
   setText("#onlineResolveTurnBtn", room.phase === "turn_resolving" ? "结算中" : "双方锁定后自动结算");
@@ -1300,7 +1370,7 @@ function enterBattleView(room, side) {
   const rightSelect = $("#duelRightSelect");
   if (leftSelect && [...leftSelect.options].some((option) => option.value === left)) leftSelect.value = left;
   if (rightSelect && [...rightSelect.options].some((option) => option.value === right)) rightSelect.value = right;
-  globalThis.JJKBattlePage?.setBattleMode?.("online", { activeRoomId: room.roomId, playerSide: side, activePage: "online", localLocked: false });
+  globalThis.JJKBattlePage?.setBattleMode?.("online", { activeRoomId: room.roomId, playerSide: side, activePage: "online", localLocked: side === "spectator" });
   const starter = globalThis.JJKDuelRuntime?.startDuelBattle || globalThis.startDuelBattle;
   const currentBattle = globalThis.JJKDuelRuntime?.getDuelBattle?.();
   const currentLeft = currentBattle?.left?.id || currentBattle?.left?.characterId || "";
@@ -1311,7 +1381,8 @@ function enterBattleView(room, side) {
   if (typeof starter === "function" && canReuseCurrentBattle) return;
   if (typeof starter === "function") {
     try {
-      starter({ mode: "online", allowOnline: true, snapshot: { roomId: room.roomId, battleSeed: room.battleState?.battleSeed, players: room.players } });
+      starter({ mode: "online", allowOnline: true, spectator: side === "spectator", snapshot: { roomId: room.roomId, battleSeed: room.battleState?.battleSeed, players: room.players } });
+      if (side === "spectator") globalThis.JJKDuelRuntime?.syncOnlineSpectatorActions?.(room);
     } catch {
       // The runtime may not be ready yet; the room state remains authoritative.
     }
@@ -1335,6 +1406,14 @@ function setValue(selector, value) {
 function setDisabled(selector, disabled) {
   const node = typeof selector === "string" ? $(selector) : selector;
   if (node) node.disabled = Boolean(disabled);
+}
+
+function reloadOnlinePage() {
+  try {
+    globalThis.location?.reload?.();
+  } catch {
+    render({});
+  }
 }
 
 function showError(error) {
@@ -1394,6 +1473,10 @@ function bindUi() {
     render(room);
     startPolling(room.roomId, "right");
   }).catch(showError));
+  $("#onlineWatchRoomBtn")?.addEventListener("click", () => watchRoom(uiState.roomId || $("#onlineJoinRoomCodeInput")?.value, { ...getBackendSettings(), playerId: uiState.playerId }).then((room) => {
+    render(room);
+    startPolling(room.roomId, "spectator");
+  }).catch(showError));
   $("#onlineCreateCharacterSelect")?.addEventListener("change", () => {
     if (uiState.roomId && uiState.side === "left") selectCharacter(uiState.roomId, "left", $("#onlineCreateCharacterSelect")?.value, { playerId: uiState.playerId }).then(render).catch(showError);
   });
@@ -1407,7 +1490,8 @@ function bindUi() {
   $("#onlineRematchBtn")?.addEventListener("click", () => rematch(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
   $("#onlineResetPrepareBtn")?.addEventListener("click", () => resetToPreparing(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
   $("#onlineKickRightPlayerBtn")?.addEventListener("click", () => kickPlayer(uiState.roomId, "right", { playerId: uiState.playerId, side: uiState.side }).then(render).catch(showError));
-  $("#onlineLeaveRoomBtn")?.addEventListener("click", () => leaveRoom(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(() => render({})).catch(showError));
+  $("#onlineLeaveRoomBtn")?.addEventListener("click", () => leaveRoom(uiState.roomId, { playerId: uiState.playerId, side: uiState.side }).then(() => reloadOnlinePage()).catch(showError));
+  $("#onlineExitSpectatorBtn")?.addEventListener("click", () => leaveRoom(uiState.roomId, { playerId: uiState.playerId, side: "spectator" }).then(() => globalThis.location?.reload?.()).catch(() => globalThis.location?.reload?.()));
   $("#onlineCopyRoomCodeBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.(uiState.roomId || ""));
   $("#onlineCopyInviteBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.($("#onlineInviteLink")?.value || ""));
   $("#onlineCopyDebugLogBtn")?.addEventListener("click", () => navigator.clipboard?.writeText?.($("#onlineDebugLog")?.textContent || ""));
@@ -1435,6 +1519,7 @@ const OnlineModule = {
   phases: PHASES,
   createRoom,
   joinRoom,
+  watchRoom,
   selectCharacter,
   lockCharacter,
   unlockCharacter,

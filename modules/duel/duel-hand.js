@@ -478,11 +478,13 @@
       .concat(asList(entry?.rules?.forceAllowTags))
       .concat(asList(entry?.rules?.techniqueFamilies))
       .concat(archetypes));
-    var specialHandTags = uniqueList([]
+    var explicitSpecialHandTags = uniqueList([]
       .concat(asList(source?.specialHandTags))
       .concat(asList(source?.["特殊手札"]))
       .concat(asList(customCard?.specialHandTags))
-      .concat(asList(customCard?.["特殊手札"]))
+      .concat(asList(customCard?.["特殊手札"])));
+    var specialHandTags = uniqueList([]
+      .concat(explicitSpecialHandTags)
       .concat(archetypes));
     var variants = uniqueList([]
       .concat(asList(source?.variants))
@@ -519,6 +521,7 @@
       archetypes: archetypes,
       variants: uniqueList(variants),
       specialHandTags: specialHandTags,
+      explicitSpecialHandTags: explicitSpecialHandTags,
       hasCe: !/零咒力|zero_ce/i.test(text),
       ceLimited: /零咒力|zero_ce|咒力受限|ce_limited/i.test(text),
       hasInnateTechnique: !/零咒力|无术式|no_innate_technique/i.test(text),
@@ -654,11 +657,12 @@
     var policy = getCharacterRuleAllowDeny(profile, rules);
     var sourceActionId = snapshot.sourceActionId;
     var forceAllowed = policy.forceAllowSourceActionIds.includes(sourceActionId);
+    var specialHandMatched = Boolean(snapshot.specialHandTags.length && includesAny(profile.specialHandTags, snapshot.specialHandTags));
     if (policy.forceDenySourceActionIds.includes(sourceActionId)) {
       return { ok: false, reason: "不符合当前角色特性", profile: profile, snapshot: snapshot };
     }
     var impliedExclusiveArchetypes = getExclusiveArchetypesFromHandTags(snapshot);
-    if (!forceAllowed && impliedExclusiveArchetypes.length && !includesAny(profile.archetypes, impliedExclusiveArchetypes)) {
+    if (!forceAllowed && impliedExclusiveArchetypes.length && !includesAny(profile.archetypes, impliedExclusiveArchetypes) && !specialHandMatched) {
       return { ok: false, reason: "需要对应专属术式原型", profile: profile, snapshot: snapshot };
     }
     if (!forceAllowed && snapshot.exclusiveToCharacters.length) {
@@ -671,16 +675,16 @@
     if (!forceAllowed && snapshot.exclusiveToArchetypes.length && !includesAny(profile.archetypes, snapshot.exclusiveToArchetypes)) {
       return { ok: false, reason: "需要对应角色原型", profile: profile, snapshot: snapshot };
     }
-    if (!forceAllowed && snapshot.specialHandTags.length && !includesAny(profile.specialHandTags, snapshot.specialHandTags)) {
+    if (!forceAllowed && snapshot.specialHandTags.length && !specialHandMatched) {
       return { ok: false, reason: "需要角色特殊手札标签", profile: profile, snapshot: snapshot };
     }
     if (!forceAllowed && snapshot.forbiddenArchetypes.length && includesAny(profile.archetypes, snapshot.forbiddenArchetypes)) {
       return { ok: false, reason: "当前角色原型禁止此卡", profile: profile, snapshot: snapshot };
     }
-    if (!forceAllowed && policy.denyCardTypes.includes(snapshot.cardType)) {
+    if (!forceAllowed && !specialHandMatched && policy.denyCardTypes.includes(snapshot.cardType)) {
       return { ok: false, reason: "当前角色不能使用该卡牌类型", profile: profile, snapshot: snapshot };
     }
-    if (!forceAllowed && includesAny(snapshot.tags, policy.denyTags)) {
+    if (!forceAllowed && !specialHandMatched && includesAny(snapshot.tags, policy.denyTags)) {
       return { ok: false, reason: "标签不符合当前角色特性", profile: profile, snapshot: snapshot };
     }
     var traitPool = uniqueList(profile.traits.concat(profile.archetypes, profile.techniqueFamilies));
@@ -690,8 +694,8 @@
     if (!forceAllowed && snapshot.forbiddenTraits.length && includesAny(traitPool, snapshot.forbiddenTraits)) {
       return { ok: false, reason: "角色特质与此卡冲突", profile: profile, snapshot: snapshot };
     }
-    if (!forceAllowed && snapshot.requiresCe && !profile.hasCe) return { ok: false, reason: "需要正常咒力流动", profile: profile, snapshot: snapshot };
-    if (!forceAllowed && snapshot.requiresInnateTechnique && !profile.hasInnateTechnique) return { ok: false, reason: "需要生得术式", profile: profile, snapshot: snapshot };
+    if (!forceAllowed && !specialHandMatched && snapshot.requiresCe && !profile.hasCe) return { ok: false, reason: "需要正常咒力流动", profile: profile, snapshot: snapshot };
+    if (!forceAllowed && !specialHandMatched && snapshot.requiresInnateTechnique && !profile.hasInnateTechnique) return { ok: false, reason: "需要生得术式", profile: profile, snapshot: snapshot };
     if (!forceAllowed && snapshot.requiresDomainAccess && !profile.hasDomainAccess) return { ok: false, reason: "需要领域能力", profile: profile, snapshot: snapshot };
     if (!forceAllowed && snapshot.requiresCursedTool && !profile.usesCursedTools) return { ok: false, reason: "需要咒具适性或咒具状态", profile: profile, snapshot: snapshot };
     if (!forceAllowed && snapshot.requiresZeroCe && !profile.isZeroCe) return { ok: false, reason: "仅零咒力个体可用", profile: profile, snapshot: snapshot };
@@ -2021,6 +2025,7 @@
       "hpDamage",
       "ceDamage"
     ];
+    if (action.techniqueFeatureHand || action.featureTechniqueHand || action.specialHandCard) return true;
     if (action.domainSpecific || action.domainRole || effects.activateDomain || effects.releaseDomain) return true;
     if (action.summonSpec || action.mechanismSpec || action.resourceSpec || action.serviceReceiptRules || action.massiveObjectRules) return true;
     if (numericFields.some(function hasNumericField(field) {

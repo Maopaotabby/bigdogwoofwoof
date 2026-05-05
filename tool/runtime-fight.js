@@ -90,6 +90,7 @@ function buildCustomDuelCard(form, existingId = "") {
     advanced: mergeDuelLocalList(form.librarySelection?.advanced || []),
     resources: mergeDuelLocalList(form.librarySelection?.resources || [])
   };
+  const techniqueFamilies = inferCustomDuelTechniqueFamilies(form.technique);
   const traits = Array.from(new Set([form.technique, ...form.traits, ...selectedMechanisms].filter(Boolean)));
   const loadout = Array.from(new Set([...(form.tools || []), ...selectedToolTags].filter(Boolean)));
   const customHandCards = normalizeCustomDuelHandCardsForCharacter(form.customHandCards, id, specialHandTag, form.domain, form.domainScript);
@@ -119,6 +120,8 @@ function buildCustomDuelCard(form, existingId = "") {
     selectedMechanisms,
     selectedToolTags,
     selectedLibrary,
+    techniqueText: form.technique || "无",
+    techniqueFamilies: inferCustomDuelTechniqueFamilies(form.technique),
     externalResource: form.externalResource || "无",
     techniqueName: form.technique || "无",
     techniqueDescription: "无",
@@ -137,6 +140,15 @@ function buildCustomDuelCard(form, existingId = "") {
 
 function buildCustomDuelSpecialHandTag(characterId) {
   return `custom_character_${String(characterId || "custom").replace(/[^\w-]+/g, "_")}`;
+}
+
+function inferCustomDuelTechniqueFamilies(text = "") {
+  const value = String(text || "");
+  const families = [];
+  if (/无下限|六眼|无量空处|limitless|six[_\s-]?eyes|unlimited[_\s-]?void|infinity/i.test(value)) families.push("limitless", "six_eyes", "gojo_limitless", "无下限", "六眼");
+  if (/十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(value)) families.push("ten_shadows", "十种影法术");
+  if (/御厨子|伏魔御厨子|斩击|捌|解|sukuna[_\s-]?slash|shrine|cleave|dismantle/i.test(value)) families.push("sukuna_slash", "shrine", "御厨子");
+  return Array.from(new Set(families));
 }
 
 function buildCustomDuelCardAxes(stats = {}, techniquePower = "B", domain = "", loadout = [], traits = []) {
@@ -1004,9 +1016,28 @@ function normalizeOnlineResolvedActions(actions = [], side = "left", battle = st
 
 function getDuelControlledSide(battle = state.duelBattle) {
   if (battle?.mode === "online" || isOnlineDuelModeActive()) {
+    if (battle?.onlinePlayerSide === "spectator" || state.duelModeState.playerSide === "spectator") return "left";
     return (battle?.onlinePlayerSide || state.duelModeState.playerSide) === "right" ? "right" : "left";
   }
   return "left";
+}
+
+function syncOnlineSpectatorActions(room = {}) {
+  const battle = state.duelBattle;
+  if (!battle || battle.mode !== "online" || battle.onlineRoomId !== room?.roomId) return null;
+  battle.onlineSpectator = true;
+  battle.spectatorActions ||= { left: [], right: [] };
+  const nextActions = {
+    left: Array.isArray(room.turnState?.actions?.left) ? room.turnState.actions.left : [],
+    right: Array.isArray(room.turnState?.actions?.right) ? room.turnState.actions.right : []
+  };
+  if (nextActions.left.length || nextActions.right.length) {
+    battle.spectatorActions = nextActions;
+    battle.spectatorActionsTurnId = room.turnState?.turnId || `turn_${room.round || battle.round + 1}`;
+  }
+  battle.actionUiMessage = "观战模式：只读取双方锁定的实际手札。";
+  renderDuelMode();
+  return battle.spectatorActions;
 }
 
 function getDuelSideResources(battle = state.duelBattle, side = getDuelControlledSide(battle)) {
@@ -1083,6 +1114,7 @@ function clearOnlineDuelBattle(roomId = "") {
   const targetRoomId = String(roomId || "");
   if (targetRoomId && battle.onlineRoomId && battle.onlineRoomId !== targetRoomId) return false;
   state.duelBattle = null;
+  clearOnlineTemporaryCustomDuelCards(targetRoomId);
   setDuelBattleMode("none", {
     activeBattleId: "",
     activeRoomId: "",
@@ -1100,18 +1132,22 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
   if (!battle || battle.mode !== "online" || !room?.roomId) return null;
   const roomId = String(room.roomId || "");
   if (battle.onlineRoomId && battle.onlineRoomId !== roomId) return battle;
+  if (room.phase === "reviewing" || room.phase === "ended") {
+    clearOnlineTemporaryCustomDuelCards(roomId);
+  }
   const side = playerSide === "right" ? "right" : "left";
+  const spectatorMode = playerSide === "spectator";
   const localLocked = room.phase === "turn_selecting" && Boolean(room.turnState?.locks?.[side]);
   const serverRound = Math.max(1, Number(room.round) || 1);
   const targetBattleRound = Math.max(0, serverRound - 1);
   const previousRound = battle.round;
   const activePage = getBattlePageModule()?.getBattlePageState?.().activePage || state.duelModeState.activePage || "online";
   battle.onlineRoomId = roomId;
-  battle.onlinePlayerSide = side;
+  battle.onlinePlayerSide = spectatorMode ? "spectator" : side;
   setDuelBattleMode("online", {
     activeBattleId: battle.battleId,
     activeRoomId: roomId,
-    playerSide: side,
+    playerSide: spectatorMode ? "spectator" : side,
     localLocked,
     activePage
   });
@@ -1119,7 +1155,7 @@ function syncOnlineRoomState(room = {}, playerSide = state.duelModeState.playerS
     const appliedResolvedTurn = applyOnlineResolvedTurnToBattle(battle, room);
     if (!appliedResolvedTurn || battle.round < targetBattleRound) battle.round = targetBattleRound;
     if (battle.resourceState) battle.resourceState.round = battle.round;
-    clearDuelSelectedHandActions(battle, side, { refund: false });
+    if (!spectatorMode) clearDuelSelectedHandActions(battle, side, { refund: false });
     battle.pendingAction = null;
     battle.currentAction = null;
     battle.currentActions = [];
@@ -1201,6 +1237,62 @@ function evaluateDuelCharacterById(characterId, fallbackSide = "left") {
   return applyDuelSideDebugOverride(evaluateDuelCharacterCard(card), fallbackSide);
 }
 
+function getOnlineSnapshotCharacterProfile(snapshotPlayer, fallbackSide = "left") {
+  const snapshot = snapshotPlayer?.characterSnapshot;
+  if (snapshot) return applyDuelSideDebugOverride(evaluateDuelCharacterCard(snapshot), fallbackSide);
+  return evaluateDuelCharacterById(snapshotPlayer?.characterId, fallbackSide);
+}
+
+function normalizeOnlineSnapshotCustomCard(snapshot, roomId = "") {
+  if (!snapshot || !snapshot.customDuel) return null;
+  const characterId = String(snapshot.characterId || snapshot.id || "");
+  if (!characterId) return null;
+  return {
+    ...clonePlain(snapshot),
+    id: snapshot.id || characterId,
+    characterId,
+    customDuel: true,
+    __onlineTemporaryCustomDuel: true,
+    __onlineRoomId: String(roomId || "")
+  };
+}
+
+function cacheOnlineSnapshotCustomCharacters(snapshot = {}) {
+  if (!snapshot?.players) return 0;
+  state.customDuelCards = Array.isArray(state.customDuelCards) ? state.customDuelCards : [];
+  const roomId = String(snapshot.roomId || "");
+  const cachedCards = [
+    normalizeOnlineSnapshotCustomCard(snapshot.players.left?.characterSnapshot, roomId),
+    normalizeOnlineSnapshotCustomCard(snapshot.players.right?.characterSnapshot, roomId)
+  ].filter(Boolean);
+  cachedCards.forEach((cached) => {
+    const existingIndex = state.customDuelCards.findIndex((card) =>
+      card?.characterId === cached.characterId || card?.id === cached.characterId
+    );
+    if (existingIndex >= 0) {
+      if (state.customDuelCards[existingIndex]?.__onlineTemporaryCustomDuel) {
+        state.customDuelCards[existingIndex] = cached;
+      }
+      return;
+    }
+    state.customDuelCards.push(cached);
+  });
+  if (cachedCards.length) notifyDuelCharacterPoolChanged();
+  return cachedCards.length;
+}
+
+function clearOnlineTemporaryCustomDuelCards(roomId = "") {
+  if (!Array.isArray(state.customDuelCards)) return 0;
+  const targetRoomId = String(roomId || "");
+  const before = state.customDuelCards.length;
+  state.customDuelCards = state.customDuelCards.filter((card) =>
+    !card?.__onlineTemporaryCustomDuel || (targetRoomId && card.__onlineRoomId && card.__onlineRoomId !== targetRoomId)
+  );
+  const removed = before - state.customDuelCards.length;
+  if (removed > 0) notifyDuelCharacterPoolChanged();
+  return removed;
+}
+
 function renderDuelMode() {
   if (!els.duelLeftSelect || !els.duelRightSelect || !state.characterCards) return;
   const cards = getDuelCharacterCards();
@@ -1257,9 +1349,19 @@ function startDuelBattle(options = {}) {
     renderDuelMode();
     return;
   }
+  if (options.mode === "online" && options.snapshot?.players) {
+    cacheOnlineSnapshotCustomCharacters(options.snapshot);
+  }
+  const onlineSnapshotProfiles = options.mode === "online" && options.snapshot?.players
+    ? {
+      left: getOnlineSnapshotCharacterProfile(options.snapshot?.players?.left, "left"),
+      right: getOnlineSnapshotCharacterProfile(options.snapshot?.players?.right, "right"),
+      leftRate: 0.5
+    }
+    : null;
   const profiles = options.left && options.right
     ? { left: options.left, right: options.right, leftRate: 0.5 }
-    : getCurrentDuelProfiles();
+    : (onlineSnapshotProfiles?.left && onlineSnapshotProfiles?.right ? onlineSnapshotProfiles : getCurrentDuelProfiles());
   if (!profiles) return;
   const mode = options.mode === "online" ? "online" : "solo";
   state.duelSpinToken += 1;
@@ -1321,7 +1423,8 @@ function startDuelBattle(options = {}) {
   battle.mode = mode;
   battle.onlineRoomId = options.snapshot?.roomId || "";
   battle.onlineBattleSeed = options.snapshot?.battleSeed || "";
-  battle.onlinePlayerSide = options.snapshot ? (state.duelModeState.playerSide || "left") : "";
+  battle.onlinePlayerSide = options.spectator ? "spectator" : options.snapshot ? (state.duelModeState.playerSide || "left") : "";
+  battle.onlineSpectator = Boolean(options.spectator);
   battle.resourceState = initializeDuelResourceState(battle);
   battle.resourceLog = battle.resourceState.resourceLog;
   battle.residualLog = battle.resourceState.residualLog;
@@ -1347,6 +1450,7 @@ globalThis.JJKDuelRuntime = {
   renderDuelMode,
   syncOnlineRoomState,
   clearOnlineDuelBattle,
+  syncOnlineSpectatorActions,
   getSelectedOnlineActionSnapshots,
   getDuelBattle: () => state.duelBattle,
   getDuelModeState: () => ({ ...state.duelModeState })
@@ -3808,6 +3912,11 @@ function renderDuelBattlePanel(left, right, baseRate) {
     return;
   }
 
+  if (battle.onlineSpectator) {
+    renderDuelSpectatorBattlePanel(battle);
+    return;
+  }
+
   const leftTactic = getDuelTacticDefinition(battle.selectedTactic);
   const rightTactic = getDuelTacticDefinition(battle.opponentTactic);
   const safetyRoundCap = battle.safetyRoundCap || getDuelSafetyRoundCap(battle);
@@ -3861,6 +3970,56 @@ function renderDuelBattlePanel(left, right, baseRate) {
     </div>
   `;
   bindDuelBattleControls();
+}
+
+function renderDuelSpectatorBattlePanel(battle) {
+  if (!els.duelBattle) return;
+  const leftActions = battle.spectatorActions?.left || [];
+  const rightActions = battle.spectatorActions?.right || [];
+  const renderSpectatorCard = (entry, side, index) => {
+    const action = entry?.action || entry?.actionSnapshot || entry;
+    const normalized = {
+      ...action,
+      id: action?.id || entry?.actionId || `spectator_${side}_${index + 1}`,
+      label: action?.label || action?.name || entry?.displayName || entry?.actionId || "已锁定手札",
+      name: action?.name || action?.label || entry?.displayName || entry?.actionId || "已锁定手札",
+      cardType: action?.cardType || entry?.cardType || action?.type || "action",
+      apCost: action?.apCost ?? entry?.apCost ?? 0,
+      ceCost: action?.ceCost ?? action?.baseCeCost ?? entry?.ceCost ?? 0,
+      baseCeCost: action?.baseCeCost ?? action?.ceCost ?? entry?.ceCost ?? 0
+    };
+    return renderDuelActionChoice(normalized, new Set(), battle, new Map(), { spectator: true });
+  };
+  const renderSpectatorHand = (side, actions) => `
+    <aside class="duel-spectator-hand ${escapeHtml(side)}">
+      <h4>${side === "left" ? "左方手札" : "右方手札"}</h4>
+      <div class="duel-spectator-hand-list">
+        ${actions.length ? actions.map((entry, index) => renderSpectatorCard(entry, side, index)).join("") : `<p class="muted">等待本回合手札锁定；上一回合卡面会保留到下一次锁定。</p>`}
+      </div>
+    </aside>
+  `;
+  els.duelStartBtn.disabled = true;
+  els.duelBattle.innerHTML = `
+    <div class="duel-spectator-stage">
+      <div class="duel-spectator-top">
+        ${renderDuelBattleStatus(battle)}
+        ${renderDuelResourcePanel(battle)}
+        ${renderDuelBattlefieldUnitsPanel(battle)}
+        ${renderDuelDomainProfilePanel(battle)}
+      </div>
+      <div class="duel-spectator-layout">
+        ${renderSpectatorHand("left", leftActions)}
+        <main class="duel-spectator-center">
+          <section class="duel-round-panel compact">
+            <h4>阶段战斗推演</h4>
+            ${battle.resolved ? renderDuelBattleResult(battle) : renderDuelAutoPanel(battle, getDuelTacticDefinition(battle.selectedTactic), getDuelTacticDefinition(battle.opponentTactic))}
+          </section>
+          ${renderDuelBattleLog(battle)}
+        </main>
+        ${renderSpectatorHand("right", rightActions)}
+      </div>
+    </div>
+  `;
 }
 
 function renderDuelFloatingCombatText(battle) {
@@ -4782,6 +4941,11 @@ function evaluateDuelCharacterCard(card) {
   const external = summarizeDuelExternalResource(card);
   const domain = summarizeDuelDomain(card);
   const axisConfig = state.mechanisms?.axisWeights || {};
+  const specialHandTags = Array.from(new Set([]
+    .concat(Array.isArray(card.specialHandTags) ? card.specialHandTags : [])
+    .concat(Array.isArray(card["特殊手札"]) ? card["特殊手札"] : [])
+    .map((tag) => String(tag || "").trim())
+    .filter((tag) => tag && tag !== "无")));
 
   const jujutsu = clamp(
     weightedDuelScore(lockedRaw, axisConfig.jujutsu) + mechanismImpact.axisBonus.jujutsu + technique.axisBonus.jujutsu + external.axisBonus.jujutsu,
@@ -4844,6 +5008,9 @@ function evaluateDuelCharacterCard(card) {
     domainProfile: card.domainProfile || "",
     domainScript: card.domainScript || null,
     customDuel: Boolean(card.customDuel),
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    explicitSpecialHandTags: specialHandTags,
     characterCardProfile: card,
     flags: Array.from(new Set([...(technique.tags || []), ...(loadout.tags || []), ...(mechanismImpact.tags || []), ...(external.tags || []), ...(domain.tags || [])])),
     notes: card.notes || ""

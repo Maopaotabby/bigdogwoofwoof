@@ -16,10 +16,12 @@
   "officialGrade": "诅咒师",
   "powerTier": "grade3_conditional",
   "specialHandTags": [
-    "voodoo",
-    "execution_setup"
+    "mimiko_doll"
   ],
   "domainProfile": "无",
   "notes": "条件型咒杀，不按双人协同状态拆分。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "mimiko_doll"
+  ]
 }

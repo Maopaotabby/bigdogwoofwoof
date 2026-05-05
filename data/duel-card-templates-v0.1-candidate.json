@@ -2796,6 +2796,74 @@
       "baseDomainPressure": 16
     },
     {
+      "cardId": "card_basic_physical_strike",
+      "sourceActionId": "basic_physical_strike",
+      "name": "体术打击",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "none",
+      "baseCeCost": 0,
+      "tags": [
+        "基础手牌",
+        "体术",
+        "近身"
+      ],
+      "rarity": "common",
+      "weight": 1.15,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "不依赖专属术式的近身打击，根据使用者体术与体质结算伤害。",
+      "baseDamage": 16,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "physical_strike",
+      "scalingProfile": "physical",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "accuracyProfile": "melee",
+      "evasionAllowed": true,
+      "hitRateModifier": 0
+    },
+    {
+      "cardId": "card_basic_cursed_energy_strike",
+      "sourceActionId": "basic_cursed_energy_strike",
+      "name": "简单咒力打击",
+      "cardType": "basic",
+      "apCost": 1,
+      "ceCostMode": "fixed",
+      "baseCeCost": 8,
+      "tags": [
+        "基础手牌",
+        "咒力",
+        "远程"
+      ],
+      "rarity": "common",
+      "weight": 1.05,
+      "allowedContexts": [
+        "normal",
+        "domain",
+        "trial_allowed"
+      ],
+      "effectSummary": "不依赖专属术式的咒力打击，根据使用者咒力结算伤害。",
+      "baseDamage": 14,
+      "baseBlock": 0,
+      "baseDomainLoadDelta": 0,
+      "durationRounds": 0,
+      "damageType": "cursed_energy_strike",
+      "scalingProfile": "ce_burst",
+      "risk": "low",
+      "status": "CONFIRMED",
+      "playableInHandBeta": true,
+      "accuracyProfile": "technique_projectile",
+      "evasionAllowed": true,
+      "hitRateModifier": 0
+    },
+    {
       "cardId": "card_curse_regen_candidate",
       "sourceActionId": "curse_regen_candidate",
       "name": "咒灵再生候选",
@@ -3804,8 +3872,7 @@
       "status": "CONFIRMED",
       "playableInHandBeta": true,
       "mahoragaProxySpec": {
-        "unitCardId": "card_unit_mahoraga_tuned_guard",
-        "summonMode": "guard_shikigami",
+        "unitCardId": "card_unit_mahoraga_tuned",
         "displayName": "八握剑异戒神将 魔虚罗",
         "handLockMessage": "魔虚罗代打中",
         "adaptationLimit": 6,
@@ -3881,7 +3948,7 @@
         "battlefield_unit"
       ],
       "effectSummary": "战场中央出现的未调幅魔虚罗。拥有独立血条与数值，每轮自动行动；对咒灵目标基础伤害乘以 3。",
-      "baseDamage": 60,
+      "baseDamage": 200,
       "baseBlock": 0,
       "baseDomainLoadDelta": 0,
       "durationRounds": 0,
@@ -3892,9 +3959,10 @@
       "playableInHandBeta": false,
       "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
       "unitStats": {
-        "maxHp": 600,
-        "currentHp": 600,
-        "baseDamage": 60,
+        "maxHp": 300,
+        "currentHp": 300,
+        "baseDamage": 200,
+        "mahoragaTurnEndHpRegen": 80,
         "guardBreak": 24,
         "actionsPerRound": 1,
         "placement": "battlefield_center",
@@ -3955,106 +4023,6 @@
       }
     },
     {
-      "cardId": "card_unit_mahoraga_tuned_guard",
-      "sourceActionId": "unit_mahoraga_tuned_guard",
-      "name": "八握剑 异戒神将 魔虚罗",
-      "cardType": "unit",
-      "apCost": 0,
-      "ceCostMode": "none",
-      "baseCeCost": 0,
-      "tags": [
-        "魔虚罗",
-        "式神",
-        "友方单位",
-        "调幅后",
-        "守护",
-        "适应",
-        "咒灵特攻"
-      ],
-      "rarity": "special",
-      "weight": 0,
-      "allowedContexts": [
-        "battlefield_unit",
-        "mahoraga_tuned_active"
-      ],
-      "effectSummary": "调幅后的友方魔虚罗。拥有独立血条与数值；在其未被击破前，对手攻击优先判定到魔虚罗身上。对咒灵目标基础伤害乘以 3。",
-      "baseDamage": 60,
-      "baseBlock": 0,
-      "baseDomainLoadDelta": 0,
-      "durationRounds": 0,
-      "damageType": "shikigami_exorcism_blade",
-      "scalingProfile": "mahoraga_tuned_guard_unit",
-      "risk": "high",
-      "status": "CONFIRMED",
-      "playableInHandBeta": false,
-      "generatedBy": "card_ten_shadows_mahoraga_tuning_ritual",
-      "unitStats": {
-        "maxHp": 600,
-        "currentHp": 600,
-        "baseDamage": 60,
-        "guardBreak": 24,
-        "actionsPerRound": 1,
-        "placement": "frontline_guard",
-        "control": "player_controlled",
-        "controlResistance": "very_high",
-        "domainResistance": "high",
-        "baseStats": {
-          "cursedEnergy": "SS",
-          "control": "S",
-          "efficiency": "S",
-          "body": "SSS",
-          "martial": "SSS",
-          "talent": "SS"
-        },
-        "raw": {
-          "cursedEnergyScore": 7.4,
-          "controlScore": 6.2,
-          "efficiencyScore": 6.2,
-          "bodyScore": 8.8,
-          "martialScore": 8.8,
-          "talentScore": 7.4
-        },
-        "axes": {
-          "jujutsu": 6.9,
-          "body": 8.8,
-          "insight": 7.55,
-          "build": 8.2
-        },
-        "attackProfile": {
-          "accuracyProfile": "melee",
-          "hitRateModifier": 0.1,
-          "damageScale": 1,
-          "attackType": "adapted_exorcism_blade",
-          "curseDamageMultiplier": 3
-        }
-      },
-      "guardRules": {
-        "interceptsOpponentAttacks": true,
-        "protectsSide": "owner",
-        "priority": 100,
-        "untilDefeated": true,
-        "scope": "single_or_team_side"
-      },
-      "targetingRules": {
-        "default": "protect_owner_then_highest_threat",
-        "interceptsOpponentAttacks": true,
-        "teamTargetingReady": true
-      },
-      "adaptationRules": {
-        "tracksThreatTags": true,
-        "initialThreshold": 2,
-        "strongThreshold": 3,
-        "initialEffect": "reduce_next_same_tag_effect",
-        "strongEffect": "major_reduction_and_counter_modifier"
-      },
-      "matchupModifiers": {
-        "againstCurse": {
-          "baseDamageMultiplier": 3,
-          "reason": "mahoraga_exorcism_blade_curse_special_attack"
-        }
-      }
-    },
-    {
       "cardId": "card_unit_mahoraga_tuned",
       "sourceActionId": "unit_mahoraga_tuned",
       "name": "八握剑异戒神将 魔虚罗",
@@ -4078,7 +4046,7 @@
         "mahoraga_tuned_active"
       ],
       "effectSummary": "调幅后的友方魔虚罗。拥有独立血条与数值；在其未被击破前，对手攻击优先判定到魔虚罗身上。对咒灵目标基础伤害乘以 3。",
-      "baseDamage": 60,
+      "baseDamage": 200,
       "baseBlock": 0,
       "baseDomainLoadDelta": 0,
       "durationRounds": 0,
@@ -4089,9 +4057,10 @@
       "playableInHandBeta": false,
       "generatedBy": "ten_shadows_mahoraga_tuning_success",
       "unitStats": {
-        "maxHp": 600,
-        "currentHp": 600,
-        "baseDamage": 60,
+        "maxHp": 300,
+        "currentHp": 300,
+        "baseDamage": 200,
+        "mahoragaTurnEndHpRegen": 80,
         "guardBreak": 24,
         "actionsPerRound": 1,
         "placement": "frontline_guard",
@@ -4434,7 +4403,7 @@
         "domain"
       ],
       "effectSummary": "再具象化曾购买的房产并砸向目标，造成巨量慢速压杀伤害；体型巨大，通常容易被闪避。",
-      "baseDamage": 360,
+      "baseDamage": 92,
       "baseBlock": 0,
       "baseDomainLoadDelta": 8,
       "durationRounds": 0,
@@ -4447,7 +4416,7 @@
       "evasionAllowed": true,
       "hitRateModifier": -0.35,
       "specialResolution": {
-        "baseDamage": 360,
+        "baseDamage": 250,
         "normalRule": "slow_huge_object_evasion_check",
         "unfinishedTenShadowsDomainRule": {
           "condition": "target_has_unfinished_ten_shadows_domain && caster_has_no_active_domain",

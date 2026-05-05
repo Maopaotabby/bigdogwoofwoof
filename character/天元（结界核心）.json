@@ -16,10 +16,12 @@
   "officialGrade": "结界核心",
   "powerTier": "strategic_support",
   "specialHandTags": [
-    "barrier_core",
-    "immortality"
+    "immortality_tengen"
   ],
   "domainProfile": "结界核心",
   "notes": "不按进化/同化状态拆分；战斗卡应体现战略支援而非正面输出。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "immortality_tengen"
+  ]
 }

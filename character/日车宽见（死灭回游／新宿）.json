@@ -11,9 +11,7 @@
   "特殊手札": [
     "higuruma_trial_owner"
   ],
-  "specialHandTags": [
-    "higuruma_trial_owner"
-  ],
+  "specialHandTags": [],
   "characterId": "higuruma_hiromi_culling",
   "displayName": "日车宽见（死灭回游/新宿）",
   "stage": "cullingGameToShinjuku",
@@ -93,5 +91,6 @@
     },
     "source": "v2.3-domain-remake",
     "barrierType": "rule_barrier"
-  }
+  },
+  "????": []
 }

@@ -9,7 +9,9 @@
     "构筑": 3.8
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "comedian"
+  ],
   "characterId": "takaba_fumihiko_culling",
   "displayName": "高羽史彦（死灭回游）",
   "stage": "cullingGame",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "comedian"
   ]
 }

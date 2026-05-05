@@ -16,10 +16,12 @@
   "officialGrade": "未评级",
   "powerTier": "support_control",
   "specialHandTags": [
-    "rule_control",
-    "position_lock"
+    "star_travel"
   ],
   "domainProfile": "无",
   "notes": "规则解释成本较高，卡牌应强调位置控制而非高伤害。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "star_travel"
+  ]
 }

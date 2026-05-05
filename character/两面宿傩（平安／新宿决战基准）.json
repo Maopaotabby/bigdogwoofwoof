@@ -12,7 +12,7 @@
     "sukuna_slash"
   ],
   "specialHandTags": [
-    "sukuna_slash"
+    "shrine"
   ],
   "characterId": "sukuna_heian_or_shinjuku",
   "displayName": "两面宿傩（平安/新宿决战基准）",
@@ -93,5 +93,8 @@
     },
     "source": "v2.3-domain-remake",
     "barrierType": "open_barrier"
-  }
+  },
+  "????": [
+    "shrine"
+  ]
 }

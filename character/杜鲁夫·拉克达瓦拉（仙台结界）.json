@@ -16,9 +16,12 @@
   "officialGrade": "古代泳者",
   "powerTier": "grade1_shikigami",
   "specialHandTags": [
-    "shikigami_domain_track"
+    "dhruv_shikigami"
   ],
   "domainProfile": "轨迹型领域效果",
   "notes": "不按生前征服期拆分，仅锚定仙台结界信息。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "dhruv_shikigami"
+  ]
 }

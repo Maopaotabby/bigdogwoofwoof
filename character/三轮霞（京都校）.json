@@ -15,11 +15,9 @@
   },
   "officialGrade": "三级术师",
   "powerTier": "grade3_defense",
-  "specialHandTags": [
-    "simple_domain",
-    "sword_draw"
-  ],
+  "specialHandTags": [],
   "domainProfile": "简易领域",
   "notes": "非生得术式型角色，按稳定系统功能写入。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": []
 }

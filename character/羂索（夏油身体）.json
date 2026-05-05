@@ -12,7 +12,11 @@
     "curse_spirit_general"
   ],
   "specialHandTags": [
-    "curse_spirit_general"
+    "body_hopping",
+    "curse_spirit_manipulation",
+    "anti_gravity_system",
+    "ganesha_obstacle_removal",
+    "ganesh_obstacle_removal"
   ],
   "characterId": "kenjaku_geto_body",
   "displayName": "羂索（夏油身体）",
@@ -94,5 +98,12 @@
     },
     "source": "v2.3-domain-remake",
     "barrierType": "open_barrier"
-  }
+  },
+  "????": [
+    "body_hopping",
+    "curse_spirit_manipulation",
+    "anti_gravity_system",
+    "ganesha_obstacle_removal",
+    "ganesh_obstacle_removal"
+  ]
 }

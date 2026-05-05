@@ -15,11 +15,9 @@
   },
   "officialGrade": "未评级",
   "powerTier": "modulo_candidate",
-  "specialHandTags": [
-    "modulo",
-    "simuria"
-  ],
+  "specialHandTags": [],
   "domainProfile": "无",
   "notes": "低证据候选；只作原型平衡锚点，不视为最终canon。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": []
 }

@@ -20,5 +20,8 @@
   ],
   "domainProfile": "无",
   "notes": "按稳定血操术使用者处理，不拆分赤鳞跃动等短时强化。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "blood_manipulation"
+  ]
 }

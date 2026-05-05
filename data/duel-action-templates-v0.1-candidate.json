@@ -1098,7 +1098,7 @@
         }
       },
       "baseBlock": 32,
-      "baseShield": 26,
+      "baseShield": 64,
       "baseDomainLoadDelta": 4,
       "baseDefensePressure": 6,
       "durationRounds": 1,

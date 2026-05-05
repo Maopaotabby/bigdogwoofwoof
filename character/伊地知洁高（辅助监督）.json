@@ -15,11 +15,9 @@
   },
   "officialGrade": "辅助监督",
   "powerTier": "noncombat_support",
-  "specialHandTags": [
-    "assistant_supervisor",
-    "curtain_support"
-  ],
+  "specialHandTags": [],
   "domainProfile": "帐/辅助结界",
   "notes": "非术式型角色，按稳定系统功能写入。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": []
 }

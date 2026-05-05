@@ -16,10 +16,12 @@
   "officialGrade": "特别一级术师",
   "powerTier": "specialGrade1_high",
   "specialHandTags": [
-    "projection_sorcery",
-    "speed"
+    "projection_sorcery"
   ],
   "domainProfile": "无",
   "notes": "不拆分断臂前后状态；伤势由战斗状态模拟。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "projection_sorcery"
+  ]
 }

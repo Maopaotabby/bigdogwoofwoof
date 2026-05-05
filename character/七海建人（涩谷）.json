@@ -9,7 +9,9 @@
     "构筑": 1.92
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "ratio_technique"
+  ],
   "characterId": "nanami_kento_shibuya",
   "displayName": "七海建人（涩谷）",
   "stage": "shibuya",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "ratio_technique"
   ]
 }

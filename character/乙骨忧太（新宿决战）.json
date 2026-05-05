@@ -12,7 +12,7 @@
     "okkotsu_rika_copy"
   ],
   "specialHandTags": [
-    "okkotsu_rika_copy"
+    "copy"
   ],
   "characterId": "yuta_okkotsu_shinjuku",
   "displayName": "乙骨忧太（新宿决战）",
@@ -90,5 +90,8 @@
       "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
     },
     "source": "v2.3-domain-remake"
-  }
+  },
+  "????": [
+    "copy"
+  ]
 }

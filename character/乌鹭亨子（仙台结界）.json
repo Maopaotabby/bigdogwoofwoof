@@ -9,7 +9,9 @@
     "构筑": 2.92
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "sky_manipulation"
+  ],
   "characterId": "uro_takako_sendai",
   "displayName": "乌鹭亨子（仙台结界）",
   "stage": "cullingGame",
@@ -87,5 +89,8 @@
       "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
     },
     "source": "v2.3-domain-remake"
-  }
+  },
+  "????": [
+    "sky_manipulation"
+  ]
 }

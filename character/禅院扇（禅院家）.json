@@ -15,10 +15,9 @@
   },
   "officialGrade": "特别一级术师",
   "powerTier": "specialGrade1",
-  "specialHandTags": [
-    "zenin_sword_fire"
-  ],
+  "specialHandTags": [],
   "domainProfile": "无",
   "notes": "不按情绪/亲族对战状态拆分。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": []
 }

@@ -9,7 +9,9 @@
     "构筑": 3.04
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "curse_spirit_manipulation"
+  ],
   "characterId": "geto_suguru_volume0",
   "displayName": "夏油杰（0卷）",
   "stage": "volume0",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "curse_spirit_manipulation"
   ]
 }

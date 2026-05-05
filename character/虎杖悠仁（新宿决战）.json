@@ -11,9 +11,7 @@
   "特殊手札": [
     "yuji_soul_melee"
   ],
-  "specialHandTags": [
-    "yuji_soul_melee"
-  ],
+  "specialHandTags": [],
   "characterId": "yuji_itadori_shinjuku",
   "displayName": "虎杖悠仁（新宿决战）",
   "stage": "shinjuku",
@@ -54,5 +52,6 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "????": []
 }

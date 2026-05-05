@@ -16,11 +16,16 @@
   "officialGrade": "准一级术师",
   "powerTier": "support_grade1",
   "specialHandTags": [
-    "output_buff",
-    "ritual_setup",
-    "team_support"
+    "solo_forbidden_area",
+    "solo_solo_forbidden_area",
+    "prayer_song"
   ],
   "domainProfile": "无",
   "notes": "不把协同增幅拆成独立形态；由支援卡/蓄力卡模拟。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "solo_forbidden_area",
+    "solo_solo_forbidden_area",
+    "prayer_song"
+  ]
 }

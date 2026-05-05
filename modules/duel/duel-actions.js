@@ -867,8 +867,8 @@
 
   function getTechniqueFeatureHandCards() {
     var appState = getOptionalDependency("state");
-    var source = appState?.techniqueFeatureHandCandidates;
-    var cards = Array.isArray(source?.draftCards) ? source.draftCards : (Array.isArray(source) ? source : []);
+    var source = appState?.duelSpecialCards;
+    var cards = Array.isArray(source?.cards) ? source.cards : (Array.isArray(source) ? source : []);
     return cards.filter(function keepFeatureCard(card) {
       return card?.importableFromMergedPackage !== false &&
         card?.reviewStatus !== "needs_merge" &&
@@ -911,11 +911,18 @@
       "loadout",
       "flags",
       "specialHandTags",
+      "特殊手札",
       "techniqueFamilies",
       "archetypes"
     ].forEach(function pushList(field) {
       parts.push(...toFeatureList(source[field]));
     });
+  }
+
+  function getExplicitFeatureHandTags(source) {
+    var explicit = toFeatureList(source?.explicitSpecialHandTags);
+    if (explicit.length) return explicit;
+    return [].concat(toFeatureList(source?.specialHandTags), toFeatureList(source?.["特殊手札"]));
   }
 
   function getActorFeatureSnapshot(actor, battle) {
@@ -941,6 +948,21 @@
     pushFeatureTextParts(parts, profile);
     pushFeatureTextParts(parts, handProfile);
     pushFeatureTextParts(parts, customCard);
+    var specialHandTags = uniqueFeatureList([]
+      .concat(toFeatureList(actor?.specialHandTags), toFeatureList(actor?.["特殊手札"]))
+      .concat(toFeatureList(actor?.profile?.specialHandTags), toFeatureList(actor?.profile?.["特殊手札"]))
+      .concat(toFeatureList(actor?.characterCardProfile?.specialHandTags), toFeatureList(actor?.characterCardProfile?.["特殊手札"]))
+      .concat(toFeatureList(profile?.specialHandTags), toFeatureList(profile?.["特殊手札"]))
+      .concat(toFeatureList(handProfile?.specialHandTags), toFeatureList(handProfile?.["特殊手札"]))
+      .concat(toFeatureList(customCard?.specialHandTags), toFeatureList(customCard?.["特殊手札"])));
+    var explicitSpecialHandTags = uniqueFeatureList([]
+      .concat(getExplicitFeatureHandTags(actor))
+      .concat(getExplicitFeatureHandTags(actor?.profile))
+      .concat(getExplicitFeatureHandTags(actor?.characterCardProfile))
+      .concat(getExplicitFeatureHandTags(profile))
+      .concat(getExplicitFeatureHandTags(handProfile))
+      .concat(getExplicitFeatureHandTags(customCard)));
+    parts.push(...specialHandTags);
     var ids = uniqueFeatureList([
       actorId,
       actor?.characterId,
@@ -964,6 +986,8 @@
     var rawText = uniqueFeatureList(parts).join(" ");
     return {
       ids: ids,
+      specialHandTags: specialHandTags,
+      explicitSpecialHandTags: explicitSpecialHandTags,
       text: rawText,
       normalizedText: normalizeFeatureText(rawText),
       hasInnateTechnique: handProfile?.hasInnateTechnique !== false && !/零咒力|无术式|no_innate_technique/i.test(rawText)
@@ -978,16 +1002,56 @@
   }
 
   function getFeatureCardAliases(card) {
-    var configuredAliases = toFeatureList(FEATURE_TECHNIQUE_ALIASES[card?.techniqueId]);
+    var family = getFeatureCardFamily(card);
+    var configuredAliases = uniqueFeatureList([]
+      .concat(toFeatureList(FEATURE_TECHNIQUE_ALIASES[card?.techniqueId]))
+      .concat(toFeatureList(FEATURE_TECHNIQUE_ALIASES[family])));
     var techniqueNameAliases = toFeatureList(card?.techniqueName).filter(function keepTechniqueNameAlias(alias) {
       return normalizeFeatureText(alias).length >= 3 || configuredAliases.includes(alias);
     });
     return uniqueFeatureList([]
+      .concat(toFeatureList(family))
       .concat(toFeatureList(card?.techniqueId))
+      .concat(toFeatureList(card?.sourceTechniqueFamily))
+      .concat(toFeatureList(card?.specialHandTags))
+      .concat(toFeatureList(card?.["特殊手札"]))
       .concat(techniqueNameAliases)
       .concat(toFeatureList(card?.domainName))
       .concat(splitFeatureOwnerAliases(card?.ownerOrRepresentative))
       .concat(configuredAliases));
+  }
+
+  function getFeatureCardFamily(card) {
+    return toFeatureList(card?.specialHandTags)[0] ||
+      toFeatureList(card?.["特殊手札"])[0] ||
+      card?.sourceTechniqueFamily ||
+      card?.techniqueFamily ||
+      card?.techniqueId ||
+      "";
+  }
+
+  function getFeatureCardSpecialHandTags(card) {
+    var family = getFeatureCardFamily(card);
+    return uniqueFeatureList([]
+      .concat(toFeatureList(card?.specialHandTags))
+      .concat(toFeatureList(card?.["特殊手札"]))
+      .concat(toFeatureList(family))
+      .concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]))
+      .concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[family])));
+  }
+
+  function getFeatureCardArchetypeRequirements(card) {
+    var family = getFeatureCardFamily(card);
+    var directSpecialHandTags = [].concat(toFeatureList(card?.specialHandTags), toFeatureList(card?.["特殊手札"]));
+    var legacyRequirements = directSpecialHandTags.length
+      ? []
+      : [].concat(
+        toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]),
+        toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[family])
+      );
+    return uniqueFeatureList([]
+      .concat(toFeatureList(card?.exclusiveToArchetypes))
+      .concat(legacyRequirements));
   }
 
   function isFeatureAliasMatch(snapshot, alias) {
@@ -1000,14 +1064,35 @@
   }
 
   function doesFeatureCardMatchActor(card, snapshot) {
-    if (!snapshot?.normalizedText || snapshot.hasInnateTechnique === false) return false;
-    var requiredArchetypes = toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]);
+    if (!snapshot?.normalizedText) return false;
+    var directCardSpecialHandTags = [].concat(toFeatureList(card?.specialHandTags), toFeatureList(card?.["特殊手札"]));
+    if (directCardSpecialHandTags.length) {
+      var explicitActorSpecialHandTags = toFeatureList(snapshot.explicitSpecialHandTags);
+      return directCardSpecialHandTags.some(function hasExplicitSpecialHandTag(tag) {
+        var normalized = normalizeFeatureText(tag);
+        return normalized && explicitActorSpecialHandTags.some(function hasActorTag(actorTag) {
+          return normalizeFeatureText(actorTag) === normalized;
+        });
+      });
+    }
+    var specialHandTags = getFeatureCardSpecialHandTags(card);
+    if (specialHandTags.some(function hasDirectSpecialHandTag(tag) {
+      var normalized = normalizeFeatureText(tag);
+      return normalized && (
+        toFeatureList(snapshot.specialHandTags).some(function hasExplicitTag(actorTag) { return normalizeFeatureText(actorTag) === normalized; }) ||
+        snapshot.ids.some(function hasDirectId(id) { return normalizeFeatureText(id) === normalized; }) ||
+        snapshot.normalizedText.includes(normalized)
+      );
+    })) return true;
+    if (snapshot.hasInnateTechnique === false) return false;
+    var family = getFeatureCardFamily(card);
+    var requiredArchetypes = getFeatureCardArchetypeRequirements(card);
     if (requiredArchetypes.length && !requiredArchetypes.some(function hasRequiredArchetype(archetype) {
       return snapshot.ids.some(function hasDirectId(id) {
         return normalizeFeatureText(id) === normalizeFeatureText(archetype);
       }) || snapshot.normalizedText.includes(normalizeFeatureText(archetype));
     })) return false;
-    if (snapshot.ids.some(function hasDirectTechnique(id) { return normalizeFeatureText(id) === normalizeFeatureText(card?.techniqueId); })) return true;
+    if (snapshot.ids.some(function hasDirectTechnique(id) { return normalizeFeatureText(id) === normalizeFeatureText(card?.techniqueId || family); })) return true;
     return getFeatureCardAliases(card).some(function hasAlias(alias) {
       return isFeatureAliasMatch(snapshot, alias);
     });
@@ -1015,6 +1100,7 @@
 
   function mapFeatureCardType(intent) {
     var key = String(intent || "").toLowerCase();
+    if (["technique", "defense", "resource", "support", "summon", "domain", "rule"].includes(key)) return key;
     if (key === "defense") return "defense";
     if (key === "resource") return "resource";
     if (key === "support") return "support";
@@ -1029,6 +1115,7 @@
     var text = [
       card?.scalingProfile,
       card?.cardIntent,
+      card?.cardType,
       card?.mechanicSubtype,
       card?.futureCardType,
       card?.techniqueId,
@@ -1051,12 +1138,15 @@
   }
 
   function buildFeatureCardEffects(card, stats) {
-    var effects = { ...(stats?.proposedEffectFields || {}) };
-    var baseBlock = Number(stats?.baseBlock || 0);
-    var controlValue = Number(stats?.controlValue || 0);
-    var soulDamage = Number(stats?.soulDamage || 0);
-    var domainLoadDelta = Number(stats?.domainLoadDelta || 0);
-    var durationRounds = Math.max(0, Number(stats?.durationRounds || 0));
+    var effects = {
+      ...(stats?.proposedEffectFields || {}),
+      ...(card?.effects || {})
+    };
+    var baseBlock = Number(stats?.baseBlock ?? card?.baseBlock ?? 0);
+    var controlValue = Number(stats?.controlValue ?? card?.controlValue ?? card?.baseStabilityDamage ?? 0);
+    var soulDamage = Number(stats?.soulDamage ?? card?.soulDamage ?? card?.baseCeDamage ?? 0);
+    var domainLoadDelta = Number(stats?.domainLoadDelta ?? card?.baseDomainLoadDelta ?? card?.domainLoadDelta ?? 0);
+    var durationRounds = Math.max(0, Number(stats?.durationRounds ?? card?.durationRounds ?? 0));
     if (baseBlock > 0) {
       effects.incomingHpScale = Math.min(
         Number(effects.incomingHpScale || 1),
@@ -1085,7 +1175,7 @@
     }
     if (domainLoadDelta) addFeatureNumericDelta(effects, "domainLoadDelta", domainLoadDelta);
     if (durationRounds > 0 && !effects.durationRounds) effects.durationRounds = durationRounds;
-    if (!effects.weightDeltas && (card?.cardIntent === "resource" || card?.cardIntent === "support")) {
+    if (!effects.weightDeltas && (card?.cardIntent === "resource" || card?.cardIntent === "support" || card?.cardType === "resource" || card?.cardType === "support")) {
       effects.weightDeltas = { ce_compression: 0.35, defensive_frame: 0.2 };
     }
     return effects;
@@ -1098,66 +1188,85 @@
 
   function buildTechniqueFeatureHandAction(card, actor, snapshot) {
     var stats = card?.balancedRuntimeStats || card?.originalCandidateRuntimeStats || {};
-    var sourceActionId = card?.sourceActionId || card?.draftCardId || ("feature_" + card?.techniqueId + "_" + card?.cardName);
-    var baseDamage = toFeatureNumber(stats.baseDamage, 0);
-    var baseBlock = toFeatureNumber(stats.baseBlock, 0);
-    var controlValue = toFeatureNumber(stats.controlValue, 0);
-    var soulDamage = toFeatureNumber(stats.soulDamage, 0);
+    var family = getFeatureCardFamily(card);
+    var displayName = card?.name || card?.cardName || card?.sourceActionId || card?.cardId || "特色手札";
+    var sourceActionId = card?.sourceActionId || card?.draftCardId || card?.cardId || ("feature_" + family + "_" + displayName);
+    var baseDamage = toFeatureNumber(stats.baseDamage ?? card?.baseDamage, 0);
+    var baseBlock = toFeatureNumber(stats.baseBlock ?? card?.baseBlock, 0);
+    var controlValue = toFeatureNumber(stats.controlValue ?? card?.controlValue ?? card?.baseStabilityDamage, 0);
+    var soulDamage = toFeatureNumber(stats.soulDamage ?? card?.soulDamage ?? card?.baseCeDamage, 0);
+    var domainLoadDelta = toFeatureNumber(stats.domainLoadDelta ?? card?.baseDomainLoadDelta ?? card?.domainLoadDelta, 0);
+    var baseDomainPressure = toFeatureNumber(stats.baseDomainPressure ?? card?.baseDomainPressure, 0);
+    var specialHandTags = getFeatureCardSpecialHandTags(card);
+    var archetypeRequirements = getFeatureCardArchetypeRequirements(card);
     var tags = uniqueFeatureList([
       "特色手札",
       "术式",
       "technique_feature",
+      family,
       card?.techniqueId,
       card?.techniqueName,
       card?.cardIntent,
+      card?.cardType,
       card?.mechanicSubtype
-    ].concat(toFeatureList(card?.mechanicTags)));
+    ].concat(toFeatureList(card?.tags), toFeatureList(card?.mechanicTags)));
     if (card?.soulRelated || soulDamage > 0) tags.push("灵魂");
     if (card?.summonRelated) tags.push("式神");
     if (card?.antiDomainRelated) tags.push("领域应对");
     var action = {
       id: sourceActionId,
       sourceActionId: sourceActionId,
-      label: card?.cardName || sourceActionId,
-      description: card?.shortEffect || card?.effectDraft || card?.longEffect || "按特色术式手札规则结算。",
-      cardType: mapFeatureCardType(card?.cardIntent),
+      cardId: card?.cardId || ("card_" + sourceActionId),
+      label: displayName,
+      name: displayName,
+      description: card?.effectSummary || card?.shortEffect || card?.effectDraft || card?.longEffect || "按特色术式手札规则结算。",
+      cardType: mapFeatureCardType(card?.cardType || card?.cardIntent),
       type: "feature_technique",
       techniqueFeatureHand: true,
+      specialHandCard: true,
       normalHandOnly: true,
       draftCardId: card?.draftCardId || "",
-      sourceTechniqueFamily: card?.techniqueId || "",
+      sourceTechniqueFamily: family,
       techniqueName: card?.techniqueName || "",
       ownerOrRepresentative: card?.ownerOrRepresentative || "",
       tags: tags,
-      specialHandTags: uniqueFeatureList([].concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]))),
-      exclusiveToArchetypes: uniqueFeatureList([].concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]))),
-      exclusiveToCharacters: snapshot?.ids || [],
+      specialHandTags: specialHandTags,
+      "特殊手札": specialHandTags,
+      exclusiveToArchetypes: archetypeRequirements,
+      exclusiveToCharacters: uniqueFeatureList([].concat(toFeatureList(card?.exclusiveToCharacters))),
       requiresCe: true,
       requiresInnateTechnique: true,
       requirements: {
         domainActive: "any",
+        ...(card?.requirements || {}),
         blocksOnTechniqueImbalance: true
       },
-      apCost: Math.max(1, toFeatureNumber(stats.apCost, 1)),
-      baseCeCost: Math.max(0, toFeatureNumber(stats.baseCeCost, 0)),
+      allowedContexts: Array.isArray(card?.allowedContexts) ? card.allowedContexts.slice() : ["normal"],
+      apCost: Math.max(1, toFeatureNumber(stats.apCost ?? card?.apCost, 1)),
+      baseCeCost: Math.max(0, toFeatureNumber(stats.baseCeCost ?? card?.baseCeCost ?? card?.ceCost ?? card?.costCe, 0)),
       baseDamage: Math.max(0, baseDamage),
       baseBlock: Math.max(0, baseBlock),
-      baseStabilityDamage: controlValue > 0 ? Math.max(1, Math.round(controlValue * 0.55)) : 0,
-      baseCeDamage: soulDamage > 0 ? Math.max(1, Math.round(soulDamage * 0.35)) : 0,
-      baseDomainLoadDelta: toFeatureNumber(stats.domainLoadDelta, 0),
-      durationRounds: Math.max(0, toFeatureNumber(stats.durationRounds, 0)),
-      scalingProfile: mapFeatureScalingProfile(card, stats),
-      accuracyProfile: stats.accuracyProfile || (baseDamage > 0 ? "technique_projectile" : "none"),
-      evasionAllowed: stats.evasionAllowed !== false && baseDamage > 0,
-      hitRateModifier: toFeatureNumber(stats.hitRateModifier, 0),
+      baseStabilityDamage: controlValue > 0 ? Math.max(1, Math.round(controlValue)) : 0,
+      baseCeDamage: soulDamage > 0 ? Math.max(1, Math.round(soulDamage)) : 0,
+      baseDomainLoadDelta: domainLoadDelta,
+      baseDomainPressure: Math.max(0, baseDomainPressure),
+      durationRounds: Math.max(0, toFeatureNumber(stats.durationRounds ?? card?.durationRounds, 0)),
+      damageType: card?.damageType || "none",
+      scalingProfile: card?.scalingProfile || mapFeatureScalingProfile(card, stats),
+      accuracyProfile: stats.accuracyProfile || card?.accuracyProfile || (baseDamage > 0 ? "technique_projectile" : "none"),
+      evasionAllowed: card?.evasionAllowed ?? (stats.evasionAllowed !== false && baseDamage > 0),
+      hitRateModifier: toFeatureNumber(stats.hitRateModifier ?? card?.hitRateModifier, 0),
       effects: buildFeatureCardEffects(card, stats),
-      risk: card?.riskTags?.includes("high") || card?.powerHint === "extreme" ? "high" : (card?.suggestedRarity === "rare" ? "medium" : "low"),
-      rarity: card?.suggestedRarity || "uncommon",
-      weight: Number(card?.cardIntent === "finisher" ? 4.5 : 5.25),
-      selectionWeight: Number(card?.cardIntent === "finisher" ? 5.1 : 5.8),
+      risk: card?.risk || (card?.riskTags?.includes("high") || card?.powerHint === "extreme" ? "high" : (card?.suggestedRarity === "rare" ? "medium" : "low")),
+      rarity: card?.rarity || card?.suggestedRarity || "uncommon",
+      weight: Number(card?.weight || (card?.cardIntent === "finisher" ? 4.5 : 5.25)),
+      selectionWeight: Number(card?.selectionWeight || card?.weight || (card?.cardIntent === "finisher" ? 5.1 : 5.8)),
       characterHints: getFeatureCardAliases(card),
-      effectSummary: card?.shortEffect || card?.effectDraft || "",
-      status: "CANDIDATE_RUNTIME_IMPORT"
+      effectSummary: card?.effectSummary || card?.shortEffect || card?.effectDraft || "",
+      summonSpec: card?.summonSpec ? { ...card.summonSpec } : undefined,
+      mechanismSpec: card?.mechanismSpec ? { ...card.mechanismSpec } : undefined,
+      resourceSpec: card?.resourceSpec ? { ...card.resourceSpec } : undefined,
+      status: card?.status || "CANDIDATE_RUNTIME_IMPORT"
     };
     if (card?.cardIntent === "finisher") action.risk = action.risk === "high" ? "critical" : "high";
     return action;
@@ -1166,17 +1275,15 @@
   function buildTechniqueFeatureHandActions(actor, opponent, duelState) {
     var battle = getBattle(duelState);
     var snapshot = getActorFeatureSnapshot(actor, battle);
-    if (!snapshot?.normalizedText || snapshot.hasInnateTechnique === false) return [];
+    if (!snapshot?.normalizedText) return [];
     var matched = [];
     var seen = new Set();
-    var seenNames = new Set();
     getTechniqueFeatureHandCards().forEach(function collectFeatureCard(card) {
-      if (!card?.techniqueId || !doesFeatureCardMatchActor(card, snapshot)) return;
-      var sourceActionId = card.sourceActionId || card.draftCardId || "";
-      var normalizedName = normalizeFeatureText(card.cardName || sourceActionId);
-      if (!sourceActionId || seen.has(sourceActionId) || seenNames.has(normalizedName)) return;
+      var family = getFeatureCardFamily(card);
+      if (!family || !doesFeatureCardMatchActor(card, snapshot)) return;
+      var sourceActionId = card.sourceActionId || card.draftCardId || card.cardId || "";
+      if (!sourceActionId || seen.has(sourceActionId)) return;
       seen.add(sourceActionId);
-      seenNames.add(normalizedName);
       matched.push(buildTechniqueFeatureHandAction(card, actor, snapshot));
     });
     return matched;
@@ -1249,6 +1356,7 @@
 
   function isDuelActionAllowedByActorIdentity(action, actor, battle) {
     if (!actor || !action) return true;
+    if (action.specialHandCard || action.techniqueFeatureHand) return true;
     if (!isReverseCursedTechniqueAction(action) && !isCurseRegenerationAction(action)) return true;
     var snapshot = getActorFeatureSnapshot(actor, battle);
     var cursedSpirit = isCursedSpiritActor(actor, battle, snapshot);
@@ -2937,14 +3045,16 @@
           unitStats: {
             maxHp: 300,
             currentHp: 300,
-            baseDamage: 60,
+            baseDamage: 200,
+            mahoragaTurnEndHpRegen: 80,
             damageType: "melee",
             accuracyProfile: "melee",
             evasionAllowed: false
           },
           hp: 300,
           maxHp: 300,
-          baseDamage: 60,
+          baseDamage: 200,
+          mahoragaTurnEndHpRegen: 80,
           damageType: "melee",
           accuracyProfile: "melee",
           evasionAllowed: false,
@@ -3127,13 +3237,15 @@
       if (!unit) return;
       // 确定攻击目标：优先攻击十影召唤者（若未影中藏身）
       
-      var targetSide;
-      // 简化：随机攻击对方角色
       var opponentSide = side === "left" ? "right" : "left";
-      
+      var opponent = callDependency("getDuelResourcePair", [battle, opponentSide]);
       if (!opponent) return;
-      // 执行 60 伤害攻击
-      var damage = 60;
+      var regen = Math.max(0, Number(unit.mahoragaTurnEndHpRegen || unit.unitStats?.mahoragaTurnEndHpRegen || 0));
+      if (regen > 0) {
+        unit.currentHp = Math.min(Number(unit.maxHp || 0), Number(unit.currentHp || unit.hp || 0) + regen);
+        unit.hp = unit.currentHp;
+      }
+      var damage = Math.max(0, Number(unit.baseDamage || unit.unitStats?.baseDamage || 200));
       // 魔虚罗对咒灵特攻
       if (opponent.characterCardProfile?.isCurse || /咒灵/.test(opponent.name || "")) {
         damage *= 3;
@@ -3146,6 +3258,7 @@
         targetSide: opponentSide,
         unitId: unit.id,
         damage: damage,
+        unitHpAfterRegen: unit.hp,
         targetHpAfter: opponent.hp
       });
     });

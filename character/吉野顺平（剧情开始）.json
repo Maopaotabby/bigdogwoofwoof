@@ -16,9 +16,12 @@
   "officialGrade": "未评级",
   "powerTier": "grade4_candidate",
   "specialHandTags": [
-    "shikigami_poison"
+    "moon_dregs"
   ],
   "domainProfile": "无",
   "notes": "按刚觉醒阶段锚定，不按潜力完全展开处理。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "moon_dregs"
+  ]
 }

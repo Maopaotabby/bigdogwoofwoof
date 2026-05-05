@@ -16,9 +16,12 @@
   "officialGrade": "觉醒泳者",
   "powerTier": "grade4_mobility",
   "specialHandTags": [
-    "mobility_low_output"
+    "haba_helicopter_hair"
   ],
   "domainProfile": "无",
   "notes": "低信息量但战斗方式稳定可确认。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "haba_helicopter_hair"
+  ]
 }

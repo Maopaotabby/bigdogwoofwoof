@@ -20,5 +20,8 @@
   ],
   "domainProfile": "无",
   "notes": "不拆分瑞兽序号为独立角色卡；具体瑞兽效果由卡牌/机制标签模拟。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "auspicious_beasts"
+  ]
 }

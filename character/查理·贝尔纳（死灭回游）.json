@@ -16,9 +16,12 @@
   "officialGrade": "觉醒泳者",
   "powerTier": "grade3_utility",
   "specialHandTags": [
-    "future_panel"
+    "manga_artist"
   ],
   "domainProfile": "无",
   "notes": "按新觉醒泳者处理，战斗经验有限。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "manga_artist"
+  ]
 }

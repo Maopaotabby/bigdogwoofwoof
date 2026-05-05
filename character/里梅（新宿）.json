@@ -9,7 +9,9 @@
     "构筑": 3.04
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "ice_formation"
+  ],
   "characterId": "uraume_shinjuku",
   "displayName": "里梅（新宿）",
   "stage": "shinjuku",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "ice_formation"
   ]
 }

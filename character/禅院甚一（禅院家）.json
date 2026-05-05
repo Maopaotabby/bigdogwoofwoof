@@ -16,9 +16,14 @@
   "officialGrade": "特别一级术师",
   "powerTier": "specialGrade1",
   "specialHandTags": [
-    "zenin_power_fist"
+    "jinichi_fist",
+    "zenin_jinichi"
   ],
   "domainProfile": "无",
   "notes": "按特别一级家族战力锚定。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "jinichi_fist",
+    "zenin_jinichi"
+  ]
 }

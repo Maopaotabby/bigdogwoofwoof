@@ -16,9 +16,12 @@
   "officialGrade": "一级术师",
   "powerTier": "grade1_support",
   "specialHandTags": [
-    "sound_cursed_energy"
+    "gakuganji_music"
   ],
   "domainProfile": "无",
   "notes": "按校长级经验与音波输出锚定，非顶级正面战斗卡。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "gakuganji_music"
+  ]
 }

@@ -9,7 +9,9 @@
     "构筑": 1.92
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "boogie_woogie"
+  ],
   "characterId": "todo_aoi_shibuya",
   "displayName": "东堂葵（涩谷）",
   "stage": "shibuya",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "boogie_woogie"
   ]
 }

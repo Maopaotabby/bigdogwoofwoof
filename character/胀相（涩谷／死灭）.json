@@ -9,7 +9,9 @@
     "构筑": 2.32
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "blood_manipulation"
+  ],
   "characterId": "choso_shibuya_culling",
   "displayName": "胀相（涩谷/死灭）",
   "stage": "shibuyaToCulling",
@@ -49,5 +51,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "blood_manipulation"
   ]
 }

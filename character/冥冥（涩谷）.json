@@ -9,7 +9,9 @@
     "构筑": 1.92
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "black_bird_manipulation"
+  ],
   "characterId": "mei_mei_shibuya",
   "displayName": "冥冥（涩谷）",
   "stage": "shibuya",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "black_bird_manipulation"
   ]
 }

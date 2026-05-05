@@ -11,9 +11,7 @@
   "特殊手札": [
     "zero_ce_heavenly_restriction"
   ],
-  "specialHandTags": [
-    "zero_ce_heavenly_restriction"
-  ],
+  "specialHandTags": [],
   "characterId": "toji_fushiguro_shibuya_revenant",
   "displayName": "伏黑甚尔（涩谷通灵）",
   "stage": "shibuya",
@@ -52,5 +50,6 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "????": []
 }

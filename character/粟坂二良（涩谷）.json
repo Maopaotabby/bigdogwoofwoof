@@ -16,9 +16,12 @@
   "officialGrade": "诅咒师",
   "powerTier": "grade2_counter",
   "specialHandTags": [
-    "inverse_counter"
+    "inverse"
   ],
   "domainProfile": "无",
   "notes": "按规则型防御诅咒师锚定。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "inverse"
+  ]
 }

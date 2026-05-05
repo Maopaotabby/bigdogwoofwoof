@@ -11,9 +11,7 @@
   "特殊手札": [
     "zero_ce_heavenly_restriction"
   ],
-  "specialHandTags": [
-    "zero_ce_heavenly_restriction"
-  ],
+  "specialHandTags": [],
   "characterId": "maki_zenin_culling",
   "displayName": "禅院真希（死灭回游完成后）",
   "stage": "cullingGame",
@@ -52,5 +50,6 @@
   ],
   "selectedToolTags": [
     "无"
-  ]
+  ],
+  "????": []
 }

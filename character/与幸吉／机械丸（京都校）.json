@@ -16,10 +16,12 @@
   "officialGrade": "准一级术师",
   "powerTier": "semiGrade1",
   "specialHandTags": [
-    "puppet_user",
-    "remote_control"
+    "puppet_manipulation"
   ],
   "domainProfile": "无",
   "notes": "不单独拆分究极机械丸形态；大型机体由卡牌/机制模拟。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "puppet_manipulation"
+  ]
 }

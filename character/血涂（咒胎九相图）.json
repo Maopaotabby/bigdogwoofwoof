@@ -16,10 +16,12 @@
   "officialGrade": "特级咒物受肉体",
   "powerTier": "grade3_curse_womb",
   "specialHandTags": [
-    "rot_technique",
-    "curse_womb"
+    "rot_technique"
   ],
   "domainProfile": "无",
   "notes": "按较低稳定性受肉体处理。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "rot_technique"
+  ]
 }

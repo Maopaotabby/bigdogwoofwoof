@@ -9,7 +9,9 @@
     "构筑": 3.04
   },
   "特殊手札": [],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "embodied_killing_intent_light"
+  ],
   "characterId": "dabra_modulo",
   "displayName": "达布拉（Modulo）",
   "stage": "modulo",
@@ -48,5 +50,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "embodied_killing_intent_light"
   ]
 }

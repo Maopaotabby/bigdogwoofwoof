@@ -16,10 +16,12 @@
   "officialGrade": "特别一级术师",
   "powerTier": "specialGrade1",
   "specialHandTags": [
-    "projection_sorcery",
-    "speed"
+    "projection_sorcery"
   ],
   "domainProfile": "无",
   "notes": "与咒灵直哉为不同存在，但不再拆短时形态。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "projection_sorcery"
+  ]
 }

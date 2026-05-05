@@ -16,9 +16,12 @@
   "officialGrade": "诅咒师",
   "powerTier": "grade3_survival",
   "specialHandTags": [
-    "luck_survival"
+    "miracles"
   ],
   "domainProfile": "无",
   "notes": "奇迹存量作为状态/资源模拟，不拆分为不同卡。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "miracles"
+  ]
 }

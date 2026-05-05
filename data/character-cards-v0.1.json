@@ -70,7 +70,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "limitless"
+      ],
+      "specialHandTags": [
+        "limitless"
+      ]
     },
     {
       "characterId": "sukuna_heian_or_shinjuku",
@@ -133,7 +139,13 @@
         },
         "source": "v2.3-domain-remake",
         "barrierType": "open_barrier"
-      }
+      },
+      "????": [
+        "shrine"
+      ],
+      "specialHandTags": [
+        "shrine"
+      ]
     },
     {
       "characterId": "yuji_itadori_after68",
@@ -157,7 +169,9 @@
       "domainProfile": "高阶反领域/领域对策",
       "officialGrade": "不适用",
       "powerTier": "postCanonException",
-      "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。"
+      "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "takaba_fumihiko_culling",
@@ -175,7 +189,13 @@
       "techniquePower": "EX-",
       "officialGrade": "未评级",
       "powerTier": "haxException",
-      "notes": "超人术式极强，但杀意、理解和稳定性限制其即时胜率。"
+      "notes": "超人术式极强，但杀意、理解和稳定性限制其即时胜率。",
+      "????": [
+        "comedian"
+      ],
+      "specialHandTags": [
+        "comedian"
+      ]
     },
     {
       "characterId": "toji_fushiguro_hidden_inventory",
@@ -200,7 +220,9 @@
       ],
       "officialGrade": "无",
       "powerTier": "topTierPhysical",
-      "notes": "完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。"
+      "notes": "完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "toji_fushiguro_shibuya_revenant",
@@ -222,7 +244,9 @@
       ],
       "officialGrade": "无",
       "powerTier": "topTierPhysical",
-      "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。"
+      "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "maki_zenin_culling",
@@ -244,7 +268,9 @@
       ],
       "officialGrade": "无",
       "powerTier": "topTierPhysical",
-      "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。"
+      "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "yuta_okkotsu_volume0_true_rika",
@@ -264,7 +290,13 @@
       ],
       "officialGrade": "特级",
       "powerTier": "specialGrade",
-      "notes": "通过相互诅咒形成近乎无限咒力来源；0卷后真里香成佛，资源形态下降。"
+      "notes": "通过相互诅咒形成近乎无限咒力来源；0卷后真里香成佛，资源形态下降。",
+      "????": [
+        "copy"
+      ],
+      "specialHandTags": [
+        "copy"
+      ]
     },
     {
       "characterId": "geto_suguru_volume0",
@@ -281,7 +313,13 @@
       "techniquePower": "SSS",
       "officialGrade": "特级",
       "powerTier": "specialGrade",
-      "notes": "咒灵操术库存不直接消耗自身咒力；若百鬼夜行不兵分两路，可能正面击败0卷乙骨与真里香组合。"
+      "notes": "咒灵操术库存不直接消耗自身咒力；若百鬼夜行不兵分两路，可能正面击败0卷乙骨与真里香组合。",
+      "????": [
+        "curse_spirit_manipulation"
+      ],
+      "specialHandTags": [
+        "curse_spirit_manipulation"
+      ]
     },
     {
       "characterId": "kashimo_hajime_ancient",
@@ -303,7 +341,15 @@
       "officialGrade": "特级古代术师",
       "visibleGrade": "specialGrade",
       "powerTier": "topTier",
-      "notes": "400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。"
+      "notes": "400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。",
+      "????": [
+        "mythical_beast_amber",
+        "kashimo_mythical_beast"
+      ],
+      "specialHandTags": [
+        "mythical_beast_amber",
+        "kashimo_mythical_beast"
+      ]
     },
     {
       "characterId": "hakari_kinji_jackpot",
@@ -362,7 +408,9 @@
         "source": "v2.3B-domain-audit",
         "barrierType": "rule_barrier",
         "domainCompletion": "conditional"
-      }
+      },
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "uraume_shinjuku",
@@ -379,7 +427,13 @@
       "techniquePower": "SSS",
       "officialGrade": "无",
       "powerTier": "topTierMinus",
-      "notes": "与秤金次长期相持，不能按低一级强者处理。"
+      "notes": "与秤金次长期相持，不能按低一级强者处理。",
+      "????": [
+        "ice_formation"
+      ],
+      "specialHandTags": [
+        "ice_formation"
+      ]
     },
     {
       "characterId": "dabra_modulo",
@@ -396,7 +450,13 @@
       "techniquePower": "SSS",
       "officialGrade": "不适用",
       "powerTier": "postCanonCeiling",
-      "notes": "基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。"
+      "notes": "基础数值接近宿傩，术式强度高于宿傩，但不进入 EX。",
+      "????": [
+        "embodied_killing_intent_light"
+      ],
+      "specialHandTags": [
+        "embodied_killing_intent_light"
+      ]
     },
     {
       "characterId": "maru_modulo",
@@ -413,7 +473,13 @@
       "techniquePower": "SSS",
       "officialGrade": "不适用",
       "powerTier": "supportHax",
-      "notes": "单体战斗力不应过高；强点在混沌与调和的规则干涉和辅助价值。"
+      "notes": "单体战斗力不应过高；强点在混沌与调和的规则干涉和辅助价值。",
+      "????": [
+        "chaos_and_harmony"
+      ],
+      "specialHandTags": [
+        "chaos_and_harmony"
+      ]
     },
     {
       "characterId": "okkotsu_tsurugi_modulo",
@@ -435,7 +501,13 @@
       "externalResource": "乙骨戒指/里香资源",
       "officialGrade": "不适用",
       "powerTier": "newGenerationTop",
-      "notes": "这里的真剑是乙骨真剑，不是克罗斯。"
+      "notes": "这里的真剑是乙骨真剑，不是克罗斯。",
+      "????": [
+        "copy"
+      ],
+      "specialHandTags": [
+        "copy"
+      ]
     },
     {
       "characterId": "cross_modulo",
@@ -451,7 +523,13 @@
       },
       "officialGrade": "不适用",
       "powerTier": "civilianOrSupport",
-      "notes": "克罗斯是马鲁的双胞胎兄弟，不是乙骨真剑。"
+      "notes": "克罗斯是马鲁的双胞胎兄弟，不是乙骨真剑。",
+      "????": [
+        "chaos_and_harmony"
+      ],
+      "specialHandTags": [
+        "chaos_and_harmony"
+      ]
     },
     {
       "characterId": "rika_orimoto_volume0_full",
@@ -472,7 +550,13 @@
       "techniquePower": "SS",
       "officialGrade": "特级过咒怨灵",
       "powerTier": "specialGradeCurse",
-      "notes": "0卷完全显现的真里香锚点；作为独立咒灵卡时不叠加乙骨的术师操作。"
+      "notes": "0卷完全显现的真里香锚点；作为独立咒灵卡时不叠加乙骨的术师操作。",
+      "????": [
+        "copy"
+      ],
+      "specialHandTags": [
+        "copy"
+      ]
     },
     {
       "characterId": "jogo_shibuya",
@@ -532,7 +616,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "disaster_flames"
+      ],
+      "specialHandTags": [
+        "disaster_flames"
+      ]
     },
     {
       "characterId": "mahito_shibuya",
@@ -595,7 +685,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "idle_transfiguration"
+      ],
+      "specialHandTags": [
+        "idle_transfiguration"
+      ]
     },
     {
       "characterId": "hanami_exchange_event",
@@ -655,7 +751,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "disaster_plants"
+      ],
+      "specialHandTags": [
+        "disaster_plants"
+      ]
     },
     {
       "characterId": "dagon_shibuya_domain",
@@ -716,7 +818,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "disaster_tides"
+      ],
+      "specialHandTags": [
+        "disaster_tides"
+      ]
     },
     {
       "characterId": "naoya_cursed_spirit_sakurajima",
@@ -776,7 +884,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "projection_sorcery"
+      ],
+      "specialHandTags": [
+        "projection_sorcery"
+      ]
     },
     {
       "characterId": "smallpox_deity_shibuya",
@@ -836,7 +950,9 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "choso_shibuya_culling",
@@ -858,7 +974,13 @@
       "officialGrade": "特级咒物受肉体",
       "visibleGrade": "grade1",
       "powerTier": "grade1Plus",
-      "notes": "按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。"
+      "notes": "按九相图受肉体而非纯咒灵处理；近战、血液操作和续航都高于常规一级。",
+      "????": [
+        "blood_manipulation"
+      ],
+      "specialHandTags": [
+        "blood_manipulation"
+      ]
     },
     {
       "characterId": "kenjaku_geto_body",
@@ -922,7 +1044,21 @@
         },
         "source": "v2.3-domain-remake",
         "barrierType": "open_barrier"
-      }
+      },
+      "????": [
+        "body_hopping",
+        "curse_spirit_manipulation",
+        "anti_gravity_system",
+        "ganesha_obstacle_removal",
+        "ganesh_obstacle_removal"
+      ],
+      "specialHandTags": [
+        "body_hopping",
+        "curse_spirit_manipulation",
+        "anti_gravity_system",
+        "ganesha_obstacle_removal",
+        "ganesh_obstacle_removal"
+      ]
     },
     {
       "characterId": "yuki_tsukumo_culling",
@@ -983,7 +1119,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "star_rage"
+      ],
+      "specialHandTags": [
+        "star_rage"
+      ]
     },
     {
       "characterId": "yuta_okkotsu_shinjuku",
@@ -1043,7 +1185,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "copy"
+      ],
+      "specialHandTags": [
+        "copy"
+      ]
     },
     {
       "characterId": "yuji_itadori_shinjuku",
@@ -1066,7 +1214,9 @@
       "domainProfile": "简易领域/反领域对策",
       "officialGrade": "不适用",
       "powerTier": "topTier",
-      "notes": "新宿后段的灵魂打击和黑闪连锁锚点；不是68年后EX状态。"
+      "notes": "新宿后段的灵魂打击和黑闪连锁锚点；不是68年后EX状态。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "megumi_fushiguro_culling",
@@ -1127,7 +1277,9 @@
         "source": "v2.3-domain-remake",
         "barrierType": "incomplete_barrier",
         "domainCompletion": "incomplete"
-      }
+      },
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "higuruma_hiromi_culling",
@@ -1190,7 +1342,9 @@
         },
         "source": "v2.3-domain-remake",
         "barrierType": "rule_barrier"
-      }
+      },
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "yorozu_heian_vessel",
@@ -1251,7 +1405,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "construction"
+      ],
+      "specialHandTags": [
+        "construction"
+      ]
     },
     {
       "characterId": "uro_takako_sendai",
@@ -1312,7 +1472,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "sky_manipulation"
+      ],
+      "specialHandTags": [
+        "sky_manipulation"
+      ]
     },
     {
       "characterId": "ryu_ishigori_sendai",
@@ -1373,7 +1539,13 @@
           "reason": "领域效果缺少可稳定脚本化资料时，降级为固定 +10 候选伤害。"
         },
         "source": "v2.3-domain-remake"
-      }
+      },
+      "????": [
+        "granite_blast"
+      ],
+      "specialHandTags": [
+        "granite_blast"
+      ]
     },
     {
       "characterId": "angel_hana_culling",
@@ -1395,7 +1567,9 @@
       "techniquePower": "SSS",
       "officialGrade": "古代术师受肉",
       "powerTier": "supportHax",
-      "notes": "术式消灭和雅各布天梯对受肉/结界/术式体系有高扰动；正面单挑基础不按顶级肉搏处理。"
+      "notes": "术式消灭和雅各布天梯对受肉/结界/术式体系有高扰动；正面单挑基础不按顶级肉搏处理。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "todo_aoi_shibuya",
@@ -1415,7 +1589,13 @@
       "techniquePower": "A",
       "officialGrade": "一级",
       "powerTier": "grade1Plus",
-      "notes": "单体面板是一级强者，配合战中不义游戏价值远高于裸数值。"
+      "notes": "单体面板是一级强者，配合战中不义游戏价值远高于裸数值。",
+      "????": [
+        "boogie_woogie"
+      ],
+      "specialHandTags": [
+        "boogie_woogie"
+      ]
     },
     {
       "characterId": "nanami_kento_shibuya",
@@ -1435,7 +1615,13 @@
       "techniquePower": "A",
       "officialGrade": "一级",
       "powerTier": "grade1",
-      "notes": "标准一级术师锚点；稳定、效率高，但不按特级候选处理。"
+      "notes": "标准一级术师锚点；稳定、效率高，但不按特级候选处理。",
+      "????": [
+        "ratio_technique"
+      ],
+      "specialHandTags": [
+        "ratio_technique"
+      ]
     },
     {
       "characterId": "kusakabe_atsuya_shinjuku",
@@ -1456,7 +1642,9 @@
       "techniquePower": "B",
       "officialGrade": "一级",
       "powerTier": "grade1Plus",
-      "notes": "无生得术式但新阴流和简易领域极稳；适合作为非术式型一级上位锚点。"
+      "notes": "无生得术式但新阴流和简易领域极稳；适合作为非术式型一级上位锚点。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "mei_mei_shibuya",
@@ -1476,7 +1664,13 @@
       "techniquePower": "A",
       "officialGrade": "一级",
       "powerTier": "grade1",
-      "notes": "黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。"
+      "notes": "黑鸟操术通过神风兑现高爆发；本卡不额外叠加忧忧传送支援。",
+      "????": [
+        "black_bird_manipulation"
+      ],
+      "specialHandTags": [
+        "black_bird_manipulation"
+      ]
     },
     {
       "characterId": "nobara_kugisaki_main_start",
@@ -1497,7 +1691,13 @@
       "techniquePower": "A",
       "officialGrade": "三级",
       "powerTier": "grade2Plus",
-      "notes": "正面基础较低，但共鸣对特定条件目标有高价值。"
+      "notes": "正面基础较低，但共鸣对特定条件目标有高价值。",
+      "????": [
+        "straw_doll_technique"
+      ],
+      "specialHandTags": [
+        "straw_doll_technique"
+      ]
     },
     {
       "characterId": "inumaki_toge_volume0",
@@ -1517,7 +1717,13 @@
       "techniquePower": "A",
       "officialGrade": "二级",
       "powerTier": "grade2Plus",
-      "notes": "咒言是强控制术式，但副作用和身体基础限制持续战。"
+      "notes": "咒言是强控制术式，但副作用和身体基础限制持续战。",
+      "????": [
+        "cursed_speech"
+      ],
+      "specialHandTags": [
+        "cursed_speech"
+      ]
     },
     {
       "characterId": "panda_volume0",
@@ -1538,7 +1744,9 @@
       "techniquePower": "D",
       "officialGrade": "二级",
       "powerTier": "grade2Plus",
-      "notes": "咒骸肉体强于普通学生，术式侧不作为主要胜路。"
+      "notes": "咒骸肉体强于普通学生，术式侧不作为主要胜路。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "miguel_volume0",
@@ -1558,7 +1766,9 @@
       "techniquePower": "B",
       "officialGrade": "诅咒师",
       "powerTier": "specialGrade",
-      "notes": "按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。"
+      "notes": "按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。",
+      "????": [],
+      "specialHandTags": []
     },
     {
       "characterId": "reggie_star_culling",
@@ -1580,13 +1790,10 @@
       "techniquePower": "A",
       "officialGrade": "觉醒泳者",
       "powerTier": "grade1Trickster",
-      "specialHandTags": [
-        "recontract_icon",
-        "receipt_materialization",
-        "object_shikigami"
-      ],
+      "specialHandTags": [],
       "domainProfile": "无",
-      "notes": "再契象以收据/契约再具象化实物或服务；实物可短暂控制，按低到中血量道具式神/战场单位处理。一户建属于高伤害慢速压杀牌。"
+      "notes": "再契象以收据/契约再具象化实物或服务；实物可短暂控制，按低到中血量道具式神/战场单位处理。一户建属于高伤害慢速压杀牌。",
+      "????": []
     }
   ]
 }

@@ -15,12 +15,9 @@
   },
   "officialGrade": "觉醒泳者",
   "powerTier": "grade1Trickster",
-  "specialHandTags": [
-    "recontract_icon",
-    "receipt_materialization",
-    "object_shikigami"
-  ],
+  "specialHandTags": [],
   "domainProfile": "无",
   "notes": "雷吉强在契约库存、物资调度和战场判断。再契象具现出的实物可短暂控制，本项目按道具式神/临时单位处理；本体不按高肉体或高爆发术师处理。",
-  "status": "CONFIRMED"
+  "status": "CONFIRMED",
+  "????": []
 }

@@ -16,9 +16,14 @@
   "officialGrade": "觉醒泳者",
   "powerTier": "grade4_trickster",
   "specialHandTags": [
-    "low_output_trick"
+    "remi_scorpion_hair",
+    "remi_hair"
   ],
   "domainProfile": "无",
   "notes": "按低强度泳者处理。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "remi_scorpion_hair",
+    "remi_hair"
+  ]
 }

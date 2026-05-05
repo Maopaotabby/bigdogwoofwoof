@@ -12,7 +12,7 @@
     "mahito_soul_transfiguration"
   ],
   "specialHandTags": [
-    "mahito_soul_transfiguration"
+    "straw_doll_technique"
   ],
   "characterId": "nobara_kugisaki_main_start",
   "displayName": "钉崎野蔷薇（剧情开始）",
@@ -53,5 +53,8 @@
   ],
   "selectedToolTags": [
     "无"
+  ],
+  "????": [
+    "straw_doll_technique"
   ]
 }

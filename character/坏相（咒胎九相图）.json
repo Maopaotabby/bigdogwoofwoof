@@ -16,10 +16,12 @@
   "officialGrade": "特级咒物受肉体",
   "powerTier": "grade2_curse_womb",
   "specialHandTags": [
-    "rot_technique",
-    "curse_womb"
+    "rot_technique"
   ],
   "domainProfile": "无",
   "notes": "与血涂协同由卡牌标签模拟，不拆分协同状态。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "rot_technique"
+  ]
 }

@@ -16,10 +16,12 @@
   "officialGrade": "诅咒师",
   "powerTier": "grade3_utility",
   "specialHandTags": [
-    "image_manipulation",
-    "escape"
+    "photo_manipulation"
   ],
   "domainProfile": "无",
   "notes": "与美美子协同由卡牌/机制模拟，不拆分双人状态。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "photo_manipulation"
+  ]
 }

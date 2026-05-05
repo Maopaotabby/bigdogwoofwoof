@@ -16,10 +16,14 @@
   "officialGrade": "禅院家术师",
   "powerTier": "support_grade2",
   "specialHandTags": [
-    "vision_restraint",
-    "team_support"
+    "ranta_eye_bind",
+    "zenin_ranta"
   ],
   "domainProfile": "无",
   "notes": "控制价值高于单体输出。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "ranta_eye_bind",
+    "zenin_ranta"
+  ]
 }

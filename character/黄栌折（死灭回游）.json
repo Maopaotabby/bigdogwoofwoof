@@ -16,10 +16,14 @@
   "officialGrade": "觉醒泳者",
   "powerTier": "grade2_brawler",
   "specialHandTags": [
-    "self_destructive_burst",
-    "rct_user"
+    "explosive_body",
+    "hazel"
   ],
   "domainProfile": "无",
   "notes": "反转恢复作为机制标签，不拆分为有无恢复形态。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": [
+    "explosive_body",
+    "hazel"
+  ]
 }

@@ -15,11 +15,9 @@
   },
   "officialGrade": "高专医师",
   "powerTier": "support_rct",
-  "specialHandTags": [
-    "rct_output",
-    "healer"
-  ],
+  "specialHandTags": [],
   "domainProfile": "无",
   "notes": "非普通生得术式卡；按医疗/反转术式系统功能锚定。",
-  "status": "CANDIDATE"
+  "status": "CANDIDATE",
+  "????": []
 }
