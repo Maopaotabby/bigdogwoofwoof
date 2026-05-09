@@ -41,7 +41,7 @@ ubuntu
 SSH private key relative to the current V2.4 project directory:
 
 ```text
-..\server-key.pem
+..\ZSHZJJXXiivv.pem
 ```
 
 Current public key bound to `ubuntu`:
@@ -88,7 +88,7 @@ logs.
 Run from the current V2.4 project directory:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1 -KeyFile "..\server-key.pem"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1 -KeyFile "..\ZSHZJJXXiivv.pem"
 ```
 
 Default target:
@@ -102,7 +102,7 @@ RemoteDir = /opt/bigdogwoofwoof
 To skip nginx reconfiguration and only update code plus the Node service:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1 -KeyFile "..\server-key.pem" -SkipNginx
+powershell -NoProfile -ExecutionPolicy Bypass -File .\update-tencent-server.ps1 -KeyFile "..\ZSHZJJXXiivv.pem" -SkipNginx
 ```
 
 The deploy script now performs these steps:

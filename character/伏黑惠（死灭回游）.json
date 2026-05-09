@@ -11,7 +11,9 @@
   "特殊手札": [
     "ten_shadows"
   ],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "ten_shadows"
+  ],
   "characterId": "megumi_fushiguro_culling",
   "displayName": "伏黑惠（死灭回游）",
   "stage": "cullingGame",

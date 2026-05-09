@@ -141,6 +141,9 @@ function syncDebugMode() {
 }
 
 function syncPlayMode() {
+  if (globalThis.JJKLoginCard && !globalThis.JJKLoginCard.hasLogin?.() && state.aiFreeEnabled) {
+    state.aiFreeEnabled = false;
+  }
   document.body.classList.toggle("activation-custom-run", isActivationCustomRun());
   document.body.classList.toggle("ai-free-enabled", state.aiFreeEnabled);
   els.playModeInputs.forEach((input) => {
@@ -160,13 +163,14 @@ function isDrawModeInteractionLocked() {
 
 function syncDrawModeControlLock() {
   const locked = isDrawModeInteractionLocked();
+  const aiLoginLocked = Boolean(globalThis.JJKLoginCard && !globalThis.JJKLoginCard.hasLogin?.());
   els.playModeInputs.forEach((input) => {
     input.disabled = locked;
     input.setAttribute("aria-disabled", locked ? "true" : "false");
   });
   if (els.aiFreeToggle) {
-    els.aiFreeToggle.disabled = locked;
-    els.aiFreeToggle.setAttribute("aria-disabled", locked ? "true" : "false");
+    els.aiFreeToggle.disabled = locked || aiLoginLocked;
+    els.aiFreeToggle.setAttribute("aria-disabled", locked || aiLoginLocked ? "true" : "false");
   }
 }
 
@@ -314,6 +318,86 @@ function isResultSpeechEnabled() {
 }
 
 function initializeDuelCustomPanel() {
+  const encyclopediaToggle = document.querySelector("#customHandEncyclopediaToggle");
+  const encyclopedia = document.querySelector("#customHandEncyclopedia");
+  const encyclopediaFloatBtn = document.querySelector("#customHandEncyclopediaFloatBtn");
+  if (encyclopediaToggle && encyclopedia && encyclopediaToggle.dataset.bound !== "yes") {
+    encyclopediaToggle.dataset.bound = "yes";
+    encyclopediaToggle.addEventListener("click", () => {
+      encyclopedia.classList.remove("is-floating");
+      encyclopedia.style.left = "";
+      encyclopedia.style.top = "";
+      encyclopedia.style.right = "";
+      encyclopedia.style.width = "";
+      encyclopedia.style.height = "";
+      encyclopedia.open = !encyclopedia.open;
+      if (encyclopedia.open) {
+        encyclopediaToggle.textContent = "收起手札百科";
+        encyclopedia.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } else {
+        encyclopediaToggle.textContent = "打开手札百科";
+      }
+    });
+  }
+  if (encyclopedia && encyclopediaFloatBtn && encyclopediaFloatBtn.dataset.bound !== "yes") {
+    encyclopediaFloatBtn.dataset.bound = "yes";
+    encyclopediaFloatBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const floating = !encyclopedia.classList.contains("is-floating");
+      encyclopedia.open = true;
+      encyclopedia.classList.toggle("is-floating", floating);
+      encyclopediaFloatBtn.textContent = floating ? "回到档案阅读" : "悬浮窗阅读";
+      if (floating) {
+        const width = Math.min(640, Math.max(360, window.innerWidth - 36));
+        const height = Math.min(520, Math.max(300, window.innerHeight - 176));
+        encyclopedia.style.width = `${width}px`;
+        encyclopedia.style.height = `${height}px`;
+        encyclopedia.style.left = "";
+        encyclopedia.style.right = "24px";
+        encyclopedia.style.top = `${Math.max(132, Math.min(180, Math.round(window.innerHeight * 0.22)))}px`;
+      } else {
+        encyclopedia.style.left = "";
+        encyclopedia.style.top = "";
+        encyclopedia.style.right = "";
+        encyclopedia.style.width = "";
+        encyclopedia.style.height = "";
+        encyclopedia.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    });
+    const dragHandle = encyclopedia.querySelector("[data-archive-drag-handle]");
+    let dragState = null;
+    dragHandle?.addEventListener("pointerdown", (event) => {
+      if (!encyclopedia.classList.contains("is-floating")) return;
+      if (event.target.closest("button, a, input, textarea, select, summary")) return;
+      const rect = encyclopedia.getBoundingClientRect();
+      dragState = {
+        pointerId: event.pointerId,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top
+      };
+      encyclopedia.style.right = "auto";
+      encyclopedia.style.left = `${rect.left}px`;
+      encyclopedia.style.top = `${rect.top}px`;
+      dragHandle.setPointerCapture?.(event.pointerId);
+    });
+    dragHandle?.addEventListener("pointermove", (event) => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      const rect = encyclopedia.getBoundingClientRect();
+      const maxLeft = Math.max(0, window.innerWidth - rect.width - 8);
+      const maxTop = Math.max(72, window.innerHeight - rect.height - 8);
+      const left = Math.min(maxLeft, Math.max(8, event.clientX - dragState.offsetX));
+      const top = Math.min(maxTop, Math.max(72, event.clientY - dragState.offsetY));
+      encyclopedia.style.left = `${Math.round(left)}px`;
+      encyclopedia.style.top = `${Math.round(top)}px`;
+    });
+    dragHandle?.addEventListener("pointerup", (event) => {
+      if (dragState?.pointerId === event.pointerId) dragState = null;
+    });
+    dragHandle?.addEventListener("pointercancel", () => {
+      dragState = null;
+    });
+  }
   if (els.duelAiAssistToggle) {
     els.duelAiAssistToggle.checked = window.localStorage.getItem(DUEL_AI_ASSIST_STORAGE_KEY) === "yes";
   }
@@ -451,7 +535,7 @@ function applyDuelLibrarySelectionToFields() {
   const count = selection.techniques.length + selection.domains.length + selection.advanced.length + selection.resources.length;
   if (els.duelLibraryStatus) {
     els.duelLibraryStatus.textContent = count
-      ? `已应用 ${count} 个定义库选项；加入角色池时会进入同一套战力计算。`
+      ? `已应用 ${count} 个定义库选项；加入角色池时会同步战力计算与特殊手札标签。`
       : "尚未选择定义库选项。";
   }
 }
@@ -523,6 +607,35 @@ function updateDuelAiStatus(message, isError = false) {
   els.duelAiStatus.classList.toggle("error-text", Boolean(isError));
 }
 
+function setDuelAiProgressValue(value) {
+  if (!els.duelAiProgressBar) return;
+  els.duelAiProgressBar.style.width = `${Math.max(0, Math.min(98, Number(value) || 0))}%`;
+}
+
+function startDuelAiProgress() {
+  if (state.duelAiProgressTimer) globalThis.clearInterval(state.duelAiProgressTimer);
+  state.duelAiProgressStartedAt = Date.now();
+  if (els.duelAiProgress) els.duelAiProgress.hidden = false;
+  setDuelAiProgressValue(4);
+  state.duelAiProgressTimer = globalThis.setInterval(() => {
+    const elapsed = Date.now() - Number(state.duelAiProgressStartedAt || Date.now());
+    const timeout = Math.max(60000, Number(DUEL_AI_CHARACTER_TIMEOUT_MS || 420000));
+    const t = Math.max(0, Math.min(1, elapsed / timeout));
+    const eased = 1 - Math.pow(1 - t, 2.65);
+    setDuelAiProgressValue(4 + eased * 90);
+  }, 700);
+}
+
+function stopDuelAiProgress() {
+  if (state.duelAiProgressTimer) globalThis.clearInterval(state.duelAiProgressTimer);
+  state.duelAiProgressTimer = null;
+  setDuelAiProgressValue(100);
+  globalThis.setTimeout(() => {
+    if (els.duelAiProgress) els.duelAiProgress.hidden = true;
+    setDuelAiProgressValue(0);
+  }, 360);
+}
+
 function renderDuelAiOutput(text) {
   if (!els.duelAiOutput) return;
   els.duelAiOutput.textContent = text || "";
@@ -530,10 +643,14 @@ function renderDuelAiOutput(text) {
 }
 
 function buildDuelAiFailureMessage(error) {
-  if (error?.name === "AbortError") return "AI辅助请求超过 150 秒，已自动中断。";
-  if (error?.status === 404) return "当前 AI 服务还没有部署新版斗蛐蛐辅助接口。请先部署新版 Worker，或继续手填。";
-  if (error?.status === 429) return error?.message || "AI 生成次数暂时达到限制，请稍后再试。";
-  return error?.message || "AI辅助服务暂时不可用。";
+  if (typeof formatAiProviderFailureMessage === "function") {
+    return formatAiProviderFailureMessage(error, { taskLabel: "AI自定义角色解析" });
+  }
+  if (error?.name === "AbortError") return "AI自定义角色解析超过 240 秒，已自动中断。请缩短描述或减少特殊手札数量后重试。";
+  if (error?.status === 401 || error?.status === 403) return "AI自定义角色解析失败：API Key 无效、权限不足，或没有访问当前模型的权限。";
+  if (error?.status === 404) return "AI自定义角色解析失败：接口路径或模型不存在。请检查 Base URL、Path 和模型名。";
+  if (error?.status === 429) return error?.message || "AI自定义角色解析失败：触发限流或额度不足，请稍后再试。";
+  return error?.message || "AI自定义角色解析失败：服务暂时不可用。";
 }
 
 //--转盘页面渲染与AI自由控件UI--//

@@ -127,7 +127,7 @@
       version: "0.1.0",
       status: "CANDIDATE",
       title: "术式手札 Beta 反馈",
-      summary: "当前为 CANDIDATE / Beta 反馈包，用于复现手札候选与 AP 多行动体验。"
+      summary: "当前为 CANDIDATE / Beta 反馈包，用于复现手札候选、CE 消耗与多手札执行体验。"
     };
   }
 

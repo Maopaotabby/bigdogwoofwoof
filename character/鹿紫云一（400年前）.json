@@ -8,10 +8,13 @@
     "悟性": 7,
     "构筑": 3.28
   },
-  "特殊手札": [],
+  "特殊手札": [
+    "hollow_wicker_basket"
+  ],
   "specialHandTags": [
     "mythical_beast_amber",
-    "kashimo_mythical_beast"
+    "kashimo_mythical_beast",
+    "hollow_wicker_basket"
   ],
   "characterId": "kashimo_hajime_ancient",
   "displayName": "鹿紫云一（400年前）",
@@ -30,13 +33,15 @@
   },
   "domainProfile": "无领域",
   "innateTraits": [
-    "电荷咒力"
+    "电荷咒力",
+    "弥虚葛笼",
+    "拥有弥须葛笼"
   ],
   "techniquePower": "SSS",
   "officialGrade": "特级古代术师",
   "visibleGrade": "specialGrade",
   "powerTier": "topTier",
-  "notes": "400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。",
+  "notes": "400年前最强且不会领域；拥有弥须葛笼，掌握弥须葛笼作为反领域手段；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。",
   "techniqueName": "无",
   "techniqueDescription": "无",
   "externalResource": "无",
@@ -54,6 +59,7 @@
   ],
   "????": [
     "mythical_beast_amber",
-    "kashimo_mythical_beast"
+    "kashimo_mythical_beast",
+    "hollow_wicker_basket"
   ]
 }

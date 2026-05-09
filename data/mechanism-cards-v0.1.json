@@ -117,14 +117,14 @@
       "id": "sixEyes",
       "displayName": "六眼",
       "match": ["六眼"],
-      "locks": [
-        { "field": "controlScore", "minRank": "SSS", "minScore": 8 },
-        { "field": "efficiencyScore", "minRank": "SSS", "minScore": 8 }
+      "rankAdjustments": [
+        { "stat": "control", "delta": 1, "label": "六眼：咒力操纵提升一阶" }
       ],
+      "locks": [],
       "instantCombatImpact": {
         "axisBonus": { "jujutsu": 0.55, "insight": 0.18 },
         "scoreBonus": 0.28,
-        "tags": ["precision", "efficiencyLock", "domainFriendly"]
+        "tags": ["precision", "sixEyesControlBoost", "domainFriendly"]
       }
     },
     {

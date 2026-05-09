@@ -1,4 +1,4 @@
-//--转盘运行时核心--//
+﻿//--转盘运行时核心--//
 ﻿// This file is now a legacy compatibility bridge.
 // Primary module ownership lives in modules/*.js.
 // Do not add new feature logic here unless documented in APP_JS_REMAINING_OWNERSHIP.md.
@@ -65,11 +65,14 @@ const state = {
     playerSide: null,
     localLocked: false
   },
+  duelCpuDifficulty: "normal",
   duelSpinToken: 0,
   customDuelCards: [],
   customDuelSeq: 0,
   customDuelEditId: "",
+  customDuelHandEditIndex: -1,
   pendingCustomDuelHandCards: [],
+  pendingCustomDuelSpecialHandTags: [],
   pendingCustomDuelDomainScript: null,
   customDuelHandSeq: 0,
   duelSpecialTerms: [],
@@ -79,6 +82,7 @@ const state = {
   lastMobileScrollY: 0,
   usageStats: null,
   wheelSettings: null,
+  duelVisualSettings: null,
   flowReviewZoom: 0.08,
   flowGraphViewportAnchor: null,
   flags: {
@@ -151,6 +155,9 @@ const els = {
   aiByokKeyInput: document.querySelector("#aiByokKeyInput"),
   aiByokRevealToggle: document.querySelector("#aiByokRevealToggle"),
   aiByokPersistLocal: document.querySelector("#aiByokPersistLocal"),
+  aiAdminPasswordInput: document.querySelector("#aiAdminPasswordInput"),
+  aiAdminLoginBtn: document.querySelector("#aiAdminLoginBtn"),
+  aiAdminStatus: document.querySelector("#aiAdminStatus"),
   aiModelInput: document.querySelector("#aiModelInput"),
   aiOutputTokenInput: document.querySelector("#aiOutputTokenInput"),
   aiProviderWarning: document.querySelector("#aiProviderWarning"),
@@ -166,6 +173,7 @@ const els = {
   aiNarrativeOutput: document.querySelector("#aiNarrativeOutput"),
   duelLeftSelect: document.querySelector("#duelLeftSelect"),
   duelRightSelect: document.querySelector("#duelRightSelect"),
+  duelCpuDifficultySelect: document.querySelector("#duelCpuDifficultySelect"),
   duelSwapBtn: document.querySelector("#duelSwapBtn"),
   duelStartBtn: document.querySelector("#duelStartBtn"),
   duelCustomName: document.querySelector("#duelCustomName"),
@@ -178,7 +186,12 @@ const els = {
   duelAiDescription: document.querySelector("#duelAiDescription"),
   duelAiAnalyzeBtn: document.querySelector("#duelAiAnalyzeBtn"),
   duelAiStatus: document.querySelector("#duelAiStatus"),
+  duelAiProgress: document.querySelector("#duelAiProgress"),
+  duelAiProgressBar: document.querySelector("#duelAiProgressBar"),
   duelAiOutput: document.querySelector("#duelAiOutput"),
+  duelManualDataInput: document.querySelector("#duelManualDataInput"),
+  duelManualDataApplyBtn: document.querySelector("#duelManualDataApplyBtn"),
+  duelManualDataStatus: document.querySelector("#duelManualDataStatus"),
   duelCustomModeInputs: document.querySelectorAll('input[name="duelCustomMode"]'),
   duelCustomModePanels: document.querySelectorAll("[data-duel-custom-mode-panel]"),
   duelCustomTechniqueTags: document.querySelector("#duelCustomTechniqueTags"),
@@ -233,6 +246,13 @@ const els = {
   duelSpecialTermClearBtn: document.querySelector("#duelSpecialTermClearBtn"),
   duelSpecialTermList: document.querySelector("#duelSpecialTermList"),
   duelSpecialTermCount: document.querySelector("#duelSpecialTermCount"),
+  duelUiThemeSelect: document.querySelector("#duelUiThemeSelect"),
+  duelCardSkinSelect: document.querySelector("#duelCardSkinSelect"),
+  duelCompactCardToggle: document.querySelector("#duelCompactCardToggle"),
+  duelSkinImportFile: document.querySelector("#duelSkinImportFile"),
+  duelSkinDownloadSpecBtn: document.querySelector("#duelSkinDownloadSpecBtn"),
+  duelVisualResetBtn: document.querySelector("#duelVisualResetBtn"),
+  duelVisualSettingsStatus: document.querySelector("#duelVisualSettingsStatus"),
   duelDebugLeftScore: document.querySelector("#duelDebugLeftScore"),
   duelDebugLeftUnit: document.querySelector("#duelDebugLeftUnit"),
   duelDebugLeftRate: document.querySelector("#duelDebugLeftRate"),
@@ -244,12 +264,14 @@ const els = {
   duelSummary: document.querySelector("#duelSummary"),
   duelBattle: document.querySelector("#duelBattle"),
   duelCards: document.querySelector("#duelCards"),
-  duelModeStatus: document.querySelector("#duelModeStatus")
+  duelModeStatus: document.querySelector("#duelModeStatus"),
+  v224UpdateModal: document.querySelector("#v224UpdateModal"),
+  v224UpdateModalClose: document.querySelector("#v224UpdateModalClose")
 };
 
 const DEBUG_ACCESS_CODE = "258079";
 const DEBUG_SUMMON_SEQUENCE = "258079";
-const APP_BUILD_VERSION = "20260505-v2.21-special-hand-resource-fix2";
+const APP_BUILD_VERSION = "V3.1.5-tutorial-title-20260509";
 const MOBILE_TOPBAR_QUERY = "(max-width: 640px)";
 const MOBILE_TOPBAR_SCROLL_DELTA = 8;
 const MOBILE_TOPBAR_MIN_HIDE_AFTER = 72;
@@ -266,12 +288,491 @@ const AI_OUTPUT_TOKENS_STORAGE_KEY = "jjk-ai-output-tokens-v1";
 const AI_BYOK_SESSION_KEY = "jjk-ai-byok-key-session-v1";
 const AI_BYOK_LOCAL_KEY = "jjk-ai-byok-key-local-v1";
 const AI_BYOK_PERSIST_LOCAL_STORAGE_KEY = "jjk-ai-byok-persist-local-v1";
+const AI_DAILY_USAGE_STORAGE_KEY = "jjk-ai-daily-usage-v1";
+const AI_DAILY_LIMIT = 2000;
+const AI_DAILY_LIMIT_MESSAGE = "今日额度达到上限，请等待明日游玩，用东八区为换日基准。";
 const DUEL_AI_ASSIST_STORAGE_KEY = "jjk-duel-ai-assist-enabled-v1";
 const WHEEL_SETTINGS_STORAGE_KEY = "jjk-wheel-player-settings-v1";
+const DUEL_VISUAL_SETTINGS_STORAGE_KEY = "jjk-duel-visual-settings-v2.24";
+const DUEL_CPU_DIFFICULTY_STORAGE_KEY = "jjk-duel-cpu-difficulty-v1";
+const V224_UPDATE_MODAL_SESSION_KEY = "jjk-v224-update-modal-seen";
+let updateNoticeReady = false;
+let updateNoticeEventsBound = false;
+const DUEL_VISUAL_DEFAULT_SETTINGS = Object.freeze({
+  theme: "original",
+  cardSkin: "v224",
+  compactCards: false,
+  customSkin: null
+});
+const DUEL_SKIN_CATEGORIES = Object.freeze(["template", "special", "domain", "summon", "mahoraga", "trial"]);
+const DUEL_SKIN_COLOR_FIELDS = Object.freeze(["background", "border", "accent", "text", "muted", "glow"]);
 const LIFE_WHEEL_RUN_DRAFT_STORAGE_KEY = "jjk-life-wheel-run-draft-v1";
 const LIFE_WHEEL_RUN_DRAFT_SCHEMA = "jjk-life-wheel-run-draft";
+
+function normalizeDuelCpuDifficulty(value) {
+  const key = String(value || "").trim().toLowerCase();
+  return ["easy", "normal", "hard"].includes(key) ? key : "normal";
+}
+
+function readDuelCpuDifficulty() {
+  try {
+    return normalizeDuelCpuDifficulty(window.localStorage.getItem(DUEL_CPU_DIFFICULTY_STORAGE_KEY));
+  } catch {
+    return "normal";
+  }
+}
+
+function saveDuelCpuDifficulty(value = state.duelCpuDifficulty) {
+  const next = normalizeDuelCpuDifficulty(value);
+  state.duelCpuDifficulty = next;
+  try {
+    window.localStorage.setItem(DUEL_CPU_DIFFICULTY_STORAGE_KEY, next);
+  } catch {
+    // Local storage may be unavailable; the current session value still works.
+  }
+  return next;
+}
+
+function syncDuelCpuDifficultyControls() {
+  state.duelCpuDifficulty = normalizeDuelCpuDifficulty(state.duelCpuDifficulty);
+  if (els.duelCpuDifficultySelect) els.duelCpuDifficultySelect.value = state.duelCpuDifficulty;
+}
+
+function updateDuelCpuDifficultyFromControls() {
+  saveDuelCpuDifficulty(els.duelCpuDifficultySelect?.value || "normal");
+  if (state.duelBattle && state.duelBattle.mode === "solo" && !state.duelBattle.resolved) {
+    state.duelBattle.cpuDifficulty = state.duelCpuDifficulty;
+    state.duelBattle.cpuDifficultyLabel = els.duelCpuDifficultySelect?.selectedOptions?.[0]?.textContent || "";
+  }
+  renderDuelMode();
+}
+
+function cloneDuelVisualDefaultSettings() {
+  return {
+    theme: DUEL_VISUAL_DEFAULT_SETTINGS.theme,
+    cardSkin: DUEL_VISUAL_DEFAULT_SETTINGS.cardSkin,
+    compactCards: DUEL_VISUAL_DEFAULT_SETTINGS.compactCards,
+    customSkin: null
+  };
+}
+
+function sanitizeDuelUiTheme(value) {
+  return String(value || "") === "dark" ? "dark" : "original";
+}
+
+function sanitizeDuelCardSkin(value) {
+  const key = String(value || "");
+  return ["classic", "v224", "custom", "champion-kashimo"].includes(key) ? key : "v224";
+}
+
+function sanitizeDuelCssValue(value) {
+  const text = String(value || "").trim().slice(0, 180);
+  if (!text) return "";
+  if (/[;{}]/.test(text) || /url\s*\(/i.test(text)) return "";
+  if (!/^[#(),.%\w\s-]+$/i.test(text)) return "";
+  return text;
+}
+
+function normalizeDuelSkinCategoryConfig(config) {
+  if (!config || typeof config !== "object") return null;
+  const normalized = {};
+  DUEL_SKIN_COLOR_FIELDS.forEach((field) => {
+    const value = sanitizeDuelCssValue(config[field]);
+    if (value) normalized[field] = value;
+  });
+  return Object.keys(normalized).length ? normalized : null;
+}
+
+function normalizeDuelSkinConfig(source) {
+  const payload = source?.skin && typeof source.skin === "object" ? source.skin : source;
+  if (!payload || typeof payload !== "object") {
+    throw new Error("皮肤文件必须是 JSON 对象。");
+  }
+  const schema = String(payload.schema || "").trim();
+  if (schema && schema !== "jjk-duel-card-skin") {
+    throw new Error("schema 必须为 jjk-duel-card-skin。");
+  }
+  const sourceCards = payload.cards || payload.cardSkins || payload.categories || {};
+  const cards = {};
+  DUEL_SKIN_CATEGORIES.forEach((category) => {
+    const normalized = normalizeDuelSkinCategoryConfig(sourceCards[category]);
+    if (normalized) cards[category] = normalized;
+  });
+  if (!Object.keys(cards).length) {
+    throw new Error("皮肤文件至少要在 cards 内提供一个分类配置。");
+  }
+  return {
+    schema: "jjk-duel-card-skin",
+    version: String(payload.version || "1.0.0").slice(0, 24),
+    name: String(payload.name || "自定义卡牌皮肤").trim().slice(0, 40) || "自定义卡牌皮肤",
+    author: String(payload.author || "").trim().slice(0, 40),
+    cards
+  };
+}
+
+function normalizeDuelVisualSettings(settings) {
+  const next = cloneDuelVisualDefaultSettings();
+  if (settings && typeof settings === "object") {
+    next.theme = sanitizeDuelUiTheme(settings.theme);
+    next.cardSkin = sanitizeDuelCardSkin(settings.cardSkin);
+    next.compactCards = Boolean(settings.compactCards);
+    if (settings.customSkin) {
+      try {
+        next.customSkin = normalizeDuelSkinConfig(settings.customSkin);
+      } catch {
+        next.customSkin = null;
+      }
+    }
+  }
+  if (next.cardSkin === "custom" && !next.customSkin) {
+    next.cardSkin = "v224";
+  }
+  return next;
+}
+
+function readDuelVisualSettings() {
+  try {
+    const raw = window.localStorage.getItem(DUEL_VISUAL_SETTINGS_STORAGE_KEY);
+    return raw ? normalizeDuelVisualSettings(JSON.parse(raw)) : cloneDuelVisualDefaultSettings();
+  } catch {
+    return cloneDuelVisualDefaultSettings();
+  }
+}
+
+function saveDuelVisualSettings() {
+  try {
+    window.localStorage.setItem(
+      DUEL_VISUAL_SETTINGS_STORAGE_KEY,
+      JSON.stringify(normalizeDuelVisualSettings(state.duelVisualSettings))
+    );
+  } catch {
+    // Local storage may be unavailable in restricted browser modes.
+  }
+}
+
+function setDuelVisualSettingsStatus(message, type = "info") {
+  if (!els.duelVisualSettingsStatus) return;
+  els.duelVisualSettingsStatus.textContent = message;
+  els.duelVisualSettingsStatus.dataset.status = type;
+}
+
+function syncDuelVisualSettingsControls() {
+  const settings = normalizeDuelVisualSettings(state.duelVisualSettings);
+  state.duelVisualSettings = settings;
+  if (els.duelUiThemeSelect) els.duelUiThemeSelect.value = settings.theme;
+  if (els.duelCardSkinSelect) els.duelCardSkinSelect.value = settings.cardSkin;
+  if (els.duelCompactCardToggle) els.duelCompactCardToggle.checked = Boolean(settings.compactCards);
+}
+
+function clearDuelCustomSkinCssVariables() {
+  if (!document.body) return;
+  const suffixMap = {
+    background: "bg",
+    border: "border",
+    accent: "accent",
+    text: "text",
+    muted: "muted",
+    glow: "glow"
+  };
+  DUEL_SKIN_CATEGORIES.forEach((category) => {
+    Object.values(suffixMap).forEach((suffix) => {
+      document.body.style.removeProperty(`--duel-skin-${category}-${suffix}`);
+    });
+  });
+}
+
+function applyDuelCustomSkinCssVariables(skin) {
+  clearDuelCustomSkinCssVariables();
+  if (!document.body || !skin?.cards) return;
+  const suffixMap = {
+    background: "bg",
+    border: "border",
+    accent: "accent",
+    text: "text",
+    muted: "muted",
+    glow: "glow"
+  };
+  DUEL_SKIN_CATEGORIES.forEach((category) => {
+    const config = skin.cards[category] || {};
+    Object.entries(suffixMap).forEach(([field, suffix]) => {
+      const value = sanitizeDuelCssValue(config[field]);
+      if (value) document.body.style.setProperty(`--duel-skin-${category}-${suffix}`, value);
+    });
+  });
+}
+
+function getDuelVisualSkinLabel(settings) {
+  if (settings.cardSkin === "classic") return "经典卡面";
+  if (settings.cardSkin === "custom") return settings.customSkin?.name || "自定义卡面";
+  if (settings.cardSkin === "champion-kashimo") return "第0届冠军卡面“鹿紫云依”";
+  return "V2.24 新版分类卡面";
+}
+
+function refreshDuelRenderedCardSkinClasses(settings) {
+  const mode = sanitizeDuelCardSkin(settings?.cardSkin);
+  const modeClass = `duel-card-skin-${mode}`;
+  document.querySelectorAll(".duel-hand-card").forEach((card) => {
+    card.classList.remove(
+      "duel-card-skin-classic",
+      "duel-card-skin-v224",
+      "duel-card-skin-custom",
+      "duel-card-skin-champion-kashimo"
+    );
+    card.classList.add(modeClass);
+    card.dataset.duelCardSkinMode = mode;
+  });
+}
+
+function dispatchDuelVisualSettingsChanged(settings) {
+  document.dispatchEvent(new CustomEvent("jjk-duel-visual-settings-changed", {
+    detail: { settings }
+  }));
+}
+
+function refreshDuelModeAfterVisualChange() {
+  window.requestAnimationFrame(() => {
+    if (typeof globalThis.renderDuelMode === "function") {
+      globalThis.renderDuelMode();
+    } else if (typeof renderDuelMode === "function") {
+      renderDuelMode();
+    }
+  });
+}
+
+function applyDuelVisualSettings() {
+  if (!document.body) return;
+  const settings = normalizeDuelVisualSettings(state.duelVisualSettings);
+  state.duelVisualSettings = settings;
+  document.body.dataset.duelUiTheme = settings.theme;
+  document.body.dataset.duelCardSkin = settings.cardSkin;
+  document.body.classList.toggle("duel-theme-dark", settings.theme === "dark");
+  document.body.classList.toggle("duel-card-skin-classic", settings.cardSkin === "classic");
+  document.body.classList.toggle("duel-card-skin-v224", settings.cardSkin === "v224");
+  document.body.classList.toggle("duel-card-skin-custom", settings.cardSkin === "custom");
+  document.body.classList.toggle("duel-card-skin-champion-kashimo", settings.cardSkin === "champion-kashimo");
+  document.body.classList.toggle("duel-compact-cards", Boolean(settings.compactCards));
+  if (settings.cardSkin === "custom") {
+    applyDuelCustomSkinCssVariables(settings.customSkin);
+  } else {
+    clearDuelCustomSkinCssVariables();
+  }
+  refreshDuelRenderedCardSkinClasses(settings);
+  dispatchDuelVisualSettingsChanged(settings);
+  syncDuelVisualSettingsControls();
+  setDuelVisualSettingsStatus(`当前外观：${settings.theme === "dark" ? "黑夜模式" : "原色模式"} / ${getDuelVisualSkinLabel(settings)} / ${settings.compactCards ? "简洁卡面" : "完整卡面"}。`);
+}
+
+function updateDuelVisualSettingsFromControls() {
+  const next = normalizeDuelVisualSettings({
+    ...state.duelVisualSettings,
+    theme: els.duelUiThemeSelect?.value,
+    cardSkin: els.duelCardSkinSelect?.value,
+    compactCards: Boolean(els.duelCompactCardToggle?.checked)
+  });
+  if (els.duelCardSkinSelect?.value === "custom" && !next.customSkin) {
+    setDuelVisualSettingsStatus("尚未导入自定义皮肤，已保持 V2.24 新版分类卡面。", "warning");
+  }
+  state.duelVisualSettings = next;
+  saveDuelVisualSettings();
+  applyDuelVisualSettings();
+  refreshDuelModeAfterVisualChange();
+}
+
+function resetDuelVisualSettings() {
+  state.duelVisualSettings = cloneDuelVisualDefaultSettings();
+  saveDuelVisualSettings();
+  applyDuelVisualSettings();
+  if (els.duelSkinImportFile) els.duelSkinImportFile.value = "";
+  refreshDuelModeAfterVisualChange();
+}
+
+function downloadDuelTextFile(text, filename, type = "application/json;charset=utf-8") {
+  if (typeof downloadTextFile === "function") {
+    downloadTextFile(text, filename, type);
+    return;
+  }
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function buildDuelSkinSpecText() {
+  return JSON.stringify({
+    schema: "jjk-duel-card-skin",
+    version: "1.0.0",
+    name: "我的自制咒术对战卡面",
+    author: "可选作者名",
+    rules: [
+      "cards 下可配置 template、special、domain、summon、mahoraga、trial 六个分类。",
+      "每个分类支持 background、border、accent、text、muted、glow 字段。",
+      "颜色可以使用 hex、rgb/rgba、hsl/hsla 或 linear-gradient；不要使用 url()、分号或 CSS 块。",
+      "导入后只保存在当前浏览器 localStorage，不会上传到服务器。"
+    ],
+    cards: {
+      template: {
+        background: "linear-gradient(135deg, #fffdf7, #f4efe1)",
+        border: "#c7b78c",
+        accent: "#8a5a12",
+        text: "#1f252b",
+        muted: "#6b6255",
+        glow: "rgba(138, 90, 18, 0.18)"
+      },
+      special: {
+        background: "linear-gradient(135deg, #211514, #421916)",
+        border: "#d16a55",
+        accent: "#ffd166",
+        text: "#fff7e6",
+        muted: "#f4c7aa",
+        glow: "rgba(225, 91, 79, 0.28)"
+      },
+      domain: {
+        background: "linear-gradient(135deg, #171435, #3b236d)",
+        border: "#9f7aea",
+        accent: "#f6d365",
+        text: "#f8f4ff",
+        muted: "#d8c9ff",
+        glow: "rgba(159, 122, 234, 0.28)"
+      },
+      summon: {
+        background: "linear-gradient(135deg, #0f2f2c, #143c52)",
+        border: "#2dd4bf",
+        accent: "#99f6e4",
+        text: "#ecfeff",
+        muted: "#b7e8e2",
+        glow: "rgba(45, 212, 191, 0.24)"
+      },
+      mahoraga: {
+        background: "linear-gradient(135deg, #050505, #2f2610)",
+        border: "#f6d365",
+        accent: "#ffe8a3",
+        text: "#fff7cc",
+        muted: "#e9cf82",
+        glow: "rgba(246, 211, 101, 0.34)"
+      },
+      trial: {
+        background: "linear-gradient(135deg, #f9f5ee, #d8d0c2)",
+        border: "#6b1f1a",
+        accent: "#b42318",
+        text: "#241c18",
+        muted: "#6c5b4f",
+        glow: "rgba(180, 35, 24, 0.18)"
+      }
+    }
+  }, null, 2);
+}
+
+async function downloadDuelSkinSpec() {
+  let text = buildDuelSkinSpecText();
+  try {
+    const response = await fetch(`./assets/duel-dynamics/card-skin-format.json?v=${APP_BUILD_VERSION}`);
+    if (response.ok) text = await response.text();
+  } catch {
+    // The generated fallback above is enough for local file previews.
+  }
+  downloadDuelTextFile(text, "jjk-duel-card-skin-format.json", "application/json;charset=utf-8");
+}
+
+async function handleDuelSkinImportFile() {
+  const file = els.duelSkinImportFile?.files?.[0];
+  if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    const customSkin = normalizeDuelSkinConfig(parsed);
+    state.duelVisualSettings = normalizeDuelVisualSettings({
+      ...state.duelVisualSettings,
+      cardSkin: "custom",
+      customSkin
+    });
+    saveDuelVisualSettings();
+    applyDuelVisualSettings();
+    setDuelVisualSettingsStatus(`已导入自定义皮肤：${customSkin.name}。`);
+    refreshDuelModeAfterVisualChange();
+  } catch (error) {
+    setDuelVisualSettingsStatus(`皮肤导入失败：${error?.message || error}`, "error");
+  } finally {
+    if (els.duelSkinImportFile) els.duelSkinImportFile.value = "";
+  }
+}
+
+function closeV224UpdateModal() {
+  if (!els.v224UpdateModal) return;
+  els.v224UpdateModal.hidden = true;
+  document.body?.classList.remove("update-modal-open");
+  try {
+    window.sessionStorage.setItem(V224_UPDATE_MODAL_SESSION_KEY, APP_BUILD_VERSION);
+  } catch {
+    // Session storage can be disabled; closing still works for this page load.
+  }
+}
+
+function isV224UpdateModalSeen() {
+  try {
+    return window.sessionStorage.getItem(V224_UPDATE_MODAL_SESSION_KEY) === APP_BUILD_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+function dispatchUpdateNoticeReady() {
+  document.dispatchEvent(new CustomEvent("jjk-update-notice-ready", {
+    detail: {
+      buildVersion: APP_BUILD_VERSION,
+      ready: updateNoticeReady,
+      seen: isV224UpdateModalSeen(),
+      visible: Boolean(els.v224UpdateModal && !els.v224UpdateModal.hidden)
+    }
+  }));
+}
+
+function showV224UpdateModal() {
+  updateNoticeReady = true;
+  if (!els.v224UpdateModal) {
+    dispatchUpdateNoticeReady();
+    return false;
+  }
+  try {
+    if (window.sessionStorage.getItem(V224_UPDATE_MODAL_SESSION_KEY) === APP_BUILD_VERSION) {
+      dispatchUpdateNoticeReady();
+      return false;
+    }
+  } catch {
+    // Continue and show the notice.
+  }
+  els.v224UpdateModal.hidden = false;
+  document.body?.classList.add("update-modal-open");
+  dispatchUpdateNoticeReady();
+  return true;
+}
+
+function bindUpdateNoticeEvents() {
+  if (updateNoticeEventsBound) return;
+  updateNoticeEventsBound = true;
+  els.v224UpdateModalClose?.addEventListener("click", closeV224UpdateModal);
+  els.v224UpdateModal?.querySelector("[data-v224-update-close]")?.addEventListener("click", closeV224UpdateModal);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && els.v224UpdateModal && !els.v224UpdateModal.hidden) closeV224UpdateModal();
+  });
+}
+
+globalThis.JJKUpdateNotice = {
+  show: showV224UpdateModal,
+  close: closeV224UpdateModal,
+  isReady: () => updateNoticeReady,
+  isSeen: isV224UpdateModalSeen,
+  buildVersion: APP_BUILD_VERSION
+};
+
 const DIRECT_SUKUNA_COMBAT_WHEEL_IDS = new Set([39, 129, 62, 40, 108, 41, 109, 131]);
 const AI_REQUEST_TIMEOUT_MS = 150000;
+const AI_PROVIDER_PREFLIGHT_TIMEOUT_MS = 20000;
+const DUEL_AI_CHARACTER_TIMEOUT_MS = 420000;
+const DUEL_AI_DESCRIPTION_MAX_CHARS = 800;
 const AI_FREE_ANALYSIS_TIMEOUT_MS = 60000;
 const AI_FREE_ANALYSIS_DEBOUNCE_MS = 700;
 const DUEL_RANKS = ["E-", "E", "D", "C", "B", "A", "S", "SS", "SSS", "EX-", "EX"];
@@ -616,6 +1117,8 @@ function registerSiteModuleBoundaries() {
       editCustomDuelCharacter,
       removeCustomDuelCharacter,
       clearCustomDuelCharacters,
+      importLoginCardCharacters,
+      removeLoginCardCharactersFromPool,
       importCombatPowerCodeToDuel,
       applyCombatPowerImportToDuelForm
     });
@@ -881,11 +1384,51 @@ function normalizeCharacterRecord(raw) {
   const cleanRuntimeList = (value) => (Array.isArray(value) ? value : [])
     .map((item) => String(item || "").trim())
     .filter((item) => item && item !== "无");
-  const specialHandTags = Array.from(new Set([]
-    .concat(Array.isArray(raw?.specialHandTags) ? raw.specialHandTags : [])
-    .concat(Array.isArray(raw?.["特殊手札"]) ? raw["特殊手札"] : [])
+  const specialTagEvidenceText = [
+    raw?.name,
+    raw?.displayName,
+    raw?.technique,
+    raw?.techniqueName,
+    raw?.techniqueText,
+    raw?.techniqueDescription,
+    raw?.domainProfile,
+    raw?.externalResource,
+    raw?.notes
+  ].concat(
+    cleanRuntimeList(raw?.innateTraits),
+    cleanRuntimeList(raw?.advancedTechniques),
+    cleanRuntimeList(raw?.loadout),
+    cleanRuntimeList(raw?.traits),
+    cleanRuntimeList(raw?.selectedMechanisms),
+    cleanRuntimeList(raw?.selectedToolTags)
+  ).filter(Boolean).join(" ");
+  const normalizeTagList = (value) => Array.from(new Set([]
+    .concat(Array.isArray(value) ? value : [])
     .map((tag) => String(tag || "").trim())
     .filter((tag) => tag && tag !== "无")));
+  const sanitizeTechniqueSpecialHandTags = (tags) => {
+    const normalized = normalizeTagList(tags);
+    const hasConstruction = /构筑术式|真球|液态金属|昆虫铠甲|三重疾苦|禅院真依|真依|yorozu|construction\s+sorcery/i.test(specialTagEvidenceText) ||
+      /(^|[\s、，,;；|/／])万($|[\s、，,;；|/／])/i.test(specialTagEvidenceText);
+    const hasBlood = /赤血操术|穿血|血刃|赤鳞跃动|超新星|苅祓|百敛|胀相|脹相|加茂宪纪|加茂憲紀|blood\s+manipulation/i.test(specialTagEvidenceText);
+    const knownEvidence = {
+      ten_shadows: /十种影法术|十种影|十影|嵌合暗翳庭|魔虚罗|魔須羅|魔须罗|mahoraga|ten[_\s-]?shadows/i,
+      projection_sorcery: /投射术式|投射咒法|二十四帧|帧率|直哉|直毘人|projection\s+sorcery/i,
+      star_rage: /星之怒|虚拟质量|凰轮|黑洞|九十九由基|star\s+rage/i,
+      limitless: /无下限|无量空处|赫|苍|茈|六眼|limitless|infinity/i,
+      shrine: /御厨子|伏魔御厨子|斩击|捌|解|sukuna|shrine|cleave|dismantle/i
+    };
+    return normalized.filter((tag) => {
+      if (tag === "construction") return hasConstruction;
+      if (tag === "blood_manipulation") return hasBlood;
+      if (/^custom_duel_|^custom_hand_|^duel_ai_term_/.test(tag)) return true;
+      if (knownEvidence[tag]) return knownEvidence[tag].test(specialTagEvidenceText);
+      return true;
+    });
+  };
+  const specialHandTags = sanitizeTechniqueSpecialHandTags([]
+    .concat(Array.isArray(raw?.specialHandTags) ? raw.specialHandTags : [])
+    .concat(Array.isArray(raw?.["特殊手札"]) ? raw["特殊手札"] : []));
   return {
     ...raw,
     name,
@@ -897,6 +1440,24 @@ function normalizeCharacterRecord(raw) {
     selectedToolTags: cleanRuntimeList(raw?.selectedToolTags),
     specialHandTags,
     "特殊手札": specialHandTags
+  };
+}
+
+function mergeCharacterManifestEntryRecord(entry, raw) {
+  if (!entry || typeof entry === "string") return raw;
+  const manifestSpecialHandTags = []
+    .concat(Array.isArray(entry.specialHandTags) ? entry.specialHandTags : [])
+    .concat(Array.isArray(entry["特殊手札"]) ? entry["特殊手札"] : []);
+  if (!manifestSpecialHandTags.length) return raw;
+  return {
+    ...entry,
+    ...raw,
+    specialHandTags: []
+      .concat(manifestSpecialHandTags)
+      .concat(Array.isArray(raw?.specialHandTags) ? raw.specialHandTags : []),
+    "特殊手札": []
+      .concat(manifestSpecialHandTags)
+      .concat(Array.isArray(raw?.["特殊手札"]) ? raw["特殊手札"] : [])
   };
 }
 
@@ -913,7 +1474,7 @@ async function loadCharacterCards() {
       return fetch(`./character/${encodeURIComponent(file)}?v=${APP_BUILD_VERSION}`).then((r) => {
         if (!r.ok) throw new Error(`character file ${file} ${r.status}`);
         return r.json();
-      }).then(normalizeCharacterRecord);
+      }).then((raw) => normalizeCharacterRecord(mergeCharacterManifestEntryRecord(entry, raw)));
     }));
     return {
       schema: manifest.schema || "jjk-character-cards",
@@ -932,6 +1493,8 @@ async function loadCharacterCards() {
 
 //--启动与事件绑定--//
 async function init() {
+  bindUpdateNoticeEvents();
+  showV224UpdateModal();
   const [wheels, flow, strength, characterCards, mechanisms, calibrationBattles, optionEffects, duelResourceRules, duelActionRules, handRulesCandidate, duelSpecialCards, duelCharacterCardRules, duelCardTemplateRules, duelCardCopyRules, duelMechanicRules, duelEndRules, duelBetaCopy, duelDomainProfiles, duelTrialTargetRules, aiProviderRules, aiPromptTemplates, cardPrompt] = await Promise.all([
     fetch(`./data/wheels.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
     fetch(`./data/flow-v1-candidate.json?v=${APP_BUILD_VERSION}`).then((r) => r.json()),
@@ -985,11 +1548,17 @@ async function init() {
 
   state.usageStats = readUsageStats();
   state.wheelSettings = readWheelSettings();
+  state.duelVisualSettings = readDuelVisualSettings();
+  state.duelCpuDifficulty = readDuelCpuDifficulty();
+  applyDuelVisualSettings();
   incrementUsageStat("pageLoads", { global: true });
   bindEvents();
   syncWheelSettingsControls();
+  syncDuelVisualSettingsControls();
+  syncDuelCpuDifficultyControls();
   syncDebugMode();
   initializeDuelCustomPanel();
+  globalThis.JJKLoginCard?.syncRuntimeReady?.();
   renderFlowTree();
   renderFlowGraph();
   renderWheelLibrary();
@@ -1003,6 +1572,9 @@ async function init() {
   } else {
     renderAll();
   }
+  document.dispatchEvent(new CustomEvent("jjk-runtime-ready", {
+    detail: { buildVersion: APP_BUILD_VERSION, updateNoticeReady }
+  }));
 }
 
 function bindEvents() {
@@ -1093,6 +1665,7 @@ function bindEvents() {
   els.clearAiKeyBtn?.addEventListener("click", clearAiByokKey);
   els.clearAiAllSettingsBtn?.addEventListener("click", clearAllAiProviderSettings);
   els.testAiProviderBtn?.addEventListener("click", testAiProviderConnection);
+  els.aiAdminLoginBtn?.addEventListener("click", loginAiAdminMode);
   els.globalSettingsBtn?.addEventListener("click", () => toggleGlobalSettingsPanel());
   els.globalSettingsCloseBtn?.addEventListener("click", () => toggleGlobalSettingsPanel(false));
   els.generateAiNarrativeBtn?.addEventListener("click", generateAiNarrative);
@@ -1105,6 +1678,7 @@ function bindEvents() {
   });
   els.duelApplyLibraryBtn?.addEventListener("click", applyDuelLibrarySelectionToFields);
   els.duelAiAnalyzeBtn?.addEventListener("click", analyzeCustomDuelWithAi);
+  els.duelManualDataApplyBtn?.addEventListener("click", applyDuelManualDataInput);
   els.duelLeftSelect?.addEventListener("change", () => {
     state.duelBattle = null;
     renderDuelMode();
@@ -1113,8 +1687,16 @@ function bindEvents() {
     state.duelBattle = null;
     renderDuelMode();
   });
+  els.duelCpuDifficultySelect?.addEventListener("change", updateDuelCpuDifficultyFromControls);
   els.duelSwapBtn?.addEventListener("click", swapDuelCharacters);
   els.duelStartBtn?.addEventListener("click", () => startDuelBattle({ mode: "solo" }));
+  els.duelUiThemeSelect?.addEventListener("change", updateDuelVisualSettingsFromControls);
+  els.duelCardSkinSelect?.addEventListener("change", updateDuelVisualSettingsFromControls);
+  els.duelCompactCardToggle?.addEventListener("change", updateDuelVisualSettingsFromControls);
+  els.duelSkinImportFile?.addEventListener("change", handleDuelSkinImportFile);
+  els.duelSkinDownloadSpecBtn?.addEventListener("click", downloadDuelSkinSpec);
+  els.duelVisualResetBtn?.addEventListener("click", resetDuelVisualSettings);
+  bindUpdateNoticeEvents();
   document.addEventListener("jjk-battle-page-state", (event) => {
     const pageState = event.detail || {};
     state.duelModeState = {
@@ -1122,6 +1704,22 @@ function bindEvents() {
       ...pageState
     };
     syncDuelModeIsolation();
+  });
+  document.addEventListener("jjk-login-card-characters-imported", (event) => {
+    importLoginCardCharacters(event.detail?.characters || [], {
+      source: event.detail?.source || "login-card",
+      ownerId: event.detail?.ownerId || ""
+    });
+  });
+  document.addEventListener("jjk-login-card-characters-removed", (event) => {
+    removeLoginCardCharactersFromPool(event.detail?.characterIds || [], {
+      ownerId: event.detail?.ownerId || ""
+    });
+  });
+  document.addEventListener("jjk-login-card-auth-changed", () => {
+    updateAiProviderUi();
+    syncDuelAiAssistPanel();
+    syncPlayMode();
   });
   els.duelCustomAddBtn?.addEventListener("click", addCustomDuelCharacter);
   els.duelImportCodeBtn?.addEventListener("click", importCombatPowerCodeToDuel);
@@ -1160,3 +1758,13 @@ function bindEvents() {
     backtrackToRecord(Number(button.dataset.backtrackId));
   });
 }
+
+
+
+
+
+
+
+
+
+

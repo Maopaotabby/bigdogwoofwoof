@@ -13,6 +13,8 @@
     "editCustomDuelCharacter",
     "removeCustomDuelCharacter",
     "clearCustomDuelCharacters",
+    "importLoginCardCharacters",
+    "removeLoginCardCharactersFromPool",
     "importCombatPowerCodeToDuel",
     "applyCombatPowerImportToDuelForm"
   ]);

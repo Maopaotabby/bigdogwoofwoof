@@ -32,27 +32,501 @@
 
 body {
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 247, 0.84) 0, rgba(255, 253, 247, 0) 320px),
-    linear-gradient(90deg, rgba(47, 111, 104, 0.07), rgba(63, 88, 126, 0.045) 48%, rgba(180, 35, 24, 0.055)),
-    repeating-linear-gradient(0deg, rgba(31, 37, 43, 0.018) 0 1px, transparent 1px 32px),
-    repeating-linear-gradient(90deg, rgba(31, 37, 43, 0.014) 0 1px, transparent 1px 36px),
-    var(--bg);
+  background: var(--bg);
   color: var(--ink);
   font-family: "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
   letter-spacing: 0;
 }
 
-body::before {
-  content: "";
+.login-card-gate,
+.login-tutorial-panel {
   position: fixed;
   inset: 0;
-  pointer-events: none;
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(238, 241, 243, 0.96);
+}
+
+.login-card-gate[hidden],
+.login-tutorial-panel[hidden] {
+  display: none !important;
+}
+
+.login-card-gate-bg {
+  position: absolute;
+  inset: 0;
   background:
-    radial-gradient(circle at 18% 12%, rgba(122, 26, 21, 0.035), transparent 20%),
-    radial-gradient(circle at 74% 18%, rgba(47, 111, 104, 0.035), transparent 22%),
-    repeating-linear-gradient(115deg, rgba(31, 37, 43, 0.012) 0 1px, transparent 1px 7px);
-  mix-blend-mode: multiply;
+    linear-gradient(90deg, rgba(15, 118, 110, 0.07) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(15, 118, 110, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+}
+
+.login-card-panel,
+.login-tutorial-card {
+  position: relative;
+  width: min(720px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-card-panel {
+  display: grid;
+  gap: 18px;
+  padding: clamp(22px, 4vw, 42px);
+}
+
+.login-card-panel-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.login-card-panel-copy h2,
+.login-card-welcome h2,
+.login-tutorial-head h2 {
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.login-card-panel-copy p,
+.login-card-welcome p,
+.login-tutorial-body p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.login-card-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.login-card-actions button {
+  min-height: 68px;
+  white-space: normal;
+}
+
+.login-card-status-loading {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 8px;
+  background: #ecfeff;
+  color: #0f766e;
+  font-size: clamp(1.08rem, 2vw, 1.32rem);
+  font-weight: 900;
+  line-height: 1.5;
+}
+
+.login-card-welcome {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 8px;
+  background: #f2fbf8;
+}
+
+.login-card-welcome[hidden],
+.login-card-actions[hidden] {
+  display: none !important;
+}
+
+.login-tutorial-panel {
+  align-items: stretch;
+  place-items: center;
+}
+
+.login-tutorial-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: calc(100vh - 44px);
+  overflow: hidden;
+}
+
+.login-tutorial-head {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 10px;
+  padding: 24px 28px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.login-tutorial-head h2 {
+  min-width: 0;
+  grid-column: 2;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.login-tutorial-body {
+  display: grid;
+  gap: 16px;
+  overflow: auto;
+  padding: 22px 28px;
+}
+
+.login-tutorial-nav {
+  justify-content: flex-end;
+  padding: 14px 28px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.login-tutorial-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.login-tutorial-actions button {
+  white-space: nowrap;
+}
+
+body .login-tutorial-actions .login-tutorial-skip,
+body .login-tutorial-actions .login-tutorial-collapse {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+}
+
+body.login-tutorial-collapsed .login-tutorial-panel {
+  pointer-events: none;
+  background: transparent;
+}
+
+body.login-tutorial-collapsed .login-tutorial-card {
+  width: auto;
+  max-width: calc(100vw - 24px);
+  max-height: none;
+  pointer-events: auto;
+}
+
+body.login-tutorial-collapsed .login-tutorial-head {
+  padding: 10px;
+  border-bottom: 0;
+}
+
+body.login-tutorial-collapsed .login-tutorial-head .badge,
+body.login-tutorial-collapsed .login-tutorial-head h2,
+body.login-tutorial-collapsed .login-tutorial-body,
+body.login-tutorial-collapsed .login-tutorial-nav {
+  display: none;
+}
+
+body.login-tutorial-collapsed .login-tutorial-actions {
+  pointer-events: auto;
+}
+
+.login-tutorial-highlight {
+  outline: 3px solid #0f766e;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 8px rgba(20, 184, 166, 0.18);
+}
+
+.login-card-tutorial-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.archive-encyclopedia-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 8px;
+  padding: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.archive-encyclopedia-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--line-dark);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--ink);
+  color: var(--paper);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+}
+
+.archive-encyclopedia {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.archive-encyclopedia.is-floating {
+  position: fixed;
+  right: 24px;
+  top: 152px;
+  z-index: 70;
+  width: min(640px, calc(100vw - 36px));
+  height: min(520px, calc(100vh - 176px));
+  min-width: min(360px, calc(100vw - 24px));
+  min-height: 260px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 112px);
+  overflow: auto;
+  resize: both;
+  box-shadow: 0 18px 50px rgba(20, 16, 9, 0.25);
+}
+
+.archive-encyclopedia:not([open]) {
+  display: none;
+}
+
+.archive-encyclopedia > summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 900;
+}
+
+.archive-encyclopedia-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-strong);
+}
+
+.archive-encyclopedia.is-floating .archive-encyclopedia-toolbar {
+  cursor: move;
+}
+
+.archive-encyclopedia .jjk-battle-info-grid {
+  padding: 0 14px 14px;
+}
+
+.duel-collapsible-tool {
+  display: grid;
+  gap: 12px;
+}
+
+.duel-collapsible-tool > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  font-weight: 800;
+}
+
+.duel-collapsible-tool[open] > summary {
+  margin-bottom: 10px;
+}
+
+.login-card-manager {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-strong);
+}
+
+.login-card-manager-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.login-card-count {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.login-card-count span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.login-card-count strong {
+  font-size: 1.25rem;
+}
+
+.login-card-character-list {
+  display: grid;
+  gap: 8px;
+}
+
+.login-card-character-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.login-card-character-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+}
+
+.login-card-character-row span,
+.login-card-character-main span {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.login-card-character-row small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.login-card-character-editor {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.login-card-character-editor[hidden] {
+  display: none;
+}
+
+.login-card-editor-text {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.login-card-stat-grid,
+.login-card-hand-editor-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.login-card-hand-editor-list {
+  display: grid;
+  gap: 10px;
+}
+
+.login-card-hand-editor-row {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.login-card-hand-editor-row strong,
+.login-card-hand-summary,
+.login-card-json-editor {
+  grid-column: 1 / -1;
+}
+
+.login-card-hand-editor-row label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.login-card-hand-editor-row input,
+.login-card-hand-editor-row select {
+  width: 100%;
+  min-width: 0;
+}
+
+.login-card-json-editor {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--paper-strong);
+}
+
+body.duel-theme-dark .login-card-gate,
+body.duel-theme-dark .login-tutorial-panel {
+  background: rgba(17, 24, 39, 0.98);
+}
+
+body.duel-theme-dark .login-card-gate-bg {
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0.09) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+body.duel-theme-dark .login-card-panel,
+body.duel-theme-dark .login-tutorial-card,
+body.duel-theme-dark .login-card-manager {
+  border-color: #334155;
+  background: #111827;
+  color: #e5edf5;
+}
+
+body.duel-theme-dark .login-card-welcome,
+body.duel-theme-dark .login-card-tutorial-form,
+body.duel-theme-dark .login-card-count,
+body.duel-theme-dark .login-card-character-row {
+  border-color: #334155;
+  background: #182235;
+}
+
+body.duel-theme-dark .login-card-status-loading {
+  border-color: #2dd4bf;
+  background: #102a2f;
+  color: #99f6e4;
+}
+
+body.duel-theme-dark .login-tutorial-head,
+body.duel-theme-dark .login-tutorial-nav {
+  border-color: #334155;
 }
 
 button {
@@ -386,7 +860,7 @@ body.debug-mode .debug-entry-panel.debug-only {
 }
 
 .topbar h1::before {
-  content: "TOKYO JCT";
+  content: "JJK DUEL";
   display: inline-flex;
   align-items: center;
   min-height: 24px;
@@ -396,7 +870,6 @@ body.debug-mode .debug-entry-panel.debug-only {
   font-size: 11px;
   font-weight: 900;
   line-height: 1;
-  transform: rotate(-3deg);
   background: rgba(255, 247, 237, 0.68);
 }
 
@@ -419,7 +892,6 @@ body.debug-mode .debug-entry-panel.debug-only {
   font: inherit;
   font-size: 14px;
   font-weight: 800;
-  transform: rotate(-1deg);
   cursor: pointer;
 }
 
@@ -573,26 +1045,6 @@ main {
   padding: 18px 18px 18px 22px;
   box-shadow: var(--shadow-md);
   overflow: hidden;
-}
-
-.panel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 8px;
-  width: 1px;
-  background: rgba(180, 35, 24, 0.28);
-}
-
-.panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 30px, rgba(31, 37, 43, 0.025) 30px 31px),
-    linear-gradient(90deg, rgba(216, 197, 159, 0.16), transparent 18%);
 }
 
 .panel > * {
@@ -772,9 +1224,9 @@ main {
   gap: 12px;
   margin: 14px 0 16px;
   padding: 14px;
-  border: 1px solid rgba(15, 118, 110, 0.22);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(240, 253, 250, 0.9), rgba(255, 253, 247, 0.92));
+  background: var(--panel);
   box-shadow: var(--shadow-sm);
 }
 
@@ -804,9 +1256,9 @@ main {
   display: grid;
   gap: 10px;
   padding: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.58);
+  background: var(--paper-strong);
 }
 
 .online-section-title {
@@ -815,6 +1267,41 @@ main {
   gap: 12px;
   align-items: baseline;
   color: var(--ink);
+}
+
+.online-collapsible-section > summary.online-section-title {
+  grid-column: 1 / -1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.online-collapsible-section > summary.online-section-title::-webkit-details-marker {
+  display: none;
+}
+
+.online-collapsible-section > summary.online-section-title::after {
+  content: "收起";
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--panel-2);
+}
+
+.online-collapsible-section:not([open]) {
+  gap: 0;
+}
+
+.online-collapsible-section:not([open]) > summary.online-section-title::after {
+  content: "展开";
+  color: var(--accent);
+}
+
+.online-collapsible-section:not([open]) > :not(summary) {
+  display: none;
 }
 
 .online-section-title span {
@@ -834,9 +1321,9 @@ main {
   justify-content: space-between;
   gap: 8px;
   padding: 9px 10px;
-  border: 1px solid rgba(15, 118, 110, 0.18);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(240, 253, 250, 0.78);
+  background: var(--panel-2);
 }
 
 .online-debug-panel {
@@ -868,9 +1355,9 @@ main {
 }
 
 .online-advanced-settings {
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--panel);
 }
 
 .online-advanced-settings summary {
@@ -892,9 +1379,9 @@ main {
   gap: 10px;
   min-width: 0;
   padding: 10px;
-  border: 1px solid rgba(15, 118, 110, 0.12);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(240, 253, 250, 0.45);
+  background: var(--panel-2);
 }
 
 .online-room-current {
@@ -903,9 +1390,9 @@ main {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1px dashed rgba(15, 118, 110, 0.24);
+  border: 1px dashed var(--line-dark);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--panel);
   color: var(--muted);
   font-size: 12px;
   font-weight: 900;
@@ -1198,6 +1685,65 @@ main {
   line-height: 1.6;
 }
 
+.duel-manual-data-entry {
+  border: 2px solid rgba(186, 84, 34, 0.42);
+  border-radius: 8px;
+  background: rgba(255, 247, 237, 0.88);
+  padding: 10px 12px;
+}
+
+.duel-manual-data-entry summary {
+  cursor: pointer;
+  font-weight: 900;
+  color: #8a3f13;
+}
+
+.duel-manual-format {
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px dashed rgba(138, 63, 19, 0.35);
+  border-radius: 8px;
+  background: #fffdf8;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.duel-manual-data-entry textarea {
+  min-height: 126px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.duel-ai-progress {
+  display: grid;
+  gap: 6px;
+  color: #0f5f59;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.duel-ai-progress[hidden] {
+  display: none;
+}
+
+.duel-ai-progress > div {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 95, 89, 0.14);
+}
+
+.duel-ai-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e, #22c55e);
+  transition: width 520ms cubic-bezier(.22, .9, .24, 1);
+}
+
 .duel-debug-panel {
   display: grid;
   gap: 12px;
@@ -1334,11 +1880,10 @@ body.debug-mode .duel-debug-panel.debug-only {
   border-radius: 50%;
   background: var(--stamp);
   box-shadow: var(--shadow-sm);
-  transform: rotate(-4deg);
 }
 
 .duel-battle {
-  margin: 16px 0;
+  margin: 10px 0;
 }
 
 .duel-battle-empty,
@@ -1366,7 +1911,7 @@ body.debug-mode .duel-debug-panel.debug-only {
 }
 
 .duel-battle-stage {
-  padding: 16px;
+  padding: 12px;
   position: relative;
   overflow: hidden;
   background:
@@ -1436,10 +1981,10 @@ body.debug-mode .duel-debug-panel.debug-only {
 .duel-battle-status {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 1.4fr) minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  margin: 14px 0;
-  padding: 14px;
+  margin: 10px 0 8px;
+  padding: 10px;
   border: 1px solid #cfddea;
   border-radius: 8px;
   background: rgba(248, 251, 253, 0.92);
@@ -1482,12 +2027,84 @@ body.debug-mode .duel-debug-panel.debug-only {
   background: linear-gradient(90deg, #ef4444, #991b1b);
 }
 
+.duel-battle-special-counters {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.duel-battle-special-counters.empty {
+  display: none;
+}
+
+.duel-special-counter-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+}
+
+.duel-special-counter-row.no-label {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.duel-special-counter-row > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.duel-special-counter-row > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+.duel-special-counter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 3px 7px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.05);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.duel-special-counter-chip b,
+.duel-special-counter-chip strong {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.duel-special-counter-chip b {
+  color: #7f1d1d;
+}
+
+.duel-special-counter-chip strong {
+  color: var(--ink);
+}
+
 .duel-resource-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.72fr) minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
   align-items: stretch;
-  margin: 14px 0;
+  margin: 0;
+}
+
+.duel-battle-support-grid {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
 }
 
 .duel-resource-side,
@@ -1572,6 +2189,31 @@ body.debug-mode .duel-debug-panel.debug-only {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #64748b, #0f172a);
+}
+
+.duel-resource-bar em {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: block;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.duel-resource-bar em.preview-loss {
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.duel-resource-bar em.preview-gain {
+  background: rgba(125, 211, 252, 0.62);
+}
+
+.duel-resource-row.hp .duel-resource-bar em.preview-gain {
+  background: rgba(252, 165, 165, 0.58);
+}
+
+.duel-resource-row strong.preview-value {
+  color: #0f5f59;
 }
 
 .duel-resource-row.hp .duel-resource-bar i {
@@ -1721,8 +2363,8 @@ body.debug-mode .duel-debug-panel.debug-only {
 .duel-battlefield-units {
   display: grid;
   gap: 10px;
-  margin: 14px 0;
-  padding: 12px;
+  margin: 0;
+  padding: 10px;
   border: 1px solid rgba(47, 111, 104, 0.3);
   border-radius: 10px;
   background:
@@ -1918,9 +2560,9 @@ body.debug-mode .duel-debug-panel.debug-only {
 
 .duel-domain-profile-panel {
   display: grid;
-  gap: 10px;
-  margin: 14px 0;
-  padding: 12px;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
   border: 1px solid #d6dee8;
   border-radius: 8px;
   background: #fbfaf6;
@@ -2042,9 +2684,9 @@ body.debug-mode .duel-debug-panel.debug-only {
 
 .duel-action-panel {
   display: grid;
-  gap: 10px;
-  margin: 14px 0;
-  padding: 12px;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 10px;
   border: 1px solid #d6dee8;
   border-radius: 8px;
   background: rgba(255, 253, 247, 0.95);
@@ -2462,6 +3104,30 @@ body.debug-mode .duel-debug-panel.debug-only {
   overflow-wrap: anywhere;
 }
 
+.duel-action-compact-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.duel-action-compact-stats i {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.duel-action-attack {
+  background: rgba(15, 118, 110, 0.1);
+  color: #0f766e !important;
+}
+
 .duel-action-numeric-brief {
   color: #334155 !important;
   line-height: 1.35;
@@ -2573,6 +3239,40 @@ body.debug-mode .duel-debug-panel.debug-only {
   margin: 0;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-choice {
+  min-height: 74px !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 8px 10px;
+}
+
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-title,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-compact-stats {
+  align-self: center;
+}
+
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-compact-stats {
+  justify-content: flex-end;
+}
+
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-subtitle,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-card-meta,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-numeric-brief,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-summon-preview,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-effect,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-tags,
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-hand-detail {
+  display: none;
+}
+
+body.duel-compact-cards .duel-hand-card:not(.active):not(:focus-within) .duel-action-status {
+  grid-column: 1 / -1;
+  padding-top: 4px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  white-space: normal;
 }
 
 .duel-card-developer-details,
@@ -3061,7 +3761,6 @@ body.debug-mode .duel-debug-panel.debug-only {
   color: var(--accent);
   font-size: 13px;
   font-weight: 900;
-  transform: rotate(-2deg);
 }
 
 .muted {
@@ -3073,10 +3772,7 @@ body.debug-mode .duel-debug-panel.debug-only {
   min-height: 280px;
   border: 1px dashed var(--line-dark);
   border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(255, 253, 247, 0.76), rgba(255, 253, 247, 0)),
-    repeating-linear-gradient(0deg, transparent 0 28px, rgba(31, 37, 43, 0.03) 28px 29px),
-    var(--soft);
+  background: var(--soft);
   padding: 16px;
   box-shadow: inset 0 1px 0 rgba(255, 253, 247, 0.72);
 }
@@ -3433,9 +4129,9 @@ body.debug-mode .debug-toggle {
 }
 
 .primary {
-  background: linear-gradient(180deg, #c7362c, var(--accent));
+  background: var(--accent);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(180, 35, 24, 0.18);
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.14);
 }
 
 .secondary {
@@ -3457,12 +4153,12 @@ body.debug-mode .debug-toggle {
 }
 
 .primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, #d2463b, var(--accent-dark));
+  background: var(--accent-dark);
 }
 
 .secondary:hover:not(:disabled) {
   border-color: var(--line-dark);
-  background: #f3efe4;
+  background: var(--panel-2);
 }
 
 .primary:disabled,
@@ -4285,9 +4981,7 @@ body.debug-mode .debug-toggle {
   overflow: auto;
   border: 1px solid var(--line-dark);
   border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(255, 253, 247, 0.88), rgba(255, 253, 247, 0.72)),
-    repeating-linear-gradient(0deg, transparent 0 28px, rgba(31, 37, 43, 0.03) 28px 29px);
+  background: var(--paper-strong);
   padding: 18px;
   color: var(--ink);
   line-height: 1.85;
@@ -4628,6 +5322,89 @@ body.debug-mode .debug-toggle {
 }
 
 @media (max-width: 640px) {
+  .login-card-actions,
+  .login-card-manager-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card-editor-text,
+  .login-card-stat-grid,
+  .login-card-hand-editor-row {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-encyclopedia-entry {
+    align-items: stretch;
+  }
+
+  .archive-encyclopedia-open {
+    width: 100%;
+  }
+
+  .archive-encyclopedia.is-floating {
+    right: 10px;
+    top: 92px;
+    width: calc(100vw - 20px);
+    height: min(72vh, 560px);
+    max-height: calc(100vh - 104px);
+    resize: vertical;
+  }
+
+  .archive-encyclopedia-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card-gate,
+  .login-tutorial-panel {
+    padding: 12px;
+  }
+
+  .login-tutorial-actions {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .login-tutorial-actions button {
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .login-tutorial-card {
+    max-height: calc(100vh - 24px);
+  }
+
+  .login-tutorial-head,
+  .login-tutorial-body,
+  .login-tutorial-nav {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .login-tutorial-head {
+    grid-template-columns: auto minmax(160px, 1fr);
+    align-items: start;
+    row-gap: 8px;
+    padding-top: 16px;
+  }
+
+  .login-tutorial-head h2 {
+    align-self: center;
+    font-size: 1.28rem;
+    line-height: 1.2;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: keep-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .duel-action-toolbar-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -4665,6 +5442,75 @@ body.debug-mode .debug-toggle {
   .duel-action-choice span:not(.duel-action-title),
   .duel-action-choice em {
     font-size: 10px;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .duel-battle,
+  .duel-action-panel,
+  .duel-resource-panel,
+  .duel-battle-log,
+  .duel-residual-log {
+    contain: layout paint;
+  }
+
+  .duel-action-panel,
+  .duel-hand-card,
+  .duel-resource-side,
+  .duel-log-entry {
+    contain: layout paint;
+    overflow-anchor: none;
+  }
+
+  .duel-action-panel {
+    gap: 10px;
+    padding: 9px;
+    border-radius: 8px;
+    transform: translateZ(0);
+  }
+
+  .duel-action-head,
+  .duel-action-meta,
+  .duel-domain-hand-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .duel-action-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .duel-action-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  .duel-hand-choices,
+  .duel-domain-hand-choices {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .duel-hand-card {
+    transform: translateZ(0);
+  }
+
+  body:not(.duel-compact-cards) .duel-hand-choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .duel-card-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.duel-card-skin-v224 .duel-hand-card .duel-action-choice::before,
+  body.duel-card-skin-custom .duel-hand-card .duel-action-choice::before,
+  .duel-hand-card.duel-card-skin-v224 .duel-action-choice::before,
+  .duel-hand-card.duel-card-skin-custom .duel-action-choice::before {
+    display: block !important;
   }
 }
 

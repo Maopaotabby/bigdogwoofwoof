@@ -1042,8 +1042,8 @@
     addOrRefreshDuelStatusEffect(owner, { id: "jackpotStateCandidate", label: "jackpot 状态候选", rounds: 3, value: 1 });
     addOrRefreshDuelStatusEffect(owner, { id: "jackpotCycleCandidate", label: "坐杀搏徒循环候选", rounds: 2, value: 1.2 });
     if (owner) {
-      owner.ce = Math.min(owner.maxCe, Number(owner.ce || 0) + owner.maxCe * 0.18);
-      owner.hp = Math.min(owner.maxHp, Number(owner.hp || 0) + owner.maxHp * 0.08);
+      owner.ce = Math.min(Number(owner.maxCe || 0) + Math.max(0, Number(owner.temporaryCeOverCap || 0)), Number(owner.ce || 0) + owner.maxCe * 0.18);
+      owner.hp = Math.min(Number(owner.maxHp || 0) + Math.max(0, Number(owner.temporaryHpOverCap || 0)), Number(owner.hp || 0) + owner.maxHp * 0.08);
       owner.stability = Number(clampValue(Number(owner.stability || 0) + 0.06, 0, 1).toFixed(4));
     }
     subPhase.jackpotGauge = Math.max(100, Number(subPhase.jackpotGauge || 0));

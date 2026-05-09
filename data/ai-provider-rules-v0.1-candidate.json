@@ -11,9 +11,9 @@
       "endpointType": "chat_completions",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
       "defaultPath": "/chat/completions",
-      "defaultModel": "doubao-seed-2-0-lite-260215",
+      "defaultModel": "doubao-seed-2-0-mini-260215",
       "defaultApiKey": "09d6d696-dc76-4d99-a912-b15bec17c869",
-      "modelPresets": ["doubao-seed-2-0-lite-260215"],
+      "modelPresets": ["doubao-seed-2-0-mini-260215"],
       "allowCustomBaseUrl": false,
       "allowCustomPath": false,
       "allowCustomModel": false,
@@ -30,7 +30,7 @@
       "defaultModel": "",
       "modelPresets": [],
       "allowCustomBaseUrl": true,
-      "allowCustomPath": true,
+      "allowCustomPath": false,
       "allowCustomModel": true,
       "securityWarningRequired": true,
       "status": "CANDIDATE"
@@ -58,7 +58,7 @@
       "allowLocalStorage": true
     }
   },
-  "defaultModel": "doubao-seed-2-0-lite-260215",
+  "defaultModel": "doubao-seed-2-0-mini-260215",
   "tokenBudget": {
     "maxPromptTokens": 6000,
     "maxOutputTokens": 1800,

@@ -1095,7 +1095,13 @@
         "shikigami",
         "domainFriendly"
       ],
-      "sourceNote": "公式书/正篇；魔虚罗适应、嵌合兽和世界斩参照属于决战资源包，另行提高构筑上限。"
+      "sourceNote": "公式书/正篇；魔虚罗适应、嵌合兽和世界斩参照属于决战资源包，另行提高构筑上限。",
+      "specialHandTags": [
+        "ten_shadows"
+      ],
+      "特殊手札": [
+        "ten_shadows"
+      ]
     },
     "无下限": {
       "displayName": "无下限术式",
@@ -1107,17 +1113,31 @@
         "domainFriendly",
         "hardControl"
       ],
-      "sourceNote": "公式书/正篇；六眼是关键经典组合。"
+      "sourceNote": "公式书/正篇；可与六眼形成经典组合，但无下限不自动附带六眼。",
+      "specialHandTags": [
+        "limitless"
+      ],
+      "特殊手札": [
+        "limitless"
+      ]
     },
     "赤血操术": {
       "displayName": "赤血操术",
-      "baseCombatBonus": 0.24,
+      "baseCombatBonus": 0.31,
       "tags": [
         "resourceHungry",
         "bodyScaling",
-        "midRange"
+        "midRange",
+        "precision",
+        "sustainedPressure"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇；按中距离穿透、近战血刃、赤鳞跃动强化与超新星范围压迫的完整血操套件处理。",
+      "specialHandTags": [
+        "blood_manipulation"
+      ],
+      "特殊手札": [
+        "blood_manipulation"
+      ]
     },
     "咒灵操术": {
       "displayName": "咒灵操术",
@@ -1128,7 +1148,13 @@
         "stockScaling",
         "strategic"
       ],
-      "sourceNote": "公式书/正篇；强度依赖咒灵库存。"
+      "sourceNote": "公式书/正篇；强度依赖咒灵库存。",
+      "specialHandTags": [
+        "curse_spirit_manipulation"
+      ],
+      "特殊手札": [
+        "curse_spirit_manipulation"
+      ]
     },
     "无为转变": {
       "displayName": "无为转变 —— 真人",
@@ -1152,6 +1178,12 @@
       "isOfficialName": true,
       "alias": [
         "无为转变"
+      ],
+      "specialHandTags": [
+        "idle_transfiguration"
+      ],
+      "特殊手札": [
+        "idle_transfiguration"
       ]
     },
     "十划咒法（七海）": {
@@ -1161,7 +1193,13 @@
         "precision",
         "bodyScaling"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "ratio_technique"
+      ],
+      "特殊手札": [
+        "ratio_technique"
+      ]
     },
     "咒言": {
       "displayName": "咒言",
@@ -1171,7 +1209,13 @@
         "resourceHungry",
         "hardControl"
       ],
-      "sourceNote": "公式书/正篇；强命令有反噬。"
+      "sourceNote": "公式书/正篇；强命令有反噬。",
+      "specialHandTags": [
+        "cursed_speech"
+      ],
+      "特殊手札": [
+        "cursed_speech"
+      ]
     },
     "不义游戏": {
       "displayName": "不义游戏",
@@ -1182,7 +1226,13 @@
         "support",
         "teamFight"
       ],
-      "sourceNote": "公式书/正篇；战术价值高于直接输出。"
+      "sourceNote": "公式书/正篇；战术价值高于直接输出。",
+      "specialHandTags": [
+        "boogie_woogie"
+      ],
+      "特殊手札": [
+        "boogie_woogie"
+      ]
     },
     "黑鸟操术": {
       "displayName": "黑鸟操术",
@@ -1192,7 +1242,13 @@
         "resourceHungry",
         "singleBurst"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "black_bird_manipulation"
+      ],
+      "特殊手札": [
+        "black_bird_manipulation"
+      ]
     },
     "投射咒法": {
       "displayName": "投射咒法",
@@ -1203,7 +1259,13 @@
         "speed",
         "precision"
       ],
-      "sourceNote": "公式书/正篇；高体术和高操纵时升值。"
+      "sourceNote": "公式书/正篇；高体术和高操纵时升值。",
+      "specialHandTags": [
+        "projection_sorcery"
+      ],
+      "特殊手札": [
+        "projection_sorcery"
+      ]
     },
     "构筑术式": {
       "displayName": "构筑术式",
@@ -1214,7 +1276,13 @@
         "talentScaling",
         "construction"
       ],
-      "sourceNote": "公式书/后期漫画；使用者差异极大。"
+      "sourceNote": "公式书/后期漫画；使用者差异极大。",
+      "specialHandTags": [
+        "construction"
+      ],
+      "特殊手札": [
+        "construction"
+      ]
     },
     "傀儡操术": {
       "displayName": "傀儡操术",
@@ -1224,7 +1292,13 @@
         "strategic",
         "preparation"
       ],
-      "sourceNote": "公式书/正篇；依赖硬件和准备。"
+      "sourceNote": "公式书/正篇；依赖硬件和准备。",
+      "specialHandTags": [
+        "puppet_manipulation"
+      ],
+      "特殊手札": [
+        "puppet_manipulation"
+      ]
     },
     "付丧操术": {
       "displayName": "付丧操术",
@@ -1233,7 +1307,13 @@
         "support",
         "mobility"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "tool_manipulation"
+      ],
+      "特殊手札": [
+        "tool_manipulation"
+      ]
     },
     "降灵术（参拜婆）": {
       "displayName": "降灵术（参拜婆）",
@@ -1243,7 +1323,13 @@
         "strategic",
         "unstable"
       ],
-      "sourceNote": "公式书/正篇；降灵对象决定上限。"
+      "sourceNote": "公式书/正篇；降灵对象决定上限。",
+      "specialHandTags": [
+        "seance_technique"
+      ],
+      "特殊手札": [
+        "seance_technique"
+      ]
     },
     "刍灵咒法（野蔷薇）": {
       "displayName": "刍灵咒法（野蔷薇）",
@@ -1253,7 +1339,13 @@
         "soulTargeting",
         "midRange"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "straw_doll_technique"
+      ],
+      "特殊手札": [
+        "straw_doll_technique"
+      ]
     },
     "星之怒（九十九）": {
       "displayName": "星之怒（九十九）",
@@ -1264,7 +1356,13 @@
         "highLethality",
         "domainFriendly"
       ],
-      "sourceNote": "后期漫画；黑洞视为死亡代价异常。"
+      "sourceNote": "后期漫画；黑洞视为死亡代价异常。",
+      "specialHandTags": [
+        "star_rage"
+      ],
+      "特殊手札": [
+        "star_rage"
+      ]
     },
     "冰凝咒法": {
       "displayName": "冰凝咒法",
@@ -1275,7 +1373,13 @@
         "hardControl",
         "areaControl"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "ice_formation"
+      ],
+      "特殊手札": [
+        "ice_formation"
+      ]
     },
     "不死（天元）": {
       "displayName": "不死（天元）",
@@ -1285,7 +1389,13 @@
         "support",
         "lowCombat"
       ],
-      "sourceNote": "公式书/正篇；战略价值不等于战斗输出。"
+      "sourceNote": "公式书/正篇；战略价值不等于战斗输出。",
+      "specialHandTags": [
+        "immortality_tengen"
+      ],
+      "特殊手札": [
+        "immortality_tengen"
+      ]
     },
     "奇迹（重面春太）": {
       "displayName": "奇迹",
@@ -1295,7 +1405,13 @@
         "luck",
         "lowOutput"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "miracles"
+      ],
+      "特殊手札": [
+        "miracles"
+      ]
     },
     "漏壶": {
       "displayName": "熔灾火藏 —— 漏瑚",
@@ -1321,6 +1437,12 @@
         "漏壶",
         "灾害火山术式",
         "Disaster Flames"
+      ],
+      "specialHandTags": [
+        "disaster_flames"
+      ],
+      "特殊手札": [
+        "disaster_flames"
       ]
     },
     "花御": {
@@ -1347,6 +1469,12 @@
         "花御",
         "灾害植物术式",
         "Disaster Plants"
+      ],
+      "specialHandTags": [
+        "disaster_plants"
+      ],
+      "特殊手札": [
+        "disaster_plants"
       ]
     },
     "陀艮": {
@@ -1373,6 +1501,12 @@
         "陀艮",
         "灾害海洋术式",
         "Disaster Tides"
+      ],
+      "specialHandTags": [
+        "disaster_tides"
+      ],
+      "特殊手札": [
+        "disaster_tides"
       ]
     },
     "乐岩寺": {
@@ -1382,7 +1516,13 @@
         "midRange",
         "support"
       ],
-      "sourceNote": "公式书/正篇；表现有限。"
+      "sourceNote": "公式书/正篇；表现有限。",
+      "specialHandTags": [
+        "gakuganji_music"
+      ],
+      "特殊手札": [
+        "gakuganji_music"
+      ]
     },
     "单独禁区": {
       "displayName": "单独禁区（庵歌姬）",
@@ -1396,7 +1536,15 @@
         "ritualSetup",
         "teamFight"
       ],
-      "sourceNote": "新增强度评定；通过舞、手印、咏唱、乐曲等完整步骤提高目标咒力输出。单人战斗强度不高，但队伍战、蓄力大招、术式爆发场景价值明显。中文资料将庵歌姬术式列为「單獨禁區」。"
+      "sourceNote": "新增强度评定；通过舞、手印、咏唱、乐曲等完整步骤提高目标咒力输出。单人战斗强度不高，但队伍战、蓄力大招、术式爆发场景价值明显。中文资料将庵歌姬术式列为「單獨禁區」。",
+      "specialHandTags": [
+        "solo_forbidden_area",
+        "solo_solo_forbidden_area"
+      ],
+      "特殊手札": [
+        "solo_forbidden_area",
+        "solo_solo_forbidden_area"
+      ]
     },
     "心身掌握": {
       "displayName": "心身掌握（拉鲁）",
@@ -1410,7 +1558,13 @@
         "hardControl",
         "teamFight"
       ],
-      "sourceNote": "新增强度评定；以巨大手掌牵制、抓取、限制行动，并可配合注意力诱导。可爱蜜糖不单列为独立术式，作为本术式派生技处理：强制吸引目标注意力、制造破绽、为队友创造命中窗口。"
+      "sourceNote": "新增强度评定；以巨大手掌牵制、抓取、限制行动，并可配合注意力诱导。可爱蜜糖不单列为独立术式，作为本术式派生技处理：强制吸引目标注意力、制造破绽、为队友创造命中窗口。",
+      "specialHandTags": [
+        "heart_catch"
+      ],
+      "特殊手札": [
+        "heart_catch"
+      ]
     },
     "祈祷之歌": {
       "displayName": "祈祷之歌（米格尔）",
@@ -1424,7 +1578,13 @@
         "bodyScaling",
         "rhythm"
       ],
-      "sourceNote": "新增强度评定；通过节奏、舞步或身体律动强化自身并削弱对手。具体增减幅度不完全明确，因此不定过高；作为近战型增益/削弱术式，稳定性优于纯条件型能力。"
+      "sourceNote": "新增强度评定；通过节奏、舞步或身体律动强化自身并削弱对手。具体增减幅度不完全明确，因此不定过高；作为近战型增益/削弱术式，稳定性优于纯条件型能力。",
+      "specialHandTags": [
+        "prayer_song"
+      ],
+      "特殊手札": [
+        "prayer_song"
+      ]
     },
     "黑沐死蟑螂操控": {
       "displayName": "腐蠊胎巢 —— 黑沐死",
@@ -1452,6 +1612,12 @@
         "黑沐死蟑螂操控",
         "蟑螂操控",
         "腐蠊胎巢"
+      ],
+      "specialHandTags": [
+        "cockroach_swarm"
+      ],
+      "特殊手札": [
+        "cockroach_swarm"
       ]
     },
     "蚀烂术式（坏相、血涂）": {
@@ -1462,7 +1628,13 @@
         "midRange",
         "damageOverTime"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "rot_technique"
+      ],
+      "特殊手札": [
+        "rot_technique"
+      ]
     },
     "疱疮神": {
       "displayName": "瘟柩葬仪 —— 疱疮神",
@@ -1489,7 +1661,9 @@
         "墓地领域",
         "Graveyard Domain",
         "瘟柩葬仪"
-      ]
+      ],
+      "specialHandTags": [],
+      "特殊手札": []
     },
     "伽尼萨障碍移除": {
       "displayName": "象神开障 —— 伽内什",
@@ -1518,6 +1692,14 @@
         "伽尼萨",
         "Ganesha",
         "象神开障"
+      ],
+      "specialHandTags": [
+        "ganesh_obstacle_removal",
+        "ganesha_obstacle_removal"
+      ],
+      "特殊手札": [
+        "ganesh_obstacle_removal",
+        "ganesha_obstacle_removal"
       ]
     },
     "夺舍（羂索）": {
@@ -1528,7 +1710,13 @@
         "stockScaling",
         "talentScaling"
       ],
-      "sourceNote": "公式书/后期漫画；长生和布局价值高。"
+      "sourceNote": "公式书/后期漫画；长生和布局价值高。",
+      "specialHandTags": [
+        "body_hopping"
+      ],
+      "特殊手札": [
+        "body_hopping"
+      ]
     },
     "坐杀搏徒": {
       "displayName": "坐杀搏徒",
@@ -1538,7 +1726,13 @@
         "domainFriendly",
         "survival"
       ],
-      "sourceNote": "后期漫画；依赖领域中奖。"
+      "sourceNote": "后期漫画；依赖领域中奖。",
+      "specialHandTags": [
+        "idle_death_gamble"
+      ],
+      "特殊手札": [
+        "idle_death_gamble"
+      ]
     },
     "诛伏赐死": {
       "displayName": "诛伏赐死",
@@ -1548,7 +1742,13 @@
         "domainFriendly",
         "highLethality"
       ],
-      "sourceNote": "后期漫画；依赖审判规则。"
+      "sourceNote": "后期漫画；依赖审判规则。",
+      "specialHandTags": [
+        "higuruma_trial_owner"
+      ],
+      "特殊手札": [
+        "higuruma_trial_owner"
+      ]
     },
     "超人（高羽）": {
       "displayName": "超人（高羽）",
@@ -1559,7 +1759,13 @@
         "unstable",
         "highDisruption"
       ],
-      "sourceNote": "后期漫画；术式强度按 EX- 处理，但本人理解、杀意和稳定性限制即时击杀兑现。"
+      "sourceNote": "后期漫画；术式强度按 EX- 处理，但本人理解、杀意和稳定性限制即时击杀兑现。",
+      "specialHandTags": [
+        "comedian"
+      ],
+      "特殊手札": [
+        "comedian"
+      ]
     },
     "模仿": {
       "displayName": "模仿",
@@ -1571,7 +1777,13 @@
         "stockScaling",
         "domainFriendly"
       ],
-      "sourceNote": "公式书/后期漫画；强度依赖复制库存。"
+      "sourceNote": "公式书/后期漫画；强度依赖复制库存。",
+      "specialHandTags": [
+        "copy"
+      ],
+      "特殊手札": [
+        "copy"
+      ]
     },
     "天空术式（乌鹭）": {
       "displayName": "天空术式（乌鹭）",
@@ -1581,7 +1793,13 @@
         "precision",
         "defense"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "sky_manipulation"
+      ],
+      "特殊手札": [
+        "sky_manipulation"
+      ]
     },
     "石流龙": {
       "displayName": "咒力放出（石流龙）",
@@ -1591,7 +1809,13 @@
         "highLethality",
         "midRange"
       ],
-      "sourceNote": "后期漫画；角色名规范为术式表现。"
+      "sourceNote": "后期漫画；角色名规范为术式表现。",
+      "specialHandTags": [
+        "granite_blast"
+      ],
+      "特殊手札": [
+        "granite_blast"
+      ]
     },
     "漫画家": {
       "displayName": "G 战杖/未来画面（漫画家）",
@@ -1601,7 +1825,13 @@
         "precision",
         "lowOutput"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "manga_artist"
+      ],
+      "特殊手札": [
+        "manga_artist"
+      ]
     },
     "反重力": {
       "displayName": "反重力机构",
@@ -1611,7 +1841,13 @@
         "defense",
         "counter"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "anti_gravity_system"
+      ],
+      "特殊手札": [
+        "anti_gravity_system"
+      ]
     },
     "天使": {
       "displayName": "术式消灭（天使）",
@@ -1621,7 +1857,9 @@
         "antiTechnique",
         "domainFriendly"
       ],
-      "sourceNote": "后期漫画；对结界/受肉/术式特攻。"
+      "sourceNote": "后期漫画；对结界/受肉/术式特攻。",
+      "specialHandTags": [],
+      "特殊手札": []
     },
     "鹿紫云一": {
       "displayName": "幻兽琥珀（鹿紫云一）",
@@ -1632,7 +1870,17 @@
         "highLethality",
         "selfDestructive"
       ],
-      "sourceNote": "后期漫画；一次性爆发。"
+      "sourceNote": "后期漫画；一次性爆发。",
+      "specialHandTags": [
+        "mythical_beast_amber",
+        "kashimo_mythical_beast",
+        "hollow_wicker_basket"
+      ],
+      "特殊手札": [
+        "mythical_beast_amber",
+        "kashimo_mythical_beast",
+        "hollow_wicker_basket"
+      ]
     },
     "达布拉": {
       "displayName": "光/杀意具现（达布拉）",
@@ -1644,7 +1892,13 @@
         "domainFriendly",
         "highDisruption"
       ],
-      "sourceNote": "Modulo；术式强度高于宿傩，但角色总强度仍按后传天花板而非 EX。"
+      "sourceNote": "Modulo；术式强度高于宿傩，但角色总强度仍按后传天花板而非 EX。",
+      "specialHandTags": [
+        "embodied_killing_intent_light"
+      ],
+      "特殊手札": [
+        "embodied_killing_intent_light"
+      ]
     },
     "光 / 具象化杀意": {
       "displayName": "光 / 具象化杀意",
@@ -1657,7 +1911,13 @@
         "highDisruption",
         "massKillingIntent"
       ],
-      "sourceNote": "Modulo / 德斯昆特高阶血脉专属锁定术式；非德斯昆特时仅在塞姆利亚人否分支中作为3倍权重候选。"
+      "sourceNote": "Modulo / 德斯昆特高阶血脉专属锁定术式；非德斯昆特时仅在塞姆利亚人否分支中作为3倍权重候选。",
+      "specialHandTags": [
+        "embodied_killing_intent_light"
+      ],
+      "特殊手札": [
+        "embodied_killing_intent_light"
+      ]
     },
     "混沌与调和": {
       "displayName": "混沌与调和",
@@ -1669,7 +1929,13 @@
         "support",
         "highDisruption"
       ],
-      "sourceNote": "Modulo；规则级高扰动/辅助价值高，但马鲁单体战力不应被硬抬到顶级。"
+      "sourceNote": "Modulo；规则级高扰动/辅助价值高，但马鲁单体战力不应被硬抬到顶级。",
+      "specialHandTags": [
+        "chaos_and_harmony"
+      ],
+      "特殊手札": [
+        "chaos_and_harmony"
+      ]
     },
     "再契象": {
       "displayName": "再契象",
@@ -1679,7 +1945,13 @@
         "resourceHungry",
         "stockScaling"
       ],
-      "sourceNote": "后期漫画；财富/收据库存会额外联动。"
+      "sourceNote": "后期漫画；财富/收据库存会额外联动。",
+      "specialHandTags": [
+        "recontract_icon"
+      ],
+      "特殊手札": [
+        "recontract_icon"
+      ]
     },
     "黄栌折": {
       "displayName": "爆炸肉体（黄栌折）",
@@ -1689,7 +1961,15 @@
         "selfDestructive",
         "midRange"
       ],
-      "sourceNote": "后期漫画；有反转术式时升值。"
+      "sourceNote": "后期漫画；有反转术式时升值。",
+      "specialHandTags": [
+        "explosive_body",
+        "hazel"
+      ],
+      "特殊手札": [
+        "explosive_body",
+        "hazel"
+      ]
     },
     "强弱颠倒": {
       "displayName": "强弱颠倒",
@@ -1699,7 +1979,13 @@
         "counter",
         "ruleBased"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "inverse"
+      ],
+      "特殊手札": [
+        "inverse"
+      ]
     },
     "御厨子（宿傩）": {
       "displayName": "御厨子（宿傩）",
@@ -1710,7 +1996,13 @@
         "highLethality",
         "domainFriendly"
       ],
-      "sourceNote": "公式书/正篇；术式本身不是特级术式中的最高档，宿傩强度主要来自基础数值、开放领域、战斗执行、善用束缚和决战资源包。"
+      "sourceNote": "公式书/正篇；术式本身不是特级术式中的最高档，宿傩强度主要来自基础数值、开放领域、战斗执行、善用束缚和决战资源包。",
+      "specialHandTags": [
+        "shrine"
+      ],
+      "特殊手札": [
+        "shrine"
+      ]
     },
     "星间飞行": {
       "displayName": "星间飞行",
@@ -1720,7 +2012,13 @@
         "precision",
         "areaControl"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "star_travel"
+      ],
+      "特殊手札": [
+        "star_travel"
+      ]
     },
     "忧忧": {
       "displayName": "空间转移（忧忧）",
@@ -1731,7 +2029,15 @@
         "mobility",
         "lowCombat"
       ],
-      "sourceNote": "公式书/后期漫画；撤退/调度价值高。"
+      "sourceNote": "公式书/后期漫画；撤退/调度价值高。",
+      "specialHandTags": [
+        "spatial_transference",
+        "ui_ui"
+      ],
+      "特殊手札": [
+        "spatial_transference",
+        "ui_ui"
+      ]
     },
     "新田新": {
       "displayName": "痛苦杀手（新田新）",
@@ -1741,7 +2047,15 @@
         "survival",
         "lowCombat"
       ],
-      "sourceNote": "公式书/正篇；医疗辅助不等于输出。"
+      "sourceNote": "公式书/正篇；医疗辅助不等于输出。",
+      "specialHandTags": [
+        "nitta",
+        "pain_killer"
+      ],
+      "特殊手札": [
+        "nitta",
+        "pain_killer"
+      ]
     },
     "羽生（喷气背包头发）": {
       "displayName": "喷气头发（羽生）",
@@ -1751,7 +2065,13 @@
         "bodyScaling",
         "lowOutput"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "hanyu_jet_hair"
+      ],
+      "特殊手札": [
+        "hanyu_jet_hair"
+      ]
     },
     "羽场（直升机头发）": {
       "displayName": "直升机头发（羽场）",
@@ -1761,7 +2081,13 @@
         "bodyScaling",
         "lowOutput"
       ],
-      "sourceNote": "后期漫画。"
+      "sourceNote": "后期漫画。",
+      "specialHandTags": [
+        "haba_helicopter_hair"
+      ],
+      "特殊手札": [
+        "haba_helicopter_hair"
+      ]
     },
     "禅院甚一": {
       "displayName": "巨大咒力拳（禅院甚一）",
@@ -1771,7 +2097,15 @@
         "midRange",
         "areaControl"
       ],
-      "sourceNote": "后期漫画；角色名规范为术式表现。"
+      "sourceNote": "后期漫画；角色名规范为术式表现。",
+      "specialHandTags": [
+        "jinichi_fist",
+        "zenin_jinichi"
+      ],
+      "特殊手札": [
+        "jinichi_fist",
+        "zenin_jinichi"
+      ]
     },
     "禅院兰太": {
       "displayName": "视线拘束（禅院兰太）",
@@ -1781,7 +2115,15 @@
         "hardControl",
         "support"
       ],
-      "sourceNote": "后期漫画；角色名规范为术式表现。"
+      "sourceNote": "后期漫画；角色名规范为术式表现。",
+      "specialHandTags": [
+        "ranta_eye_bind",
+        "zenin_ranta"
+      ],
+      "特殊手札": [
+        "ranta_eye_bind",
+        "zenin_ranta"
+      ]
     },
     "禅院长寿郎土掌术式": {
       "displayName": "禅院长寿郎土掌术式",
@@ -1795,7 +2137,15 @@
         "lowEvidence",
         "zeninMinorTechnique"
       ],
-      "sourceNote": "新增强度评定；资料表现很少，只能确认大致与地面、岩石或巨掌压制有关。暂定为地形控制/短程压制型术式，必须标注 lowEvidence，不宜给高强度。"
+      "sourceNote": "新增强度评定；资料表现很少，只能确认大致与地面、岩石或巨掌压制有关。暂定为地形控制/短程压制型术式，必须标注 lowEvidence，不宜给高强度。",
+      "specialHandTags": [
+        "chojuro_earth_hand",
+        "zenin_chojuro_earth_hand"
+      ],
+      "特殊手札": [
+        "chojuro_earth_hand",
+        "zenin_chojuro_earth_hand"
+      ]
     },
     "降灵术来访瑞兽（猪也）": {
       "displayName": "来访瑞兽（猪野）",
@@ -1805,7 +2155,13 @@
         "support",
         "midRange"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "auspicious_beasts"
+      ],
+      "特殊手札": [
+        "auspicious_beasts"
+      ]
     },
     "丽美（拿头发扎人，没别的）": {
       "displayName": "蝎尾头发（丽美）",
@@ -1814,7 +2170,15 @@
         "lowCombat",
         "lowOutput"
       ],
-      "sourceNote": "后期漫画；弱术式。"
+      "sourceNote": "后期漫画；弱术式。",
+      "specialHandTags": [
+        "remi_hair",
+        "remi_scorpion_hair"
+      ],
+      "特殊手札": [
+        "remi_hair",
+        "remi_scorpion_hair"
+      ]
     },
     "照片操控": {
       "displayName": "照片操控（枷场菜菜子）",
@@ -1828,7 +2192,13 @@
         "imageManipulation",
         "escape"
       ],
-      "sourceNote": "新增强度评定；通过手机照片影响被拍摄对象，可用于位移、回避或改变对象状态。效果有条件限制，消耗与疲劳明显，实战偏奇袭与逃生。"
+      "sourceNote": "新增强度评定；通过手机照片影响被拍摄对象，可用于位移、回避或改变对象状态。效果有条件限制，消耗与疲劳明显，实战偏奇袭与逃生。",
+      "specialHandTags": [
+        "photo_manipulation"
+      ],
+      "特殊手札": [
+        "photo_manipulation"
+      ]
     },
     "美美子玩偶术式": {
       "displayName": "美美子玩偶术式",
@@ -1842,7 +2212,13 @@
         "restraint",
         "executionSetup"
       ],
-      "sourceNote": "新增强度评定；通过玩偶和绳套把对玩偶造成的效果反映到目标身上，偏咒杀、束缚、处刑式攻击。对弱目标威胁较高，但依赖媒介与条件，正面对战稳定性有限。"
+      "sourceNote": "新增强度评定；通过玩偶和绳套把对玩偶造成的效果反映到目标身上，偏咒杀、束缚、处刑式攻击。对弱目标威胁较高，但依赖媒介与条件，正面对战稳定性有限。",
+      "specialHandTags": [
+        "mimiko_doll"
+      ],
+      "特殊手札": [
+        "mimiko_doll"
+      ]
     },
     "杜鲁布": {
       "displayName": "式神轨迹领域（杜鲁布）",
@@ -1853,7 +2229,13 @@
         "domainFriendly",
         "strategic"
       ],
-      "sourceNote": "后期漫画；角色名规范为术式表现。"
+      "sourceNote": "后期漫画；角色名规范为术式表现。",
+      "specialHandTags": [
+        "dhruv_shikigami"
+      ],
+      "特殊手札": [
+        "dhruv_shikigami"
+      ]
     },
     "激震掌": {
       "displayName": "激震掌（熊猫 / 大猩猩核心）",
@@ -1867,7 +2249,9 @@
         "internalDamage",
         "bodyScaling"
       ],
-      "sourceNote": "新增强度评定；熊猫大猩猩核心的近战震荡技，可造成难以完全格挡的内部冲击。不是普通生得术式，强度依赖熊猫肉体、咒骸核心与近战命中，不进入普通术式池。"
+      "sourceNote": "新增强度评定；熊猫大猩猩核心的近战震荡技，可造成难以完全格挡的内部冲击。不是普通生得术式，强度依赖熊猫肉体、咒骸核心与近战命中，不进入普通术式池。",
+      "specialHandTags": [],
+      "特殊手札": []
     },
     "灵魂打击": {
       "displayName": "灵魂打击（虎杖悠仁）",
@@ -1882,7 +2266,13 @@
         "hardToHeal",
         "yujiExclusive"
       ],
-      "sourceNote": "新增强度评定；直接打击灵魂边界，对受肉体、灵魂结构异常者、难以普通恢复的目标有特殊克制。不是传统术式，更适合作为虎杖专属机制或灵魂伤害标签，不进入普通术式池。"
+      "sourceNote": "新增强度评定；直接打击灵魂边界，对受肉体、灵魂结构异常者、难以普通恢复的目标有特殊克制。不是传统术式，更适合作为虎杖专属机制或灵魂伤害标签，不进入普通术式池。",
+      "specialHandTags": [
+        "yuji_soul_melee"
+      ],
+      "特殊手札": [
+        "yuji_soul_melee"
+      ]
     },
     "自定义": {
       "displayName": "自定义术式流程",
@@ -1890,7 +2280,9 @@
       "tags": [
         "custom"
       ],
-      "sourceNote": "由自定义参数决定，不给固定术式加成。"
+      "sourceNote": "由自定义参数决定，不给固定术式加成。",
+      "specialHandTags": [],
+      "特殊手札": []
     },
     "淀月（顺平）": {
       "displayName": "淀月（顺平）",
@@ -1900,7 +2292,13 @@
         "support",
         "damageOverTime"
       ],
-      "sourceNote": "公式书/正篇。"
+      "sourceNote": "公式书/正篇。",
+      "specialHandTags": [
+        "moon_dregs"
+      ],
+      "特殊手札": [
+        "moon_dregs"
+      ]
     },
     "分身（神秘纸袋男）": {
       "displayName": "分身术式",
@@ -1910,7 +2308,13 @@
         "support",
         "lowOutput"
       ],
-      "sourceNote": "公式书/正篇；情报有限。"
+      "sourceNote": "公式书/正篇；情报有限。",
+      "specialHandTags": [
+        "clone_technique"
+      ],
+      "特殊手札": [
+        "clone_technique"
+      ]
     },
     "穿越者当然是外挂（进入彩蛋池）": {
       "displayName": "穿越者当然是外挂（进入彩蛋池）",
@@ -1920,7 +2324,9 @@
         "highDisruption",
         "easterEgg"
       ],
-      "sourceNote": "彩蛋入口，实际强度由彩蛋池决定。"
+      "sourceNote": "彩蛋入口，实际强度由彩蛋池决定。",
+      "specialHandTags": [],
+      "特殊手札": []
     }
   }
 }

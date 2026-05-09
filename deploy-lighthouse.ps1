@@ -8,6 +8,25 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Initialize-RestrictedSshKey {
+  param([string]$SourceKey)
+  if (!(Test-Path -LiteralPath $SourceKey)) {
+    throw "SSH key file not found: $SourceKey"
+  }
+  if (!(Get-Command icacls -ErrorAction SilentlyContinue)) {
+    return $SourceKey
+  }
+  $keyDir = Join-Path $env:TEMP "bigdogwoofwoof-ssh"
+  New-Item -ItemType Directory -Force -Path $keyDir | Out-Null
+  $keyBaseName = [System.IO.Path]::GetFileNameWithoutExtension($SourceKey)
+  $targetKey = Join-Path $keyDir ("{0}-{1}.pem" -f $keyBaseName, $PID)
+  Copy-Item -LiteralPath $SourceKey -Destination $targetKey -Force
+  $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+  icacls $targetKey /inheritance:r | Out-Null
+  icacls $targetKey /grant:r "$($currentUser):(R)" | Out-Null
+  return [System.IO.Path]::GetFullPath($targetKey)
+}
+
 function Assert-LastExitCode {
   param([string]$Action)
   if ($LASTEXITCODE -ne 0) {
@@ -50,7 +69,7 @@ function Invoke-RemoteScript {
   $oldPreference = $ErrorActionPreference
   $ErrorActionPreference = "Continue"
   try {
-    $Script | ssh @(Get-SshArgs) $target "tr -d '\r' | bash -s"
+    $Script | ssh @(Get-SshArgs) $target "sed '1s/^\xEF\xBB\xBF//' | tr -d '\r' | bash -s"
   } finally {
     $ErrorActionPreference = $oldPreference
   }
@@ -133,6 +152,7 @@ sudo npm ci --omit=dev
 sudo chown -R www-data:www-data "$remote_dir"
 sudo chmod 750 "$remote_dir/server-data"
 sudo chmod 600 "$remote_dir/.env"
+sudo -u www-data sh -lc 'touch "$1/.deploy-write-test" && rm "$1/.deploy-write-test"' sh "$remote_dir/server-data"
 '@
   $script = $script.Replace("__REMOTE_DIR__", $RemoteDir)
   Invoke-RemoteScript "Publish-RemoteRelease" $script
@@ -193,34 +213,39 @@ exit 1
   Invoke-RemoteScript "Configure-RemoteNginx" $script
 }
 
-if ($KeyFile -and !(Test-Path -LiteralPath $KeyFile)) {
-  throw "SSH key file not found: $KeyFile"
+if ($KeyFile) {
+  $KeyFile = Initialize-RestrictedSshKey $KeyFile
 }
 
 $archive = Join-Path $env:TEMP "bigdogwoofwoof-lighthouse.tar.gz"
-if (Test-Path -LiteralPath $archive) {
-  Remove-Item -LiteralPath $archive -Force
+Push-Location $PSScriptRoot
+try {
+  if (Test-Path -LiteralPath $archive) {
+    Remove-Item -LiteralPath $archive -Force
+  }
+
+  tar `
+    --exclude ".git" `
+    --exclude "node_modules" `
+    --exclude "HISTORY_VERSION" `
+    --exclude "server-data" `
+    --exclude ".env" `
+    --exclude "*.log" `
+    -czf $archive .
+  Assert-LastExitCode "Create lighthouse archive"
+
+  Install-RemotePrerequisites
+
+  $target = "${User}@${HostName}:/tmp/bigdogwoofwoof-lighthouse.tar.gz"
+  Copy-ArchiveToRemote -ArchivePath $archive -TargetPath $target
+
+  Publish-RemoteRelease
+  Restart-RemoteService
+  Configure-RemoteNginx
+
+  Invoke-Remote "systemctl --no-pager --full status bigdogwoofwoof-online.service | sed -n '1,18p'"
+  Write-Output "Backend health: http://$HostName/health"
+  Write-Output "Online endpoint: http://$HostName/online-room"
+} finally {
+  Pop-Location
 }
-
-tar `
-  --exclude ".git" `
-  --exclude "node_modules" `
-  --exclude "HISTORY_VERSION" `
-  --exclude "server-data" `
-  --exclude ".env" `
-  --exclude "*.log" `
-  -czf $archive .
-Assert-LastExitCode "Create lighthouse archive"
-
-Install-RemotePrerequisites
-
-$target = "${User}@${HostName}:/tmp/bigdogwoofwoof-lighthouse.tar.gz"
-Copy-ArchiveToRemote -ArchivePath $archive -TargetPath $target
-
-Publish-RemoteRelease
-Restart-RemoteService
-Configure-RemoteNginx
-
-Invoke-Remote "systemctl --no-pager --full status bigdogwoofwoof-online.service | sed -n '1,18p'"
-Write-Output "Backend health: http://$HostName/health"
-Write-Output "Online endpoint: http://$HostName/online-room"

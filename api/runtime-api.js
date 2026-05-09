@@ -16,9 +16,9 @@ function mergeCardPromptIntoPromptTemplates(promptTemplates, cardPrompt) {
     label: existing.label || "斗蛐蛐角色卡辅助",
     staticPrefix: [
       ...systemPrompt,
-      ...(Array.isArray(cardPrompt.specialHandRules) ? ["特殊手札制作规则：", ...cardPrompt.specialHandRules] : []),
-      ...(Array.isArray(cardPrompt.domainRules) ? ["特殊领域制作规则：", ...cardPrompt.domainRules] : []),
-      ...(Array.isArray(cardPrompt.hardConstraints) ? ["返回格式硬约束：", ...cardPrompt.hardConstraints] : [])
+      ...(Array.isArray(cardPrompt.specialHandRules) ? ["Special hand rules:", ...cardPrompt.specialHandRules] : []),
+      ...(Array.isArray(cardPrompt.domainRules) ? ["Domain rules:", ...cardPrompt.domainRules] : []),
+      ...(Array.isArray(cardPrompt.hardConstraints) ? ["Return format constraints:", ...cardPrompt.hardConstraints] : [])
     ],
     dynamicSections: Array.from(new Set([
       ...((Array.isArray(existing.dynamicSections) ? existing.dynamicSections : [])),
@@ -29,8 +29,7 @@ function mergeCardPromptIntoPromptTemplates(promptTemplates, cardPrompt) {
       "allowedStages",
       "generatedTermTemplates",
       "customSpecialTerms",
-      "mechanismHints",
-      "cardPrompt"
+      "mechanismHints"
     ])),
     maxOutputChars: Math.max(Number(existing.maxOutputChars || 0), 1800)
   };
@@ -75,6 +74,170 @@ function removeSafeStorage(storage, key) {
   } catch (error) {
     return false;
   }
+}
+
+function getEast8DateKey(date = new Date()) {
+  const time = date instanceof Date ? date.getTime() : Date.now();
+  return new Date(time + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+const DUEL_CUSTOM_NAME_MAX_BYTES = 14;
+const DUEL_CUSTOM_DOMAIN_MAX_BYTES = 14;
+const DUEL_CUSTOM_TECHNIQUE_MAX_BYTES = 10;
+const aiPendingRequestMap = new Map();
+
+function utf8ByteLength(value) {
+  return new TextEncoder().encode(String(value || "")).length;
+}
+
+function trimUtf8Bytes(value, maxBytes) {
+  const limit = Math.max(0, Number(maxBytes || 0));
+  let output = "";
+  for (const char of String(value || "")) {
+    if (utf8ByteLength(output + char) > limit) break;
+    output += char;
+  }
+  return output;
+}
+
+function getLoginCardAiIdentity() {
+  const payload = globalThis.JJKLoginCard?.getPayload?.() || {};
+  const characters = Array.isArray(payload.characters) ? payload.characters : [];
+  const activeCharacter = characters[0]?.card || characters[0] || {};
+  const isAdmin = payload.admin === true || payload.admin?.enabled === true;
+  return {
+    nickname: String(payload.nickname || payload.ownerNickname || payload.displayName || "未命名登录卡").slice(0, 80),
+    ownerId: String(payload.ownerId || payload.ipDerivedId || payload.creatorIp || payload.creationIp || "anonymous").slice(0, 120),
+    loginCardIp: String(payload.creationIp || payload.creatorIp || payload.ipDerivedId || payload.ownerId || "").slice(0, 120),
+    characterId: String(activeCharacter.characterId || activeCharacter.id || payload.ownerId || "default-character").slice(0, 120),
+    isAdmin
+  };
+}
+
+function getAiUsageKindForTemplate(templateId) {
+  if (templateId === "duel_character_assist") return "character_generation";
+  if (templateId === "life_narrative" || templateId === "article_summary") return "life_narrative";
+  if (templateId === "battle_narration") return "battle_summary";
+  return "other";
+}
+
+function hashAiRequestKey(value) {
+  var text = String(value || "");
+  var hash = 2166136261;
+  for (var index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function buildAiGovernanceHeaders(templateId, context, promptPayload) {
+  const identity = getLoginCardAiIdentity();
+  const usageKind = getAiUsageKindForTemplate(templateId);
+  const requestKey = hashAiRequestKey(JSON.stringify({
+    templateId,
+    usageKind,
+    identity,
+    context,
+    model: promptPayload?.model || ""
+  }));
+  return {
+    "X-JJK-AI-Kind": usageKind,
+    "X-JJK-AI-Request-Key": requestKey,
+    "X-JJK-Login-Card-Nickname": encodeAiGovernanceHeaderValue(identity.nickname),
+    "X-JJK-Login-Card-Owner": encodeAiGovernanceHeaderValue(identity.ownerId),
+    "X-JJK-Login-Card-IP": encodeAiGovernanceHeaderValue(identity.loginCardIp),
+    "X-JJK-Character-Id": encodeAiGovernanceHeaderValue(identity.characterId),
+    "X-JJK-Login-Card-Admin": identity.isAdmin ? "1" : "0"
+  };
+}
+
+function encodeAiGovernanceHeaderValue(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  try {
+    return encodeURIComponent(text).slice(0, 240);
+  } catch {
+    return "";
+  }
+}
+
+function loginAiAdminMode() {
+  const password = String(els.aiAdminPasswordInput?.value || "");
+  const result = globalThis.JJKLoginCard?.unlockAdminMode?.(password) || {
+    ok: false,
+    message: "登录卡模块未加载，无法写入管理员模式。"
+  };
+  if (els.aiAdminStatus) {
+    els.aiAdminStatus.textContent = result.message || (result.ok ? "管理员模式已开启。" : "管理员登录失败。");
+    els.aiAdminStatus.classList.toggle("error-text", !result.ok);
+  }
+  if (result.ok && els.aiAdminPasswordInput) els.aiAdminPasswordInput.value = "";
+  updateAiProviderUi();
+  return result;
+}
+
+function readAiDailyUsage() {
+  const today = getEast8DateKey();
+  const fallback = { date: today, count: 0 };
+  try {
+    const parsed = JSON.parse(readSafeStorage(window.localStorage, AI_DAILY_USAGE_STORAGE_KEY, "{}")) || {};
+    if (parsed.date !== today) return fallback;
+    return {
+      date: today,
+      count: Math.max(0, Math.floor(Number(parsed.count || 0)))
+    };
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function writeAiDailyUsage(usage) {
+  return writeSafeStorage(window.localStorage, AI_DAILY_USAGE_STORAGE_KEY, JSON.stringify({
+    date: usage.date || getEast8DateKey(),
+    count: Math.max(0, Math.floor(Number(usage.count || 0)))
+  }));
+}
+
+function createAiDailyQuotaError(usage = readAiDailyUsage()) {
+  return createAiProviderError(AI_DAILY_LIMIT_MESSAGE, {
+    reasonCode: "daily-quota-exceeded",
+    stage: "quota",
+    dailyLimit: AI_DAILY_LIMIT,
+    dailyUsage: usage.count,
+    timezone: "Asia/Shanghai"
+  });
+}
+
+function assertAiDailyQuotaAvailable() {
+  if (getLoginCardAiIdentity().isAdmin) return readAiDailyUsage();
+  const usage = readAiDailyUsage();
+  if (usage.count >= AI_DAILY_LIMIT) throw createAiDailyQuotaError(usage);
+  return usage;
+}
+
+function hasLoginCardForAi() {
+  return Boolean(globalThis.JJKLoginCard?.hasLogin?.());
+}
+
+function createLoginCardRequiredAiError() {
+  return createAiProviderError("获取登录卡后才能用哦", {
+    reasonCode: "login-card-required",
+    stage: "login-card"
+  });
+}
+
+function assertLoginCardForAi() {
+  if (!hasLoginCardForAi()) throw createLoginCardRequiredAiError();
+  return true;
+}
+
+function recordAiDailyCall() {
+  if (getLoginCardAiIdentity().isAdmin) return readAiDailyUsage();
+  const usage = assertAiDailyQuotaAvailable();
+  const next = { date: usage.date, count: usage.count + 1 };
+  writeAiDailyUsage(next);
+  return next;
 }
 
 function getAiDefaultProviderMode() {
@@ -137,6 +300,12 @@ function getProviderModeForProviderId(providerId) {
   return getAiProviderMode();
 }
 
+function normalizeAiProviderModelName(value) {
+  const model = String(value || "").trim();
+  if (model === "doubao-seed-2-0-lite-260215") return "doubao-seed-2-0-mini-260215";
+  return model;
+}
+
 function initializeAiNarrativePanel() {
   if (els.aiProviderMode) {
     els.aiProviderMode.value = getStoredAiProviderMode();
@@ -150,10 +319,10 @@ function initializeAiNarrativePanel() {
     els.aiBaseUrlInput.value = readSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, activeProvider?.baseUrl || "");
   }
   if (els.aiPathInput) {
-    els.aiPathInput.value = readSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, activeProvider?.defaultPath || "");
+    els.aiPathInput.value = activeProvider?.defaultPath || "/chat/completions";
   }
   if (els.aiModelInput) {
-    els.aiModelInput.value = readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, getAiProviderDefaultModel());
+    els.aiModelInput.value = normalizeAiProviderModelName(readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, getAiProviderDefaultModel()));
   }
   if (els.aiOutputTokenInput) {
     els.aiOutputTokenInput.value = readSafeStorage(window.localStorage, AI_OUTPUT_TOKENS_STORAGE_KEY, String(getAiProviderMaxOutputTokens()));
@@ -169,8 +338,19 @@ function initializeAiNarrativePanel() {
 }
 
 function syncDuelAiAssistPanel() {
+  if (!hasLoginCardForAi()) {
+    if (els.duelAiAssistToggle) {
+      els.duelAiAssistToggle.checked = false;
+      els.duelAiAssistToggle.disabled = true;
+    }
+    if (els.duelAiDescription) els.duelAiDescription.disabled = true;
+    if (els.duelAiAnalyzeBtn) els.duelAiAnalyzeBtn.disabled = true;
+    updateDuelAiStatus("获取登录卡后才能用哦", true);
+    return;
+  }
   const enabled = isDuelAiAssistEnabled();
   if (els.duelAiAssistToggle) els.duelAiAssistToggle.checked = enabled;
+  if (els.duelAiAssistToggle) els.duelAiAssistToggle.disabled = false;
   if (els.duelAiDescription) els.duelAiDescription.disabled = !enabled;
   if (els.duelAiAnalyzeBtn) els.duelAiAnalyzeBtn.disabled = !enabled;
   if (!enabled) updateDuelAiStatus("AI辅助已关闭，当前使用手填角色卡。");
@@ -192,7 +372,7 @@ function getAiProviderId() {
 
 function getAiProviderDefaultModel() {
   const provider = getAiProviderConfig(getAiProviderId() || getAiProviderMode());
-  return provider?.defaultModel || state.aiProviderRules?.defaultModel || "gpt-5-mini";
+  return normalizeAiProviderModelName(provider?.defaultModel || state.aiProviderRules?.defaultModel || "doubao-seed-2-0-mini-260215");
 }
 
 function getAiProviderMaxOutputTokens() {
@@ -218,10 +398,12 @@ function getAiProviderBaseUrl() {
 
 function getAiProviderPath() {
   const provider = getAiProviderConfig(getAiProviderId() || getAiProviderMode());
-  if (getAiProviderMode() === "custom") {
-    return String(els.aiPathInput?.value || readSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, provider?.defaultPath || "") || provider?.defaultPath || "").trim();
-  }
-  return String(provider?.defaultPath || "").trim();
+  return String(provider?.defaultPath || "/chat/completions").trim();
+}
+
+function shouldUseServerAiProxy(aiMode, baseUrl) {
+  if (aiMode === "default") return true;
+  return false;
 }
 
 function syncAiProviderForMode(shouldUpdateModel = false) {
@@ -302,8 +484,7 @@ function saveAiProviderSettings() {
   writeSafeStorage(window.localStorage, AI_PROVIDER_ID_STORAGE_KEY, providerId);
   if (mode === "custom") {
     writeSafeStorage(window.localStorage, AI_BASE_URL_STORAGE_KEY, getAiProviderBaseUrl());
-    writeSafeStorage(window.localStorage, AI_PATH_STORAGE_KEY, getAiProviderPath());
-    writeSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, String(els.aiModelInput?.value || getAiProviderDefaultModel()).trim() || getAiProviderDefaultModel());
+    writeSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, normalizeAiProviderModelName(els.aiModelInput?.value || getAiProviderDefaultModel()) || getAiProviderDefaultModel());
     writeSafeStorage(window.localStorage, AI_OUTPUT_TOKENS_STORAGE_KEY, String(clamp(Number(els.aiOutputTokenInput?.value || getAiProviderMaxOutputTokens()), 64, 4000)));
     writeSafeStorage(window.localStorage, AI_BYOK_PERSIST_LOCAL_STORAGE_KEY, els.aiByokPersistLocal?.checked ? "yes" : "no");
   }
@@ -320,20 +501,54 @@ function getAiProviderSettings() {
   const providerId = getAiProviderId() || inferAiProviderIdForMode(aiMode);
   const provider = getAiProviderConfig(providerId || aiMode);
   const model = aiMode === "default"
-    ? (provider?.defaultModel || state.aiProviderRules?.defaultModel || getAiProviderDefaultModel())
-    : String(els.aiModelInput?.value || readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, getAiProviderDefaultModel())).trim() || getAiProviderDefaultModel();
+    ? normalizeAiProviderModelName(provider?.defaultModel || state.aiProviderRules?.defaultModel || getAiProviderDefaultModel())
+    : normalizeAiProviderModelName(els.aiModelInput?.value || readSafeStorage(window.localStorage, AI_MODEL_STORAGE_KEY, ""));
+  const providerBaseUrl = getAiProviderBaseUrl();
+  const useServerProxy = shouldUseServerAiProxy(aiMode, providerBaseUrl);
   return {
     aiMode,
     providerId,
     endpointType: provider?.endpointType || "chat_completions",
-    baseUrl: getAiProviderBaseUrl(),
-    path: getAiProviderPath(),
+    baseUrl: useServerProxy ? window.location.origin : providerBaseUrl,
+    path: useServerProxy ? "/api/ai-provider/chat/completions" : getAiProviderPath(),
     model,
     maxOutputTokens,
     maxPromptTokens: Number(state.aiProviderRules?.maxPromptTokens || state.aiProviderRules?.tokenBudget?.maxPromptTokens || 6000),
     byokPersistLocal: Boolean(els.aiByokPersistLocal?.checked),
-    apiKey: getDirectAiModes().includes(aiMode) ? (readAiByokKey() || provider?.defaultApiKey || state.aiProviderRules?.defaultApiKey || "") : ""
+    apiKey: useServerProxy ? "server-proxy" : (aiMode === "default"
+      ? (provider?.defaultApiKey || state.aiProviderRules?.defaultApiKey || "")
+      : aiMode === "custom"
+        ? readAiByokKey()
+        : "")
   };
+}
+
+function shouldForceDuelAiAssistServerProxy(templateId) {
+  return templateId === "duel_character_assist" && getAiProviderMode() === "default" && !getLoginCardAiIdentity().isAdmin;
+}
+
+function getAiProviderSettingsForTemplate(templateId) {
+  const settings = getAiProviderSettings();
+  if (settings.aiMode === "off" || !shouldForceDuelAiAssistServerProxy(templateId)) return settings;
+  const provider = getAiProviderConfig("ark_ai") || getAiProviderConfig("default") || {};
+  const model = normalizeAiProviderModelName(provider.defaultModel || state.aiProviderRules?.defaultModel || "doubao-seed-2-0-mini-260215");
+  return {
+    ...settings,
+    aiMode: "default",
+    providerId: "ark_ai",
+    endpointType: provider.endpointType || "chat_completions",
+    baseUrl: window.location.origin,
+    path: "/api/ai-provider/chat/completions",
+    model,
+    apiKey: "server-proxy",
+    serverProxy: true,
+    forcedServerProxyForTemplate: templateId
+  };
+}
+
+function isServerProxyAiSettings(settings) {
+  return Boolean(settings?.serverProxy) ||
+    (settings?.apiKey === "server-proxy" && settings?.path === "/api/ai-provider/chat/completions");
 }
 
 function toggleAiByokKeyVisibility() {
@@ -353,8 +568,8 @@ function updateAiProviderUi() {
     const warning = mode === "off"
       ? "AI 已关闭：三个 AI 入口都会使用本地 fallback，不调用远程服务。"
       : mode === "default"
-        ? "默认模式：使用内置 ArkAI Base URL、Path、Model 和默认 Key；自定义窗口已隐藏。"
-        : "自定义模式：请填写 Base URL、Path、Model 和 API Key；这些设置只保存在你的浏览器中。";
+        ? "默认模式：使用服务器代理的 Base URL、Model 和默认 Key；自定义窗口已隐藏。"
+        : "自定义模式：请填写 Base URL、Model 和 API Key；会直接调用你的 OpenAI-compatible Provider。";
     els.aiProviderWarning.textContent = warning;
     els.aiProviderWarning.classList.toggle("error-text", isCustom);
   }
@@ -377,8 +592,8 @@ function updateAiProviderUi() {
     els.aiBaseUrlInput.placeholder = isCustom ? "https://your-compatible-provider.example/v1" : (provider?.baseUrl || "");
   }
   if (els.aiPathInput) {
-    els.aiPathInput.disabled = !isCustom || provider?.allowCustomPath === false;
-    els.aiPathInput.placeholder = provider?.defaultPath || "/chat/completions";
+    els.aiPathInput.value = provider?.defaultPath || "/chat/completions";
+    els.aiPathInput.disabled = true;
   }
   if (els.aiModelInput) els.aiModelInput.disabled = !isCustom || provider?.allowCustomModel === false;
   if (els.aiOutputTokenInput) els.aiOutputTokenInput.disabled = !isCustom;
@@ -386,12 +601,23 @@ function updateAiProviderUi() {
     els.aiFallbackStatus.textContent = mode === "off"
       ? "AI 已关闭：AI生成对战过程、角色经历、自定义角色辅助都不会调用远程服务。"
       : mode === "default"
-        ? "默认：三个 AI 入口统一走 ArkAI 路径。"
-        : `自定义：三个 AI 入口统一走 ${provider?.label || providerId || "自定义 Provider"} 路径。`;
+        ? "默认：三个 AI 入口统一走服务器代理。"
+        : `自定义：三个 AI 入口统一走 ${provider?.label || providerId || "自定义 Provider"}，路径固定为 /chat/completions。`;
   }
   if (els.globalSettingsStatus) {
-    els.globalSettingsStatus.textContent = `当前 AI：${getAiEndpointModeHint()} 模型：${getAiProviderSettings().model || "未设置"}`;
+    els.globalSettingsStatus.textContent = hasLoginCardForAi()
+      ? `当前 AI：${getAiEndpointModeHint()} 模型：${getAiProviderSettings().model || "未设置"}`
+      : "获取登录卡后才能用哦";
+    els.globalSettingsStatus.classList.toggle("error-text", !hasLoginCardForAi());
   }
+  const loginLocked = !hasLoginCardForAi();
+  if (els.testAiProviderBtn) els.testAiProviderBtn.disabled = loginLocked;
+  if (els.generateAiNarrativeBtn) els.generateAiNarrativeBtn.disabled = loginLocked;
+  if (els.aiFreeToggle) {
+    els.aiFreeToggle.disabled = loginLocked || isDrawModeInteractionLocked();
+    els.aiFreeToggle.setAttribute("aria-disabled", els.aiFreeToggle.disabled ? "true" : "false");
+  }
+  if (els.duelAiAssistToggle) els.duelAiAssistToggle.disabled = loginLocked;
   updateAiCostEstimate();
 }
 
@@ -412,6 +638,10 @@ function updateAiCostEstimate(payload = null) {
 }
 
 async function testAiProviderConnection() {
+  if (!hasLoginCardForAi()) {
+    updateAiNarrativeStatus("获取登录卡后才能用哦", true);
+    return;
+  }
   saveAiProviderSettings();
   const settings = getAiProviderSettings();
   const builder = getAiPromptBuilder();
@@ -427,13 +657,151 @@ async function testAiProviderConnection() {
     return;
   }
   if (settings.aiMode === "custom" && (!settings.baseUrl || !settings.model)) {
-    updateAiNarrativeStatus("请先填写自定义 Provider 的 Base URL、Path 和 Model。", true);
+    updateAiNarrativeStatus("请先填写自定义 Provider 的 Base URL 和 Model。", true);
     return;
   }
-  updateAiNarrativeStatus(localCheck?.ok === false
-    ? `连接设置不完整：${localCheck.message}`
-    : "连接设置已填写。为避免浪费 token，测试按钮只做本地配置检查；实际生成时才会请求。",
-    localCheck?.ok === false);
+  if (localCheck?.ok === false) {
+    updateAiNarrativeStatus(`连接设置不完整：${localCheck.message}`, true);
+    return;
+  }
+  updateAiNarrativeStatus("正在发送轻量连通性测试...");
+  try {
+    const result = await testAiProviderReachability(settings, { timeoutMs: AI_PROVIDER_PREFLIGHT_TIMEOUT_MS });
+    updateAiNarrativeStatus(`连接测试通过：${result.providerId || settings.providerId || settings.aiMode} / ${result.model || settings.model}。后续发送 prompt 前也会先做预检。`);
+  } catch (error) {
+    updateAiNarrativeStatus(formatAiProviderFailureMessage(error, { taskLabel: "连接测试" }), true);
+  }
+}
+
+function createAiProviderError(message, details = {}) {
+  const error = new Error(message || "AI Provider request failed.");
+  Object.assign(error, details);
+  return error;
+}
+
+function redactAiFailureText(value) {
+  return String(value || "")
+    .replace(/Bearer\s+[^\s"'，。；;]+/gi, "Bearer [redacted]")
+    .replace(/sk-[A-Za-z0-9_-]+/g, "[redacted-key]")
+    .replace(/[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}/g, "[redacted-key]")
+    .slice(0, 260);
+}
+
+function decorateAiProviderError(error, details = {}) {
+  if (!error || typeof error !== "object") return createAiProviderError(String(error || "AI Provider request failed."), details);
+  Object.assign(error, details);
+  if (!error.reasonCode) {
+    if (error.name === "AbortError") error.reasonCode = "timeout";
+    else if (error.status === 401 || error.status === 403) error.reasonCode = "auth";
+    else if (error.status === 404) error.reasonCode = "not-found";
+    else if (error.status === 408 || error.status === 504) error.reasonCode = "timeout";
+    else if (error.status === 409 || /duplicate-ai-request/i.test(error.message || "")) error.reasonCode = "duplicate-request";
+    else if (error.status === 429) error.reasonCode = "rate-limit";
+    else if (Number(error.status) >= 500) error.reasonCode = "provider-server";
+    else if (/failed to fetch|network|cors/i.test(error.message || "")) error.reasonCode = "network";
+  }
+  return error;
+}
+
+function buildAiProviderPreflightPayload(settings = {}) {
+  return {
+    model: settings.model || getAiProviderDefaultModel(),
+    input: [
+      { role: "system", content: "Reply exactly OK." },
+      { role: "user", content: "ping" }
+    ],
+    max_output_tokens: 8,
+    temperature: 0,
+    prompt_cache_key: "jjk-wheel-v1:provider_preflight",
+    metadata: {
+      templateId: "provider_preflight",
+      estimatedPromptTokens: 8,
+      trimmed: false,
+      maxOutputTokens: 8
+    }
+  };
+}
+
+async function testAiProviderReachability(settings, options = {}) {
+  const builder = getAiPromptBuilder();
+  const providerId = settings?.providerId || getAiProviderId() || settings?.aiMode || "";
+  const model = settings?.model || getAiProviderDefaultModel();
+  const localCheck = builder?.testAiProviderConnection
+    ? builder.testAiProviderConnection(settings, { providerRules: state.aiProviderRules })
+    : null;
+  if (settings?.aiMode === "off") {
+    return { ok: true, remote: false, providerId, model };
+  }
+  if (localCheck?.ok === false) {
+    throw createAiProviderError(localCheck.message || "AI Provider 设置不完整。", {
+      reasonCode: localCheck.message === "missing api key" ? "missing-api-key" : "missing-provider-config",
+      stage: "preflight",
+      providerId,
+      model
+    });
+  }
+  if (!builder?.callAiProvider) {
+    throw createAiProviderError("AI prompt builder 未加载。", {
+      reasonCode: "builder-unavailable",
+      stage: "preflight",
+      providerId,
+      model
+    });
+  }
+  try {
+    const preflightSettings = { ...settings, maxOutputTokens: 8, temperature: 0 };
+    await callAiProviderWithTimeout(builder, preflightSettings, buildAiProviderPreflightPayload(settings), {
+      promptTemplateId: "provider_preflight",
+      localFallbackText: "OK",
+      timeoutMs: options.timeoutMs || AI_PROVIDER_PREFLIGHT_TIMEOUT_MS
+    });
+    return { ok: true, remote: true, providerId, model };
+  } catch (error) {
+    throw decorateAiProviderError(error, {
+      stage: "preflight",
+      providerId,
+      model,
+      timeoutMs: options.timeoutMs || AI_PROVIDER_PREFLIGHT_TIMEOUT_MS
+    });
+  }
+}
+
+function formatAiProviderFailureMessage(error, options = {}) {
+  if (error?.reasonCode === "daily-quota-exceeded") return AI_DAILY_LIMIT_MESSAGE;
+  if (error?.reasonCode === "login-card-required") return "获取登录卡后才能用哦";
+  const taskLabel = options.taskLabel || "AI请求";
+  const stageLabel = error?.stage === "preflight"
+    ? "连通性预检"
+    : error?.stage === "response-parse"
+      ? "返回解析"
+      : "远程请求";
+  const provider = error?.providerId || error?.provider || getAiProviderId() || getAiProviderMode() || "unknown";
+  const model = error?.model || getAiProviderSettings().model || "未设置";
+  const base = `${taskLabel}失败（${stageLabel}，Provider：${provider}，模型：${model}）`;
+  const detail = redactAiFailureText(error?.message || "");
+  if (error?.name === "AbortError" || error?.reasonCode === "timeout") {
+    const seconds = Math.round(Number(error?.timeoutMs || AI_REQUEST_TIMEOUT_MS) / 1000);
+    return `${base}：超过 ${seconds} 秒未响应。请重试，或缩短描述/减少特殊手札数量。`;
+  }
+  if (error?.reasonCode === "missing-api-key") return `${base}：缺少 API Key。请在 AI 设置中填写 Key；普通用户使用自定义角色卡时不需要填写 Key。`;
+  if (error?.reasonCode === "missing-provider-config") return `${base}：Base URL 或 Model 未配置完整。`;
+  if (error?.reasonCode === "builder-unavailable") return `${base}：前端 AI 模块未加载，请刷新页面后再试。`;
+  if (error?.status === 401 || error?.status === 403 || error?.reasonCode === "auth") {
+    if (error?.serverProxy || error?.forcedServerProxyForTemplate) {
+      return `${base}：服务器代理 Key 无效、权限不足，或没有访问当前模型的权限；普通用户不需要填写 Key，请联系站长检查服务器配置。`;
+    }
+    return `${base}：Key 无效、权限不足，或该 Key 没有访问当前模型的权限。`;
+  }
+  if (error?.status === 404 || error?.reasonCode === "not-found") return `${base}：接口或模型不存在。请检查 Base URL 和模型名；接口路径固定为 /chat/completions。`;
+  if (error?.status === 429 || error?.reasonCode === "rate-limit") return `${base}：触发限流或额度不足，请稍后重试或更换 Key/模型。${detail ? ` 原始信息：${detail}` : ""}`;
+  if (error?.status === 409 || error?.reasonCode === "duplicate-request") {
+    const seconds = Math.max(1, Math.ceil(Number(error?.data?.retryAfterMs || error?.retryAfterMs || 15000) / 1000));
+    return `${base}：相同请求刚提交过或仍在处理中，请等待 ${seconds} 秒后重试。`;
+  }
+  if (Number(error?.status) >= 500 || error?.reasonCode === "provider-server") return `${base}：Provider 服务器返回 ${error.status}，通常是服务端繁忙或模型暂不可用。${detail ? ` 原始信息：${detail}` : ""}`;
+  if (error?.reasonCode === "network") return `${base}：网络/CORS/域名连接失败。请检查 Base URL 是否可访问，或通过代理线路调用。`;
+  if (error?.reasonCode === "invalid-structured-json") return `${base}：模型没有返回可解析的角色 JSON，或缺少 suggestion.specialHands。请重试；原始片段：${redactAiFailureText(error?.sample || detail)}`;
+  return `${base}${detail ? `：${detail}` : "：服务暂时不可用。"}`;
 }
 
 function normalizeAiEndpoint(value) {
@@ -462,6 +830,11 @@ function toggleGlobalSettingsPanel(force) {
 }
 
 async function generateAiNarrative() {
+  if (!hasLoginCardForAi()) {
+    renderAiNarrativeOutput("");
+    updateAiNarrativeStatus("获取登录卡后才能用哦", true);
+    return;
+  }
   const kind = els.aiNarrativeKind?.value || "finalBiography";
   const narrativeContext = buildAiNarrativePayload(kind);
   if (narrativeContext.records.length === 0) {
@@ -499,10 +872,10 @@ async function generateAiNarrative() {
     const modeText = data.localFallback ? "本地 fallback，未消耗 API token" : "已调用玩家配置的 AI Provider";
     updateAiNarrativeStatus(`人生经历记录已生成。类型：${getAiNarrativeKindLabel(kind)}；${modeText}${debugText}${incompleteText}。`, Boolean(data.incompleteReason));
   } catch (error) {
-    renderAiNarrativeOutput(buildLocalLifeNarrativeFallback(narrativeContext));
+    renderAiNarrativeOutput(["daily-quota-exceeded", "login-card-required"].includes(error?.reasonCode) ? "" : buildLocalLifeNarrativeFallback(narrativeContext));
     updateAiNarrativeStatus(buildAiFailureMessage(error), true);
   } finally {
-    els.generateAiNarrativeBtn.disabled = false;
+    els.generateAiNarrativeBtn.disabled = !hasLoginCardForAi();
   }
 }
 
@@ -515,13 +888,14 @@ async function requestAiNarrative(endpoint, payload) {
 
 function buildAiPromptPayload(templateId, context, options = {}) {
   const builder = getAiPromptBuilder();
-  const settings = getAiProviderSettings();
+  const { providerSettings, ...builderOptions } = options;
+  const settings = providerSettings || getAiProviderSettings();
   const promptOptions = {
     providerRules: state.aiProviderRules,
     model: settings.model,
     maxOutputTokens: settings.maxOutputTokens,
     siteVersion: APP_BUILD_VERSION,
-    ...options
+    ...builderOptions
   };
   const payload = builder?.buildAiPromptPayload
     ? builder.buildAiPromptPayload(templateId, context, promptOptions)
@@ -546,9 +920,13 @@ function buildAiPromptPayload(templateId, context, options = {}) {
 }
 
 async function requestAiGoverned(templateId, context, options = {}) {
+  assertLoginCardForAi();
+  assertAiDailyQuotaAvailable();
   const builder = getAiPromptBuilder();
-  const settings = getAiProviderSettings();
-  const promptPayload = buildAiPromptPayload(templateId, context, options);
+  const settings = getAiProviderSettingsForTemplate(templateId);
+  const promptPayload = buildAiPromptPayload(templateId, context, { ...options, providerSettings: settings });
+  const requestKey = hashAiRequestKey(JSON.stringify({ templateId, context, model: promptPayload?.model || "" }));
+  if (aiPendingRequestMap.has(requestKey)) return aiPendingRequestMap.get(requestKey);
   const localFallbackText = options.localFallbackText || buildLocalAiFallbackText(templateId, context);
   const localResponse = (reason) => ({
     provider: settings.aiMode || "off",
@@ -561,17 +939,39 @@ async function requestAiGoverned(templateId, context, options = {}) {
     promptMetadata: promptPayload.metadata || null
   });
 
+  const execute = (async () => {
   if (settings.aiMode === "off") {
     return localResponse("mode:" + settings.aiMode);
   }
   if (getDirectAiModes().includes(settings.aiMode) && !settings.apiKey) {
+    if (options.throwOnRemoteFailure) {
+      throw createAiProviderError("missing api key", {
+        reasonCode: "missing-api-key",
+        stage: "preflight",
+        providerId: settings.providerId,
+        model: settings.model
+      });
+    }
     return localResponse("missing-byok-key");
   }
   if (settings.aiMode === "custom" && (!settings.baseUrl || !settings.model)) {
+    if (options.throwOnRemoteFailure) {
+      throw createAiProviderError("missing compatible provider config", {
+        reasonCode: "missing-provider-config",
+        stage: "preflight",
+        providerId: settings.providerId,
+        model: settings.model
+      });
+    }
     return localResponse("missing-compatible-provider-config");
   }
   try {
     if (!builder?.callAiProvider) throw new Error("AI prompt builder is unavailable.");
+    if (options.preflight !== false && settings.aiMode === "custom") {
+      await testAiProviderReachability(settings, {
+        timeoutMs: options.preflightTimeoutMs || AI_PROVIDER_PREFLIGHT_TIMEOUT_MS
+      });
+    }
     const result = await callAiProviderWithTimeout(builder, settings, promptPayload, {
       promptTemplateId: templateId,
       localFallbackText,
@@ -589,17 +989,43 @@ async function requestAiGoverned(templateId, context, options = {}) {
       promptMetadata: promptPayload.metadata || null
     };
   } catch (error) {
-    return localResponse(error?.status ? `HTTP ${error.status}` : (error?.message || "provider-failed"));
+    const decorated = decorateAiProviderError(error, {
+      stage: error?.stage || "request",
+      providerId: settings.providerId,
+      model: settings.model,
+      serverProxy: isServerProxyAiSettings(settings),
+      forcedServerProxyForTemplate: settings.forcedServerProxyForTemplate || "",
+      timeoutMs: error?.timeoutMs || options.timeoutMs || AI_REQUEST_TIMEOUT_MS
+    });
+    if (decorated.reasonCode === "daily-quota-exceeded") throw decorated;
+    if (options.throwOnRemoteFailure) throw decorated;
+    return localResponse(decorated?.status ? `HTTP ${decorated.status}` : (decorated?.message || "provider-failed"));
+  }
+  })();
+  aiPendingRequestMap.set(requestKey, execute);
+  try {
+    return await execute;
+  } finally {
+    aiPendingRequestMap.delete(requestKey);
   }
 }
 
 async function callAiProviderWithTimeout(builder, settings, promptPayload, options = {}) {
+  recordAiDailyCall();
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), options.timeoutMs || AI_REQUEST_TIMEOUT_MS);
-  const fetchImpl = (url, request = {}) => fetch(url, {
-    ...request,
-    signal: controller.signal
-  });
+  const timeoutMs = options.timeoutMs || AI_REQUEST_TIMEOUT_MS;
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  const fetchImpl = (url, request = {}) => {
+    const headers = {
+      ...(request.headers || {}),
+      ...buildAiGovernanceHeaders(options.promptTemplateId, promptPayload?.input?.[1]?.content || {}, promptPayload)
+    };
+    return fetch(url, {
+      ...request,
+      headers,
+      signal: controller.signal
+    });
+  };
   try {
     return await builder.callAiProvider(settings, promptPayload, {
       providerRules: state.aiProviderRules,
@@ -608,6 +1034,9 @@ async function callAiProviderWithTimeout(builder, settings, promptPayload, optio
       localFallbackText: options.localFallbackText,
       fetchImpl
     });
+  } catch (error) {
+    if (error && typeof error === "object") error.timeoutMs = timeoutMs;
+    throw error;
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -636,7 +1065,7 @@ function getAiEndpointModeHint() {
   const providerMode = getAiProviderMode();
   if (providerMode === "off") return "AI 已关闭：不会调用任何远程服务。";
   if (providerMode === "default") return "当前为默认模式：AI生成对战过程、角色经历、自定义角色辅助统一使用 ArkAI 路径。";
-  if (providerMode === "custom") return "当前为自定义模式：三个 AI 入口统一使用你填写的 OpenAI-compatible 路径。";
+  if (providerMode === "custom") return "当前为自定义模式：三个 AI 入口统一使用你填写的 OpenAI-compatible Base URL、Model 和 Key。";
   return "当前 AI 模式未识别，已回退到默认 ArkAI 路径。";
 }
 
@@ -646,14 +1075,10 @@ function shouldTryNextAiEndpoint(error) {
 
 function buildAiFailureMessage(error) {
   const mode = getAiProviderMode();
-  if (error?.name === "AbortError") {
-    return "生成请求超过 150 秒，已自动中断。请重试，或先用较短流程记录生成。";
-  }
-  if (error?.status === 429) {
-    return error?.message || "AI 生成次数暂时达到限制，请稍后再试。";
-  }
+  if (error?.name === "AbortError" || error?.status || error?.reasonCode) return formatAiProviderFailureMessage(error, { taskLabel: "AI生成" });
   if (mode === "custom" && !readAiByokKey()) return "未配置自定义 Provider API Key，已回退到本地叙事。";
   if (mode === "custom" && !getAiProviderSettings().baseUrl) return "未配置自定义 Provider 的 Base URL，已回退到本地叙事。";
+  if (mode === "custom" && !getAiProviderSettings().model) return "未配置自定义 Provider 的 Model，已回退到本地叙事。";
   if (mode === "off") return "当前没有调用远程 AI。";
   if (state.debugMode) return error?.message || "人生经历记录生成失败。";
   return "AI Provider 暂时不可用，已回退到本地叙事。";
@@ -990,11 +1415,23 @@ function roundForPayload(value) {
 
 //--斗蛐蛐AI辅助请求--//
 async function analyzeCustomDuelWithAi() {
+  if (!hasLoginCardForAi()) {
+    updateDuelAiStatus("获取登录卡后才能用哦", true);
+    renderDuelAiOutput("获取登录卡后才能用哦");
+    return;
+  }
   if (!isDuelAiAssistEnabled()) {
     updateDuelAiStatus("请先开启 AI辅助。", true);
     return;
   }
-  const description = normalizeCustomDuelLongText(els.duelAiDescription?.value || "");
+  const rawDescription = String(els.duelAiDescription?.value || "").trim();
+  const maxDescriptionChars = Number(DUEL_AI_DESCRIPTION_MAX_CHARS || 800);
+  if (Array.from(rawDescription).length > maxDescriptionChars) {
+    updateDuelAiStatus(`AI辅助自定义角色最多 ${maxDescriptionChars} 字，请压缩设定后再解析。`, true);
+    els.duelAiDescription?.focus();
+    return;
+  }
+  const description = normalizeCustomDuelLongText(rawDescription);
   const draft = readCustomDuelDraftForm();
   if (!description && !draft.name && !draft.technique && !draft.domain && !draft.tools.length && !draft.traits.length) {
     updateDuelAiStatus("先写一段角色设定，或至少填写部分术式、咒具、特质。", true);
@@ -1003,12 +1440,29 @@ async function analyzeCustomDuelWithAi() {
   }
 
   els.duelAiAnalyzeBtn.disabled = true;
+  if (typeof startDuelAiProgress === "function") startDuelAiProgress();
   updateDuelAiStatus("正在解析角色设定并回填角色卡...");
-  renderDuelAiOutput("解析中...");
+  renderDuelAiOutput("烧脑中。");
   try {
-    const data = await requestDuelAiAssistWithFallback(buildDuelCharacterAssistPayload(description, draft));
+    const data = await requestDuelAiAssistWithFallback(buildDuelCharacterAssistPayload(description, draft), { requireRemote: true });
+    logDuelAiRawResponse("duel-character-assist", data);
     const suggestion = normalizeDuelAiSuggestion(data.suggestion || data.cardSuggestion || {}, data.generatedTerms);
     if (!suggestion) throw new Error("解析服务没有返回可用角色卡。");
+    if (!data.localFallback && !suggestion.specialHands?.length) {
+      const fallbackHands = buildDuelAiTextFallbackSpecialHands(getDuelAiRawText(data), suggestion);
+      if (fallbackHands.length) {
+        suggestion.specialHands = fallbackHands;
+        suggestion.notes = normalizeCustomDuelLongText([suggestion.notes, "远程模型未按 JSON 返回 specialHands，已从原始文本降级提取临时手札。"].filter(Boolean).join(" "));
+      }
+    }
+    if (!data.localFallback && !suggestion.specialHands?.length) {
+      throw createAiProviderError("模型返回了角色卡，但没有返回可用 specialHands。", {
+        reasonCode: "invalid-structured-json",
+        stage: "response-parse",
+        providerId: data.provider,
+        model: data.model
+      });
+    }
     applyDuelAiSuggestion(suggestion);
     const pieces = [
       data.analysis ? `解析：${data.analysis}` : "",
@@ -1023,7 +1477,45 @@ async function analyzeCustomDuelWithAi() {
     renderDuelAiOutput("AI解析失败。可以继续手动填写角色卡。");
     updateDuelAiStatus(buildDuelAiFailureMessage(error), true);
   } finally {
-    els.duelAiAnalyzeBtn.disabled = !isDuelAiAssistEnabled();
+    if (typeof stopDuelAiProgress === "function") stopDuelAiProgress();
+    els.duelAiAnalyzeBtn.disabled = !hasLoginCardForAi() || !isDuelAiAssistEnabled();
+  }
+}
+
+function applyDuelManualDataInput() {
+  const rawText = String(els.duelManualDataInput?.value || "").trim();
+  if (!rawText) {
+    if (els.duelManualDataStatus) {
+      els.duelManualDataStatus.textContent = "先粘贴 JSON 或 AI 原文。";
+      els.duelManualDataStatus.classList.add("error-text");
+    }
+    return;
+  }
+  logDuelAiRawResponse("duel-manual-input", { text: rawText, provider: "manual", model: "manual" });
+  try {
+    const parsed = parseDuelAiStructuredJson({ text: rawText, markdown: rawText, provider: "manual", model: "manual" });
+    const draft = readCustomDuelDraftForm();
+    const rawSuggestion = parsed.suggestion || parsed.cardSuggestion || buildLooseDuelAiSuggestionFromText(rawText, draft);
+    if (!rawSuggestion) throw new Error("没有读取到 suggestion 或可用文本。");
+    if (!Array.isArray(rawSuggestion.specialHands) || !rawSuggestion.specialHands.length) {
+      rawSuggestion.specialHands = buildDuelAiTextFallbackSpecialHands(rawText, rawSuggestion);
+    }
+    const suggestion = normalizeDuelAiSuggestion(rawSuggestion, parsed.generatedTerms);
+    if (!suggestion || !suggestion.specialHands?.length) throw new Error("没有读取到可用 specialHands。");
+    applyDuelAiSuggestion(suggestion);
+    renderDuelAiOutput(`已读取手动数据并回填角色卡。\n\n${suggestion.notes || ""}`.trim());
+    updateDuelAiStatus("手动数据已读取并回填。");
+    if (els.duelManualDataStatus) {
+      els.duelManualDataStatus.textContent = "已读取。";
+      els.duelManualDataStatus.classList.remove("error-text");
+    }
+  } catch (error) {
+    const message = error?.message || "手动数据解析失败。";
+    updateDuelAiStatus(message, true);
+    if (els.duelManualDataStatus) {
+      els.duelManualDataStatus.textContent = message;
+      els.duelManualDataStatus.classList.add("error-text");
+    }
   }
 }
 
@@ -1036,12 +1528,12 @@ function readCustomDuelDraftForm() {
   });
   const librarySelection = readDuelLibrarySelection();
   return {
-    name: normalizeCustomDuelText(els.duelCustomName?.value || ""),
+    name: trimUtf8Bytes(normalizeCustomDuelText(els.duelCustomName?.value || ""), DUEL_CUSTOM_NAME_MAX_BYTES),
     visibleGrade: els.duelCustomGrade?.value || "grade2",
     stage: getValidDuelStage(els.duelCustomStage?.value || "custom"),
     techniquePower: els.duelCustomTechniquePower?.value || "B",
-    technique: mergeDuelLocalList(splitCustomDuelList(els.duelCustomTechnique?.value || ""), librarySelection.techniques).join("、"),
-    domain: mergeDuelLocalList(splitCustomDuelList(els.duelCustomDomain?.value || ""), librarySelection.domains).join("、"),
+    technique: trimUtf8Bytes(mergeDuelLocalList(splitCustomDuelList(els.duelCustomTechnique?.value || ""), librarySelection.techniques).join("、"), DUEL_CUSTOM_TECHNIQUE_MAX_BYTES),
+    domain: trimUtf8Bytes(mergeDuelLocalList(splitCustomDuelList(els.duelCustomDomain?.value || ""), librarySelection.domains).join("、"), DUEL_CUSTOM_DOMAIN_MAX_BYTES),
     tools: splitCustomDuelList(els.duelCustomTools?.value || ""),
     traits: mergeDuelLocalList(splitCustomDuelList(els.duelCustomTraits?.value || ""), librarySelection.advanced),
     mechanismTags: readSelectedDuelDefinitionValues(els.duelCustomMechanisms),
@@ -1063,14 +1555,13 @@ function buildDuelCharacterAssistPayload(description, draft) {
     description,
     draft,
     allowedRanks: DUEL_RANKS,
-    allowedGrades: DUEL_GRADE_OPTIONS,
-    allowedStages: DUEL_STAGE_OPTIONS,
+    allowedGrades: DUEL_GRADE_OPTIONS.map((item) => ({ value: item.value, label: item.label })),
+    allowedStages: DUEL_STAGE_OPTIONS.map((item) => ({ value: item.value, label: item.label })),
     generatedTermTemplates: getDuelGeneratedTermTemplatesForAi(),
     customSpecialTerms: getDuelSpecialTermsForAi(),
-    cardPrompt: state.cardPrompt || null,
     mechanismHints: {
-      cursedTools: (state.mechanisms?.cursedTools || []).slice(0, 18).map((item) => item.displayName || item.id),
-      mechanisms: (state.mechanisms?.mechanisms || []).slice(0, 28).map((item) => item.displayName || item.id)
+      cursedTools: (state.mechanisms?.cursedTools || []).slice(0, 12).map((item) => item.displayName || item.id),
+      mechanisms: (state.mechanisms?.mechanisms || []).slice(0, 18).map((item) => item.displayName || item.id)
     }
   };
 }
@@ -1090,8 +1581,10 @@ function getDuelGeneratedTermTemplatesForAi() {
   ];
 }
 
-async function requestDuelAiAssistWithFallback(payload) {
+async function requestDuelAiAssistWithFallback(payload, options = {}) {
   const failures = [];
+  assertLoginCardForAi();
+  assertAiDailyQuotaAvailable();
   if (getAiProviderMode() === "off") {
     const localOnly = buildLocalDuelAssistFallback(payload, [`mode:${getAiProviderMode()}`]);
     if (localOnly) return localOnly;
@@ -1099,7 +1592,9 @@ async function requestDuelAiAssistWithFallback(payload) {
   try {
     return await requestDuelAiAssist("", payload);
   } catch (error) {
+    if (error?.reasonCode === "daily-quota-exceeded") throw error;
     failures.push(error?.message || String(error || "AI Provider failed"));
+    if (options.requireRemote && getAiProviderMode() !== "off") throw error;
   }
   const localFallback = buildLocalDuelAssistFallback(payload, failures);
   if (localFallback) return localFallback;
@@ -1109,18 +1604,60 @@ async function requestDuelAiAssistWithFallback(payload) {
 async function requestDuelAiAssist(endpoint, payload) {
   const templateId = payload?.mode === "characterBuild" ? "duel_character_assist" : "battle_narration";
   const data = await requestAiGoverned(templateId, payload, {
-    timeoutMs: AI_REQUEST_TIMEOUT_MS,
+    timeoutMs: templateId === "duel_character_assist" ? DUEL_AI_CHARACTER_TIMEOUT_MS : AI_REQUEST_TIMEOUT_MS,
+    preflightTimeoutMs: AI_PROVIDER_PREFLIGHT_TIMEOUT_MS,
+    throwOnRemoteFailure: templateId === "duel_character_assist",
     localFallbackText: buildLocalAiFallbackText(templateId, payload)
   });
+  if (payload?.mode === "characterBuild") logDuelAiRawResponse("duel-character-assist-provider", data);
   const parsedData = payload?.mode === "characterBuild" ? parseDuelAiStructuredJson(data) : data;
   if (payload?.mode === "battleNarrative" && !data.battleText && (data.text || data.markdown)) {
     data.battleText = data.text || data.markdown;
   }
   if (payload?.mode === "characterBuild" && !parsedData.suggestion && !parsedData.cardSuggestion) {
+    const looseSuggestion = buildLooseDuelAiSuggestionFromText(getDuelAiRawText(data), payload?.draft || {});
+    if (looseSuggestion?.specialHands?.length) {
+      return {
+        ...parsedData,
+        suggestion: looseSuggestion,
+        analysis: parsedData.analysis || "模型没有返回严格 JSON，已从原始文本降级提取作战建议。",
+        warnings: Array.isArray(parsedData.warnings) ? parsedData.warnings : ["远程返回不是严格 JSON，建议检查手动输入数据。"]
+      };
+    }
+    if (!data.localFallback) {
+      throw createAiProviderError("模型返回了非 JSON，或 JSON 缺少 suggestion 字段。", {
+        reasonCode: "invalid-structured-json",
+        stage: "response-parse",
+        providerId: data.provider,
+        model: data.model,
+        sample: String(data.text || data.markdown || "").slice(0, 220)
+      });
+    }
     const fallback = buildLocalDuelAssistFallback(payload, [data.fallbackReason || "AI did not return structured suggestion"]);
     if (fallback) return fallback;
   }
   return parsedData;
+}
+
+function getDuelAiRawText(data) {
+  if (!data || typeof data !== "object") return "";
+  return String(data.text || data.markdown || data.rawText || data.content || "").trim();
+}
+
+function logDuelAiRawResponse(label, data) {
+  try {
+    const rawText = getDuelAiRawText(data);
+    console.info("[JJK][AI raw response]", {
+      label,
+      provider: data?.provider || "",
+      model: data?.model || "",
+      localFallback: Boolean(data?.localFallback),
+      text: rawText,
+      data
+    });
+  } catch {
+    // Console logging must never break AI parsing.
+  }
 }
 
 function parseDuelAiStructuredJson(data) {
@@ -1128,10 +1665,7 @@ function parseDuelAiStructuredJson(data) {
   if (data.suggestion || data.cardSuggestion) return data;
   const text = String(data.text || data.markdown || "").trim();
   if (!text) return data;
-  const cleaned = text
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/i, "")
-    .trim();
+  const cleaned = extractDuelAiJsonText(text);
   try {
     const parsed = JSON.parse(cleaned);
     return {
@@ -1141,8 +1675,93 @@ function parseDuelAiStructuredJson(data) {
       markdown: data.markdown
     };
   } catch (error) {
-    return data;
+    return {
+      ...data,
+      structuredParseError: error?.message || "invalid-json"
+    };
   }
+}
+
+function extractDuelAiJsonText(text) {
+  const source = String(text || "").trim();
+  const fenced = source.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = (fenced ? fenced[1] : source).trim();
+  if (candidate.startsWith("{") && candidate.endsWith("}")) return candidate;
+  const first = candidate.indexOf("{");
+  const last = candidate.lastIndexOf("}");
+  if (first >= 0 && last > first) return candidate.slice(first, last + 1);
+  return candidate;
+}
+
+function buildLooseDuelAiSuggestionFromText(text, draft = {}) {
+  const source = normalizeCustomDuelLongText(text || "");
+  if (!source) return null;
+  const hands = buildDuelAiTextFallbackSpecialHands(source, draft);
+  return {
+    name: normalizeCustomDuelText(draft.name || "") || "",
+    visibleGrade: draft.visibleGrade || "grade2",
+    stage: draft.stage || "custom",
+    techniquePower: draft.techniquePower || "B",
+    technique: normalizeCustomDuelText(draft.technique || ""),
+    domainProfile: normalizeCustomDuelText(draft.domain || ""),
+    loadout: Array.isArray(draft.tools) ? draft.tools.slice(0, 8) : [],
+    innateTraits: Array.isArray(draft.traits) ? draft.traits.slice(0, 8) : [],
+    externalResource: normalizeCustomDuelText(draft.externalResource || ""),
+    notes: source.slice(0, 720),
+    baseStats: { ...(draft.stats || DUEL_DEFAULT_CUSTOM_STATS) },
+    specialHands: hands,
+    generatedTerms: []
+  };
+}
+
+function buildDuelAiTextFallbackSpecialHands(text, context = {}) {
+  const source = normalizeCustomDuelLongText(text || "");
+  if (!source) return [];
+  const lines = source
+    .split(/\n+|(?:\d+[\.\、])|(?:[-*]\s+)/)
+    .map((line) => normalizeCustomDuelText(line.replace(/^#+\s*/, "").replace(/\*\*/g, "")))
+    .filter((line) => line && !/^作战建议|suggestion$/i.test(line))
+    .slice(0, 12);
+  const candidates = lines.length ? lines : [source];
+  const seen = new Set();
+  return candidates
+    .map((line, index) => {
+      const rawName = line.split(/[：:]/)[0] || line;
+      const name = normalizeCustomDuelText(rawName)
+        .replace(/^(技能优先级|风险规避|领域战术|特殊战术|建议|战术)\s*/g, "")
+        .slice(0, 12) || `作战手札${index + 1}`;
+      if (seen.has(name)) return null;
+      seen.add(name);
+      const type = /防御|规避|预留|回避|护盾|保护/.test(line)
+        ? "defense"
+        : /领域|必中|结界/.test(line)
+          ? "domain"
+          : /资源|召唤|库存|咒灵|式神|回复|预留/.test(line)
+            ? "resource"
+            : /优先|辅助|干扰|压制|战术/.test(line)
+              ? "technique"
+              : "attack";
+      const risk = /核爆|自毁|牺牲|禁|无法再使用|最后/.test(line) ? "critical" : (/高消耗|领域|围困/.test(line) ? "high" : "medium");
+      const damage = type === "attack" ? 16 : (type === "technique" || type === "domain" ? 12 : 0);
+      const block = type === "defense" ? 18 : 0;
+      return {
+        id: `ai-text-fallback-${index + 1}`,
+        name,
+        type,
+        risk,
+        apCost: type === "domain" ? 2 : 1,
+        ceCost: type === "domain" ? 34 : (risk === "critical" ? 36 : 22),
+        damage,
+        block,
+        stabilityDelta: type === "defense" ? 8 : 0,
+        domainLoadDelta: type === "domain" ? 12 : 0,
+        summary: line.slice(0, 140),
+        tags: ["自定义", "AI文本提取"],
+        source: "ai_text_fallback"
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 4);
 }
 
 function buildLocalDuelAssistFallback(payload, failures = []) {
@@ -1435,19 +2054,51 @@ function normalizeDuelAiSuggestion(raw, externalGeneratedTerms = []) {
   const visibleGrade = DUEL_GRADE_OPTIONS.some((item) => item.value === raw.visibleGrade) ? raw.visibleGrade : "grade2";
   const techniquePower = DUEL_RANKS.includes(raw.techniquePower) ? raw.techniquePower : "B";
   return {
-    name: normalizeCustomDuelText(raw.name || raw.displayName || ""),
+    name: trimUtf8Bytes(normalizeCustomDuelText(raw.name || raw.displayName || ""), DUEL_CUSTOM_NAME_MAX_BYTES),
     visibleGrade,
     stage: getValidDuelStage(raw.stage || ""),
     techniquePower,
-    technique: normalizeCustomDuelText(raw.technique || raw.techniqueName || ""),
-    domain: normalizeCustomDuelText(raw.domainProfile || raw.domain || ""),
+    technique: trimUtf8Bytes(normalizeCustomDuelText(raw.technique || raw.techniqueName || ""), DUEL_CUSTOM_TECHNIQUE_MAX_BYTES),
+    domain: trimUtf8Bytes(normalizeCustomDuelText(raw.domainProfile || raw.domain || ""), DUEL_CUSTOM_DOMAIN_MAX_BYTES),
     tools: Array.isArray(raw.loadout) ? raw.loadout.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(raw.tools || ""),
     traits: Array.isArray(raw.innateTraits) ? raw.innateTraits.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(raw.traits || ""),
     externalResource: normalizeCustomDuelText(raw.externalResource || ""),
     notes: normalizeCustomDuelText(raw.notes || ""),
     generatedTerms,
+    domainScript: normalizeDuelAiDomainScript(raw.domainScript),
     specialHands,
     stats: normalizedStats
+  };
+}
+
+function normalizeDuelAiDomainScript(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const serialized = JSON.stringify(raw);
+  if (/\b(function|eval|new Function|=>|<script)\b/i.test(serialized)) return null;
+  const allowedScriptTypes = new Set([
+    "sure_hit",
+    "auto_attack",
+    "self_buff",
+    "technique_buff",
+    "soul_pressure",
+    "hard_control",
+    "rule_trial_execution",
+    "jackpot_rule",
+    "placeholder_damage"
+  ]);
+  const scriptType = allowedScriptTypes.has(String(raw.scriptType || "")) ? String(raw.scriptType) : "placeholder_damage";
+  return {
+    ...raw,
+    id: normalizeCustomDuelText(raw.id || `ai_domain_${Date.now().toString(36)}`).toLowerCase().replace(/[^a-z0-9_-]+/g, "_"),
+    language: "json-rule-v1",
+    scriptType,
+    activation: normalizeCustomDuelText(raw.activation || "onDomainResolved"),
+    blockedBy: Array.isArray(raw.blockedBy) ? raw.blockedBy.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : [
+      "domain_clash",
+      "simple_domain_guard",
+      "hollow_wicker_basket_guard"
+    ],
+    source: "ai"
   };
 }
 
@@ -1488,6 +2139,7 @@ function filterDuelAiSpecialHandTags(tags = [], context = {}) {
 function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
   const source = Array.isArray(rawHands) ? rawHands : [];
   const allowedTypes = new Set(["attack", "technique", "ce_burst", "defense", "domain", "support", "resource", "counter", "rule", "soul_pressure"]);
+  const allowedAccuracyProfiles = new Set(["melee", "weapon", "technique_projectile", "technique_area", "unavoidable", "none"]);
   const riskMap = { extreme: "critical", critical: "critical", high: "high", medium: "medium", low: "low" };
   const seen = new Set();
   return source
@@ -1495,7 +2147,7 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
       if (!hand || typeof hand !== "object") return null;
       const name = normalizeCustomDuelText(hand.name || hand.label || "").slice(0, 40);
       if (!name) return null;
-      const type = normalizeCustomDuelText(hand.type || hand.cardType || "technique");
+      const type = normalizeCustomDuelText(hand.type || hand.cardType || "technique").toLowerCase();
       const cardType = allowedTypes.has(type) ? type : "technique";
       const idSource = normalizeCustomDuelText(hand.id || `ai-special-hand-${index + 1}`).toLowerCase();
       const id = idSource.replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `ai-special-hand-${index + 1}`;
@@ -1506,8 +2158,28 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
       const damage = clamp(Math.round(Number(hand.damage ?? hand.baseDamage ?? 0) || 0), 0, 999);
       const block = clamp(Math.round(Number(hand.block ?? hand.baseBlock ?? 0) || 0), 0, 999);
       const stabilityDelta = clamp(Math.round(Number(hand.stabilityDelta ?? hand.stability ?? 0) || 0), -100, 100);
-      const domainLoadDelta = clamp(Math.round(Number(hand.domainLoadDelta ?? hand.domainLoad ?? 0) || 0), 0, 999);
+      const domainLoadDelta = clamp(Math.round(Number(hand.domainLoadDelta ?? hand.domainLoad ?? 0) || 0), -999, 999);
       const summary = normalizeCustomDuelText(hand.summary || hand.description || `${name}：AI 生成特殊手札。`);
+      const rawAccuracyProfile = normalizeCustomDuelText(hand.accuracyProfile || hand.accuracy || "").toLowerCase();
+      const inferredAccuracyProfile = cardType === "attack"
+        ? "melee"
+        : cardType === "defense" || cardType === "support" || cardType === "resource"
+          ? "none"
+          : cardType === "domain" || cardType === "rule"
+            ? "unavoidable"
+            : "technique_projectile";
+      const accuracyProfile = allowedAccuracyProfiles.has(rawAccuracyProfile) ? rawAccuracyProfile : inferredAccuracyProfile;
+      const evasionAllowed = typeof hand.evasionAllowed === "boolean"
+        ? hand.evasionAllowed
+        : (damage > 0 && !["unavoidable", "none"].includes(accuracyProfile));
+      const hitRateModifier = clamp(Number(hand.hitRateModifier ?? hand.accuracyModifier ?? 0) || 0, -0.5, 0.5);
+      const onMissSource = hand.onMiss && typeof hand.onMiss === "object" ? hand.onMiss : {};
+      const onMiss = {
+        damageScale: clamp(Number(onMissSource.damageScale ?? (accuracyProfile === "technique_area" ? 0.38 : accuracyProfile === "technique_projectile" ? 0.12 : 0)) || 0, 0, 1),
+        ceDamageScale: clamp(Number(onMissSource.ceDamageScale ?? (accuracyProfile === "technique_area" ? 0.45 : accuracyProfile === "technique_projectile" ? 0.2 : 0)) || 0, 0, 1),
+        stabilityScale: clamp(Number(onMissSource.stabilityScale ?? (accuracyProfile === "technique_area" ? 0.45 : accuracyProfile === "technique_projectile" ? 0.2 : 0)) || 0, 0, 1),
+        keepCard: Boolean(onMissSource.keepCard)
+      };
       const rawTags = Array.isArray(hand.tags) ? hand.tags.map(normalizeCustomDuelText).filter(Boolean).slice(0, 12) : splitCustomDuelList(hand.tags || "");
       const tags = filterDuelAiSpecialHandTags([
         "自定义",
@@ -1534,6 +2206,10 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
         durationRounds: 1,
         damageType: typeof inferCustomHandDamageType === "function" ? inferCustomHandDamageType(cardType) : (cardType === "defense" ? "none" : "technique"),
         scalingProfile: typeof inferCustomHandScalingProfile === "function" ? inferCustomHandScalingProfile(cardType) : "balanced",
+        accuracyProfile,
+        evasionAllowed,
+        hitRateModifier,
+        onMiss,
         rarity: "special",
         weight: 1,
         allowedContexts: ["normal", "domain", "trial_allowed"],
@@ -1543,7 +2219,7 @@ function normalizeDuelAiSpecialHands(rawHands = [], context = {}) {
           weightDeltas: typeof buildCustomHandWeightDeltas === "function" ? buildCustomHandWeightDeltas(cardType, damage, block) : {}
         },
         effectSummary: summary,
-        risk: riskMap[String(hand.risk || "medium").trim()] || "medium",
+        risk: riskMap[String(hand.risk || "medium").trim().toLowerCase()] || "medium",
         tags,
         logTemplate: summary,
         source: normalizeCustomDuelText(hand.source || "ai")
@@ -1678,9 +2354,11 @@ function formatDuelGeneratedTermLine(term) {
 
 //--AI自由行动解析请求--//
 async function requestAiFreeInfluenceForTask(task, actionText, anchorText) {
+  assertLoginCardForAi();
   const payload = buildAiFreeAnalysisPayload(task, actionText, anchorText);
   const failures = [];
   const statuses = [];
+  assertAiDailyQuotaAvailable();
   if (getAiProviderMode() === "off") {
     return buildLocalAiFreeInfluence(task, actionText, anchorText, [`mode:${getAiProviderMode()}`]);
   }
@@ -1688,6 +2366,7 @@ async function requestAiFreeInfluenceForTask(task, actionText, anchorText) {
     const data = await requestAiFreeAnalysis("", payload);
     return normalizeRemoteAiFreeInfluence(data, task, actionText, anchorText);
   } catch (error) {
+    if (error?.reasonCode === "daily-quota-exceeded") throw error;
     failures.push(error?.message || String(error || "AI Provider failed"));
     if (error?.status) statuses.push(error.status);
   }
@@ -1899,6 +2578,8 @@ function normalizeRemoteAiFreeTextList(items = []) {
 }
 
 function buildAiFreeAnalysisFailureMessage(error) {
+  if (error?.reasonCode === "daily-quota-exceeded") return AI_DAILY_LIMIT_MESSAGE;
+  if (error?.reasonCode === "login-card-required") return "获取登录卡后才能用哦";
   if (error?.name === "AbortError") return "远端 AI 解析超过 60 秒，已中断。当前不会用本地关键词替代正式解析。";
   if (error?.status === 404) return "远端 Worker 尚未部署 /api/ai-free-analysis，AI自由辅助暂不能确认行动策略。";
   if (error?.status === 429) return error?.message || "远端 AI 解析请求达到限制，请稍后再试。";

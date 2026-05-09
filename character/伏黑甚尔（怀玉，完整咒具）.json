@@ -11,7 +11,9 @@
   "特殊手札": [
     "zero_ce_heavenly_restriction"
   ],
-  "specialHandTags": [],
+  "specialHandTags": [
+    "zero_ce_heavenly_restriction"
+  ],
   "characterId": "toji_fushiguro_hidden_inventory",
   "displayName": "伏黑甚尔（怀玉，完整咒具）",
   "stage": "hiddenInventory",

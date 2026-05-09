@@ -22,7 +22,8 @@
       "file": "五条悟（新宿决战）.json",
       "characterId": "gojo_satoru_shinjuku",
       "specialHandTags": [
-        "limitless"
+        "limitless",
+        "gojo_limitless"
       ]
     },
     {
@@ -30,14 +31,20 @@
       "file": "两面宿傩（平安／新宿决战基准）.json",
       "characterId": "sukuna_heian_or_shinjuku",
       "specialHandTags": [
-        "shrine"
+        "shrine",
+        "sukuna_slash"
       ]
     },
     {
       "name": "虎天帝 / 虎杖悠仁（68年后）",
       "file": "虎天帝 ／ 虎杖悠仁（68年后）.json",
       "characterId": "yuji_itadori_after68",
-      "specialHandTags": []
+      "specialHandTags": [
+        "hutian_black_flash",
+        "shrine",
+        "blood_manipulation",
+        "yuji_soul_melee"
+      ]
     },
     {
       "name": "高羽史彦（死灭回游）",
@@ -51,26 +58,33 @@
       "name": "伏黑甚尔（怀玉，完整咒具）",
       "file": "伏黑甚尔（怀玉，完整咒具）.json",
       "characterId": "toji_fushiguro_hidden_inventory",
-      "specialHandTags": []
+      "specialHandTags": [
+        "zero_ce_heavenly_restriction"
+      ]
     },
     {
       "name": "伏黑甚尔（涩谷通灵）",
       "file": "伏黑甚尔（涩谷通灵）.json",
       "characterId": "toji_fushiguro_shibuya_revenant",
-      "specialHandTags": []
+      "specialHandTags": [
+        "zero_ce_heavenly_restriction"
+      ]
     },
     {
       "name": "禅院真希（死灭回游完成后）",
       "file": "禅院真希（死灭回游完成后）.json",
       "characterId": "maki_zenin_culling",
-      "specialHandTags": []
+      "specialHandTags": [
+        "zero_ce_heavenly_restriction"
+      ]
     },
     {
       "name": "乙骨忧太（0卷，真里香）",
       "file": "乙骨忧太（0卷，真里香）.json",
       "characterId": "yuta_okkotsu_volume0_true_rika",
       "specialHandTags": [
-        "copy"
+        "copy",
+        "okkotsu_rika_copy"
       ]
     },
     {
@@ -87,7 +101,8 @@
       "characterId": "kashimo_hajime_ancient",
       "specialHandTags": [
         "mythical_beast_amber",
-        "kashimo_mythical_beast"
+        "kashimo_mythical_beast",
+        "hollow_wicker_basket"
       ]
     },
     {
@@ -119,7 +134,8 @@
       "file": "乙骨真剑（Modulo）.json",
       "characterId": "okkotsu_tsurugi_modulo",
       "specialHandTags": [
-        "copy"
+        "copy",
+        "okkotsu_rika_copy"
       ]
     },
     {
@@ -135,7 +151,9 @@
       "file": "祈本里香（0卷，完全显现）.json",
       "characterId": "rika_orimoto_volume0_full",
       "specialHandTags": [
-        "copy"
+        "copy",
+        "okkotsu_rika_copy",
+        "curse_spirit_general"
       ]
     },
     {
@@ -143,7 +161,8 @@
       "file": "漏瑚（涩谷）.json",
       "characterId": "jogo_shibuya",
       "specialHandTags": [
-        "disaster_flames"
+        "disaster_flames",
+        "curse_spirit_general"
       ]
     },
     {
@@ -151,7 +170,9 @@
       "file": "真人（涩谷）.json",
       "characterId": "mahito_shibuya",
       "specialHandTags": [
-        "idle_transfiguration"
+        "idle_transfiguration",
+        "mahito_soul_transfiguration",
+        "curse_spirit_general"
       ]
     },
     {
@@ -159,7 +180,8 @@
       "file": "花御（京都交流会）.json",
       "characterId": "hanami_exchange_event",
       "specialHandTags": [
-        "disaster_plants"
+        "disaster_plants",
+        "curse_spirit_general"
       ]
     },
     {
@@ -167,7 +189,8 @@
       "file": "陀艮（涩谷，领域展开）.json",
       "characterId": "dagon_shibuya_domain",
       "specialHandTags": [
-        "disaster_tides"
+        "disaster_tides",
+        "curse_spirit_general"
       ]
     },
     {
@@ -175,14 +198,17 @@
       "file": "禅院直哉（咒灵，樱岛）.json",
       "characterId": "naoya_cursed_spirit_sakurajima",
       "specialHandTags": [
-        "projection_sorcery"
+        "projection_sorcery",
+        "curse_spirit_general"
       ]
     },
     {
       "name": "疱疮神（涩谷）",
       "file": "疱疮神（涩谷）.json",
       "characterId": "smallpox_deity_shibuya",
-      "specialHandTags": []
+      "specialHandTags": [
+        "curse_spirit_general"
+      ]
     },
     {
       "name": "胀相（涩谷/死灭）",
@@ -201,7 +227,8 @@
         "curse_spirit_manipulation",
         "anti_gravity_system",
         "ganesha_obstacle_removal",
-        "ganesh_obstacle_removal"
+        "ganesh_obstacle_removal",
+        "curse_spirit_general"
       ]
     },
     {
@@ -217,26 +244,33 @@
       "file": "乙骨忧太（新宿决战）.json",
       "characterId": "yuta_okkotsu_shinjuku",
       "specialHandTags": [
-        "copy"
+        "copy",
+        "okkotsu_rika_copy"
       ]
     },
     {
       "name": "虎杖悠仁（新宿决战）",
       "file": "虎杖悠仁（新宿决战）.json",
       "characterId": "yuji_itadori_shinjuku",
-      "specialHandTags": []
+      "specialHandTags": [
+        "yuji_soul_melee"
+      ]
     },
     {
       "name": "伏黑惠（死灭回游）",
       "file": "伏黑惠（死灭回游）.json",
       "characterId": "megumi_fushiguro_culling",
-      "specialHandTags": []
+      "specialHandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "name": "日车宽见（死灭回游/新宿）",
       "file": "日车宽见（死灭回游／新宿）.json",
       "characterId": "higuruma_hiromi_culling",
-      "specialHandTags": []
+      "specialHandTags": [
+        "higuruma_trial_owner"
+      ]
     },
     {
       "name": "万（平安/受肉）",
@@ -303,7 +337,8 @@
       "file": "钉崎野蔷薇（剧情开始）.json",
       "characterId": "nobara_kugisaki_main_start",
       "specialHandTags": [
-        "straw_doll_technique"
+        "straw_doll_technique",
+        "mahito_soul_transfiguration"
       ]
     },
     {
@@ -596,7 +631,9 @@
       "name": "雷吉·斯塔（死灭回游）",
       "file": "雷吉·斯塔（死灭回游）.json",
       "characterId": "reggie_star_culling",
-      "specialHandTags": []
+      "specialHandTags": [
+        "recontract_icon"
+      ]
     }
   ]
 }

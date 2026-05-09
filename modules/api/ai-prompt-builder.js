@@ -3,6 +3,7 @@
 
   var namespace = "JJKAiPromptBuilder";
   var version = "0.1.1-candidate";
+  var MAX_AI_BATTLE_HISTORY = 20;
   var validModes = Object.freeze([
     "off",
     "default",
@@ -28,9 +29,9 @@
         endpointType: "chat_completions",
         baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
         defaultPath: "/chat/completions",
-        defaultModel: "doubao-seed-2-0-lite-260215",
+        defaultModel: "doubao-seed-2-0-mini-260215",
         defaultApiKey: "09d6d696-dc76-4d99-a912-b15bec17c869",
-        modelPresets: Object.freeze(["doubao-seed-2-0-lite-260215"]),
+        modelPresets: Object.freeze(["doubao-seed-2-0-mini-260215"]),
         allowCustomBaseUrl: false,
         allowCustomPath: false,
         allowCustomModel: false,
@@ -58,7 +59,7 @@
       default: Object.freeze({ enabled: true, label: "默认", providerId: "ark_ai", defaultStorage: "sessionStorage", allowLocalStorage: false }),
       custom: Object.freeze({ enabled: true, label: "自定义", providerId: "openai_compatible", defaultStorage: "sessionStorage", allowLocalStorage: true })
     }),
-    defaultModel: "doubao-seed-2-0-lite-260215",
+    defaultModel: "doubao-seed-2-0-mini-260215",
     openAiResponsesEndpoint: "https://api.openai.com/v1/responses",
     tokenBudget: Object.freeze({
       maxPromptTokens: 6000,
@@ -123,9 +124,14 @@
       duel_character_assist: Object.freeze({
         label: "自定义角色卡",
         staticPrefix: Object.freeze([
-          "把玩家描述整理成咒术角色卡 JSON。",
-          "只输出 JSON；字段优先包含 suggestion/cardSuggestion。",
-          "不要编造描述中没有的核心术式、领域或咒具；不确定则留空或保守。"
+          "把玩家描述整理成咒术角色卡 JSON，只输出 JSON。",
+          "不要输出 Markdown、代码块、解释前缀或后缀；无法确定的字段用空字符串、空数组或保守低数值。",
+          "顶层必须是 suggestion、analysis、warnings。suggestion.specialHands 1-6 张且不能为空。",
+          "specialHands 每张必须含 id/name/type/risk/ceCost/damage/block/stabilityDelta/domainLoadDelta/accuracyProfile/evasionAllowed/hitRateModifier/onMiss/summary/tags/source；apCost 是旧字段，可省略或固定 0，不得作为平衡依据。",
+          "type 仅 attack/technique/ce_burst/defense/domain/support/resource/counter/rule/soul_pressure；risk 仅 low/medium/high/critical，risk 不得写进 tags。",
+          "tags 只写术式、资源、角色绑定或机制标签；不要把 visibleGrade、risk、模型名、API 信息写入 tags。",
+          "特殊手札伤害会由系统按角色咒力操纵自动套用“咒力操纵修正”独立乘区；不要把该乘区折算进 damage，也不要输出 ceControlDamageCorrection 字段。",
+          "禁止 guaranteedWin/instantKill/ignoreAllDefense/unlimitedCostFree；领域脚本仅 json-rule-v1，不写 JS/eval。"
         ]),
         dynamicSections: Object.freeze(["mode", "description", "draft", "language"]),
         maxOutputChars: 1200
@@ -390,6 +396,22 @@
     return value.slice(value.length - limit);
   }
 
+  function compactBattleHistoryForAi(history) {
+    if (!Array.isArray(history)) return history;
+    return history.slice(-MAX_AI_BATTLE_HISTORY).map(function compactBattleHistoryEntry(entry, index) {
+      if (!entry || typeof entry !== "object") return entry;
+      return {
+        index: entry.index ?? entry.round ?? index + 1,
+        battleId: entry.battleId || entry.id || "",
+        left: entry.left?.name || entry.leftName || entry.playerName || "",
+        right: entry.right?.name || entry.rightName || entry.opponentName || "",
+        winner: entry.winnerName || entry.winner || entry.result || "",
+        reason: entry.endReason || entry.resolutionReason || "",
+        summary: String(entry.summary || entry.battleText || entry.resultText || entry.detail || "").slice(0, 240)
+      };
+    });
+  }
+
   function trimKnownCollections(context, rules, trimSteps) {
     var next = cloneJson(context || {});
     var recentLogLimit = rules.recentLogLimit || defaultProviderRules.recentLogLimit;
@@ -434,6 +456,17 @@
         trimSteps.push("trimmed " + key + " to " + maxDomainSummary);
       }
     });
+
+    ["battleHistory", "battles", "duelHistory", "recentBattles"].forEach(function trimBattleHistory(key) {
+      if (Array.isArray(next[key]) && next[key].length > MAX_AI_BATTLE_HISTORY) {
+        next[key] = compactBattleHistoryForAi(next[key]);
+        trimSteps.push("trimmed " + key + " to " + MAX_AI_BATTLE_HISTORY);
+      }
+    });
+    if (next.battle && Array.isArray(next.battle.history) && next.battle.history.length > MAX_AI_BATTLE_HISTORY) {
+      next.battle.history = compactBattleHistoryForAi(next.battle.history);
+      trimSteps.push("trimmed battle.history to " + MAX_AI_BATTLE_HISTORY);
+    }
 
     if (next.debug) {
       delete next.debug;
@@ -722,6 +755,7 @@
       if (!apiKey) throw new Error("API key is required for BYOK direct mode.");
       endpoint = getProviderEndpoint(settings, provider);
       if (!endpoint) throw new Error("OpenAI-compatible base URL is required.");
+      if (mode === "custom" && !String(settings?.model || "").trim()) throw new Error("Custom AI model is required.");
       body = buildChatCompletionsPayload(settings, payload, provider);
       return {
         mode: mode,
@@ -753,7 +787,10 @@
       return {};
     });
     if (!response.ok) {
-      var error = new Error(data.error || "HTTP " + response.status);
+      var providerMessage = typeof data.error === "string"
+        ? data.error
+        : (data.error?.message || data.message || data.detail || data.msg || "HTTP " + response.status);
+      var error = new Error(providerMessage);
       error.status = response.status;
       error.data = data;
       throw error;
@@ -905,6 +942,7 @@
     buildBetaFeedbackPrompt: buildBetaFeedbackPrompt,
     estimatePromptTokenBudget: estimatePromptTokenBudget,
     trimAiContextToBudget: trimAiContextToBudget,
+    compactBattleHistoryForAi: compactBattleHistoryForAi,
     summarizeBattleForAi: summarizeBattleForAi,
     summarizeLogsForAi: summarizeLogsForAi,
     buildPromptCacheKey: buildPromptCacheKey,

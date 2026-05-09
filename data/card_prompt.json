@@ -5,27 +5,37 @@
   "language": "zh-CN",
   "purpose": "System prompt for custom character AI assist. It converts natural-language character descriptions into structured JJK duel character data, special domain data, and special hand cards.",
   "systemPrompt": [
-    "????????????????????????????????????????????",
-    "????????????? HP/CE/AP?????????????????????????",
-    "????????????? analysis ? warnings ????????????",
-    "??????? id/name/type/risk/apCost/ceCost/damage/block/stabilityDelta/domainLoadDelta/summary/tags/source?????????",
-    "???????guaranteedWin?instantKill?ignoreAllDefense?unlimitedCostFree????????? ceCost?domainLoadDelta?risk ? warnings?",
-    "????? domainProfile/domainScript?????????????????? specialHands?",
-    "????? JSON ????? Markdown??????????"
+    "你是斗蛐蛐自定义角色数据生成器。把玩家描述整理成可读入的咒术角色卡 JSON。",
+    "只输出一个 JSON 对象，不要 Markdown、标题、解释、代码块或列表前缀。",
+    "不要把 JSON 包在 ```json 代码块里；不要输出自然语言说明；无法确定的字段用空字符串、空数组或保守低数值。",
+    "顶层必须包含 suggestion、analysis、warnings。suggestion.specialHands 必须存在且 1-6 张，不能为空。",
+    "每张 specialHands 必须含 id/name/type/risk/ceCost/damage/block/stabilityDelta/domainLoadDelta/summary/tags/source。",
+    "禁止 guaranteedWin、instantKill、ignoreAllDefense、unlimitedCostFree。强效果必须提高 ceCost、domainLoadDelta、risk，并写入 warnings。",
+    "若描述包含领域，填写 domainProfile/domainScript；若没有领域，不要编造领域，但仍必须返回 specialHands。",
+    "数值只给基础值，系统会自动按角色咒力操纵、术式强度和实战公式修正，不要把乘区折算进 damage。"
   ],
   "specialHandRules": [
-    "type ??? attack?technique?ce_burst?defense?domain?support?resource?counter?rule?soul_pressure?risk ??? low?medium?high?critical?",
+    "type 只能是 attack、technique、ce_burst、defense、domain、support、resource、counter、rule、soul_pressure；risk 只能是 low、medium、high、critical。",
     "specialHands.risk only uses low/medium/high/critical; risk only belongs in risk, not tags. tags must not use low/medium/high/critical/extreme.",
-    "??/??/??/??/??????????????? domainScript.effects????????????",
-    "???? accuracyProfile/evasionAllowed/onMiss????????????????????",
-    "????????? damage 8-32???????? 45 ????? block ?? 8-34?????? warnings?"
+    "tags 只写术式、资源、角色绑定或机制标签；不要把 visibleGrade、risk、模型名、API 信息写入 tags。",
+    "攻击/术式牌常规 damage 8-32；超过 45 必须 critical、高消耗并写 warnings；防御牌 block 常规 8-34。",
+    "accuracyProfile 可用 melee、weapon、technique_projectile、technique_area、unavoidable、none；必中只给领域/规则类，且必须有代价。",
+    "CE 参考：低消耗 8-16，常规 18-32，高消耗 34-55，极端 56+ 并 critical。"
   ],
   "domainRules": [
-    "domainProfile ????????????????",
-    "?????? domainScript?scriptType ??? sure_hit?auto_attack?self_buff?technique_buff?soul_pressure?hard_control?rule_trial_execution?jackpot_rule?placeholder_damage?",
-    "domainScript ??? json-rule-v1 ????????? JavaScript?eval??????????",
-    "???????? blockedBy?domain_clash?simple_domain_guard?hollow_wicker_basket_guard?falling_blossom_emotion?zero_ce_domain_bypass?",
-    "???????? placeholder_plus_10_damage fallback???? reason?"
+    "domainProfile 写领域名称和核心效果，不确定时留空。",
+    "如填写 domainScript，scriptType 只能是 sure_hit、auto_attack、self_buff、technique_buff、soul_pressure、hard_control、rule_trial_execution、jackpot_rule、placeholder_damage。",
+    "domainScript 只允许 json-rule-v1 结构化数据，禁止 JavaScript、eval、函数或脚本片段。",
+    "领域应设置 blockedBy：domain_clash、simple_domain_guard、hollow_wicker_basket_guard、falling_blossom_emotion、zero_ce_domain_bypass 中的合理项。",
+    "复杂领域无法准确表达时，用 placeholder_plus_10_damage fallback 并写 reason。"
+  ],
+  "numericReference": [
+    "visibleGrade 常用：grade4、grade3、semiGrade2、grade2、semiGrade1、grade1、specialGrade、unknown。",
+    "属性等级只用 E、D、C、B、A、S、SS、SSS、EX-、EX。",
+    "damage 0 表示非攻击牌；普通攻击 8-18，核心术式 18-32，终结技 33-55，极端伤害必须 critical。",
+    "block 0 表示非防御牌；普通防御 8-18，强防御 19-34。",
+    "stabilityDelta 使用 -20 到 20 的整数，正数代表自身体势/稳定恢复，负数代表自损或失衡。",
+    "domainLoadDelta 使用 -20 到 30 的整数，展开/强化领域为正，收束/维护为负或小正。"
   ],
   "returnFormat": {
     "type": "object",
@@ -64,7 +74,6 @@
             "name": "string",
             "type": "attack | technique | ce_burst | defense | domain | support | resource | counter | rule | soul_pressure",
             "risk": "low | medium | high | critical",
-            "apCost": 1,
             "ceCost": 10,
             "damage": 0,
             "block": 0,
@@ -146,8 +155,8 @@
     }
   },
   "hardConstraints": [
-    "???????? suggestion?analysis?warnings?",
-    "suggestion.specialHands ?? 6 ???????????????",
-    "???? API key??????????????????"
+    "必须输出合法 JSON，顶层必须有 suggestion、analysis、warnings。",
+    "suggestion.specialHands 最多 6 张，但至少 1 张；无法完整生成时也要返回 1 张保守手札。",
+    "不得请求、输出或复述 API key、令牌、密钥。"
   ]
 }

@@ -12,6 +12,7 @@ function addCustomDuelCharacter() {
     state.customDuelCards.push(card);
   }
   state.pendingCustomDuelHandCards = [];
+  state.pendingCustomDuelSpecialHandTags = [];
   state.pendingCustomDuelDomainScript = null;
   state.duelBattle = null;
   renderDuelCustomList();
@@ -39,6 +40,59 @@ function notifyDuelCharacterPoolChanged() {
       totalCount: getDuelCharacterCards().length
     }
   }));
+}
+
+function normalizeLoginCardCharacterForPool(card = {}, options = {}) {
+  const copy = cloneCustomDuelExportValue(card) || {};
+  const characterId = String(copy.characterId || copy.id || `login_card_${Date.now().toString(36)}`).trim();
+  const displayName = String(copy.displayName || copy.name || "未命名角色").trim();
+  return {
+    ...copy,
+    characterId,
+    displayName,
+    name: copy.name || displayName,
+    customDuel: copy.customDuel !== false,
+    source: copy.source || "login-card",
+    __loginCardCharacter: true,
+    __loginCardOwnerId: options.ownerId || copy.__loginCardOwnerId || ""
+  };
+}
+
+function importLoginCardCharacters(cards = [], options = {}) {
+  const normalizedCards = (Array.isArray(cards) ? cards : [])
+    .map((card) => normalizeLoginCardCharacterForPool(card, options))
+    .filter((card) => card.characterId);
+  if (!normalizedCards.length) return { imported: 0, total: state.customDuelCards.length };
+  for (const card of normalizedCards) {
+    const existingIndex = state.customDuelCards.findIndex((item) => item.characterId === card.characterId);
+    if (existingIndex >= 0) state.customDuelCards[existingIndex] = card;
+    else state.customDuelCards.push(card);
+  }
+  state.duelBattle = null;
+  renderDuelCustomList();
+  renderDuelMode();
+  notifyDuelCharacterPoolChanged();
+  return { imported: normalizedCards.length, total: state.customDuelCards.length };
+}
+
+function removeLoginCardCharactersFromPool(characterIds = [], options = {}) {
+  const ids = new Set((Array.isArray(characterIds) ? characterIds : [characterIds]).map(String).filter(Boolean));
+  if (!ids.size) return { removed: 0, total: state.customDuelCards.length };
+  const ownerId = String(options.ownerId || "");
+  const before = state.customDuelCards.length;
+  state.customDuelCards = state.customDuelCards.filter((card) => {
+    if (!ids.has(String(card.characterId))) return true;
+    if (!card.__loginCardCharacter) return true;
+    if (ownerId && String(card.__loginCardOwnerId || "") !== ownerId) return true;
+    return false;
+  });
+  const removed = before - state.customDuelCards.length;
+  if (!removed) return { removed: 0, total: state.customDuelCards.length };
+  state.duelBattle = null;
+  renderDuelCustomList();
+  renderDuelMode();
+  notifyDuelCharacterPoolChanged();
+  return { removed, total: state.customDuelCards.length };
 }
 
 function readCustomDuelForm() {
@@ -72,6 +126,7 @@ function readCustomDuelForm() {
     librarySelection,
     manualCombatScore: parseOptionalDuelNumber(els.duelCustomCombatScore?.value, 0, 12),
     manualCombatUnit: parseOptionalDuelNumber(els.duelCustomCombatUnit?.value, 1, 99999999),
+    specialHandTags: normalizeCustomDuelSpecialHandTags(state.pendingCustomDuelSpecialHandTags || []),
     customHandCards: (state.pendingCustomDuelHandCards || []).map((card) => ({ ...card })),
     domainScript: state.pendingCustomDuelDomainScript ? { ...state.pendingCustomDuelDomainScript } : null,
     stats
@@ -90,7 +145,35 @@ function buildCustomDuelCard(form, existingId = "") {
     advanced: mergeDuelLocalList(form.librarySelection?.advanced || []),
     resources: mergeDuelLocalList(form.librarySelection?.resources || [])
   };
-  const techniqueFamilies = inferCustomDuelTechniqueFamilies(form.technique);
+  const techniqueEvidenceText = buildCustomDuelTechniqueEvidenceText(
+    form.technique,
+    selectedLibrary.techniques,
+    form.domain,
+    selectedLibrary.domains,
+    form.traits,
+    selectedMechanisms,
+    form.externalResource,
+    selectedLibrary.resources
+  );
+  const techniqueSpecialHandTags = inferCustomDuelTechniqueSpecialHandTags(
+    form.technique,
+    selectedLibrary.techniques,
+    form.domain,
+    selectedLibrary.domains,
+    form.traits,
+    selectedMechanisms,
+    form.externalResource,
+    selectedLibrary.resources
+  );
+  const inheritedSpecialHandTags = normalizeCustomDuelSpecialHandTags(form.specialHandTags || [], form["特殊手札"] || []);
+  const specialHandTags = sanitizeCustomDuelTechniqueSpecialHandTags(
+    normalizeCustomDuelSpecialHandTags(specialHandTag, inheritedSpecialHandTags, techniqueSpecialHandTags),
+    techniqueEvidenceText
+  );
+  const techniqueFamilies = sanitizeCustomDuelTechniqueSpecialHandTags(
+    normalizeCustomDuelSpecialHandTags(inferCustomDuelTechniqueFamilies(form.technique), techniqueSpecialHandTags, inheritedSpecialHandTags),
+    techniqueEvidenceText
+  );
   const traits = Array.from(new Set([form.technique, ...form.traits, ...selectedMechanisms].filter(Boolean)));
   const loadout = Array.from(new Set([...(form.tools || []), ...selectedToolTags].filter(Boolean)));
   const customHandCards = normalizeCustomDuelHandCardsForCharacter(form.customHandCards, id, specialHandTag, form.domain, form.domainScript);
@@ -101,8 +184,9 @@ function buildCustomDuelCard(form, existingId = "") {
     hp,
     mp,
     "四轴": buildCustomDuelCardAxes(form.stats, form.techniquePower, form.domain, loadout, traits),
-    "特殊手札": [specialHandTag],
-    specialHandTags: [specialHandTag],
+    "特殊手札": specialHandTags,
+    specialHandTags,
+    explicitSpecialHandTags: specialHandTags,
     characterId: id,
     displayName: form.name,
     customDuel: true,
@@ -121,7 +205,7 @@ function buildCustomDuelCard(form, existingId = "") {
     selectedToolTags,
     selectedLibrary,
     techniqueText: form.technique || "无",
-    techniqueFamilies: inferCustomDuelTechniqueFamilies(form.technique),
+    techniqueFamilies,
     externalResource: form.externalResource || "无",
     techniqueName: form.technique || "无",
     techniqueDescription: "无",
@@ -138,27 +222,334 @@ function buildCustomDuelCard(form, existingId = "") {
   };
 }
 
+function updateCustomDuelAccessStatus(message, isError = false) {
+  const target = els.duelCustomAccessStatus || els.duelWheelImportStatus;
+  if (!target) return;
+  target.textContent = message || "";
+  target.classList.toggle("error-text", Boolean(isError));
+}
+
+function cloneCustomDuelExportValue(value) {
+  const cloned = typeof clonePlain === "function" ? clonePlain(value) : null;
+  if (cloned != null || value == null) return cloned;
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return value;
+  }
+}
+
+function sanitizeCustomDuelFilenamePart(value) {
+  return String(value || "custom-character")
+    .replace(/[\\/:*?"<>|]+/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80) || "custom-character";
+}
+
+function getCustomDuelExportDateText(date = new Date()) {
+  if (typeof formatDateForFilename === "function") return formatDateForFilename(date);
+  return date.toISOString().replace(/[:.]/g, "-").slice(0, 19);
+}
+
+function downloadCustomDuelCharacterJson(text, filename) {
+  if (typeof downloadTextFile === "function") {
+    downloadTextFile(text, filename, "application/json;charset=utf-8");
+    return;
+  }
+  const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function normalizeCustomDuelExportHandCard(card = {}, fallbackTags = []) {
+  const copy = cloneCustomDuelExportValue(card) || {};
+  const specialHandTags = normalizeCustomDuelSpecialHandTags(
+    copy.specialHandTags,
+    copy["特殊手札"],
+    fallbackTags
+  );
+  const tags = normalizeCustomDuelSpecialHandTags(
+    copy.tags,
+    "自定义",
+    "特殊手札",
+    specialHandTags
+  );
+  return {
+    ...copy,
+    name: copy.name || copy.label || "未命名特殊手札",
+    label: copy.label || copy.name || "未命名特殊手札",
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    tags
+  };
+}
+
+function normalizeCustomDuelCharacterCardForExport(card = {}) {
+  const techniqueEvidenceText = buildCustomDuelTechniqueEvidenceText(
+    card.technique,
+    card.techniqueName,
+    card.techniqueText,
+    card.techniqueDescription,
+    card.domainProfile,
+    card.externalResource,
+    card.innateTraits,
+    card.advancedTechniques,
+    card.loadout,
+    card.selectedMechanisms,
+    card.selectedLibrary?.techniques,
+    card.selectedLibrary?.domains,
+    card.selectedLibrary?.advanced,
+    card.selectedLibrary?.resources
+  );
+  const specialHandTags = sanitizeCustomDuelTechniqueSpecialHandTags(
+    normalizeCustomDuelSpecialHandTags(
+      card.specialHandTags,
+      card["特殊手札"],
+      card.explicitSpecialHandTags
+    ),
+    techniqueEvidenceText
+  );
+  const customHandCards = (card.customHandCards || []).map((hand) => normalizeCustomDuelExportHandCard(hand, specialHandTags));
+  return {
+    name: card.name || card.displayName || "未命名角色",
+    hp: card.hp,
+    mp: card.mp,
+    "四轴": cloneCustomDuelExportValue(card["四轴"] || {}),
+    "特殊手札": specialHandTags,
+    specialHandTags,
+    explicitSpecialHandTags: specialHandTags,
+    characterId: card.characterId || card.id || "",
+    displayName: card.displayName || card.name || "未命名角色",
+    customDuel: true,
+    stage: getValidDuelStage(card.stage || "custom"),
+    baseStats: cloneCustomDuelExportValue(card.baseStats || {}),
+    innateTraits: cloneCustomDuelExportValue(card.innateTraits || []),
+    loadout: cloneCustomDuelExportValue(card.loadout || []),
+    selectedMechanisms: cloneCustomDuelExportValue(card.selectedMechanisms || []),
+    selectedToolTags: cloneCustomDuelExportValue(card.selectedToolTags || []),
+    selectedLibrary: cloneCustomDuelExportValue(card.selectedLibrary || {}),
+    techniqueText: card.techniqueText || card.techniqueName || "无",
+    techniqueFamilies: sanitizeCustomDuelTechniqueSpecialHandTags(
+      normalizeCustomDuelSpecialHandTags(card.techniqueFamilies, specialHandTags),
+      techniqueEvidenceText
+    ),
+    externalResource: card.externalResource || "无",
+    techniqueName: card.techniqueName || card.techniqueText || "无",
+    techniqueDescription: card.techniqueDescription || "无",
+    techniquePower: card.techniquePower || "B",
+    domainProfile: card.domainProfile || "无",
+    domainScript: card.domainScript ? cloneCustomDuelExportValue(card.domainScript) : null,
+    visibleGrade: card.visibleGrade || "grade2",
+    officialGrade: card.officialGrade || gradeLabel(card.visibleGrade),
+    powerTier: card.powerTier || "custom",
+    debugManualCombatScore: card.debugManualCombatScore,
+    debugManualCombatUnit: card.debugManualCombatUnit,
+    customHandCards,
+    notes: card.notes || "无"
+  };
+}
+
+function buildCustomDuelCharacterCardExport(card, exportedAt = new Date()) {
+  return {
+    schema: "jjk-duel-character-card-export",
+    version: 1,
+    status: "CUSTOM_USER_CARD",
+    source: "custom-duel-character",
+    siteVersion: APP_BUILD_VERSION,
+    duelSystemVersion: typeof DUEL_SYSTEM_VERSION === "string" ? DUEL_SYSTEM_VERSION : "",
+    exportedAt: exportedAt.toISOString(),
+    character: normalizeCustomDuelCharacterCardForExport(card),
+    importHint: "可在自定义角色的“角色卡 / 转盘导出数据导入”中读取。"
+  };
+}
+
+async function exportCustomDuelCharacterCard(characterId) {
+  const card = state.customDuelCards.find((item) => item.characterId === characterId);
+  if (!card) {
+    updateCustomDuelAccessStatus("没有找到要导出的自定义角色。", true);
+    return;
+  }
+  const exportedAt = new Date();
+  const payload = buildCustomDuelCharacterCardExport(card, exportedAt);
+  if (globalThis.JJKLoginCard?.hasLogin?.()) {
+    try {
+      const result = await globalThis.JJKLoginCard.addCharacterExportPayload(payload);
+      if (result?.ok) {
+        updateCustomDuelAccessStatus(result.message || `已存入登录卡：${card.displayName || card.name || "未命名角色"}。请到“对战设置 > 管理卡面角色”统一下载。`);
+        window.alert("记得导出登录卡！否则你的角色就消失了！");
+        return;
+      }
+      updateCustomDuelAccessStatus(result?.message || "写入登录卡失败。", true);
+    } catch (error) {
+      updateCustomDuelAccessStatus(error?.message || "写入登录卡失败。", true);
+    }
+    return;
+  }
+  updateCustomDuelAccessStatus("请先用登录卡 PNG 登录，再点击“存入登陆卡”。统一下载入口在“对战设置 > 管理卡面角色”。", true);
+}
+
 function buildCustomDuelSpecialHandTag(characterId) {
   return `custom_character_${String(characterId || "custom").replace(/[^\w-]+/g, "_")}`;
+}
+
+function normalizeCustomDuelSpecialHandTags(...sources) {
+  const seen = new Set();
+  return sources.flatMap((source) => Array.isArray(source) ? source : [source])
+    .map((tag) => String(tag || "").trim())
+    .filter((tag) => {
+      if (!tag || tag === "无" || seen.has(tag)) return false;
+      seen.add(tag);
+      return true;
+    })
+    .slice(0, 24);
+}
+
+function buildCustomDuelTechniqueEvidenceText(...sources) {
+  return sources
+    .flatMap((source) => Array.isArray(source) ? source : [source])
+    .map((value) => normalizeCustomDuelText(value))
+    .filter(Boolean)
+    .join(" ");
+}
+
+function hasCustomDuelConstructionTechniqueEvidence(text = "") {
+  const value = String(text || "");
+  return /构筑术式|真球|液态金属|昆虫铠甲|三重疾苦|禅院真依|真依|yorozu|construction\s+sorcery/i.test(value) ||
+    /(^|[\s、，,;；|/／])万($|[\s、，,;；|/／])/i.test(value);
+}
+
+function hasCustomDuelBloodTechniqueEvidence(text = "") {
+  return /赤血操术|穿血|血刃|赤鳞跃动|超新星|苅祓|百敛|胀相|脹相|加茂宪纪|加茂憲紀|blood\s+manipulation/i.test(String(text || ""));
+}
+
+function hasCustomDuelTagEvidence(tag, evidenceText = "") {
+  const text = String(evidenceText || "");
+  const checks = {
+    ten_shadows: /十种影法术|十种影|十影|嵌合暗翳庭|魔虚罗|魔須羅|魔须罗|mahoraga|ten[_\s-]?shadows/i,
+    construction: /构筑术式|真球|液态金属|昆虫铠甲|三重疾苦|禅院真依|真依|yorozu|construction\s+sorcery/i,
+    blood_manipulation: /赤血操术|穿血|血刃|赤鳞跃动|超新星|苅祓|百敛|胀相|脹相|加茂宪纪|加茂憲紀|blood\s+manipulation/i,
+    projection_sorcery: /投射术式|投射咒法|二十四帧|帧率|直哉|直毘人|projection\s+sorcery/i,
+    star_rage: /星之怒|虚拟质量|凰轮|黑洞|九十九由基|star\s+rage/i,
+    limitless: /无下限|无量空处|赫|苍|茈|六眼|limitless|infinity/i,
+    shrine: /御厨子|伏魔御厨子|斩击|捌|解|sukuna|shrine|cleave|dismantle/i
+  };
+  const checker = checks[String(tag || "")];
+  return checker ? checker.test(text) : true;
+}
+
+function sanitizeCustomDuelTechniqueSpecialHandTags(tags = [], evidenceText = "") {
+  const normalized = normalizeCustomDuelSpecialHandTags(tags);
+  return normalized.filter((tag) => {
+    if (tag === "construction") return hasCustomDuelConstructionTechniqueEvidence(evidenceText);
+    if (tag === "blood_manipulation") return hasCustomDuelBloodTechniqueEvidence(evidenceText);
+    if (/^custom_duel_|^custom_hand_|^duel_ai_term_/.test(tag)) return true;
+    if (["ten_shadows", "projection_sorcery", "star_rage", "limitless", "shrine"].includes(tag)) {
+      return hasCustomDuelTagEvidence(tag, evidenceText);
+    }
+    return true;
+  });
 }
 
 function inferCustomDuelTechniqueFamilies(text = "") {
   const value = String(text || "");
   const families = [];
-  if (/无下限|六眼|无量空处|limitless|six[_\s-]?eyes|unlimited[_\s-]?void|infinity/i.test(value)) families.push("limitless", "six_eyes", "gojo_limitless", "无下限", "六眼");
+  if (/无下限|无量空处|limitless|unlimited[_\s-]?void|infinity/i.test(value)) families.push("limitless", "gojo_limitless", "无下限");
+  if (/六眼|six[_\s-]?eyes/i.test(value)) families.push("six_eyes", "六眼");
   if (/十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(value)) families.push("ten_shadows", "十种影法术");
   if (/御厨子|伏魔御厨子|斩击|捌|解|sukuna[_\s-]?slash|shrine|cleave|dismantle/i.test(value)) families.push("sukuna_slash", "shrine", "御厨子");
   return Array.from(new Set(families));
 }
 
+function normalizeCustomDuelTechniqueLookupText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[\s"'`“”‘’()[\]{}<>（）【】《》:：;；,，、\/／\\|._-]+/g, "")
+    .trim();
+}
+
+function getCustomDuelTechniqueProfiles() {
+  return state.strength?.techniqueProfiles && typeof state.strength.techniqueProfiles === "object"
+    ? state.strength.techniqueProfiles
+    : {};
+}
+
+function getCustomDuelProfileSpecialHandTags(profile) {
+  if (!profile || typeof profile !== "object") return [];
+  return normalizeCustomDuelSpecialHandTags(
+    profile.specialHandTags,
+    profile["特殊手札"],
+    profile.specialHandTag,
+    profile.specialTag
+  );
+}
+
+function collectCustomDuelTechniqueProfileAliases(key, profile) {
+  if (!profile || typeof profile !== "object") return [key].filter(Boolean);
+  return normalizeCustomDuelSpecialHandTags(
+    key,
+    profile.displayName,
+    profile.name,
+    profile.owner,
+    profile.representative,
+    profile.ownerOrRepresentative,
+    profile.domainName,
+    profile.domainProfile,
+    profile.alias,
+    profile.aliases,
+    profile.specialHandTags,
+    profile["特殊手札"]
+  );
+}
+
+function isReliableCustomDuelTechniqueAlias(alias, normalizedAlias) {
+  if (!normalizedAlias) return false;
+  const isAscii = /^[a-z0-9]+$/i.test(normalizedAlias);
+  if (isAscii) return normalizedAlias.length >= 4;
+  return normalizedAlias.length >= 2 || String(alias || "").trim() === "万";
+}
+
+function doesCustomDuelTechniqueProfileMatch(sourceText, key, profile) {
+  const normalizedSource = normalizeCustomDuelTechniqueLookupText(sourceText);
+  if (!normalizedSource || !getCustomDuelProfileSpecialHandTags(profile).length) return false;
+  return collectCustomDuelTechniqueProfileAliases(key, profile).some((alias) => {
+    const normalizedAlias = normalizeCustomDuelTechniqueLookupText(alias);
+    if (!isReliableCustomDuelTechniqueAlias(alias, normalizedAlias)) return false;
+    return normalizedSource.includes(normalizedAlias) || normalizedAlias.includes(normalizedSource);
+  });
+}
+
+function inferCustomDuelTechniqueSpecialHandTags(...sources) {
+  const sourceText = buildCustomDuelTechniqueEvidenceText(...sources);
+  if (!sourceText) return [];
+  const tags = [];
+  Object.entries(getCustomDuelTechniqueProfiles()).forEach(([key, profile]) => {
+    if (doesCustomDuelTechniqueProfileMatch(sourceText, key, profile)) {
+      tags.push(...getCustomDuelProfileSpecialHandTags(profile));
+    }
+  });
+  return sanitizeCustomDuelTechniqueSpecialHandTags(
+    normalizeCustomDuelSpecialHandTags(tags, inferCustomDuelTechniqueFamilies(sourceText)),
+    sourceText
+  );
+}
+
 function buildCustomDuelCardAxes(stats = {}, techniquePower = "B", domain = "", loadout = [], traits = []) {
+  const adjustedStats = applyDuelMechanismRankAdjustments(stats, getDuelActiveMechanisms({ innateTraits: traits }));
   const raw = {
-    cursedEnergyScore: duelRankValue(stats.cursedEnergy),
-    controlScore: duelRankValue(stats.control),
-    efficiencyScore: duelRankValue(stats.efficiency),
-    bodyScore: duelRankValue(stats.body),
-    martialScore: duelRankValue(stats.martial),
-    talentScore: duelRankValue(stats.talent)
+    cursedEnergyScore: duelRankValue(adjustedStats.cursedEnergy),
+    controlScore: duelRankValue(adjustedStats.control),
+    efficiencyScore: duelRankValue(adjustedStats.efficiency),
+    bodyScore: duelRankValue(adjustedStats.body),
+    martialScore: duelRankValue(adjustedStats.martial),
+    talentScore: duelRankValue(adjustedStats.talent)
   };
   const jujutsu = Number((raw.cursedEnergyScore * 0.5 + raw.controlScore * 0.27 + raw.efficiencyScore * 0.23).toFixed(2));
   const body = Number((raw.bodyScore * 0.54 + raw.martialScore * 0.46).toFixed(2));
@@ -283,7 +674,27 @@ function parseRequiredDuelInteger(input, label, min = 0, max = 9999) {
 
 function populateDuelCustomHandTypeSelect() {
   if (!els.duelCustomHandType) return;
-  const labels = state.duelCardTemplateRules?.cardTypeLabels || {};
+  const defaultLabels = {
+    attack: "攻击",
+    technique: "术式",
+    ce_burst: "咒力爆发",
+    defense: "防御",
+    domain: "领域",
+    support: "支援",
+    resource: "资源",
+    counter: "反击",
+    rule: "规则",
+    soul_pressure: "灵魂压迫",
+    basic: "基础攻击",
+    curse_tool: "咒具",
+    special: "特殊术式",
+    domain_response: "领域应对",
+    domain_maintenance: "领域维持",
+    rule_trial: "审判规则",
+    rule_defense: "审判应对",
+    jackpot: "坐杀搏徒"
+  };
+  const labels = { ...defaultLabels, ...(state.duelCardTemplateRules?.cardTypeLabels || {}) };
   const usedTypes = new Set(Object.keys(labels));
   (state.duelCardTemplateRules?.cards || []).forEach((card) => {
     if (card?.cardType) usedTypes.add(card.cardType);
@@ -291,7 +702,7 @@ function populateDuelCustomHandTypeSelect() {
   const options = Array.from(usedTypes)
     .filter(Boolean)
     .sort()
-    .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(labels[type] || type)}（${escapeHtml(type)}）</option>`)
+    .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}（${escapeHtml(labels[type] || type)}）</option>`)
     .join("");
   if (els.duelCustomHandType.dataset.optionSignature === options) return;
   els.duelCustomHandType.innerHTML = options;
@@ -306,7 +717,7 @@ function readCustomDuelHandForm() {
   const risk = ["low", "medium", "high", "critical"].includes(els.duelCustomHandRisk?.value)
     ? els.duelCustomHandRisk.value
     : "medium";
-  const apCost = parseRequiredDuelInteger(els.duelCustomHandApCost, "AP 消耗", 0, 9);
+  const apCost = 0;
   const ceCost = parseRequiredDuelInteger(els.duelCustomHandCeCost, "咒力消耗", 0, 999);
   const damage = parseRequiredDuelInteger(els.duelCustomHandDamage, "伤害", 0, 999);
   const block = parseRequiredDuelInteger(els.duelCustomHandBlock, "防御", 0, 999);
@@ -394,10 +805,17 @@ function inferCustomHandScalingProfile(cardType) {
 function addCustomDuelHandCard() {
   try {
     const card = readCustomDuelHandForm();
-    state.pendingCustomDuelHandCards.push(card);
+    const editIndex = Number(state.customDuelHandEditIndex);
+    if (Number.isInteger(editIndex) && editIndex >= 0 && editIndex < state.pendingCustomDuelHandCards.length) {
+      card.id = state.pendingCustomDuelHandCards[editIndex].id || card.id;
+      state.pendingCustomDuelHandCards[editIndex] = card;
+      state.customDuelHandEditIndex = -1;
+    } else {
+      state.pendingCustomDuelHandCards.push(card);
+    }
     clearCustomDuelHandForm();
     renderPendingCustomDuelHandList();
-    updateCustomDuelHandStatus(`已加入特殊手札：${card.name}`);
+    updateCustomDuelHandStatus(`${editIndex >= 0 ? "已保存" : "已加入"}特殊手札：${card.name}`);
   } catch (error) {
     updateCustomDuelHandStatus(error?.message || "特殊手札格式不正确。", true);
     window.alert(error?.message || "特殊手札格式不正确。");
@@ -408,16 +826,20 @@ function clearCustomDuelHandForm() {
   if (els.duelCustomHandName) els.duelCustomHandName.value = "";
   if (els.duelCustomHandSummary) els.duelCustomHandSummary.value = "";
   if (els.duelCustomHandTags) els.duelCustomHandTags.value = "";
-  if (els.duelCustomHandApCost) els.duelCustomHandApCost.value = "1";
+  if (els.duelCustomHandApCost) els.duelCustomHandApCost.value = "0";
   if (els.duelCustomHandCeCost) els.duelCustomHandCeCost.value = "10";
   if (els.duelCustomHandDamage) els.duelCustomHandDamage.value = "10";
   if (els.duelCustomHandBlock) els.duelCustomHandBlock.value = "0";
   if (els.duelCustomHandStability) els.duelCustomHandStability.value = "0";
   if (els.duelCustomHandDomainLoad) els.duelCustomHandDomainLoad.value = "0";
+  state.customDuelHandEditIndex = -1;
+  if (els.duelCustomHandAddBtn) els.duelCustomHandAddBtn.textContent = "加入特殊手札";
 }
 
 function clearPendingCustomDuelHandCards() {
   state.pendingCustomDuelHandCards = [];
+  state.customDuelHandEditIndex = -1;
+  clearCustomDuelHandForm();
   renderPendingCustomDuelHandList();
   updateCustomDuelHandStatus("已清空待接入特殊手札。");
 }
@@ -439,14 +861,20 @@ function renderPendingCustomDuelHandList() {
     <article class="duel-custom-item">
       <div>
         <strong>${escapeHtml(card.name || card.label)}</strong>
-        <span>${escapeHtml(card.cardType)} · AP ${escapeHtml(card.apCost)} · CE ${escapeHtml(card.baseCeCost)} · 伤害 ${escapeHtml(card.baseDamage)} · 防御 ${escapeHtml(card.baseBlock)}</span>
+        <span>${escapeHtml(card.cardType)} · CE（咒力） ${escapeHtml(card.baseCeCost)} · 伤害 ${escapeHtml(card.baseDamage)} · 防御 ${escapeHtml(card.baseBlock)}</span>
         <span>${escapeHtml(card.effectSummary || "")}</span>
       </div>
       <div class="duel-custom-actions">
+        <button class="secondary" type="button" data-custom-hand-edit="${index}">编辑</button>
         <button class="secondary danger" type="button" data-custom-hand-remove="${index}">移除</button>
       </div>
     </article>
   `).join("");
+  els.duelCustomHandList.querySelectorAll("[data-custom-hand-edit]").forEach((button) => {
+    button.addEventListener("click", () => {
+      editPendingCustomDuelHandCard(Number(button.dataset.customHandEdit));
+    });
+  });
   els.duelCustomHandList.querySelectorAll("[data-custom-hand-remove]").forEach((button) => {
     button.addEventListener("click", () => {
       const index = Number(button.dataset.customHandRemove);
@@ -457,8 +885,27 @@ function renderPendingCustomDuelHandList() {
   });
 }
 
+function editPendingCustomDuelHandCard(index) {
+  const card = state.pendingCustomDuelHandCards?.[index];
+  if (!card) return;
+  state.customDuelHandEditIndex = index;
+  if (els.duelCustomHandName) els.duelCustomHandName.value = card.name || card.label || "";
+  if (els.duelCustomHandType) els.duelCustomHandType.value = card.cardType || card.type || "technique";
+  if (els.duelCustomHandRisk) els.duelCustomHandRisk.value = ["low", "medium", "high", "critical"].includes(card.risk) ? card.risk : "medium";
+  if (els.duelCustomHandApCost) els.duelCustomHandApCost.value = "0";
+  if (els.duelCustomHandCeCost) els.duelCustomHandCeCost.value = String(Number(card.baseCeCost ?? card.ceCost ?? 10));
+  if (els.duelCustomHandDamage) els.duelCustomHandDamage.value = String(Number(card.baseDamage ?? card.damage ?? 0));
+  if (els.duelCustomHandBlock) els.duelCustomHandBlock.value = String(Number(card.baseBlock ?? card.block ?? 0));
+  if (els.duelCustomHandStability) els.duelCustomHandStability.value = String(Math.round(Number(card.effects?.stabilityDelta ?? 0) * 100));
+  if (els.duelCustomHandDomainLoad) els.duelCustomHandDomainLoad.value = String(Number(card.baseDomainLoadDelta ?? card.effects?.domainLoadDelta ?? 0));
+  if (els.duelCustomHandSummary) els.duelCustomHandSummary.value = card.effectSummary || card.description || "";
+  if (els.duelCustomHandTags) els.duelCustomHandTags.value = (card.tags || []).filter((tag) => !["自定义", "特殊手札"].includes(tag)).join("、");
+  if (els.duelCustomHandAddBtn) els.duelCustomHandAddBtn.textContent = "保存特殊手札";
+  updateCustomDuelHandStatus(`正在编辑特殊手札：${card.name || card.label || ""}`);
+  els.duelCustomHandName?.focus();
+}
+
 function editCustomDuelCharacter(characterId) {
-  if (!state.debugMode) return;
   const card = state.customDuelCards.find((item) => item.characterId === characterId);
   if (!card) return;
   state.customDuelEditId = characterId;
@@ -509,6 +956,10 @@ function editCustomDuelCharacter(characterId) {
   if (els.duelCustomCombatScore) els.duelCustomCombatScore.value = card.debugManualCombatScore ?? "";
   if (els.duelCustomCombatUnit) els.duelCustomCombatUnit.value = card.debugManualCombatUnit ?? "";
   state.pendingCustomDuelHandCards = (card.customHandCards || []).map((item) => ({ ...item }));
+  state.pendingCustomDuelSpecialHandTags = normalizeCustomDuelSpecialHandTags(
+    card.specialHandTags || [],
+    card["特殊手札"] || []
+  ).filter((tag) => tag !== buildCustomDuelSpecialHandTag(card.characterId));
   state.pendingCustomDuelDomainScript = card.domainScript ? { ...card.domainScript } : null;
   renderPendingCustomDuelHandList();
   syncCustomDuelEditMode();
@@ -535,12 +986,13 @@ function renderDuelCustomList() {
       <div>
         <strong>${escapeHtml(card.displayName)}</strong>
         <span>${escapeHtml(gradeLabel(card.visibleGrade))} · 术式 ${escapeHtml(card.techniquePower || "-")} · ${escapeHtml(formatDuelList(card.loadout))}</span>
-        <span>特殊手札 ${escapeHtml((card.customHandCards || []).length)} 张 · 标签 ${escapeHtml((card.specialHandTags || [])[0] || "-")}</span>
+        <span>特殊手札 ${escapeHtml((card.customHandCards || []).length)} 张 · 标签 ${escapeHtml(formatDuelList(card.specialHandTags || []))}</span>
       </div>
       <div class="duel-custom-actions">
         <button class="secondary" type="button" data-duel-custom-use="left" data-duel-custom-id="${escapeHtml(card.characterId)}">我方</button>
         <button class="secondary" type="button" data-duel-custom-use="right" data-duel-custom-id="${escapeHtml(card.characterId)}">对方</button>
-        <button class="secondary debug-only" type="button" data-duel-custom-edit="${escapeHtml(card.characterId)}">编辑</button>
+        <button class="secondary" type="button" data-duel-custom-export="${escapeHtml(card.characterId)}">存入登陆卡</button>
+        <button class="secondary" type="button" data-duel-custom-edit="${escapeHtml(card.characterId)}">编辑</button>
         <button class="secondary danger" type="button" data-duel-custom-delete="${escapeHtml(card.characterId)}">删除</button>
       </div>
     </article>
@@ -548,6 +1000,11 @@ function renderDuelCustomList() {
 }
 
 function handleCustomDuelListClick(event) {
+  const exportButton = event.target.closest("[data-duel-custom-export]");
+  if (exportButton) {
+    exportCustomDuelCharacterCard(exportButton.dataset.duelCustomExport);
+    return;
+  }
   const editButton = event.target.closest("[data-duel-custom-edit]");
   if (editButton) {
     editCustomDuelCharacter(editButton.dataset.duelCustomEdit);
@@ -580,6 +1037,7 @@ function removeCustomDuelCharacter(characterId) {
   if (state.customDuelEditId === characterId) {
     state.customDuelEditId = "";
     state.pendingCustomDuelHandCards = [];
+    state.pendingCustomDuelSpecialHandTags = [];
     state.pendingCustomDuelDomainScript = null;
     renderPendingCustomDuelHandList();
   }
@@ -594,6 +1052,7 @@ function clearCustomDuelCharacters() {
   state.customDuelCards = [];
   state.customDuelEditId = "";
   state.pendingCustomDuelHandCards = [];
+  state.pendingCustomDuelSpecialHandTags = [];
   state.pendingCustomDuelDomainScript = null;
   state.duelBattle = null;
   renderDuelCustomList();
@@ -935,6 +1394,23 @@ function setDuelBattleMode(mode, patch = {}) {
   return state.duelModeState;
 }
 
+function normalizeDuelCpuDifficulty(value) {
+  const key = String(value || "").trim().toLowerCase();
+  return ["easy", "normal", "hard"].includes(key) ? key : "normal";
+}
+
+function getDuelCpuDifficultyLabel(value) {
+  return {
+    easy: "简单：陪练",
+    normal: "普通：稳定",
+    hard: "困难：强规划"
+  }[normalizeDuelCpuDifficulty(value)] || "普通：稳定";
+}
+
+function getSelectedDuelCpuDifficulty() {
+  return normalizeDuelCpuDifficulty(els.duelCpuDifficultySelect?.value || state.duelCpuDifficulty || "normal");
+}
+
 function clonePlain(value) {
   if (value == null) return value;
   try {
@@ -942,6 +1418,17 @@ function clonePlain(value) {
   } catch {
     return null;
   }
+}
+
+function getDuelVisualSettingsSnapshot() {
+  const settings = state.duelVisualSettings || {};
+  const cardSkin = ["classic", "v224", "custom", "champion-kashimo"].includes(settings.cardSkin) ? settings.cardSkin : "v224";
+  return {
+    theme: settings.theme === "dark" ? "dark" : "original",
+    cardSkin,
+    compactCards: Boolean(settings.compactCards),
+    customSkin: cardSkin === "custom" ? clonePlain(settings.customSkin || null) : null
+  };
 }
 
 function createDuelPassTurnAction(side = "left", battle = state.duelBattle) {
@@ -978,8 +1465,27 @@ function getSelectedOnlineActionSnapshots(side = state.duelModeState.playerSide 
   const battle = state.duelBattle;
   if (!battle) return [];
   const actorSide = side === "right" ? "right" : "left";
+  const { actor, opponent } = getDuelSideResources(battle, actorSide);
+  const visualSettings = getDuelVisualSettingsSnapshot();
   return getDuelSelectedHandActions(battle, actorSide).map((entry, index) => {
     const action = entry?.action || entry;
+    const view = getDuelHandCardViewModel(entry, actor, opponent, battle) || {};
+    const skinCategory = getDuelCardSkinCategory(view, entry);
+    const actionSnapshot = {
+      ...(clonePlain(action) || {}),
+      skinCategory,
+      cardSkinCategory: skinCategory,
+      cardSkin: visualSettings.cardSkin,
+      visualCardSkin: visualSettings.cardSkin,
+      visualSettings,
+      domainHand: Boolean(view.domainHand || entry?.domainHand || action?.domainHand),
+      domainSpecific: Boolean(view.domainSpecific || entry?.domainSpecific || action?.domainSpecific),
+      specialHandCard: Boolean(view.specialHandCard || entry?.specialHandCard || action?.specialHandCard),
+      techniqueFeatureHand: Boolean(view.techniqueFeatureHand || entry?.techniqueFeatureHand || action?.techniqueFeatureHand),
+      tags: Array.isArray(action?.tags) && action.tags.length ? clonePlain(action.tags) : clonePlain(view.tags || []),
+      uiTags: clonePlain(view.uiTags || action?.uiTags || []),
+      specialHandTags: clonePlain(action?.specialHandTags || entry?.specialHandTags || [])
+    };
     return {
       actionId: entry?.actionId || entry?.id || action?.id || `action_${index + 1}`,
       displayName: entry?.label || action?.label || action?.name || entry?.actionId || `手札 ${index + 1}`,
@@ -987,7 +1493,19 @@ function getSelectedOnlineActionSnapshots(side = state.duelModeState.playerSide 
       apCost: Number(entry?.apCost ?? action?.apCost ?? 0),
       ceCost: Number(entry?.ceCost ?? action?.ceCost ?? action?.costCe ?? 0),
       selectedRound: Number(entry?.selectedRound || battle.round + 1),
-      action: clonePlain(action)
+      skinCategory,
+      cardSkinCategory: skinCategory,
+      cardSkin: visualSettings.cardSkin,
+      visualCardSkin: visualSettings.cardSkin,
+      visualSettings,
+      tags: clonePlain(view.tags || entry?.tags || action?.tags || []),
+      uiTags: clonePlain(view.uiTags || entry?.uiTags || action?.uiTags || []),
+      specialHandTags: clonePlain(entry?.specialHandTags || action?.specialHandTags || []),
+      domainHand: Boolean(view.domainHand || entry?.domainHand || action?.domainHand),
+      domainSpecific: Boolean(view.domainSpecific || entry?.domainSpecific || action?.domainSpecific),
+      specialHandCard: Boolean(view.specialHandCard || entry?.specialHandCard || action?.specialHandCard),
+      techniqueFeatureHand: Boolean(view.techniqueFeatureHand || entry?.techniqueFeatureHand || action?.techniqueFeatureHand),
+      action: actionSnapshot
     };
   });
 }
@@ -1032,7 +1550,10 @@ function syncOnlineSpectatorActions(room = {}) {
     right: Array.isArray(room.turnState?.actions?.right) ? room.turnState.actions.right : []
   };
   if (nextActions.left.length || nextActions.right.length) {
-    battle.spectatorActions = nextActions;
+    battle.spectatorActions = {
+      left: nextActions.left.length ? nextActions.left : (battle.spectatorActions.left || []),
+      right: nextActions.right.length ? nextActions.right : (battle.spectatorActions.right || [])
+    };
     battle.spectatorActionsTurnId = room.turnState?.turnId || `turn_${room.round || battle.round + 1}`;
   }
   battle.actionUiMessage = "观战模式：只读取双方锁定的实际手札。";
@@ -1072,6 +1593,14 @@ function applyOnlineResolvedTurnToBattle(battle, room = {}) {
   battle.cpuActions = rightResult.actions || [];
   battle.currentAction = battle.currentActions[0] || null;
   battle.cpuAction = battle.cpuActions[0] || null;
+  if (maybeResolveDuelBattleAfterHandActions(battle)) {
+    battle.lastRoundMemo = buildDuelRoundMemo(battle, beforeMemoSnapshot, snapshotDuelMemoState(battle), leftResult, rightResult);
+    battle.onlineAppliedTurns.push(turnKey);
+    battle.currentOptions = [];
+    battle.pendingAction = null;
+    updateDuelResourceReplayKey(battle);
+    return true;
+  }
   battle.opponentTactic = pickDuelOpponentTactic(battle);
   const domainActivationPairs = [
     ...battle.currentActions.map((action) => ({ action, actor: battle.resourceState.p1, opponent: battle.resourceState.p2, responseAction: battle.cpuActions[0] || null })),
@@ -1214,7 +1743,7 @@ function syncDuelModeIsolation() {
     } else if (mode === "solo") {
       els.duelModeStatus.textContent = isSoloDuelModeActive()
         ? "当前为单人对战；手札执行会推进本地战斗。"
-        : "当前为单人对战页；开始后显示手札、AP、领域和日志。";
+        : "当前为单人对战页；开始后显示手札、体势、咒力、领域和日志。";
     } else {
       els.duelModeStatus.textContent = "尚未进入对战。";
     }
@@ -1293,7 +1822,22 @@ function clearOnlineTemporaryCustomDuelCards(roomId = "") {
   return removed;
 }
 
+let duelModeRenderFrame = 0;
+
+function requestDuelModeRender() {
+  if (duelModeRenderFrame) return;
+  if (typeof window === "undefined" || typeof window.requestAnimationFrame !== "function") {
+    renderDuelMode();
+    return;
+  }
+  duelModeRenderFrame = window.requestAnimationFrame(() => {
+    duelModeRenderFrame = 0;
+    renderDuelMode();
+  });
+}
+
 function renderDuelMode() {
+  duelModeRenderFrame = 0;
   if (!els.duelLeftSelect || !els.duelRightSelect || !state.characterCards) return;
   const cards = getDuelCharacterCards();
   if (!cards.length) {
@@ -1364,6 +1908,7 @@ function startDuelBattle(options = {}) {
     : (onlineSnapshotProfiles?.left && onlineSnapshotProfiles?.right ? onlineSnapshotProfiles : getCurrentDuelProfiles());
   if (!profiles) return;
   const mode = options.mode === "online" ? "online" : "solo";
+  const cpuDifficulty = mode === "solo" ? normalizeDuelCpuDifficulty(options.cpuDifficulty || getSelectedDuelCpuDifficulty()) : "normal";
   state.duelSpinToken += 1;
   const seed = options.snapshot?.battleSeed || createDuelBattleSeed(profiles.left, profiles.right);
   const battleId = createDuelBattleId(profiles.left, profiles.right, seed);
@@ -1393,6 +1938,8 @@ function startDuelBattle(options = {}) {
     momentum: 0,
     selectedTactic: "balanced",
     opponentTactic: "balanced",
+    cpuDifficulty,
+    cpuDifficultyLabel: getDuelCpuDifficultyLabel(cpuDifficulty),
     currentOptions: [],
     selectedIndex: null,
     phase: "strategy",
@@ -1448,6 +1995,9 @@ globalThis.JJKDuelRuntime = {
   ...(globalThis.JJKDuelRuntime || {}),
   startDuelBattle,
   renderDuelMode,
+  importLoginCardCharacters,
+  removeLoginCardCharactersFromPool,
+  getCustomDuelCards: () => state.customDuelCards.map((card) => cloneCustomDuelExportValue(card)),
   syncOnlineRoomState,
   clearOnlineDuelBattle,
   syncOnlineSpectatorActions,
@@ -1588,7 +2138,7 @@ function getDuelActionRules() {
       { id: "ce_reinforcement", label: "咒力强化", status: "CANDIDATE", description: "将咒力贴合肉体与近身节奏。", cost: { ceRatio: 0.045, minCe: 10 }, requirements: { domainActive: "any" }, effects: { outgoingScale: 1.12, weightDeltas: { initiative: 0.8, melee: 1.15, finisher: 0.35 }, stabilityDelta: -0.012, domainLoadDelta: 1.5 }, risk: "medium", logTemplate: "你将咒力集中于近身压制，本回合体术与直接输出上升。" },
       { id: "defensive_frame", label: "防御构筑", status: "CANDIDATE", description: "用咒力构成防线。", cost: { ceRatio: 0.035, minCe: 8 }, requirements: { domainActive: "any" }, effects: { incomingHpScale: 0.76, incomingCeScale: 0.88, stabilityDelta: 0.018, weightDeltas: { counter: 0.45, sustain: 0.65 } }, risk: "low", logTemplate: "你先补足防御构筑，减少本回合体势损耗。" },
       { id: "technique_interference", label: "术式干涉", status: "CANDIDATE", description: "干扰对方术式与回流节奏。", cost: { ceRatio: 0.07, minCe: 14 }, requirements: { domainActive: "any" }, effects: { weightDeltas: { counter: 1.15, technique: 0.35 }, opponentWeightDeltas: { technique: -0.7, domain: -0.55 }, opponentStabilityDelta: -0.026, opponentDomainLoadDelta: 7, opponentRegenInterference: 0.22 }, risk: "medium", logTemplate: "你把咒力打入对方术式节奏，干扰其咒力回流与领域维持。" },
-      { id: "residue_reading", label: "残秽读解", status: "CANDIDATE", description: "读取对方咒力流向。", cost: { ceRatio: 0.018, minCe: 4 }, requirements: { domainActive: "any" }, effects: { stabilityDelta: 0.024, weightDeltas: { counter: 0.8, initiative: 0.25 }, selfStatus: { id: "residueReading", label: "残秽读解", rounds: 2, value: 1 } }, risk: "low", logTemplate: "你压低输出读取残秽，对方咒力流向被记录。" },
+      { id: "residue_reading", label: "咒力流淌", status: "CANDIDATE", description: "调整自身咒力流向，使下一回合咒力回流提高15%。", cost: { ceRatio: 0.018, minCe: 4 }, requirements: { domainActive: "any" }, effects: { selfStatus: { id: "ceRegenBoost", label: "咒力流淌", rounds: 1, value: 0.15 } }, risk: "low", logTemplate: "你顺着咒力流向重新调息，下一回合咒力回流提高15%。" },
       { id: "forced_output", label: "强制输出", status: "CANDIDATE", description: "强行拉高术式输出。", cost: { ceRatio: 0.11, minCe: 22 }, requirements: { domainActive: "any", blocksOnTechniqueImbalance: true }, effects: { outgoingScale: 1.26, weightDeltas: { technique: 1.15, finisher: 1.35 }, stabilityDelta: -0.045, domainLoadDelta: 6 }, risk: "high", logTemplate: "你强行拉高术式输出，本回合上限提高。" },
       { id: "ce_compression", label: "压缩咒力", status: "CANDIDATE", description: "收束咒力流动。", cost: { ceRatio: 0.028, minCe: 6 }, requirements: { domainActive: "any" }, effects: { outgoingScale: 0.9, stabilityDelta: 0.042, domainLoadDelta: -5, domainLoadScale: 0.72, weightDeltas: { sustain: 0.9, counter: 0.35, finisher: -0.55 } }, risk: "low", logTemplate: "你主动压缩咒力输出，降低领域负荷增长。" },
       { id: "domain_expand", label: "领域展开", status: "CANDIDATE", description: "展开领域进入高压结界。", cost: { ceRatio: 0.18, minCe: 34 }, requirements: { requiresDomainAccess: true, domainActive: false, blocksOnTechniqueImbalance: true }, effects: { activateDomain: true, domainLoadDelta: 18, weightDeltas: { domain: 2.4, technique: 0.7 }, outgoingScale: 1.12, stabilityDelta: -0.018 }, risk: "high", logTemplate: "你展开领域，结界压制启动，领域负荷同步上升。" },
@@ -1637,6 +2187,14 @@ function getDuelHandRules() {
       maxPerTurn: 3,
       carryOver: false
     },
+    cpuDifficulty: {
+      default: "normal",
+      options: {
+        easy: { label: "简单：陪练", beamWidth: 1, scoreNoise: 0.2, mistakeRate: 0.2 },
+        normal: { label: "普通：稳定", beamWidth: 3, scoreNoise: 0, mistakeRate: 0 },
+        hard: { label: "困难：强规划", beamWidth: 5, scoreNoise: 0, mistakeRate: 0 }
+      }
+    },
     cardLikeDisplay: {
       enabled: true,
       showApCost: true,
@@ -1666,7 +2224,7 @@ function getDuelBetaCopy() {
     version: "0.1.0",
     status: "CANDIDATE",
     title: "术式手札 Beta 反馈",
-    summary: "当前为 CANDIDATE / Beta 反馈包，用于复现手札候选与 AP 多行动体验。",
+    summary: "当前为 CANDIDATE / Beta 反馈包，用于复现手札候选、CE 消耗与多手札执行体验。",
     buttons: {
       export: "导出本场反馈",
       copy: "复制反馈 JSON"
@@ -2237,7 +2795,7 @@ function selectDuelAction(actionId) {
   if (!battle || battle.autoRunning || battle.resolved) return;
   if (isOnlineDuelModeActive() && state.duelModeState.localLocked) {
     battle.actionUiMessage = "联机行动已锁定；如尚未结算，请先取消锁定。";
-    renderDuelMode();
+    requestDuelModeRender();
     return;
   }
   if (!battle.actionChoices?.length || battle.actionRound !== battle.round + 1) updateDuelActionAvailability(battle);
@@ -2248,14 +2806,14 @@ function selectDuelAction(actionId) {
   if (!selection.selected) {
     battle.actionUiMessage = selection.reason || "不可执行";
     updateDuelResourceReplayKey(battle);
-    renderDuelMode();
+    requestDuelModeRender();
     return;
   }
   const selected = getDuelSelectedHandActions(battle, actorSide);
   battle.pendingAction = selected[0]?.action || null;
   battle.actionUiMessage = "";
   updateDuelResourceReplayKey(battle);
-  renderDuelMode();
+  requestDuelModeRender();
 }
 
 function getDuelActionContext(battle, side) {
@@ -2301,7 +2859,7 @@ function appendDuelActionLog(action, actor, opponent, result, battle = state.due
     const text = mechanic?.logTemplate || mechanic?.label || mechanic?.id || "";
     if (text) parts.push(text);
   });
-  if (action.id === "residue_reading") parts.push(`${opponent.name} 的咒力流向被记录`);
+  if (action.id === "residue_reading") parts.push("下一回合咒力回流提高15%");
   recordDuelResourceChange(battle, {
     side: actor.side,
     title: `${sideLabel}手法：${action.label}`,
@@ -2353,7 +2911,7 @@ function appendDuelHandBatchLog(battle, side, entries = [], options = {}) {
     normalized.length
       ? `${sideLabel}本回合${phase === "executed" ? "执行" : "选择"} ${normalized.length} 张手札：${formatDuelHandLogOrder(normalized)}。`
       : `${sideLabel}本回合未选择可执行手札。`,
-    normalized.length ? `预留 AP ${formatNumber(totalAp)} / CE ${formatNumber(totalCe)}。` : "",
+    normalized.length ? `预留 CE ${formatNumber(totalCe)}。` : "",
     result?.reason ? `结果：${result.reason}。` : "",
     resultParts.length ? `执行顺序：${resultParts.join("；")}。` : ""
   ].filter(Boolean);
@@ -2436,16 +2994,16 @@ function getDuelMartialScoreForEvasion(resource) {
 
 function getDuelHitRateFromMartialDiff(diff) {
   const rounded = Math.round(Number(diff || 0));
-  if (rounded >= 4) return 0.96;
-  if (rounded === 3) return 0.92;
-  if (rounded === 2) return 0.86;
-  if (rounded === 1) return 0.78;
-  if (rounded === 0) return 0.68;
-  if (rounded === -1) return 0.55;
-  if (rounded === -2) return 0.4;
-  if (rounded === -3) return 0.25;
-  if (rounded === -4) return 0.12;
-  return 0.05;
+  if (rounded >= 4) return 0.9;
+  if (rounded === 3) return 0.86;
+  if (rounded === 2) return 0.8;
+  if (rounded === 1) return 0.73;
+  if (rounded === 0) return 0.66;
+  if (rounded === -1) return 0.58;
+  if (rounded === -2) return 0.49;
+  if (rounded === -3) return 0.4;
+  if (rounded === -4) return 0.32;
+  return 0.25;
 }
 
 function normalizeDuelRate(value, fallback = 0) {
@@ -2456,11 +3014,11 @@ function normalizeDuelRate(value, fallback = 0) {
 
 function getDuelEvasionProfileConfig(profile) {
   const configs = {
-    melee: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
-    weapon: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
-    execution_sword: { hitBonus: 0.12, min: 0.05, max: 0.95, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
-    technique_projectile: { hitBonus: 0.08, min: 0.08, max: 0.95, damageScaleOnMiss: 0.12, ceScaleOnMiss: 0.2 },
-    technique_area: { hitBonus: 0.23, min: 0.18, max: 0.95, damageScaleOnMiss: 0.38, ceScaleOnMiss: 0.45 }
+    melee: { hitBonus: 0, min: 0.25, max: 0.9, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
+    weapon: { hitBonus: 0.02, min: 0.25, max: 0.92, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
+    execution_sword: { hitBonus: 0.12, min: 0.28, max: 0.95, damageScaleOnMiss: 0, ceScaleOnMiss: 0 },
+    technique_projectile: { hitBonus: 0.08, min: 0.3, max: 0.94, damageScaleOnMiss: 0.18, ceScaleOnMiss: 0.25 },
+    technique_area: { hitBonus: 0.23, min: 0.42, max: 0.95, damageScaleOnMiss: 0.45, ceScaleOnMiss: 0.5 }
   };
   return configs[profile] || null;
 }
@@ -2890,23 +3448,26 @@ function createMahoragaAutoAction(battle, side) {
     {
       id: "mahoraga_eight_handled_sword",
       label: "魔虚罗·八握剑斩击",
-      baseDamage: 68,
-      baseStabilityDamage: 22,
+      baseDamage: 200,
+      baseBlock: 100,
+      baseStabilityDamage: 34,
       effectSummary: "魔虚罗自主代打，以八握剑进行强压斩击。"
     },
     {
       id: "mahoraga_adaptive_counter",
       label: "魔虚罗·适应反击",
-      baseDamage: 54,
-      baseStabilityDamage: 18,
-      effects: { incomingHpScale: 0.92 },
+      baseDamage: 200,
+      baseBlock: 130,
+      baseStabilityDamage: 28,
+      effects: { incomingHpScale: 0.62 },
       effectSummary: "法轮记录攻击模式后反打，并略微降低本回合承伤。"
     },
     {
       id: "mahoraga_guard_break_step",
       label: "魔虚罗·破防踏碎",
-      baseDamage: 46,
-      baseStabilityDamage: 28,
+      baseDamage: 200,
+      baseBlock: 110,
+      baseStabilityDamage: 42,
       effects: { opponentStabilityDelta: -0.045 },
       effectSummary: "以巨力破坏站位与防御结构。"
     }
@@ -2985,9 +3546,9 @@ function renderDuelResourcePanel(battle = state.duelBattle) {
   if (!battle?.resourceState) return "";
   return `
     <section class="duel-resource-panel">
-      ${renderDuelResourceSide(battle.resourceState.p1, battle.left)}
+      ${renderDuelResourceSide(battle.resourceState.p1, battle.left, battle)}
       ${renderDuelRoundMemoPanel(battle)}
-      ${renderDuelResourceSide(battle.resourceState.p2, battle.right)}
+      ${renderDuelResourceSide(battle.resourceState.p2, battle.right, battle)}
     </section>
   `;
 }
@@ -3333,23 +3894,257 @@ function renderDuelTurnExecuteControl(battle = state.duelBattle) {
   `;
 }
 
+function getDuelActionEntry(actionOrCandidate = {}) {
+  return actionOrCandidate?.action || actionOrCandidate || {};
+}
+
+function getDuelActionEntryId(actionOrCandidate = {}) {
+  const action = getDuelActionEntry(actionOrCandidate);
+  return actionOrCandidate?.actionId || actionOrCandidate?.id || action.actionId || action.id || action.sourceActionId || action.cardId || "";
+}
+
+const DUEL_DOMAIN_CONTROL_SKIN_IDS = new Set([
+  "domain_expand",
+  "domain_compress",
+  "domain_force_sustain",
+  "domain_release",
+  "domain_clash",
+  "simple_domain_guard",
+  "hollow_wicker_basket_guard",
+  "falling_blossom_emotion",
+  "zero_ce_domain_bypass",
+  "domain_survival_guard"
+]);
+
+const DUEL_DOMAIN_CONTROL_SKIN_TAGS = new Set([
+  "domain_access",
+  "domain_activation",
+  "domain_maintenance",
+  "domain_response",
+  "simple_domain",
+  "hollow_wicker_basket",
+  "falling_blossom_emotion",
+  "zero_ce_domain_bypass",
+  "领域操控",
+  "领域展开",
+  "领域对抗",
+  "简易领域",
+  "弥虚葛笼",
+  "弥须葛笼",
+  "落花之情",
+  "必中规避"
+]);
+
+const DUEL_CARD_SKIN_CATEGORY_KEYS = new Set(["template", "special", "domain", "summon", "mahoraga", "trial"]);
+const DUEL_CARD_SKIN_MODE_KEYS = new Set(["classic", "v224", "custom", "champion-kashimo"]);
+
+function normalizeDuelSkinToken(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeDuelCardSkinMode(value = "") {
+  const key = String(value || "").trim().toLowerCase();
+  return DUEL_CARD_SKIN_MODE_KEYS.has(key) ? key : "";
+}
+
+function getDuelForcedCardSkinMode(view = {}, actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  return normalizeDuelCardSkinMode(
+    view.visualCardSkin ||
+    view.cardSkin ||
+    view.visualSettings?.cardSkin ||
+    entry.visualCardSkin ||
+    entry.cardSkin ||
+    entry.visualSettings?.cardSkin ||
+    action.visualCardSkin ||
+    action.cardSkin ||
+    action.visualSettings?.cardSkin ||
+    ""
+  );
+}
+
+function sanitizeDuelInlineCssValue(value) {
+  const text = String(value || "").trim().slice(0, 180);
+  if (!text || /[;{}]/.test(text) || /url\s*\(/i.test(text)) return "";
+  if (!/^[#(),.%\w\s-]+$/i.test(text)) return "";
+  return text;
+}
+
+function getDuelForcedCustomSkinInlineStyles(view = {}, actionOrCandidate = {}, category = "template") {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  const settings = view.visualSettings || entry.visualSettings || action.visualSettings || null;
+  if (settings?.cardSkin !== "custom" || !settings.customSkin?.cards) return [];
+  const config = settings.customSkin.cards[category] || {};
+  const suffixMap = {
+    background: "bg",
+    border: "border",
+    accent: "accent",
+    text: "text",
+    muted: "muted",
+    glow: "glow"
+  };
+  return Object.entries(suffixMap)
+    .map(([field, suffix]) => {
+      const value = sanitizeDuelInlineCssValue(config[field]);
+      return value ? `--card-skin-${suffix}:${escapeHtml(value)}` : "";
+    })
+    .filter(Boolean);
+}
+
+function collectDuelSkinTags(view = {}, actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  return []
+    .concat(Array.isArray(view.tags) ? view.tags : [])
+    .concat(Array.isArray(view.uiTags) ? view.uiTags : [])
+    .concat(Array.isArray(entry.tags) ? entry.tags : [])
+    .concat(Array.isArray(action.tags) ? action.tags : [])
+    .concat(Array.isArray(action.specialHandTags) ? action.specialHandTags : [])
+    .concat(Array.isArray(action["特殊手札"]) ? action["特殊手札"] : [])
+    .map(normalizeDuelSkinToken)
+    .filter(Boolean);
+}
+
+function collectDuelSkinIds(view = {}, actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  return [
+    getDuelActionEntryId(entry),
+    entry.sourceActionId,
+    entry.actionId,
+    entry.id,
+    entry.cardId,
+    view.sourceActionId,
+    view.actionId,
+    view.id,
+    view.cardId,
+    action.sourceActionId,
+    action.actionId,
+    action.id,
+    action.cardId
+  ]
+    .flatMap((value) => {
+      const token = normalizeDuelSkinToken(value);
+      return token.startsWith("card_") ? [token, token.slice(5)] : [token];
+    })
+    .filter(Boolean);
+}
+
+function isDuelDomainControlSkinChoice(view = {}, actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  const cardType = normalizeDuelSkinToken(view.cardType || entry.cardType || action.cardType || action.type || "");
+  const ids = collectDuelSkinIds(view, entry);
+  if (ids.some((id) => DUEL_DOMAIN_CONTROL_SKIN_IDS.has(id))) return true;
+  const tags = collectDuelSkinTags(view, entry);
+  const hasControlTag = tags.some((tag) => DUEL_DOMAIN_CONTROL_SKIN_TAGS.has(tag));
+  if (!hasControlTag) return false;
+  return Boolean(
+    view.domainHand ||
+    entry.domainHand ||
+    action.domainHand ||
+    cardType === "domain_maintenance" ||
+    ids.some((id) => /^domain_(expand|compress|force_sustain|release|clash|survival)/.test(id))
+  );
+}
+
+function isDuelPureDomainChoice(actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  const effects = action.effects || entry.effects || {};
+  const cardType = String(entry.cardType || action.cardType || action.type || "").toLowerCase();
+  if (action.domainSpecific || entry.domainSpecific || ["rule_trial", "rule_defense", "jackpot"].includes(cardType)) return false;
+  if (isDuelDomainControlSkinChoice({}, entry)) return true;
+  if (
+    (entry.specialHandCard || action.specialHandCard || entry.techniqueFeatureHand || action.techniqueFeatureHand) &&
+    (entry.normalHandOnly || action.normalHandOnly) &&
+    !effects.activateDomain &&
+    !effects.releaseDomain
+  ) {
+    return false;
+  }
+  return Boolean(
+    entry.domainHand ||
+    action.domainHand ||
+    effects.activateDomain ||
+    effects.releaseDomain
+  );
+}
+
+function uniqueDuelActionEntries(entries = []) {
+  const seen = new Set();
+  return (entries || []).filter((entry) => {
+    const id = getDuelActionEntryId(entry);
+    const action = getDuelActionEntry(entry);
+    const key = id || [entry?.label || action.label, entry?.name || action.name, entry?.cardType || action.cardType].filter(Boolean).join("|");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getDuelCardAnimationVariant(actionOrCandidate = {}, battle = state.duelBattle, mode = "deal", count = 4) {
+  const action = getDuelActionEntry(actionOrCandidate);
+  const id = getDuelActionEntryId(actionOrCandidate) || action.label || action.name || "card";
+  const source = [
+    battle?.battleId || battle?.battleSeed || battle?.seed || "battle",
+    battle?.round || 0,
+    mode,
+    id
+  ].join("|");
+  return (hashDuelSeed(source) % Math.max(1, count)) + 1;
+}
+
+function isDuelDomainExpandCard(actionOrCandidate = {}) {
+  const action = getDuelActionEntry(actionOrCandidate);
+  const ids = collectDuelSkinIds({}, actionOrCandidate);
+  return ids.includes("domain_expand") ||
+    ids.includes("card_domain_expand") ||
+    (Boolean(action?.effects?.activateDomain || actionOrCandidate?.effects?.activateDomain) && isDuelDomainControlSkinChoice({}, actionOrCandidate));
+}
+
+function markDuelHandActionAnimation(battle = state.duelBattle, side = "left", mode = "play") {
+  if (!battle) return;
+  const ids = getDuelSelectedHandActions(battle, side)
+    .map((entry) => entry.actionId || entry.id || entry.action?.id || "")
+    .filter(Boolean);
+  if (!ids.length) return;
+  const round = Number(battle.round || 0) + 1;
+  const safeMode = mode === "lock" ? "lock" : "play";
+  battle.handActionAnimation = {
+    mode: safeMode,
+    side,
+    round,
+    ids,
+    key: [battle.battleId || "battle", side, round, safeMode, ids.join(",")].join("|")
+  };
+}
+
 function renderDuelActionChoices(battle = state.duelBattle) {
   if (!battle?.resourceState || battle.resolved) return "";
-  if (!battle.actionChoices?.length || battle.actionRound !== battle.round + 1) updateDuelActionAvailability(battle);
-  const choices = battle.actionChoices || [];
-  const domainChoices = battle.domainHandCandidates || [];
+  const handRules = getDuelHandRules();
+  const maxDomainHandSize = handRules.domainHand?.enabled === false ? 0 : Number(handRules.domainHand?.maxHandSize || 3);
+  if (
+    !battle.actionChoices?.length ||
+    battle.actionRound !== battle.round + 1 ||
+    (maxDomainHandSize > 0 && !Array.isArray(battle.domainHandCandidates))
+  ) updateDuelActionAvailability(battle);
+  const rawChoices = battle.actionChoices || [];
+  const misplacedDomainChoices = rawChoices.filter(isDuelPureDomainChoice);
+  const choices = rawChoices.filter((action) => !isDuelPureDomainChoice(action));
+  const domainChoices = uniqueDuelActionEntries([...(battle.domainHandCandidates || []), ...misplacedDomainChoices]);
   const { actorSide, actor } = getDuelSideResources(battle);
   const selectedEntries = getDuelSelectedHandActions(battle, actorSide);
   const mahoragaProxyActive = isMahoragaProxyActive(battle, actorSide);
   const selectedIds = new Set(selectedEntries.map((entry) => entry.actionId || entry.id));
   const selectedOrderMap = new Map(selectedEntries.map((entry, index) => [entry.actionId || entry.id, index + 1]));
-  const handRules = getDuelHandRules();
   const maxSelections = handRules.hand?.maxSelectionsPerTurn || 1;
   const sideHandState = battle.handState?.[actorSide] || {};
   const maxHandSize = handRules.hand?.maxHandSize || 8;
   const drawPerTurn = handRules.hand?.drawPerTurn || 5;
   const pendingDiscardCount = Math.max(0, Number(sideHandState.pendingDiscardCount || 0));
-  const maxDomainHandSize = handRules.domainHand?.enabled === false ? 0 : Number(handRules.domainHand?.maxHandSize || 3);
   const selectedTotalCe = selectedEntries.reduce((total, entry) => total + Number(entry?.ceCost || 0), 0);
   const actorCe = Number(actor?.ce || 0);
   const actorMaxCe = Number(actor?.maxCe || 0);
@@ -3359,10 +4154,30 @@ function renderDuelActionChoices(battle = state.duelBattle) {
   const onlineLocked = onlineMode && state.duelModeState.localLocked;
   const lockEntry = battle.handLockMessages?.[actorSide];
   const handLockMessage = lockEntry && Number(lockEntry.round || 0) === battle.round + 1 ? String(lockEntry.message || "") : "";
+  const dealAnimationKey = [
+    battle.battleId || "battle",
+    actorSide,
+    battle.round + 1,
+    choices.map((item) => item?.id || item?.actionId || item?.action?.id || "").join(","),
+    domainChoices.map((item) => item?.id || item?.actionId || item?.action?.id || "").join(",")
+  ].join("|");
+  const shouldAnimateDeal = Boolean(dealAnimationKey && battle.lastDealingAnimationKey !== dealAnimationKey);
+  if (shouldAnimateDeal) battle.lastDealingAnimationKey = dealAnimationKey;
+  const handAnimation = battle.handActionAnimation || {};
+  const animationIds = new Set(Array.isArray(handAnimation.ids) ? handAnimation.ids : []);
+  const animationMode = handAnimation.mode === "lock" ? "lock" : "play";
+  const shouldAnimatePlay = Boolean(
+    animationIds.size &&
+    handAnimation.side === actorSide &&
+    Number(handAnimation.round || 0) === battle.round + 1 &&
+    handAnimation.key &&
+    battle.lastHandActionAnimationKey !== handAnimation.key
+  );
+  if (shouldAnimatePlay) battle.lastHandActionAnimationKey = handAnimation.key;
   const selectedOrder = selectedEntries.length ? `
     <ol class="duel-selected-hand-list">
       ${selectedEntries.map((entry, index) => `
-        <li><span>${escapeHtml(formatNumber(index + 1))}</span><strong>${escapeHtml(entry.label || entry.actionId || "未命名手札")}</strong><em>AP ${escapeHtml(formatNumber(entry.apCost || 0))} / CE ${escapeHtml(formatNumber(entry.ceCost || 0))}</em></li>
+        <li><span>${escapeHtml(formatNumber(index + 1))}</span><strong>${escapeHtml(entry.label || entry.actionId || "未命名手札")}</strong><em>CE ${escapeHtml(formatNumber(entry.ceCost || 0))}</em></li>
       `).join("")}
     </ol>
   ` : `<p class="duel-selected-hand-empty">尚未选择本回合手札</p>`;
@@ -3387,7 +4202,7 @@ function renderDuelActionChoices(battle = state.duelBattle) {
     ? "咒力回流断裂，慎用高消耗手法。"
     : (domainRisk > 0.72 ? "领域负荷接近阈值，强行维持可能触发领域崩解和术式烧断。" : "");
   return `
-    <section class="duel-action-panel">
+    <section class="duel-action-panel${shouldAnimateDeal ? " deal-animation" : ""}${shouldAnimatePlay ? ` ${animationMode}-animation` : ""}" data-duel-deal-round="${escapeHtml(battle.round + 1)}">
       <div class="duel-action-head">
         <div class="duel-action-toolbar-buttons">
           <h4>${onlineMode ? "联机手札" : "术式手札"}</h4>
@@ -3403,7 +4218,6 @@ function renderDuelActionChoices(battle = state.duelBattle) {
           <span class="duel-chip">已选择手札：${escapeHtml(formatNumber(selectedEntries.length))} / ${escapeHtml(formatNumber(maxSelections))}</span>
         </div>
       </div>
-      ${renderDuelTurnExecuteControl(battle)}
       <p class="duel-hand-pool-hint">${escapeHtml(getDuelHandPoolInfluenceText(battle))}</p>
       ${pendingDiscardCount > 0 ? `<p class="duel-action-warning">手牌溢出：请在下方手牌中选择 ${escapeHtml(formatNumber(pendingDiscardCount))} 张弃置，弃到 ${escapeHtml(formatNumber(maxHandSize))} 张或更少后才能出牌。</p>` : ""}
       ${sideHandState.lastInjected?.length ? `<p class="duel-action-message">本轮额外加入手牌：${escapeHtml(sideHandState.lastInjected.map((item) => item.label || item.actionId).join("、"))}</p>` : ""}
@@ -3425,7 +4239,14 @@ function renderDuelActionChoices(battle = state.duelBattle) {
       </div>
       <div class="duel-action-choices duel-hand-choices">
         ${choices.length
-          ? choices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, { discardMode: pendingDiscardCount > 0 })).join("")
+          ? choices.map((action, index) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, {
+            discardMode: pendingDiscardCount > 0,
+            dealAnimation: shouldAnimateDeal,
+            dealIndex: index,
+            playAnimation: shouldAnimatePlay && animationIds.has(getDuelActionEntryId(action)),
+            playMode: animationMode,
+            playIndex: selectedOrderMap.get(getDuelActionEntryId(action)) || index
+          })).join("")
           : (handLockMessage ? `<p class="duel-selected-hand-empty">${escapeHtml(handLockMessage)}</p>` : "")}
       </div>
       ${maxDomainHandSize && !mahoragaProxyActive ? `
@@ -3435,10 +4256,17 @@ function renderDuelActionChoices(battle = state.duelBattle) {
         </div>
         <div class="duel-action-choices duel-domain-hand-choices">
           ${domainChoices.length
-            ? domainChoices.map((action) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap)).join("")
+            ? domainChoices.map((action, index) => renderDuelActionChoice(action, selectedIds, battle, selectedOrderMap, {
+              dealAnimation: shouldAnimateDeal,
+              dealIndex: choices.length + index,
+              playAnimation: shouldAnimatePlay && animationIds.has(getDuelActionEntryId(action)),
+              playMode: animationMode,
+              playIndex: selectedOrderMap.get(getDuelActionEntryId(action)) || choices.length + index
+            })).join("")
             : `<p class="duel-selected-hand-empty">当前没有可用领域操控手札。</p>`}
         </div>
       ` : ""}
+      ${renderDuelTurnExecuteControl(battle)}
     </section>
   `;
 }
@@ -3670,20 +4498,20 @@ function renderDuelDeveloperDetails(view = {}, debug = {}) {
     <details class="duel-hand-debug">
       <summary>开发者详情</summary>
       <dl>
-        <dt>cardId</dt><dd>${escapeHtml(debug.cardId || view.cardId || "n/a")}</dd>
-        <dt>sourceActionId</dt><dd>${escapeHtml(debug.sourceActionId || view.sourceActionId || view.actionId || "n/a")}</dd>
-        <dt>mechanicIds</dt><dd>${escapeHtml((debug.mechanicIds || view.mechanicIds || []).join(" / ") || "none")}</dd>
-        <dt>allowedContexts</dt><dd>${escapeHtml((debug.allowedContexts || view.allowedContexts || []).join(" / ") || "normal")}</dd>
-        <dt>longEffect</dt><dd>${escapeHtml(view.longEffect || "n/a")}</dd>
-        <dt>flavorLine</dt><dd>${escapeHtml(view.flavorLine || "n/a")}</dd>
-        <dt>actionId</dt><dd>${escapeHtml(debug.actionId || view.actionId || "n/a")}</dd>
-        <dt>cardType</dt><dd>${escapeHtml(debug.cardType || view.cardType || "n/a")}</dd>
-        <dt>rarity</dt><dd>${escapeHtml(debug.rarity || view.rarity || "n/a")}</dd>
-        <dt>effectTags</dt><dd>${escapeHtml((debug.effectTags || []).join(" / ") || "none")}</dd>
-        <dt>status</dt><dd>${escapeHtml(debug.status || view.status || "n/a")}</dd>
-        <dt>copyStatus</dt><dd>${escapeHtml(view.copyStatus || "n/a")}</dd>
-        <dt>source</dt><dd>${escapeHtml(debug.source || view.source || "existing-action-pool")}</dd>
-        <dt>weight</dt><dd>${escapeHtml(debug.weight || "n/a")}</dd>
+        <dt>cardId（卡牌ID）</dt><dd>${escapeHtml(debug.cardId || view.cardId || "n/a")}</dd>
+        <dt>sourceActionId（来源动作ID）</dt><dd>${escapeHtml(debug.sourceActionId || view.sourceActionId || view.actionId || "n/a")}</dd>
+        <dt>mechanicIds（机制ID）</dt><dd>${escapeHtml((debug.mechanicIds || view.mechanicIds || []).join(" / ") || "none")}</dd>
+        <dt>allowedContexts（允许场景）</dt><dd>${escapeHtml((debug.allowedContexts || view.allowedContexts || []).join(" / ") || "normal")}</dd>
+        <dt>longEffect（长效果）</dt><dd>${escapeHtml(view.longEffect || "n/a")}</dd>
+        <dt>flavorLine（风味文本）</dt><dd>${escapeHtml(view.flavorLine || "n/a")}</dd>
+        <dt>actionId（动作ID）</dt><dd>${escapeHtml(debug.actionId || view.actionId || "n/a")}</dd>
+        <dt>cardType（卡牌类型）</dt><dd>${escapeHtml(debug.cardType || view.cardType || "n/a")}</dd>
+        <dt>rarity（稀有度）</dt><dd>${escapeHtml(debug.rarity || view.rarity || "n/a")}</dd>
+        <dt>effectTags（效果标签）</dt><dd>${escapeHtml((debug.effectTags || []).join(" / ") || "none")}</dd>
+        <dt>status（状态）</dt><dd>${escapeHtml(debug.status || view.status || "n/a")}</dd>
+        <dt>copyStatus（文案状态）</dt><dd>${escapeHtml(view.copyStatus || "n/a")}</dd>
+        <dt>source（来源）</dt><dd>${escapeHtml(debug.source || view.source || "existing-action-pool")}</dd>
+        <dt>weight（权重）</dt><dd>${escapeHtml(debug.weight || "n/a")}</dd>
       </dl>
     </details>
   `;
@@ -3706,7 +4534,127 @@ function getDuelCardNumericBrief(view = {}) {
   const modifierText = modifier
     ? `x${formatNumber(Number(modifier.toFixed(2)))}（浮动 x${formatNumber(Number((modifier * 0.92).toFixed(2)))}~x${formatNumber(Number((modifier * 1.08).toFixed(2)))})`
     : "特殊效果";
-  return `攻 ${formatNumber(finalDamage)}｜防 ${formatNumber(finalBlock)}｜消耗 AP ${formatNumber(view.apCost || 0)} / CE ${formatNumber(finalCost)}｜数值修正 ${modifierText}`;
+  return `攻 ${formatNumber(finalDamage)}｜防 ${formatNumber(finalBlock)}｜CE（咒力）消耗 ${formatNumber(finalCost)}｜数值修正 ${modifierText}`;
+}
+
+function collectDuelSkinIdentityText(view = {}, actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  return [
+    entry.actionId,
+    entry.id,
+    entry.sourceActionId,
+    entry.cardId,
+    entry.cardType,
+    entry.domainRole,
+    entry.domainClass,
+    view.actionId,
+    view.id,
+    view.sourceActionId,
+    view.cardId,
+    view.cardType,
+    view.displayName,
+    view.label,
+    view.name,
+    view.subtitle,
+    view.shortEffect,
+    action.id,
+    action.actionId,
+    action.sourceActionId,
+    action.cardId,
+    action.cardType,
+    action.type,
+    action.label,
+    action.name,
+    action.description,
+    action.scalingProfile
+  ].concat(
+    Array.isArray(view.tags) ? view.tags : [],
+    Array.isArray(view.uiTags) ? view.uiTags : [],
+    Array.isArray(action.tags) ? action.tags : [],
+    Array.isArray(action.specialHandTags) ? action.specialHandTags : [],
+    Array.isArray(action["特殊手札"]) ? action["特殊手札"] : []
+  ).filter(Boolean).join(" ");
+}
+
+function getDuelCardSkinCategory(view = {}, actionOrCandidate = {}) {
+  const entry = actionOrCandidate || {};
+  const action = getDuelActionEntry(entry);
+  const explicitCategory = normalizeDuelSkinToken(
+    view.skinCategory ||
+    view.cardSkinCategory ||
+    entry.skinCategory ||
+    entry.cardSkinCategory ||
+    action.skinCategory ||
+    action.cardSkinCategory ||
+    ""
+  );
+  if (DUEL_CARD_SKIN_CATEGORY_KEYS.has(explicitCategory)) return explicitCategory;
+  const effects = action.effects || entry.effects || {};
+  const cardType = String(view.cardType || entry.cardType || action.cardType || action.type || "").toLowerCase();
+  const identityText = collectDuelSkinIdentityText(view, entry).toLowerCase();
+  const originalIdentityText = collectDuelSkinIdentityText(view, entry);
+  if (/mahoraga|魔虚罗|魔須羅|八握剑|八握劍/.test(identityText) || /魔虚罗|魔須羅|八握剑|八握劍/.test(originalIdentityText)) {
+    return "mahoraga";
+  }
+  if (
+    cardType === "rule_trial" ||
+    cardType === "rule_defense" ||
+    cardType === "jackpot" ||
+    action.domainSpecific ||
+    /trial|verdict|evidence|judgeman|higuruma|rule_trial|rule_defense|审判|判决|判決|证据|證據|抗审判|日车/.test(identityText) ||
+    /审判|判决|判決|证据|證據|抗审判|日车/.test(originalIdentityText)
+  ) {
+    return "trial";
+  }
+  if (isDuelDomainControlSkinChoice(view, entry)) {
+    return "domain";
+  }
+  if (
+    cardType === "summon" ||
+    Boolean(view.summonSpec || action.summonSpec || action.unitStats || action.mahoragaProxySpec) ||
+    /summon|shikigami|ten_shadows|unit|式神|十种影|十影|召唤|召喚/.test(identityText) ||
+    /式神|十种影|十影|召唤|召喚/.test(originalIdentityText)
+  ) {
+    return "summon";
+  }
+  if (
+    action.specialHandCard ||
+    action.techniqueFeatureHand ||
+    view.specialHandCard ||
+    view.techniqueFeatureHand ||
+    Array.isArray(action.specialHandTags) && action.specialHandTags.length > 0 ||
+    /特色手札|technique_feature|feature_technique|specialhand/.test(identityText)
+  ) {
+    return "special";
+  }
+  if (
+    isDuelPureDomainChoice(entry) &&
+    (entry.domainHand || action.domainHand || effects.activateDomain || effects.releaseDomain)
+  ) {
+    return "domain";
+  }
+  return "template";
+}
+
+function getDuelCompactAttackValue(view = {}, actionOrCandidate = {}) {
+  const action = getDuelActionEntry(actionOrCandidate);
+  const candidates = [
+    view.finalDamage,
+    view.numericPreview?.finalDamage,
+    view.effectPreview?.numbers?.finalDamage,
+    view.effectPreview?.finalDamage,
+    action.finalDamage,
+    action.numericPreview?.finalDamage,
+    action.baseDamage,
+    action.damage,
+    action.effects?.damage,
+    action.unitStats?.baseDamage,
+    view.summonSpec?.unitStats?.baseDamage,
+    view.summonSpec?.baseDamage
+  ];
+  const value = candidates.find((item) => Number(item) > 0);
+  return Number(value || 0);
 }
 
 function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, selectedOrderMap = new Map(), options = {}) {
@@ -3752,8 +4700,17 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
     action?.name
   ].filter(Boolean).join(" ");
   const specialCardClass = /mahoraga_tuning_ritual|魔虚罗调幅仪式/.test(identityText) ? " mahoraga-ritual" : "";
+  const skinCategory = getDuelCardSkinCategory(view, action);
+  const skinClass = ` duel-skin-${skinCategory}`;
+  const visualSettings = getDuelVisualSettingsSnapshot();
+  const cardSkinClass = ` duel-card-skin-${visualSettings.cardSkin}`;
+  const compactStats = `
+        <span class="duel-action-compact-stats">
+          <i class="duel-action-attack">攻击 ${escapeHtml(formatNumber(getDuelCompactAttackValue(view, action)))}</i>
+          <i class="duel-action-cost">咒力 ${escapeHtml(formatNumber(view.ceCost || 0))}</i>
+        </span>`;
   return `
-    <article class="duel-hand-card ${escapeHtml(cardTypeClass)}${specialCardClass}${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
+    <article class="duel-hand-card ${escapeHtml(cardTypeClass)}${specialCardClass}${skinClass}${cardSkinClass}${selected ? " active" : ""}${!view.available ? " disabled" : ""}">
       <button class="duel-action-choice duel-hand-main${selected ? " active" : ""}" data-duel-action="${escapeHtml(view.actionId)}" type="button" ${onlineLocked || discardMode || selected || !view.available ? "disabled" : ""}>
         <span class="duel-action-title">${escapeHtml(titleText)}</span>
         ${subtitleText ? `<span class="duel-action-subtitle">${escapeHtml(subtitleText)}</span>` : ""}
@@ -3762,7 +4719,7 @@ function renderDuelActionChoice(action, selectedIds, battle = state.duelBattle, 
           <i class="duel-action-card-type">类型：${escapeHtml(cardTypeText)}</i>
           <i class="duel-action-risk">风险：${escapeHtml(riskText)}</i>
         </span>
-        <span class="duel-action-cost">AP ${escapeHtml(formatNumber(view.apCost))}｜咒力 ${escapeHtml(formatNumber(view.ceCost || 0))}</span>
+        ${compactStats}
         <span class="duel-action-numeric-brief">${escapeHtml(numericBrief)}</span>
         ${renderDuelSummonInlinePreview(view)}
         <span class="duel-action-effect">效果：${escapeHtml(shortEffectText)}</span>
@@ -3801,8 +4758,38 @@ function renderDuelSummonInlinePreview(view) {
   return `<span class="duel-summon-preview"><b>召唤</b>${escapeHtml(unitName)}｜${escapeHtml(control)}｜${escapeHtml(placement)}${escapeHtml(duration)}</span>`;
 }
 
-function renderDuelResourceSide(resource, profile) {
+function getDuelSelectedResourcePreview(resource, battle = state.duelBattle) {
+  if (!resource?.side || !battle) return null;
+  const preview = {
+    hp: Number(resource.hp || 0),
+    ce: Number(resource.ce || 0)
+  };
+  const selected = getDuelSelectedHandActions(battle, resource.side) || [];
+  selected.forEach((entry) => {
+    const action = entry?.action || entry || {};
+    const runtime = action.bloodRuntime || entry?.bloodRuntime;
+    if (!runtime?.active && !action.bloodConversion) return;
+    const ceCost = Number(runtime?.ceCost ?? action.ceCost ?? action.costCe ?? 0) || 0;
+    const hpCost = Number(runtime?.hpCost ?? action.effects?.selfHpCostFlat ?? 0) || 0;
+    preview.ce = Number((preview.ce - ceCost).toFixed(1));
+    preview.hp = Number((preview.hp - hpCost).toFixed(1));
+    if (action.bloodConversion === "ce_to_hp") {
+      preview.hp = Number((preview.hp + ceCost * Number(action.bloodCeToHpEfficiency || 0.82)).toFixed(1));
+    } else if (action.bloodConversion === "hp_to_ce") {
+      preview.ce = Number((preview.ce + hpCost * Number(action.bloodHpToCeEfficiency || 0.76)).toFixed(1));
+    }
+  });
+  if (Math.abs(preview.hp - Number(resource.hp || 0)) < 0.05 && Math.abs(preview.ce - Number(resource.ce || 0)) < 0.05) {
+    return null;
+  }
+  preview.hp = Math.max(0, preview.hp);
+  preview.ce = Math.max(0, preview.ce);
+  return preview;
+}
+
+function renderDuelResourceSide(resource, profile, battle = state.duelBattle) {
   if (!resource) return "";
+  const preview = getDuelSelectedResourcePreview(resource, battle);
   const hpRatio = resource.maxHp ? clamp(resource.hp / resource.maxHp, 0, 1) : 0;
   const ceRatio = resource.maxCe ? clamp(resource.ce / resource.maxCe, 0, 1) : 0;
   const domainRatio = resource.domain?.threshold ? clamp(resource.domain.load / resource.domain.threshold, 0, 1) : 0;
@@ -3818,12 +4805,13 @@ function renderDuelResourceSide(resource, profile) {
         <strong>${escapeHtml(resource.name)}</strong>
         <span>${escapeHtml(gradeLabel(profile?.visibleGrade))}</span>
       </div>
-      ${renderDuelResourceBar("体势", resource.hp, resource.maxHp, hpRatio, "hp")}
-      ${renderDuelResourceBar("咒力", resource.ce, resource.maxCe, ceRatio, "ce")}
+      ${renderDuelResourceBar("体势", resource.hp, resource.maxHp, hpRatio, "hp", preview?.hp)}
+      ${renderDuelResourceBar("咒力", resource.ce, resource.maxCe, ceRatio, "ce", preview?.ce)}
       <div class="duel-resource-meta">
         <span>咒力回流 <strong>+${escapeHtml(formatNumber(resource.ceRegen))}</strong> / 回合</span>
         <span>咒力稳定 <strong>${escapeHtml(formatPercent(resource.stability))}</strong></span>
       </div>
+      ${renderDuelBattleSpecialCounterWindow(battle, resource.side)}
       <div class="duel-domain-load">
         <span>领域负荷</span>
         <strong>${escapeHtml(domainText)}</strong>
@@ -3834,11 +4822,22 @@ function renderDuelResourceSide(resource, profile) {
   `;
 }
 
-function renderDuelResourceBar(label, value, max, ratio, kind) {
+function renderDuelResourceBar(label, value, max, ratio, kind, previewValue = null) {
+  const hasPreview = Number.isFinite(Number(previewValue)) && Math.abs(Number(previewValue) - Number(value || 0)) >= 0.05;
+  const baseRatio = clamp(ratio, 0, 1);
+  const previewRatio = hasPreview && max ? clamp(Number(previewValue) / max, 0, 1) : baseRatio;
+  const segmentLeft = Math.min(baseRatio, previewRatio) * 100;
+  const segmentWidth = Math.abs(previewRatio - baseRatio) * 100;
+  const previewSegment = hasPreview
+    ? `<em class="${previewRatio >= baseRatio ? "preview-gain" : "preview-loss"}" style="left:${segmentLeft}%;width:${segmentWidth}%"></em>`
+    : "";
+  const valueText = hasPreview
+    ? `${formatNumber(value)} → ${formatNumber(previewValue)} / ${formatNumber(max)}`
+    : `${formatNumber(value)} / ${formatNumber(max)}`;
   return `
     <div class="duel-resource-row ${escapeHtml(kind)}">
-      <div><span>${escapeHtml(label)}</span><strong>${escapeHtml(formatNumber(value))} / ${escapeHtml(formatNumber(max))}</strong></div>
-      <div class="duel-resource-bar"><i style="width:${clamp(ratio, 0, 1) * 100}%"></i></div>
+      <div><span>${escapeHtml(label)}</span><strong class="${hasPreview ? "preview-value" : ""}">${escapeHtml(valueText)}</strong></div>
+      <div class="duel-resource-bar"><i style="width:${baseRatio * 100}%"></i>${previewSegment}</div>
     </div>
   `;
 }
@@ -3942,14 +4941,17 @@ function renderDuelBattlePanel(left, right, baseRate) {
           <span class="badge">${escapeHtml(roundBadge)}</span>
           <h3>${escapeHtml(battle.left.name)} 对 ${escapeHtml(battle.right.name)}</h3>
           <p class="muted">${escapeHtml(getDuelRoundRuleText(battle.left, battle.right))}</p>
+          ${battle.mode === "solo" ? `<p class="muted">电脑难度：${escapeHtml(battle.cpuDifficultyLabel || getDuelCpuDifficultyLabel(battle.cpuDifficulty))}</p>` : ""}
         </div>
         <button class="secondary" id="duelResetBtn" type="button">清空战局</button>
       </div>
       ${statusRows}
-      ${renderDuelResourcePanel(battle)}
-      ${renderDuelBattlefieldUnitsPanel(battle)}
-      ${renderDuelDomainProfilePanel(battle)}
       ${renderDuelActionChoices(battle)}
+      <div class="duel-battle-support-grid">
+        ${renderDuelResourcePanel(battle)}
+        ${renderDuelBattlefieldUnitsPanel(battle)}
+        ${renderDuelDomainProfilePanel(battle)}
+      </div>
       ${renderDuelBetaFeedbackPanel(battle)}
       <div class="duel-interaction">
         <details class="duel-tactic-panel" ${battle.round === 0 && !battle.resolved ? "open" : ""}>
@@ -3981,12 +4983,25 @@ function renderDuelSpectatorBattlePanel(battle) {
     const normalized = {
       ...action,
       id: action?.id || entry?.actionId || `spectator_${side}_${index + 1}`,
+      actionId: entry?.actionId || action?.actionId || action?.id || `spectator_${side}_${index + 1}`,
       label: action?.label || action?.name || entry?.displayName || entry?.actionId || "已锁定手札",
       name: action?.name || action?.label || entry?.displayName || entry?.actionId || "已锁定手札",
       cardType: action?.cardType || entry?.cardType || action?.type || "action",
       apCost: action?.apCost ?? entry?.apCost ?? 0,
       ceCost: action?.ceCost ?? action?.baseCeCost ?? entry?.ceCost ?? 0,
-      baseCeCost: action?.baseCeCost ?? action?.ceCost ?? entry?.ceCost ?? 0
+      baseCeCost: action?.baseCeCost ?? action?.ceCost ?? entry?.ceCost ?? 0,
+      skinCategory: entry?.skinCategory || entry?.cardSkinCategory || action?.skinCategory || action?.cardSkinCategory || "",
+      cardSkinCategory: entry?.cardSkinCategory || entry?.skinCategory || action?.cardSkinCategory || action?.skinCategory || "",
+      visualCardSkin: entry?.visualCardSkin || entry?.cardSkin || action?.visualCardSkin || action?.cardSkin || entry?.visualSettings?.cardSkin || action?.visualSettings?.cardSkin || "",
+      cardSkin: entry?.cardSkin || entry?.visualCardSkin || action?.cardSkin || action?.visualCardSkin || entry?.visualSettings?.cardSkin || action?.visualSettings?.cardSkin || "",
+      visualSettings: entry?.visualSettings || action?.visualSettings || null,
+      tags: Array.isArray(action?.tags) && action.tags.length ? action.tags : (Array.isArray(entry?.tags) ? entry.tags : []),
+      uiTags: Array.isArray(action?.uiTags) && action.uiTags.length ? action.uiTags : (Array.isArray(entry?.uiTags) ? entry.uiTags : []),
+      specialHandTags: Array.isArray(action?.specialHandTags) && action.specialHandTags.length ? action.specialHandTags : (Array.isArray(entry?.specialHandTags) ? entry.specialHandTags : []),
+      domainHand: Boolean(entry?.domainHand || action?.domainHand),
+      domainSpecific: Boolean(entry?.domainSpecific || action?.domainSpecific),
+      specialHandCard: Boolean(entry?.specialHandCard || action?.specialHandCard),
+      techniqueFeatureHand: Boolean(entry?.techniqueFeatureHand || action?.techniqueFeatureHand)
     };
     return renderDuelActionChoice(normalized, new Set(), battle, new Map(), { spectator: true });
   };
@@ -4071,8 +5086,10 @@ function bindDuelBattleControls() {
   els.duelBattle.querySelector("#duelAutoRunBtn")?.addEventListener("click", runDuelAutoBattle);
   els.duelBattle.querySelector("#duelOnlineLockFromHandBtn")?.addEventListener("click", () => {
     if (globalThis.JJKOnline?.lockSelectedTurnFromBattle) {
+      const { actorSide } = getDuelSideResources(state.duelBattle);
+      markDuelHandActionAnimation(state.duelBattle, actorSide, "lock");
       state.duelBattle.actionUiMessage = "正在发送联机行动...";
-      renderDuelMode();
+      requestDuelModeRender();
       Promise.resolve().then(() => globalThis.JJKOnline.lockSelectedTurnFromBattle()).then((room) => {
         if (!state.duelBattle) return;
         if (room) {
@@ -4080,11 +5097,11 @@ function bindDuelBattleControls() {
           return;
         }
         state.duelBattle.actionUiMessage = "行动已发送，等待服务器同步。";
-        renderDuelMode();
+        requestDuelModeRender();
       }).catch((error) => {
         if (state.duelBattle) {
           state.duelBattle.actionUiMessage = `联机行动提交失败：${error?.message || "请检查房间状态后重试。"}`;
-          renderDuelMode();
+          requestDuelModeRender();
         }
       });
       return;
@@ -4100,7 +5117,7 @@ function bindDuelBattleControls() {
       state.duelBattle.actionUiMessage = "";
     }
     updateDuelResourceReplayKey(state.duelBattle);
-    renderDuelMode();
+    requestDuelModeRender();
   });
   els.duelBattle.querySelector("[data-duel-hand-undo]")?.addEventListener("click", () => {
     const { actorSide, actor, opponent } = getDuelSideResources(state.duelBattle);
@@ -4113,7 +5130,7 @@ function bindDuelBattleControls() {
       state.duelBattle.actionUiMessage = "";
     }
     updateDuelResourceReplayKey(state.duelBattle);
-    renderDuelMode();
+    requestDuelModeRender();
   });
   els.duelBattle.querySelectorAll("[data-duel-action]").forEach((button) => {
     button.addEventListener("click", () => selectDuelAction(button.dataset.duelAction || ""));
@@ -4129,7 +5146,7 @@ function bindDuelBattleControls() {
         state.duelBattle.actionChoices = state.duelBattle.handState?.[actorSide]?.cards || state.duelBattle.actionChoices || [];
       }
       updateDuelResourceReplayKey(state.duelBattle);
-      renderDuelMode();
+      requestDuelModeRender();
     });
   });
   els.duelBattle.querySelector("[data-duel-feedback-export]")?.addEventListener("click", () => {
@@ -4146,7 +5163,7 @@ function bindDuelBattleControls() {
       updateDuelResourceReplayKey(state.duelBattle);
       state.duelBattle.currentOptions = [];
       state.duelBattle.selectedIndex = null;
-      renderDuelMode();
+      requestDuelModeRender();
     });
   });
 }
@@ -4169,6 +5186,86 @@ function renderDuelBattleStatus(battle) {
         <strong>${escapeHtml(battle.right.name)}</strong>
         <span>${formatNumber(battle.rightScore)} 点</span>
       </div>
+    </div>
+  `;
+}
+
+function getDuelSpecialCounterEntries(battle, side) {
+  const stateMap = battle?.duelSpecialCounterState?.[side] || battle?.specialCounterState?.[side] || {};
+  const entries = [];
+  if (Array.isArray(stateMap)) {
+    entries.push(...stateMap);
+  } else {
+    Object.values(stateMap).forEach((group) => {
+      if (Array.isArray(group)) {
+        entries.push(...group);
+        return;
+      }
+      if (Array.isArray(group?.entries)) entries.push(...group.entries);
+    });
+  }
+  if (!entries.length) {
+    const bloodState = battle?.bloodManipulationState?.[side];
+    if (Number(bloodState?.pierce || 0) > 0) {
+      entries.push({ id: "blood_pierce", label: "?", value: Number(bloodState.pierce), format: "percent" });
+    }
+    if (Number(bloodState?.blood || 0) > 0) {
+      entries.push({ id: "blood_boost", label: "?", value: Number(bloodState.blood), format: "percent" });
+    }
+  }
+  return entries
+    .filter((entry) => entry && entry.label && Number.isFinite(Number(entry.value)) && Math.abs(Number(entry.value)) > 0.0001)
+    .map((entry) => ({
+      id: entry.id || entry.label,
+      label: String(entry.label),
+      value: Number(entry.value),
+      format: entry.format || "percent"
+    }));
+}
+
+function formatDuelSpecialCounterValue(entry) {
+  if (entry?.format === "number") return formatNumber(entry.value);
+  if (entry?.format === "signed-number") return `${entry.value > 0 ? "+" : ""}${formatNumber(entry.value)}`;
+  return formatPercent(entry.value);
+}
+
+function renderDuelSpecialCounterRow(label, entries) {
+  if (!entries.length) return "";
+  const labelNode = label ? `<span>${escapeHtml(label)}</span>` : "";
+  return `
+    <div class="duel-special-counter-row${label ? "" : " no-label"}">
+      ${labelNode}
+      <div>
+        ${entries.map((entry) => `
+          <span class="duel-special-counter-chip">
+            <b>${escapeHtml(entry.label)}</b>
+            <strong>${escapeHtml(formatDuelSpecialCounterValue(entry))}</strong>
+          </span>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderDuelBattleSpecialCounterWindow(battle, side = "") {
+  if (side) {
+    const entries = getDuelSpecialCounterEntries(battle, side);
+    if (!entries.length) return "";
+    return `
+      <div class="duel-battle-special-counters">
+        ${renderDuelSpecialCounterRow("", entries)}
+      </div>
+    `;
+  }
+  const leftEntries = getDuelSpecialCounterEntries(battle, "left");
+  const rightEntries = getDuelSpecialCounterEntries(battle, "right");
+  if (!leftEntries.length && !rightEntries.length) {
+    return `<div class="duel-battle-special-counters empty"></div>`;
+  }
+  return `
+    <div class="duel-battle-special-counters">
+      ${renderDuelSpecialCounterRow("我方", leftEntries)}
+      ${renderDuelSpecialCounterRow("对方", rightEntries)}
     </div>
   `;
 }
@@ -4276,6 +5373,8 @@ function buildDuelBattleAssistPayload(battle) {
     battleId: battle.battleId,
     seed: battle.seed,
     replayKey: battle.replayKey,
+    cpuDifficulty: battle.cpuDifficulty || "normal",
+    cpuDifficultyLabel: battle.cpuDifficultyLabel || getDuelCpuDifficultyLabel(battle.cpuDifficulty),
     roundRule: getDuelRoundRuleText(battle.left, battle.right),
     tactics: {
       left: { id: leftTactic.id, label: leftTactic.label, description: leftTactic.description },
@@ -4435,6 +5534,7 @@ function runDuelAutoBattle() {
   battle.phase = "stage";
   battle.currentOptions = [];
   battle.selectedIndex = null;
+  markDuelHandActionAnimation(battle, "left", "play");
   state.duelSpinToken += 1;
   const token = state.duelSpinToken;
   renderDuelMode();
@@ -4458,7 +5558,7 @@ function runDuelAutoBattle() {
       : [createDuelPassTurnAction("left", activeBattle)];
     const pickedRightSelections = isMahoragaProxyActive(activeBattle, "right")
       ? [lockMahoragaHandForTurn(activeBattle, "right")]
-      : pickDuelCpuHandActions(activeBattle.resourceState?.p2, activeBattle.resourceState?.p1, activeBattle, { side: "right" });
+      : pickDuelCpuHandActions(activeBattle.resourceState?.p2, activeBattle.resourceState?.p1, activeBattle, { side: "right", difficulty: activeBattle.cpuDifficulty });
     const rightSelections = pickedRightSelections.length ? pickedRightSelections : [createDuelPassTurnAction("right", activeBattle)];
     appendDuelHandBatchLog(activeBattle, "left", leftSelections, { phase: "selected" });
     appendDuelHandBatchLog(activeBattle, "right", rightSelections, { phase: "selected" });
@@ -4484,6 +5584,16 @@ function runDuelAutoBattle() {
     activeBattle.cpuActions = rightActions;
     activeBattle.currentAction = leftActions[0] || null;
     activeBattle.cpuAction = rightActions[0] || null;
+    if (maybeResolveDuelBattleAfterHandActions(activeBattle)) {
+      activeBattle.lastRoundMemo = buildDuelRoundMemo(activeBattle, beforeMemoSnapshot, snapshotDuelMemoState(activeBattle), leftHandResult, rightHandResult);
+      activeBattle.currentOptions = [];
+      activeBattle.selectedIndex = null;
+      activeBattle.pendingAction = null;
+      activeBattle.autoRunning = false;
+      updateDuelResourceReplayKey(activeBattle);
+      renderDuelMode();
+      return;
+    }
     const domainActivationPairs = [
       ...leftActions.map((action) => ({
         action,
@@ -4753,6 +5863,26 @@ function maybeResolveDuelBattle(battle) {
   applyDuelBattleEndResult(battle, result);
 }
 
+function hasDuelImmediateEndSignal(battle) {
+  if (!battle?.resourceState) return false;
+  if (battle.specialEndCondition?.ended || battle.pendingSpecialEndCondition?.ended) return true;
+  return Number(battle.resourceState.p1?.hp || 0) <= 0 || Number(battle.resourceState.p2?.hp || 0) <= 0;
+}
+
+function maybeResolveDuelBattleAfterHandActions(battle) {
+  if (!battle || battle.resolved || !hasDuelImmediateEndSignal(battle)) return false;
+  const previousRound = Number(battle.round || 0);
+  const previousResourceRound = Number(battle.resourceState?.round || previousRound);
+  const handRound = previousRound + 1;
+  battle.round = handRound;
+  if (battle.resourceState) battle.resourceState.round = handRound;
+  maybeResolveDuelBattle(battle);
+  if (battle.resolved) return true;
+  battle.round = previousRound;
+  if (battle.resourceState) battle.resourceState.round = previousResourceRound;
+  return false;
+}
+
 function applyDuelBattleEndResult(battle, result) {
   if (!battle || battle.resolved || !result?.ended) return;
   battle.finalRate = computeDuelBattleFinalRate(battle);
@@ -4925,15 +6055,16 @@ function getDuelPowerTierLabel(profile = {}) {
 }
 
 function evaluateDuelCharacterCard(card) {
-  const raw = {
-    cursedEnergyScore: duelRankValue(card.baseStats?.cursedEnergy),
-    controlScore: duelRankValue(card.baseStats?.control),
-    efficiencyScore: duelRankValue(card.baseStats?.efficiency),
-    bodyScore: duelRankValue(card.baseStats?.body),
-    martialScore: duelRankValue(card.baseStats?.martial),
-    talentScore: duelRankValue(card.baseStats?.talent)
-  };
   const activeMechanisms = getDuelActiveMechanisms(card);
+  const effectiveBaseStats = applyDuelMechanismRankAdjustments(card.baseStats || {}, activeMechanisms);
+  const raw = {
+    cursedEnergyScore: duelRankValue(effectiveBaseStats.cursedEnergy),
+    controlScore: duelRankValue(effectiveBaseStats.control),
+    efficiencyScore: duelRankValue(effectiveBaseStats.efficiency),
+    bodyScore: duelRankValue(effectiveBaseStats.body),
+    martialScore: duelRankValue(effectiveBaseStats.martial),
+    talentScore: duelRankValue(effectiveBaseStats.talent)
+  };
   const lockedRaw = applyDuelMechanismLocks(raw, activeMechanisms);
   const mechanismImpact = summarizeDuelMechanisms(activeMechanisms);
   const loadout = summarizeDuelLoadout(card.loadout || []);
@@ -4992,7 +6123,8 @@ function evaluateDuelCharacterCard(card) {
     canDefend: card.canDefend,
     canRemainSilent: card.canRemainSilent,
     techniquePower: card.techniquePower || "",
-    baseStats: card.baseStats || {},
+    baseStats: effectiveBaseStats,
+    rawBaseStats: card.baseStats || {},
     raw: lockedRaw,
     axes: { jujutsu, body, insight, build },
     combatScore,
@@ -5038,6 +6170,49 @@ function duelRankValue(rank) {
   return Number(value >= 0 ? value : 0);
 }
 
+function getDuelRankOrder() {
+  return Array.isArray(DUEL_RANKS) && DUEL_RANKS.length
+    ? DUEL_RANKS
+    : ["E-", "E", "D", "C", "B", "A", "S", "SS", "SSS", "EX-", "EX"];
+}
+
+function normalizeDuelRankLabel(rank) {
+  const match = String(rank || "").trim().toUpperCase().match(/^(EX-|EX|SSS|SS|S|A|B|C|D|E-|E)/);
+  return match ? match[1] : "";
+}
+
+function stepDuelRank(rank, delta = 0) {
+  const order = getDuelRankOrder();
+  const key = normalizeDuelRankLabel(rank);
+  const index = order.indexOf(key);
+  const step = Number(delta);
+  if (index < 0 || !Number.isFinite(step) || !step) return rank;
+  return order[Math.max(0, Math.min(order.length - 1, index + Math.trunc(step)))];
+}
+
+function duelScoreFieldToBaseStat(field) {
+  return {
+    cursedEnergyScore: "cursedEnergy",
+    controlScore: "control",
+    efficiencyScore: "efficiency",
+    bodyScore: "body",
+    martialScore: "martial",
+    talentScore: "talent"
+  }[field] || "";
+}
+
+function applyDuelMechanismRankAdjustments(baseStats = {}, activeMechanisms = []) {
+  const adjusted = { ...(baseStats || {}) };
+  for (const mechanism of activeMechanisms || []) {
+    for (const adjustment of mechanism.rankAdjustments || []) {
+      const stat = adjustment.stat || duelScoreFieldToBaseStat(adjustment.field);
+      if (!stat || adjusted[stat] == null) continue;
+      adjusted[stat] = stepDuelRank(adjusted[stat], Number(adjustment.delta ?? adjustment.deltaRank ?? 0));
+    }
+  }
+  return adjusted;
+}
+
 function weightedDuelScore(raw, weights = {}) {
   let total = 0;
   let weightSum = 0;
@@ -5059,11 +6234,23 @@ function getDuelActiveMechanisms(card) {
     ...(card.innateTraits || []),
     ...(card.advancedTechniques || []),
     ...(card.loadout || []),
+    ...(card.selectedMechanisms || []),
+    ...(card.techniqueFamilies || []),
     card.domainProfile,
     card.externalResource,
     card.notes
   ].filter(Boolean).map(String);
+  const traitTexts = [
+    ...(card.innateTraits || []),
+    ...(card.advancedTechniques || []),
+    ...(card.selectedMechanisms || []),
+    ...(card.techniqueFamilies || [])
+  ].filter(Boolean).map(String);
   return (state.mechanisms?.mechanisms || []).filter((mechanism) => {
+    if (mechanism.id === "sixEyes") {
+      return traitTexts.some((text) => /六眼|six[_\s-]?eyes|sixEyes/i.test(text));
+    }
+    if (texts.some((text) => text === mechanism.id || text.includes(mechanism.id))) return true;
     return (mechanism.match || []).some((keyword) => texts.some((text) => text.includes(keyword)));
   });
 }

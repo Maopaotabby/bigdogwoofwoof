@@ -2,7 +2,7 @@
   "use strict";
 
   var namespace = "JJKDuelCardTemplate";
-  var version = "1.390A-combat-core-rationalization-pass";
+  var version = "1.392-public-template-tactics";
   var expectedExports = [
     "getDuelCardTemplateRules",
     "getDuelCardTemplates",
@@ -29,6 +29,7 @@
     "getDuelRankMultiplier",
     "getDuelEfficiencyCostMultiplier",
     "getDuelCardScalingProfile",
+    "getDuelCeControlDamageCorrection",
     "calculateDuelCardBaseEffect",
     "calculateDuelCardFinalPreview",
     "calculateDuelCardCeCost",
@@ -109,6 +110,7 @@
     "outcome",
     "combatOverride"
   ];
+  var allowedTemplateStatuses = ["CANDIDATE", "CONFIRMED"];
   var rankMultipliers = Object.freeze({
     E: 0.45,
     D: 0.60,
@@ -120,6 +122,23 @@
     SSS: 3.60,
     "EX-": 4.25,
     EX: 5.00
+  });
+  var ceControlDamageCorrection = Object.freeze({
+    label: "咒力操纵修正",
+    baselineRank: "EX",
+    baselineCard: "五条悟-虚式茈",
+    baselineTargetDamage: 600,
+    baselineMultiplier: 7.875,
+    exponent: 1.25,
+    minMultiplier: 0.45,
+    maxMultiplier: 8.25,
+    zeroCeMultiplier: 0.45
+  });
+  var tenShadowsDamageBalance = Object.freeze({
+    ceControlMultiplierScale: 0.26,
+    ceControlMaxMultiplier: 2.15,
+    baseDamageMultiplier: 1.12,
+    baseDamageFlat: 2
   });
   var efficiencyCostMultipliers = Object.freeze({
     E: 1.45,
@@ -463,6 +482,16 @@
     if (incomingHp) addPreviewLine(preview.combatLines, "受到体势伤害：" + incomingHp + "。");
     var incomingCe = formatScalePercent(effects.incomingCeScale);
     if (incomingCe) addPreviewLine(preview.combatLines, "受到咒力消耗压力：" + incomingCe + "。");
+    var evasionBonus = formatSignedPercent(effects.evasionBonus);
+    if (evasionBonus) addPreviewLine(preview.combatLines, "闪避：" + evasionBonus + "。");
+    var selfHpCostRatio = Number(effects.selfHpCostRatio);
+    if (Number.isFinite(selfHpCostRatio) && selfHpCostRatio > 0) {
+      addPreviewLine(preview.resourceLines, "体势代价：最大体势 " + formatSignedPercent(selfHpCostRatio).replace(/^\+/, "") + "。");
+    }
+    var selfHpCostFlat = Number(effects.selfHpCostFlat);
+    if (Number.isFinite(selfHpCostFlat) && selfHpCostFlat > 0) {
+      addPreviewLine(preview.resourceLines, "体势代价：" + formatPlainNumber(selfHpCostFlat) + "。");
+    }
     var sureHit = formatScalePercent(effects.sureHitScale);
     if (sureHit) addPreviewLine(preview.combatLines, "必中组件影响：" + sureHit + "。");
     var domainPressure = formatScalePercent(effects.domainPressureScale);
@@ -501,9 +530,17 @@
     addPreviewLine(preview.statusLines, buildStatusLine(effects.opponentStatus, "可能施加给对手"));
     var duration = Number(effects.durationRounds || effects.rounds || effects.duration || 0);
     if (Number.isFinite(duration) && duration > 0) addPreviewLine(preview.statusLines, "持续：" + formatPlainNumber(duration) + " 回合。");
+    if (Array.isArray(effects.delayedSelfStatuses) && effects.delayedSelfStatuses.some(function hasLoanDebt(status) {
+      return status?.id === "loaned_shot_debt";
+    })) {
+      addPreviewLine(preview.riskLines, "后续负担：下一回合起输出倍率 -20%。");
+    }
 
     if (Array.isArray(template?.allowedContexts) && template.allowedContexts.length) {
       addPreviewLine(preview.conditionLines, "适用：" + template.allowedContexts.join(" / ") + "。");
+    }
+    if (action.exclusiveHandSelection || template?.exclusiveHandSelection) {
+      addPreviewLine(preview.conditionLines, "限制：本回合只能选择此手札。");
     }
     if (requirements.domainActive === true) addPreviewLine(preview.conditionLines, "条件：需要己方领域处于展开状态。");
     if (requirements.domainActive === false) addPreviewLine(preview.conditionLines, "条件：需要己方尚未展开领域。");
@@ -712,6 +749,10 @@
       asArray(source.techniqueFamilies).join(" ")
     ].filter(Boolean).join(" ");
     var baseRank = rankFromVisibleGrade(source.visibleGrade || source.officialGrade || source.grade || "");
+    var flags = new Set(asArray(source.flags));
+    var antiDomainOnly = /简易领域|simple domain|弥虚葛笼|彌虚葛籠|落花之情|反领域/i.test(text) &&
+      !/领域展开|生得领域|开放领域|顶级领域|顶尖领域|顶格领域|最高级领域|无量空处|伏魔御厨子|坐杀搏徒|真赝相爱|自闭圆顿裹|盖棺铁围山|荡蕴平线|时胞月宫殿|诛伏赐死|三重疾苦|domain expansion/i.test(text);
+    var hasTrueDomainAccess = !flags.has("noDomain") && !antiDomainOnly && Boolean(source.hasDomainAccess || /领域展开|domain expansion|伏魔御厨子|无量空处|诛伏赐死|坐杀搏徒|自闭圆顿裹|真赝相爱|嵌合暗翳庭/i.test(text));
     var stats = {
       cePool: normalizeDuelRank(source.cePool || source.maxCeRank || source.cursedEnergy || baseStats.cursedEnergy || baseRank, baseRank),
       ceOutput: normalizeDuelRank(source.ceOutput || source.cursedEnergyOutput || source.output || baseStats.cursedEnergy || baseRank, baseRank),
@@ -721,11 +762,11 @@
       physicalPower: normalizeDuelRank(source.physicalPower || source.body || source.physical || baseStats.body || baseRank, baseRank),
       speed: normalizeDuelRank(source.speed || source.mobility || baseStats.martial || baseRank, baseRank),
       weaponMastery: normalizeDuelRank(source.weaponMastery || source.cursedToolMastery || "C", "C"),
-      domainSkill: normalizeDuelRank(source.domainSkill || source.domainRank || (source.hasDomainAccess ? baseRank : "C"), source.hasDomainAccess ? baseRank : "C"),
+      domainSkill: normalizeDuelRank(source.domainSkill || source.domainRank || (hasTrueDomainAccess ? baseRank : "C"), hasTrueDomainAccess ? baseRank : "C"),
       isZeroCe: Boolean(source.isZeroCe || source.hasCe === false || /zero_ce|零咒力|天与咒缚|甚尔|真希/i.test(text)),
       hasCe: source.hasCe === undefined ? !/zero_ce|零咒力|天与咒缚|甚尔|真希/i.test(text) : Boolean(source.hasCe),
       hasInnateTechnique: source.hasInnateTechnique === undefined ? !/无术式|no_innate_technique|零咒力/i.test(text) : Boolean(source.hasInnateTechnique),
-      hasDomainAccess: Boolean(source.hasDomainAccess || /领域|domain|伏魔御厨子|无量空处|诛伏赐死|坐杀搏徒|自闭圆顿裹/i.test(text)),
+      hasDomainAccess: hasTrueDomainAccess,
       usesCursedTools: Boolean(source.usesCursedTools || /咒具|cursed_tool|释魂刀|天逆|游云|黑绳|万里锁/i.test(text))
     };
     if (/五条|gojo|limitless|无下限|无量空处/i.test(text)) {
@@ -815,8 +856,12 @@
     function pick(field) {
       return toNumber(action[field] ?? template?.[field], 0);
     }
+    var baseDamage = pick("baseDamage");
+    if (shouldBoostTenShadowsBaseDamage(actionOrCandidate, baseDamage)) {
+      baseDamage = roundPreviewNumber(baseDamage * tenShadowsDamageBalance.baseDamageMultiplier + tenShadowsDamageBalance.baseDamageFlat, 1);
+    }
     return {
-      baseDamage: pick("baseDamage"),
+      baseDamage: baseDamage,
       baseBlock: pick("baseBlock"),
       baseShield: pick("baseShield"),
       baseStabilityDamage: pick("baseStabilityDamage"),
@@ -836,6 +881,138 @@
 
   function getRiskCostMultiplier(risk) {
     return { low: 0.95, medium: 1, high: 1.08, critical: 1.18 }[String(risk || "medium")] || 1;
+  }
+
+  function isSpecialHandDamageCorrectionCard(actionOrCandidate) {
+    var action = actionOrCandidate?.action || actionOrCandidate || {};
+    var template = getDuelCardTemplateForAction(actionOrCandidate);
+    var specialHandTags = []
+      .concat(asArray(action.specialHandTags))
+      .concat(asArray(action.specialhandTag))
+      .concat(asArray(action.specialHandTag))
+      .concat(asArray(template?.specialHandTags))
+      .concat(asArray(template?.specialhandTag))
+      .concat(asArray(template?.specialHandTag));
+    var text = [
+      action.source,
+      action.handSource,
+      action.cardSource,
+      action.poolType,
+      action.cardType,
+      template?.source,
+      template?.handSource,
+      template?.cardSource,
+      template?.poolType,
+      template?.cardType,
+      asArray(action.tags).join(" "),
+      asArray(template?.tags).join(" ")
+    ].filter(Boolean).join(" ").toLowerCase();
+    return Boolean(
+      action.specialHandCard ||
+      action.techniqueFeatureHand ||
+      action.featureTechniqueHand ||
+      action.aiSpecialHand ||
+      action.customSpecialHand ||
+      specialHandTags.length ||
+      /duel-special-card|special_hand|specialhand|special-card|特色手札|特殊手札/.test(text)
+    );
+  }
+
+  function isTenShadowsCard(actionOrCandidate) {
+    var action = actionOrCandidate?.action || actionOrCandidate || {};
+    var template = getDuelCardTemplateForAction(actionOrCandidate);
+    var text = [
+      action.id,
+      action.sourceActionId,
+      action.cardId,
+      action.label,
+      action.name,
+      action.cardType,
+      action.scalingProfile,
+      template?.sourceActionId,
+      template?.cardId,
+      template?.name,
+      template?.cardType,
+      template?.scalingProfile
+    ].concat(
+      asArray(action.tags),
+      asArray(action.specialHandTags),
+      asArray(template?.tags),
+      asArray(template?.specialHandTags)
+    ).filter(Boolean).join(" ").toLowerCase();
+    return /ten_shadows|十影|十种影|十種影|式神/.test(text);
+  }
+
+  function shouldBoostTenShadowsBaseDamage(actionOrCandidate, baseDamage) {
+    if (!isTenShadowsCard(actionOrCandidate)) return false;
+    if (!(Number(baseDamage || 0) > 0)) return false;
+    var action = actionOrCandidate?.action || actionOrCandidate || {};
+    var template = getDuelCardTemplateForAction(actionOrCandidate);
+    var id = String(action.sourceActionId || action.id || template?.sourceActionId || template?.cardId || "");
+    var scaling = String(action.scalingProfile || template?.scalingProfile || "").toLowerCase();
+    if (/^unit_/.test(id) || /mahoraga_(unattuned|tuned).*unit/.test(scaling)) return false;
+    return true;
+  }
+
+  function getDuelCeControlDamageCorrection(characterOrActor, actionOrCandidate) {
+    var action = actionOrCandidate?.action || actionOrCandidate || {};
+    var template = getDuelCardTemplateForAction(actionOrCandidate);
+    var applies = action.disableCeControlDamageCorrection ? false : isSpecialHandDamageCorrectionCard(actionOrCandidate);
+    var tenShadowsAdjusted = applies && isTenShadowsCard(actionOrCandidate);
+    var bloodAdjusted = applies && isBloodManipulationCardAction(action, template, null);
+    var projectionAdjusted = applies && isProjectionSorceryCardAction(action, template, null);
+    var starRageAdjusted = applies && asArray(action.specialHandTags || template?.specialHandTags).includes("star_rage");
+    var stats = getDuelCharacterCombatStats(characterOrActor || {});
+    var controlMultiplier = toNumber(stats.multipliers?.ceControl, getDuelRankMultiplier(stats.ceControl));
+    var baselineControl = getDuelRankMultiplier(ceControlDamageCorrection.baselineRank);
+    var multiplier = 1;
+    if (applies) {
+      if (!stats.hasCe || stats.isZeroCe) {
+        multiplier = projectionAdjusted ? 1 : ceControlDamageCorrection.zeroCeMultiplier;
+      } else {
+        multiplier = ceControlDamageCorrection.baselineMultiplier *
+          Math.pow(Math.max(0.01, controlMultiplier) / baselineControl, ceControlDamageCorrection.exponent);
+      }
+      if (tenShadowsAdjusted) {
+        multiplier *= tenShadowsDamageBalance.ceControlMultiplierScale;
+      }
+      if (bloodAdjusted) {
+        var bloodScale = Math.max(0, Math.min(1, toNumber(action.bloodCeControlDamageScale ?? template?.bloodCeControlDamageScale, 0.32)));
+        multiplier = 1 + (multiplier - 1) * bloodScale;
+      }
+      if (projectionAdjusted) {
+        var projectionScale = Math.max(0, Math.min(1, toNumber(action.projectionCeControlDamageScale ?? template?.projectionCeControlDamageScale ?? action.projectionSorcery?.ceControlDamageScale ?? template?.projectionSorcery?.ceControlDamageScale, 0.18)));
+        multiplier = 1 + (multiplier - 1) * projectionScale;
+      }
+      if (starRageAdjusted) {
+        var starScaleLimit = Math.max(1, toNumber(action.starRageCeControlDamageScaleLimit ?? template?.starRageCeControlDamageScaleLimit, 1));
+        var starScale = Math.max(0, Math.min(starScaleLimit, toNumber(action.starRageCeControlDamageScale ?? template?.starRageCeControlDamageScale, 0.26)));
+        multiplier = 1 + (multiplier - 1) * starScale;
+      }
+      var starRageMaxMultiplier = Math.max(ceControlDamageCorrection.minMultiplier, toNumber(action.starRageCeControlMaxMultiplier ?? template?.starRageCeControlMaxMultiplier, 1.55));
+      multiplier = Math.max(
+        ceControlDamageCorrection.minMultiplier,
+        Math.min(
+          starRageAdjusted ? starRageMaxMultiplier : (projectionAdjusted ? 1.35 : (bloodAdjusted ? 1.72 : (tenShadowsAdjusted ? tenShadowsDamageBalance.ceControlMaxMultiplier : ceControlDamageCorrection.maxMultiplier))),
+          multiplier
+        )
+      );
+    }
+    return {
+      label: ceControlDamageCorrection.label,
+      applies: applies,
+      rank: stats.ceControl,
+      controlMultiplier: roundPreviewNumber(controlMultiplier, 3),
+      multiplier: roundPreviewNumber(multiplier, 3),
+      tenShadowsAdjusted: tenShadowsAdjusted || undefined,
+      bloodAdjusted: bloodAdjusted || undefined,
+      projectionAdjusted: projectionAdjusted || undefined,
+      starRageAdjusted: starRageAdjusted || undefined,
+      baselineRank: ceControlDamageCorrection.baselineRank,
+      baselineCard: ceControlDamageCorrection.baselineCard,
+      baselineTargetDamage: ceControlDamageCorrection.baselineTargetDamage,
+      source: "1.391-ce-control-damage-correction"
+    };
   }
 
   function isZeroCeCostCard(actionOrCandidate, actorStats) {
@@ -886,14 +1063,25 @@
     var base = calculateDuelCardBaseEffect(actionOrCandidate);
     var stats = getDuelCharacterCombatStats(characterOrActor || {});
     var m = stats.multipliers;
+    var action = actionOrCandidate?.action || actionOrCandidate || {};
+    var template = getDuelCardTemplateForAction(actionOrCandidate);
     var contextMultiplier = toNumber(options?.contextMultiplier, 1) || 1;
     var riskMultiplier = toNumber(options?.riskMultiplier, 1) || 1;
     var value = base.baseDamage;
-    if (base.scalingProfile === "technique") value *= Math.pow(m.ceOutput, 0.72) * Math.pow(m.ceMaxOutput, 0.28) * Math.pow(m.ceControl, 0.5) * Math.pow(m.techniquePower, 0.7) * contextMultiplier;
+    if (isProjectionSorceryCardAction(action, template, null) && base.baseDamage > 0) {
+      var projectionSpec = action.projectionSorcery || template?.projectionSorcery || {};
+      var martialScale = Math.max(0, toNumber(action.projectionMartialDamageScale ?? template?.projectionMartialDamageScale ?? projectionSpec.martialDamageScale, 1.75));
+      var bodyScale = Math.max(0, toNumber(action.projectionBodyDamageScale ?? template?.projectionBodyDamageScale ?? projectionSpec.bodyDamageScale, 0.55));
+      var controlScale = Math.max(0, toNumber(action.projectionControlDamageScale ?? template?.projectionControlDamageScale ?? projectionSpec.controlDamageScale, 0.35));
+      var techniqueScale = Math.max(0, toNumber(action.projectionTechniqueDamageScale ?? template?.projectionTechniqueDamageScale ?? projectionSpec.techniqueDamageScale, 0.15));
+      value *= Math.pow(m.speed, martialScale) * Math.pow(m.physicalPower, bodyScale) * Math.pow(Math.max(1, m.ceControl), controlScale) * Math.pow(Math.max(1, m.techniquePower), techniqueScale) * contextMultiplier;
+    } else if (base.scalingProfile === "technique") value *= Math.pow(m.ceOutput, 0.72) * Math.pow(m.ceMaxOutput, 0.28) * Math.pow(m.ceControl, 0.5) * Math.pow(m.techniquePower, 0.7) * contextMultiplier;
     else if (base.scalingProfile === "ce_burst") value *= Math.pow(m.ceMaxOutput, 1.15) * Math.pow(m.ceControl, 0.35) * riskMultiplier;
     else if (base.scalingProfile === "zero_ce" || base.scalingProfile === "physical") value *= m.physicalPower * Math.pow(m.speed, 0.4) * Math.pow(m.weaponMastery, 0.6) * (stats.isZeroCe ? 1.15 : 1);
     else if (base.scalingProfile === "cursed_tool") value *= Math.pow(m.physicalPower, 0.6) * m.weaponMastery * Math.pow(m.speed, 0.3);
     else value *= Math.max(0.7, (m.ceOutput + m.physicalPower) / 2);
+    var correction = getDuelCeControlDamageCorrection(characterOrActor || {}, actionOrCandidate);
+    if (base.baseDamage > 0 && correction.applies) value *= correction.multiplier;
     return roundPreviewNumber(value, 1);
   }
 
@@ -904,7 +1092,18 @@
     var stabilityMultiplier = toNumber(options?.stabilityMultiplier, 1) || 1;
     var raw = Math.max(base.baseBlock, base.baseShield);
     var value = raw * Math.pow(m.ceControl, 0.7) * Math.pow(m.ceEfficiency, 0.5) * stabilityMultiplier;
-    if (base.scalingProfile === "zero_ce" || base.scalingProfile === "physical" || base.scalingProfile === "cursed_tool") {
+    if (base.scalingProfile === "ce_vitality_guard") {
+      var maxCe = Math.max(0, Number(characterOrActor?.maxCe || 0));
+      var maxHp = Math.max(0, Number(characterOrActor?.maxHp || 0));
+      var ceRatio = maxCe > 0 ? Math.max(0.12, Math.min(1.15, Number(characterOrActor.ce || 0) / maxCe)) : 1;
+      var hpRatio = maxHp > 0 ? Math.max(0.12, Math.min(1.15, Number(characterOrActor.hp || 0) / maxHp)) : 1;
+      value = raw *
+        Math.pow(m.ceControl, 0.65) *
+        Math.pow(m.ceEfficiency, 0.35) *
+        Math.pow(m.physicalPower, 0.45) *
+        Math.max(0.08, ceRatio * hpRatio) *
+        stabilityMultiplier;
+    } else if (base.scalingProfile === "zero_ce" || base.scalingProfile === "physical" || base.scalingProfile === "cursed_tool") {
       value = raw * Math.max(m.physicalPower, m.weaponMastery) * Math.pow(m.speed, 0.25);
     }
     return roundPreviewNumber(value, 1);
@@ -952,10 +1151,12 @@
     var base = calculateDuelCardBaseEffect(actionOrCandidate);
     var stats = getDuelCharacterCombatStats(characterOrActor || {});
     var cost = calculateDuelCardCeCost(actionOrCandidate, characterOrActor || {});
+    var correction = getDuelCeControlDamageCorrection(characterOrActor || {}, actionOrCandidate);
     return {
       base: base,
       stats: stats,
       cost: cost,
+      ceControlDamageCorrection: correction,
       finalDamage: calculateDuelDamageFromCard(actionOrCandidate, characterOrActor || {}, options || {}),
       finalBlock: calculateDuelBlockFromCard(actionOrCandidate, characterOrActor || {}, options || {}),
       finalHealing: calculateDuelHealingFromCard(actionOrCandidate, characterOrActor || {}, options || {}),
@@ -973,6 +1174,7 @@
     var lines = [];
     var base = preview.base;
     if (base.baseDamage) lines.push("基础伤害：" + formatPlainNumber(base.baseDamage) + "，最终预估：" + formatPlainNumber(preview.finalDamage) + "。");
+    if (base.baseDamage && preview.ceControlDamageCorrection?.applies) lines.push("咒力操纵修正：" + preview.ceControlDamageCorrection.rank + " ×" + formatPlainNumber(preview.ceControlDamageCorrection.multiplier) + "。");
     if (base.baseBlock || base.baseShield) lines.push("基础防御：" + formatPlainNumber(Math.max(base.baseBlock, base.baseShield)) + "，最终防御：" + formatPlainNumber(preview.finalBlock) + "。");
     if (base.baseHealing) lines.push("基础治疗：" + formatPlainNumber(base.baseHealing) + "，最终恢复：" + formatPlainNumber(preview.finalHealing) + "。");
     if (base.baseDomainPressure) lines.push("基础领域压制：" + formatPlainNumber(base.baseDomainPressure) + "，最终领域压制：" + formatPlainNumber(preview.finalDomainPressure) + "。");
@@ -1112,6 +1314,18 @@
       preview.statusPreview.push("受到体势伤害：" + formatScalePercent(value));
       return;
     }
+    if (field === "evasionBonus" && value !== 0) {
+      preview.statusPreview.push("闪避：" + formatSignedPercent(value));
+      return;
+    }
+    if (field === "selfHpCostRatio" && value > 0) {
+      preview.resourcePreview.push("体势代价：最大体势 " + formatSignedPercent(value).replace(/^\+/, ""));
+      return;
+    }
+    if (field === "selfHpCostFlat" && value > 0) {
+      preview.resourcePreview.push("体势代价 " + formatSignedNumber(value).replace(/^\+/, ""));
+      return;
+    }
     if (field === "stabilityDelta" && value !== 0) {
       preview.statusPreview.push("稳定度：" + formatSignedPercent(value));
       return;
@@ -1131,6 +1345,86 @@
     if (field === "durationRounds" && value > 0) {
       preview.statusPreview.push("持续 " + formatSignedNumber(value).replace(/^\+/, "") + " 回合");
     }
+  }
+
+  function isBloodManipulationCardAction(action, template, display) {
+    var text = [
+      action?.id,
+      action?.sourceActionId,
+      action?.label,
+      action?.name,
+      action?.description,
+      action?.effectSummary,
+      template?.cardId,
+      template?.sourceActionId,
+      template?.name,
+      template?.effectSummary,
+      display?.displayName,
+      display?.shortEffect
+    ].concat(
+      [].concat(action?.tags || []),
+      [].concat(action?.specialHandTags || []),
+      [].concat(template?.tags || []),
+      [].concat(template?.specialHandTags || [])
+    ).filter(Boolean).join(" ");
+    return /blood_manipulation|赤血操术|穿血|血刃|百敛|超新星|赤鳞跃动|胀相|脹相|加茂宪纪|加茂憲紀/i.test(text);
+  }
+
+  function isProjectionSorceryCardAction(action, template, display) {
+    var text = [
+      action?.id,
+      action?.sourceActionId,
+      action?.label,
+      action?.name,
+      action?.description,
+      action?.effectSummary,
+      template?.cardId,
+      template?.sourceActionId,
+      template?.name,
+      template?.effectSummary,
+      display?.displayName,
+      display?.shortEffect
+    ].concat(
+      [].concat(action?.tags || []),
+      [].concat(action?.specialHandTags || []),
+      [].concat(template?.tags || []),
+      [].concat(template?.specialHandTags || [])
+    ).filter(Boolean).join(" ");
+    return /projection_sorcery|投射术式|投射咒法|二十四帧|帧内闪击|破帧刹那/i.test(text);
+  }
+
+  function formatBloodCostPercent(ratio) {
+    var numeric = Number(ratio || 0);
+    if (!Number.isFinite(numeric) || numeric <= 0) return "0%";
+    var percent = numeric * 100;
+    var rounded = Math.abs(percent - Math.round(percent)) < 0.01 ? Math.round(percent) : Number(percent.toFixed(1));
+    return String(rounded) + "%";
+  }
+
+  function getBloodManipulationCostRatios(action) {
+    var conversion = action?.bloodConversion || "";
+    var ceDefault = conversion === "hp_to_ce" ? 0 : 0.08;
+    var hpDefault = conversion === "ce_to_hp" ? 0 : 0.055;
+    return {
+      ceRatio: Number(action?.bloodCeCostRatio ?? ceDefault) || 0,
+      hpRatio: Number(action?.bloodHpCostRatio ?? hpDefault) || 0
+    };
+  }
+
+  function appendBloodManipulationCostCopy(text, action, template, display) {
+    var base = sanitizeDisplayText(text, "");
+    if (!isBloodManipulationCardAction(action, template, display)) return base;
+    if (/消耗(?:咒力|当前体势)\s*\d+(?:\.\d+)?%.*(?:实际扣除|转化|当前体势|体势上限|咒力上限)/.test(base)) return base;
+    var ratios = getBloodManipulationCostRatios(action);
+    var copy;
+    if (action?.bloodConversion === "ce_to_hp") {
+      copy = "消耗咒力 " + formatBloodCostPercent(ratios.ceRatio) + "，按实际消耗咒力转化体势；体势可超过上限。";
+    } else if (action?.bloodConversion === "hp_to_ce") {
+      copy = "消耗当前体势 " + formatBloodCostPercent(ratios.hpRatio) + "，按实际消耗体势转化咒力；咒力可超过上限。";
+    } else {
+      copy = "消耗咒力 " + formatBloodCostPercent(ratios.ceRatio) + "、当前体势 " + formatBloodCostPercent(ratios.hpRatio) + "；伤害按实际扣除数值实时结算。";
+    }
+    return base ? base.replace(/[。；;,\s]*$/, "。") + copy : copy;
   }
 
   function buildEffectPreview(actionOrCandidate, template, baseView, display, availabilityMessage) {
@@ -1156,6 +1450,7 @@
       .concat(preview.riskPreview)
       .concat(preview.conditionPreview));
     var summary = richPreview.summary || resolvedEffectLines[0] || display?.shortEffect || template?.effectSummary || action?.description || "沿用既有手法效果。";
+    summary = appendBloodManipulationCostCopy(summary, action, template, display);
     if (!isReadablePreviewText(summary)) summary = "沿用既有手法效果。";
     preview.debugFields = cleanPreviewLines([
       template?.cardId ? "cardId:" + template.cardId : "",
@@ -1164,7 +1459,7 @@
     ]);
     return {
       schema: "jjk-duel-effect-preview",
-      version: "1.390A-combat-core-rationalization-pass",
+      version: "1.392-public-template-tactics",
       summary: summary,
       lines: resolvedEffectLines,
       resolvedEffectLines: resolvedEffectLines,
@@ -1187,6 +1482,7 @@
     var uiTags = normalizeDisplayTags(display.uiTags, tags);
     var displayName = display.displayName || template.name;
     var shortEffect = display.shortEffect || template.effectSummary;
+    shortEffect = appendBloodManipulationCostCopy(shortEffect, action, template, display);
     var availabilityMessage = getDuelCardAvailabilityMessage(
       baseView?.unavailableReason || baseView?.reason || "",
       Boolean(baseView?.available),
@@ -1291,7 +1587,7 @@
           });
         }
       });
-      if (card?.status !== "CANDIDATE") {
+      if (!allowedTemplateStatuses.includes(card?.status)) {
         statusIssues.push({
           cardId: card?.cardId || "",
           sourceActionId: card?.sourceActionId || "",
@@ -1568,6 +1864,7 @@
     getDuelRankMultiplier: getDuelRankMultiplier,
     getDuelEfficiencyCostMultiplier: getDuelEfficiencyCostMultiplier,
     getDuelCardScalingProfile: getDuelCardScalingProfile,
+    getDuelCeControlDamageCorrection: getDuelCeControlDamageCorrection,
     calculateDuelCardBaseEffect: calculateDuelCardBaseEffect,
     calculateDuelCardFinalPreview: calculateDuelCardFinalPreview,
     calculateDuelCardCeCost: calculateDuelCardCeCost,

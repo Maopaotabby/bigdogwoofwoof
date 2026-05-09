@@ -1,0 +1,6 @@
+1  unknown  22  14179  平均间隔49s(1.22次/分)  是
+KgccaAc  109.122.3.82  10  5193  平均间隔1m(0.67次/分)  否
+quota-smoke-owner  quota-smoke-ip  6  20  平均间隔43ms(1382.49次/分)  否
+duplicate-smoke-owner  duplicate-smoke-ip  2  2  平均间隔30ms(2000.00次/分)  否
+remote-smoke-owner  remote-smoke-ip2  1  2  单次  否
+remote-smoke-owner  remote-smoke-ip3  1  2  单次  否

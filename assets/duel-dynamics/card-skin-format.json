@@ -1,0 +1,62 @@
+{
+  "schema": "jjk-duel-card-skin",
+  "version": "1.0.0",
+  "name": "我的自制咒术对战卡面",
+  "author": "可选作者名",
+  "rules": [
+    "cards 下可配置 template、special、domain、summon、mahoraga、trial 六个分类。",
+    "每个分类支持 background、border、accent、text、muted、glow 字段。",
+    "颜色可以使用 hex、rgb/rgba、hsl/hsla 或 linear-gradient；不要使用 url()、分号或 CSS 块。",
+    "导入后只保存在当前浏览器 localStorage，不会上传到服务器。"
+  ],
+  "cards": {
+    "template": {
+      "background": "linear-gradient(135deg, #fffdf7, #f4efe1)",
+      "border": "#c7b78c",
+      "accent": "#8a5a12",
+      "text": "#1f252b",
+      "muted": "#6b6255",
+      "glow": "rgba(138, 90, 18, 0.18)"
+    },
+    "special": {
+      "background": "linear-gradient(135deg, #211514, #421916)",
+      "border": "#d16a55",
+      "accent": "#ffd166",
+      "text": "#fff7e6",
+      "muted": "#f4c7aa",
+      "glow": "rgba(225, 91, 79, 0.28)"
+    },
+    "domain": {
+      "background": "linear-gradient(135deg, #171435, #3b236d)",
+      "border": "#9f7aea",
+      "accent": "#f6d365",
+      "text": "#f8f4ff",
+      "muted": "#d8c9ff",
+      "glow": "rgba(159, 122, 234, 0.28)"
+    },
+    "summon": {
+      "background": "linear-gradient(135deg, #0f2f2c, #143c52)",
+      "border": "#2dd4bf",
+      "accent": "#99f6e4",
+      "text": "#ecfeff",
+      "muted": "#b7e8e2",
+      "glow": "rgba(45, 212, 191, 0.24)"
+    },
+    "mahoraga": {
+      "background": "linear-gradient(135deg, #050505, #2f2610)",
+      "border": "#f6d365",
+      "accent": "#ffe8a3",
+      "text": "#fff7cc",
+      "muted": "#e9cf82",
+      "glow": "rgba(246, 211, 101, 0.34)"
+    },
+    "trial": {
+      "background": "linear-gradient(135deg, #f9f5ee, #d8d0c2)",
+      "border": "#6b1f1a",
+      "accent": "#b42318",
+      "text": "#241c18",
+      "muted": "#6c5b4f",
+      "glow": "rgba(180, 35, 24, 0.18)"
+    }
+  }
+}

@@ -17,8 +17,8 @@
     },
     {
       "caseId": "CB003",
-      "claim": "六眼锁定咒力操纵和咒力效率 SSS。",
-      "expectedEffect": "拥有六眼时即时战力计算应对 control/efficiency 设 SSS 下限。"
+      "claim": "六眼不再绑定无下限；拥有六眼时咒力操纵提升一阶。",
+      "expectedEffect": "拥有六眼时即时战力计算应按等级表将 control 提升一阶，例如 S 提升到 SS；不再锁定 efficiency。"
     },
     {
       "caseId": "CB004",

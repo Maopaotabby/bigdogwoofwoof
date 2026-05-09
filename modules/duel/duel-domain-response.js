@@ -260,7 +260,10 @@
       ...(profile?.flags || []),
       ...(profile?.advancedTechniques || []),
       ...(profile?.innateTraits || []),
-      ...(profile?.loadout || [])
+      ...(profile?.loadout || []),
+      ...(profile?.specialHandTags || []),
+      ...(profile?.explicitSpecialHandTags || []),
+      ...(profile?.techniqueFamilies || [])
     ].filter(Boolean).join(" ");
   }
 
@@ -307,7 +310,7 @@
     canExpandDomain = hasDuelTrueDomainAccess(profile);
     hasHighDomainInterference = !flags.has("noDomain") && /高阶领域干涉|领域干涉|领域展延|结界干涉|空性结界/.test(text);
     hasSimpleDomain = flags.has("antiDomain") || flags.has("simpleDomain") || /简易领域|simple domain/i.test(text);
-    hasHollowWickerBasket = flags.has("hollowWickerBasket") || /弥虚葛笼|彌虚葛籠|Hollow Wicker Basket/i.test(text);
+    hasHollowWickerBasket = flags.has("hollowWickerBasket") || /弥虚葛笼|彌虚葛籠|弥须葛笼|彌須葛籠|hollow_wicker_basket|Hollow Wicker Basket/i.test(text);
     hasFallingBlossomEmotion = flags.has("fallingBlossomEmotion") || /落花之情/.test(text);
     hasZeroCeBypass = flags.has("zeroCE") ||
       flags.has("domainSureHitInvalid") ||

@@ -30,6 +30,29 @@
     "maxPerTurn": 3,
     "carryOver": false
   },
+  "cpuDifficulty": {
+    "default": "normal",
+    "options": {
+      "easy": {
+        "label": "简单：陪练",
+        "beamWidth": 1,
+        "scoreNoise": 0.2,
+        "mistakeRate": 0.2
+      },
+      "normal": {
+        "label": "普通：稳定",
+        "beamWidth": 3,
+        "scoreNoise": 0,
+        "mistakeRate": 0
+      },
+      "hard": {
+        "label": "困难：强规划",
+        "beamWidth": 5,
+        "scoreNoise": 0,
+        "mistakeRate": 0
+      }
+    }
+  },
   "cardLikeDisplay": {
     "enabled": true,
     "showApCost": true,

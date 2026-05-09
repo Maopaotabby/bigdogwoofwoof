@@ -2,7 +2,7 @@
   "use strict";
 
   var namespace = "JJKDuelActions";
-  var version = "1.386E-resource-action-extraction";
+  var version = "1.395-defeat-heal-lock";
   var expectedExports = [
     "getDuelActionTemplates",
     "buildDuelActionPool",
@@ -65,6 +65,18 @@
     "zero_ce_domain_bypass",
     "domain_survival_guard"
   ]);
+  var domainControlActionIds = new Set([
+    "domain_expand",
+    "domain_compress",
+    "domain_force_sustain",
+    "domain_release",
+    "domain_clash",
+    "simple_domain_guard",
+    "hollow_wicker_basket_guard",
+    "falling_blossom_emotion",
+    "zero_ce_domain_bypass",
+    "domain_survival_guard"
+  ]);
   var bindings = Object.create(null);
   var dependencies = Object.create(null);
   var actionTemplateIndexCache = null;
@@ -75,22 +87,41 @@
   };
   var FEATURE_TECHNIQUE_ALIASES = Object.freeze({
     ten_shadows: ["十种影法术", "十种影", "十影", "伏黑惠", "megumi", "嵌合暗翳庭", "魔虚罗", "魔须罗", "mahoraga"],
-    limitless: ["无下限术式", "无下限", "六眼", "五条悟", "五条", "无量空处", "limitless"],
+    limitless: ["无下限术式", "无下限", "五条悟", "五条", "无量空处", "limitless"],
     blood_manipulation: ["赤血操术", "胀相", "加茂宪纪", "虎杖悠仁", "blood"],
     curse_spirit_manipulation: ["咒灵操术", "夏油杰", "夏油", "羂索", "咒灵群"],
     idle_transfiguration: ["无为转变", "真人", "自闭圆顿裹", "灵魂"],
+    higuruma_trial_owner: ["诛伏赐死", "日车", "日车宽见", "审判", "裁判", "证据", "罪状", "判决", "没收", "处刑人之剑", "judgeman", "higuruma", "trial"],
+    yuji_soul_melee: ["灵魂打击", "虎杖", "虎杖悠仁", "逕庭拳", "径庭拳", "黑闪", "半人半咒", "itadori", "yuji", "soul"],
+    recontract_icon: ["再契象", "雷吉", "收据", "契约再现", "实物具现", "服务收据", "reggie", "receipt", "recontract"],
+    gojo_limitless: ["无下限术式", "无下限", "五条悟", "五条", "无量空处", "limitless", "gojo"],
     ratio_technique: ["十划咒法", "七海建人", "七海", "七三"],
     cursed_speech: ["咒言", "狗卷棘", "狗卷"],
     boogie_woogie: ["不义游戏", "东堂葵", "东堂"],
     black_bird_manipulation: ["黑鸟操术", "冥冥"],
     projection_sorcery: ["投射咒法", "禅院直哉", "直哉", "直毘人", "时胞月宫殿"],
     construction: ["构筑术式", "万", "真依", "真球", "三重疾苦"],
+    puppet_manipulation: ["傀儡操术", "机械丸", "与幸吉", "究极机械丸", "傀儡"],
+    tool_manipulation: ["付丧操术", "西宫桃", "扫帚", "咒具操控", "器物牵引"],
+    seance_technique: ["降灵术", "参拜婆", "降灵", "肉体降灵", "依代"],
     straw_doll_technique: ["刍灵咒法", "钉崎野蔷薇", "钉崎", "共鸣"],
     star_rage: ["星之怒", "九十九由基", "九十九", "凰轮"],
     ice_formation: ["冰凝咒法", "里梅"],
+    immortality_tengen: ["不死", "天元", "星浆体", "同化", "结界"],
+    miracles: ["奇迹", "重面春太", "命数", "幸运"],
     disaster_flames: ["漏瑚", "盖棺铁围山", "火山", "熔灾"],
     disaster_plants: ["花御", "朶颐光海", "咒植"],
     disaster_tides: ["陀艮", "荡蕴平线", "潮灾"],
+    gakuganji_music: ["乐岩寺", "咒力音波", "电吉他", "音波"],
+    solo_forbidden_area: ["单独禁区", "庵歌姬", "神乐", "祝词", "奉纳"],
+    solo_solo_forbidden_area: ["单独禁区", "庵歌姬", "神乐", "祝词", "奉纳"],
+    heart_catch: ["心身掌握", "拉鲁", "可爱蜜糖", "巨手", "注意牵引"],
+    prayer_song: ["祈祷之歌", "米格尔", "黑绳"],
+    cockroach_swarm: ["黑沐死", "蟑螂", "腐蠊胎巢", "烂生刀", "虫群"],
+    rot_technique: ["蚀烂术式", "坏相", "血涂", "朽血", "翅王"],
+    ganesh_obstacle_removal: ["伽尼萨", "伽内什", "障碍移除", "象神", "移障"],
+    ganesha_obstacle_removal: ["伽尼萨", "伽内什", "障碍移除", "象神", "移障"],
+    body_hopping: ["夺舍", "羂索", "脑核转移", "身体交换", "brain transplant"],
     idle_death_gamble: ["赌运显法", "秤金次", "秤", "坐杀搏徒", "jackpot"],
     comedian: ["超人", "高羽史彦", "高羽"],
     copy: ["模仿", "乙骨忧太", "乙骨", "里香", "真赝相爱"],
@@ -102,15 +133,40 @@
     shrine: ["御厨子", "伏魔御厨子", "两面宿傩", "宿傩", "虎杖悠仁", "解", "捌", "斩击"],
     embodied_killing_intent_light: ["光", "具象化杀意", "达布拉", "达布拉卡拉巴"],
     chaos_and_harmony: ["混沌与调和", "玛鲁", "马鲁", "克罗斯"],
-    prayer_song: ["祈祷之歌", "米格尔", "黑绳"],
+    explosive_body: ["黄栌折", "爆炸肉体", "断齿", "眼球投爆", "hazel"],
+    hazel: ["黄栌折", "爆炸肉体", "断齿", "眼球投爆", "hazel"],
+    inverse: ["强弱颠倒", "inverse", "粟坂二良", "强攻击变弱", "弱攻击"],
+    star_travel: ["星间飞行", "南十字", "星序", "love rendezvous", "标记"],
+    spatial_transference: ["忧忧", "空间转移", "箱门", "魂位训练", "传送"],
+    ui_ui: ["忧忧", "空间转移", "箱门", "魂位训练", "传送"],
+    nitta: ["新田新", "痛苦杀手", "创口暂停", "伤势保留"],
+    pain_killer: ["新田新", "痛苦杀手", "创口暂停", "伤势保留"],
+    hanyu_jet_hair: ["羽生", "喷气背包头发", "喷翼", "飞行"],
+    haba_helicopter_hair: ["羽场", "直升机头发", "旋翼", "飞行"],
+    jinichi_fist: ["禅院甚一", "甚一", "巨大咒力拳", "铁拳", "咒像"],
+    zenin_jinichi: ["禅院甚一", "甚一", "巨大咒力拳", "铁拳", "咒像"],
+    ranta_eye_bind: ["禅院兰太", "兰太", "视线拘束", "睨视", "瞳压"],
+    zenin_ranta: ["禅院兰太", "兰太", "视线拘束", "睨视", "瞳压"],
+    chojuro_earth_hand: ["禅院长寿郎", "长寿郎", "土掌术式", "岩掌", "地裂"],
+    zenin_chojuro_earth_hand: ["禅院长寿郎", "长寿郎", "土掌术式", "岩掌", "地裂"],
+    auspicious_beasts: ["来访瑞兽", "猪野琢真", "猪野", "獬豸", "灵龟", "麒麟"],
+    remi_hair: ["丽美", "蝎尾头发", "尾刺", "头发扎人"],
+    remi_scorpion_hair: ["丽美", "蝎尾头发", "尾刺", "头发扎人"],
+    photo_manipulation: ["照片操控", "枷场菜菜子", "菜菜子", "影像", "底片"],
+    mimiko_doll: ["美美子", "玩偶术式", "枷场美美子", "玩偶", "缢线"],
+    dhruv_shikigami: ["杜鲁布", "式神轨迹领域", "轨迹领土", "巡行"],
     moon_dregs: ["淀月", "吉野顺平", "顺平"],
-    auspicious_beasts: ["来访瑞兽", "猪野琢真", "猪野"],
+    clone_technique: ["分身", "神秘纸袋男", "五影散身", "伪身"],
     manga_artist: ["漫画家", "查理", "贝尔纳"]
   });
   var FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS = Object.freeze({
     limitless: ["gojo_limitless"],
+    gojo_limitless: ["gojo_limitless"],
     shrine: ["sukuna_slash"],
     ten_shadows: ["ten_shadows"],
+    higuruma_trial_owner: ["higuruma_trial_owner"],
+    yuji_soul_melee: ["yuji_soul_melee"],
+    recontract_icon: ["recontract_icon"],
     idle_death_gamble: ["hakari_jackpot_owner"],
     copy: ["okkotsu_rika_copy"],
     idle_transfiguration: ["mahito_soul_transfiguration"]
@@ -319,6 +375,235 @@
     return getDuelActionRules().templates || [];
   }
 
+  function getDuelDomainControlActionTemplates() {
+    return [
+      {
+        id: "domain_expand",
+        label: "领域展开",
+        status: "CONFIRMED",
+        description: "展开领域进入高压结界。",
+        cardType: "domain",
+        domainHand: true,
+        tags: ["领域操控", "domain_access", "领域", "领域展开", "domain_activation", "展开"],
+        cost: { ceRatio: 0.18, minCe: 34 },
+        requirements: { requiresDomainAccess: true, domainActive: false, blocksOnTechniqueImbalance: true },
+        effects: { activateDomain: true, domainLoadDelta: 18, weightDeltas: { domain: 2.4, technique: 0.7 }, outgoingScale: 1.12, stabilityDelta: -0.018 },
+        baseDamage: 12,
+        baseDomainLoadDelta: 18,
+        baseDomainPressure: 24,
+        baseCeCost: 34,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "high",
+        weight: 0.7,
+        selectionWeight: 8.4,
+        logTemplate: "你展开领域，结界压制启动，领域负荷同步上升。"
+      },
+      {
+        id: "domain_compress",
+        label: "压缩领域",
+        status: "CONFIRMED",
+        description: "主动收束领域边界。",
+        cardType: "domain_maintenance",
+        domainHand: true,
+        tags: ["领域操控", "domain_access", "领域", "domain_maintenance", "收束", "稳定"],
+        cost: { ceRatio: 0.045, minCe: 10 },
+        requirements: { domainActive: true },
+        effects: { domainLoadDelta: -10, domainLoadScale: 0.45, outgoingScale: 0.88, stabilityDelta: 0.03, weightDeltas: { domain: -0.5, sustain: 1 } },
+        baseStabilityRestore: 30,
+        baseDomainLoadDelta: -10,
+        baseDomainPressure: 16,
+        baseDefensePressure: 5,
+        baseCeCost: 10,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "low",
+        weight: 1,
+        selectionWeight: 7.2,
+        logTemplate: "你主动收束领域边界，换取负荷回落。"
+      },
+      {
+        id: "domain_force_sustain",
+        label: "强行维持领域",
+        status: "CONFIRMED",
+        description: "不顾负荷继续扩大领域压制。",
+        cardType: "domain_maintenance",
+        domainHand: true,
+        tags: ["领域操控", "domain_access", "领域", "domain_maintenance", "维持", "领域崩解风险"],
+        cost: { ceRatio: 0.13, minCe: 24 },
+        requirements: { domainActive: true },
+        effects: { domainLoadDelta: 16, domainLoadScale: 1.45, outgoingScale: 1.2, stabilityDelta: -0.038, weightDeltas: { domain: 1.8, finisher: 0.6 } },
+        baseDamage: 20,
+        baseDomainLoadDelta: 16,
+        baseDomainPressure: 16,
+        baseCeCost: 24,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "critical",
+        weight: 0.55,
+        selectionWeight: 6.4,
+        logTemplate: "你强行维持领域压制，领域收益提高，但负荷逼近熔断线。"
+      },
+      {
+        id: "domain_release",
+        label: "主动解除领域",
+        status: "CONFIRMED",
+        description: "主动撤去领域避免熔断。",
+        cardType: "domain_maintenance",
+        domainHand: true,
+        tags: ["领域操控", "domain_access", "领域", "domain_maintenance", "解除", "回稳"],
+        cost: { ceRatio: 0, minCe: 0 },
+        requirements: { domainActive: true },
+        effects: { releaseDomain: true, stabilityDelta: 0.035, domainLoadDelta: -8, weightDeltas: { sustain: 0.75, domain: -1.4 } },
+        baseStabilityRestore: 35,
+        baseDomainLoadDelta: -8,
+        baseDomainPressure: 16,
+        baseDefensePressure: 4,
+        baseCeCost: 0,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "low",
+        weight: 1,
+        selectionWeight: 7.2,
+        logTemplate: "你主动解除领域，避免领域熔断。"
+      },
+      {
+        id: "domain_clash",
+        label: "领域对抗",
+        status: "CONFIRMED",
+        description: "以真正领域展开或高阶领域干涉正面对撞对方领域。",
+        cardType: "domain_response",
+        domainHand: true,
+        tags: ["领域操控", "domain_access", "领域", "domain_response", "领域对抗", "domain_activation", "领域应对"],
+        cost: { ceRatio: 0.14, minCe: 28 },
+        requirements: { opponentDomainActive: true, requiresDomainClash: true },
+        effects: { weightDeltas: { counter: 1.1, domain: 1.05 }, opponentWeightDeltas: { domain: -1.35, technique: -0.35 }, opponentDomainLoadDelta: 16, domainLoadDelta: 8, sureHitScale: 0.46, domainPressureScale: 0.72, manualAttackScale: 0.92, stabilityDelta: -0.024, lowStabilityHpRecoil: 5 },
+        baseShield: 54,
+        baseDomainLoadDelta: 8,
+        baseDomainPressure: 16,
+        baseDefensePressure: 6,
+        baseCeCost: 28,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "high",
+        weight: 0.75,
+        selectionWeight: 6.8,
+        logTemplate: "你以领域或高阶结界干涉正面对抗对方领域，推高对方领域负荷，但自身也承受领域负担。"
+      },
+      {
+        id: "simple_domain_guard",
+        label: "简易领域防御",
+        status: "CONFIRMED",
+        description: "以简易领域削弱必中，拖住对方领域压制。",
+        cardType: "domain_response",
+        domainHand: true,
+        tags: ["领域操控", "simple_domain", "简易领域", "领域应对", "必中削弱", "防御"],
+        cost: { ceRatio: 0.065, minCe: 12 },
+        requirements: { opponentDomainActive: true, requiresSimpleDomain: true },
+        effects: { sureHitScale: 0.35, domainPressureScale: 0.72, manualAttackScale: 0.95, incomingHpScale: 0.82, incomingCeScale: 0.9, opponentWeightDeltas: { domain: -0.35 }, opponentDomainLoadDelta: 2, stabilityDelta: -0.006, selfStatus: { id: "simpleDomainWearing", label: "简易领域磨损", rounds: 1, value: 1 } },
+        baseBlock: 18,
+        baseShield: 65,
+        baseDomainPressure: 2,
+        baseCeCost: 12,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "medium",
+        weight: 1,
+        selectionWeight: 6.2,
+        logTemplate: "你展开简易领域削弱必中，结界边界被对方领域持续压缩并开始磨损。"
+      },
+      {
+        id: "hollow_wicker_basket_guard",
+        label: "弥虚葛笼",
+        status: "CONFIRMED",
+        description: "以弥虚葛笼抵消必中，但行动和输出受到明显限制。",
+        cardType: "domain_response",
+        domainHand: true,
+        tags: ["领域操控", "hollow_wicker_basket", "弥虚葛笼", "领域应对", "必中抵消", "架势限制"],
+        cost: { ceRatio: 0.055, minCe: 10 },
+        requirements: { opponentDomainActive: true, requiresHollowWickerBasket: true },
+        effects: { sureHitScale: 0.28, domainPressureScale: 0.78, manualAttackScale: 1, incomingHpScale: 0.86, outgoingScale: 0.68, weightDeltas: { technique: -0.7, finisher: -0.8, melee: -0.35 }, opponentDomainLoadDelta: 1, selfStatus: { id: "hollowWickerBasketPosture", label: "弥虚葛笼架势受限", rounds: 1, value: 1 } },
+        baseBlock: 14,
+        baseShield: 72,
+        baseDomainPressure: 1,
+        baseCeCost: 10,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "medium",
+        weight: 1,
+        selectionWeight: 6.1,
+        logTemplate: "你维持弥虚葛笼抵消必中，架势被迫固定，输出和机动同步受限。"
+      },
+      {
+        id: "falling_blossom_emotion",
+        label: "落花之情",
+        status: "CONFIRMED",
+        description: "以自动迎击削弱必中，是预留的反必中防线而非领域对撞。",
+        cardType: "domain_response",
+        domainHand: true,
+        tags: ["领域操控", "falling_blossom_emotion", "落花之情", "领域应对", "自动迎击"],
+        cost: { ceRatio: 0.05, minCe: 10 },
+        requirements: { opponentDomainActive: true, requiresFallingBlossomEmotion: true },
+        effects: { sureHitScale: 0.48, domainPressureScale: 0.82, manualAttackScale: 0.95, incomingHpScale: 0.88, weightDeltas: { counter: 0.4 }, stabilityDelta: -0.004 },
+        baseBlock: 12,
+        baseShield: 48,
+        baseDomainPressure: 1,
+        baseCeCost: 10,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "medium",
+        weight: 1,
+        selectionWeight: 5.8,
+        logTemplate: "你以落花之情自动迎击必中，削弱命中伤害，但这不是领域对撞。"
+      },
+      {
+        id: "zero_ce_domain_bypass",
+        label: "零咒力必中规避",
+        status: "CONFIRMED",
+        description: "零咒力个体不被领域必中正常捕捉，但仍会承受领域压制和手动攻击。",
+        cardType: "domain_response",
+        domainHand: true,
+        tags: ["领域操控", "zero_ce", "零咒力", "领域应对", "必中规避", "天与咒缚"],
+        cost: { ceRatio: 0, minCe: 0 },
+        requirements: { opponentDomainActive: true, requiresZeroCeBypass: true },
+        effects: { sureHitScale: 0.08, domainPressureScale: 0.82, manualAttackScale: 1, incomingHpScale: 0.88, outgoingScale: 1.02, weightDeltas: { melee: 0.9, initiative: 0.55, counter: 0.35 } },
+        baseBlock: 10,
+        baseShield: 58,
+        baseDomainPressure: 1,
+        baseCeCost: 0,
+        durationRounds: 1,
+        damageType: "domain",
+        scalingProfile: "domain_pressure",
+        risk: "low",
+        weight: 1,
+        selectionWeight: 5.9,
+        logTemplate: "零咒力个体不被领域必中正常捕捉，转而寻找近身突入、破坏结界锚点或脱出的机会。"
+      }
+    ];
+  }
+
+  function mergeDuelDomainControlActionTemplates(templates) {
+    var merged = Array.isArray(templates) ? templates.slice() : [];
+    var existingIds = new Set(merged.map(function collectId(template) {
+      return String(template?.id || template?.sourceActionId || "").trim();
+    }).filter(Boolean));
+    getDuelDomainControlActionTemplates().forEach(function addFallbackDomainControl(template) {
+      var id = String(template?.id || "").trim();
+      if (!id || existingIds.has(id)) return;
+      merged.push(template);
+      existingIds.add(id);
+    });
+    return merged;
+  }
+
   function getDuelMechanicTemplateRules() {
     var getter = getOptionalDependency("getDuelMechanicTemplateRules");
     if (typeof getter === "function" && getter !== getDuelMechanicTemplateRules) return getter();
@@ -512,7 +797,8 @@
       "sureHitScale",
       "domainPressureScale",
       "manualAttackScale",
-      "domainLoadScale"
+      "domainLoadScale",
+      "damageScale"
     ];
     var additiveKeys = [
       "stabilityDelta",
@@ -520,7 +806,10 @@
       "opponentDomainLoadDelta",
       "opponentStabilityDelta",
       "opponentRegenInterference",
-      "lowStabilityHpRecoil"
+      "lowStabilityHpRecoil",
+      "selfHpCostFlat",
+      "selfHpCostRatio",
+      "evasionBonus"
     ];
     effects.weightDeltas = { ...(effects.weightDeltas || {}) };
     effects.opponentWeightDeltas = { ...(effects.opponentWeightDeltas || {}) };
@@ -557,6 +846,8 @@
   function getDuelActionCost(action, actor) {
     var dependency = getOptionalDependency("getDuelActionCost");
     if (dependency && dependency !== getDuelActionCost) return dependency(action, actor);
+    var bloodRuntime = getBloodManipulationRuntimeConfig(action, actor, getBattle());
+    if (bloodRuntime?.active && Number.isFinite(Number(bloodRuntime.ceCost))) return Math.max(0, Number(bloodRuntime.ceCost));
     var costPreview = global.JJKDuelCardTemplate?.calculateDuelCardCeCost;
     if (typeof costPreview === "function") {
       var preview = costPreview(action, actor || {});
@@ -599,6 +890,13 @@
     return callDependency("clampDuelResource", [resource]);
   }
 
+  function getDuelActionTemporaryResourceCap(resource, valueKey, maxKey, overCapKey) {
+    var max = Math.max(0, Number(resource?.[maxKey] || 0));
+    var overCap = Math.max(0, Number(resource?.[overCapKey] || 0));
+    var current = Math.max(0, Number(resource?.[valueKey] || 0));
+    return Math.max(max, current, max + overCap);
+  }
+
   function getDuelStatusEffectValue(resource, id) {
     var dependency = getOptionalDependency("getDuelStatusEffectValue");
     if (dependency) return dependency(resource, id);
@@ -610,6 +908,49 @@
       .map(function mapEffect(effect) {
         return Number(effect.value || 1);
       }));
+  }
+
+  function getDuelActionTurnNumber(battle) {
+    return Number(battle?.round || 0) + 1;
+  }
+
+  function isDuelStatusEffectActive(effect, battle) {
+    var triggerRound = Number(effect?.triggerRound || 0);
+    return !triggerRound || getDuelActionTurnNumber(battle) >= triggerRound;
+  }
+
+  function getActiveDuelOutgoingStatusScale(resource, battle) {
+    return (Array.isArray(resource?.statusEffects) ? resource.statusEffects : []).reduce(function multiplyScale(total, effect) {
+      if (!isDuelStatusEffectActive(effect, battle)) return total;
+      var scale = Number(effect.outgoingScale ?? (effect.id === "loaned_shot_debt" ? effect.value : 1));
+      return Number.isFinite(scale) && scale > 0 ? total * scale : total;
+    }, 1);
+  }
+
+  function isDuelResourceDefeated(resource, battle) {
+    if (!resource) return true;
+    if (Number(resource.hp || 0) > 0) return false;
+    return !isMahoragaProxyProtectingSide(battle, resource.side || "");
+  }
+
+  function getDuelActionHpCost(action, actor) {
+    var bloodRuntime = getBloodManipulationRuntimeConfig(action, actor, getBattle());
+    if (bloodRuntime?.active && Number.isFinite(Number(bloodRuntime.hpCost))) return Math.max(0, Number(bloodRuntime.hpCost));
+    var effects = action?.effects || {};
+    var flat = Math.max(0, Number(effects.selfHpCostFlat ?? action?.selfHpCostFlat ?? 0));
+    var ratio = Math.max(0, Number(effects.selfHpCostRatio ?? action?.selfHpCostRatio ?? 0));
+    var maxHp = Math.max(0, Number(actor?.maxHp || 0));
+    return Number((flat + maxHp * ratio).toFixed(1));
+  }
+
+  function applyDuelActionHpCost(action, actor) {
+    var cost = getDuelActionHpCost(action, actor);
+    if (!cost || !actor) return 0;
+    var effects = action?.effects || {};
+    var minimumHp = effects.selfHpCostNonlethal === false || action?.selfHpCostNonlethal === false ? 0 : 1;
+    var beforeHp = Number(actor.hp || 0);
+    actor.hp = Number(Math.max(minimumHp, beforeHp - cost).toFixed(1));
+    return Number(Math.max(0, beforeHp - Number(actor.hp || 0)).toFixed(1));
   }
 
   function recordDuelResourceChange(battle, entry) {
@@ -708,11 +1049,18 @@
     var domainResponse = getDuelDomainResponseProfile(profile || {}, actor, opponent, battle);
     var requirements = action.requirements || {};
     var costCe = getDuelActionCost(action, actor);
+    var hpCost = getDuelActionHpCost(action, actor);
     if (!actor || !opponent) return { available: false, reason: "资源状态缺失", costCe: costCe };
+    if (isDuelResourceDefeated(actor, battle)) return { available: false, reason: "体势已归零，无法行动", costCe: costCe };
     if (actor.ce < costCe) return { available: false, reason: "咒力不足", costCe: costCe };
+    if (hpCost > 0 && Number(actor.hp || 0) <= 1) return { available: false, reason: "体势不足以支付代价", costCe: costCe };
     if (isTenShadowsUniqueShikigamiAction(action) && hasTenShadowsShikigamiBeenSummoned(battle, side, action)) {
       return { available: false, reason: "该十种影式神本场已经召唤过", costCe: costCe };
     }
+    var starRageAvailability = getStarRageActionAvailability(action, actor, battle);
+    if (!starRageAvailability.available) return { available: false, reason: starRageAvailability.reason, costCe: costCe };
+    var projectionAvailability = getProjectionActionAvailability(action, actor, battle);
+    if (!projectionAvailability.available) return { available: false, reason: projectionAvailability.reason, costCe: costCe };
     if (requirements.requiresMissingHp && actor.maxHp && Number(actor.hp || 0) >= Number(actor.maxHp || 0) - 0.5) {
       return { available: false, reason: "当前没有需要反转治疗的伤势", costCe: costCe };
     }
@@ -865,16 +1213,57 @@
       .replace(/[\s"'`.,，。；;：:、/／\\|!?！？()（）\[\]【】{}《》<>·・_\-—~]+/g, "");
   }
 
+  function normalizeFeatureTag(value) {
+    return String(value || "").trim();
+  }
+
   function getTechniqueFeatureHandCards() {
     var appState = getOptionalDependency("state");
     var source = appState?.duelSpecialCards;
     var cards = Array.isArray(source?.cards) ? source.cards : (Array.isArray(source) ? source : []);
     return cards.filter(function keepFeatureCard(card) {
-      return card?.importableFromMergedPackage !== false &&
+      return card?.playableInHandBeta !== false &&
+        card?.importableFromMergedPackage !== false &&
         card?.reviewStatus !== "needs_merge" &&
         card?.duplicateStatus !== "exact_duplicate" &&
         card?.draftRole !== "conflict_only";
     });
+  }
+
+  function getRawDuelSpecialCards() {
+    var appState = getOptionalDependency("state");
+    var source = appState?.duelSpecialCards;
+    return Array.isArray(source?.cards) ? source.cards : (Array.isArray(source) ? source : []);
+  }
+
+  function getDuelSpecialCardByCardId(cardId) {
+    var normalized = String(cardId || "").trim();
+    if (!normalized) return null;
+    return getRawDuelSpecialCards().find(function findSpecialCard(card) {
+      return card?.cardId === normalized || card?.sourceActionId === normalized || card?.id === normalized;
+    }) || null;
+  }
+
+  function getTechniqueFeatureHandSourceActionIds() {
+    var ids = new Set();
+    getTechniqueFeatureHandCards().forEach(function collectSpecialSourceId(card) {
+      [
+        card?.sourceActionId,
+        card?.id,
+        card?.draftCardId
+      ].forEach(function addId(value) {
+        var id = String(value || "").trim();
+        if (domainControlActionIds.has(id)) return;
+        if (id) ids.add(id);
+      });
+    });
+    return ids;
+  }
+
+  function isActionTemplateShadowedBySpecialHand(template, specialSourceActionIds) {
+    if (!template || !specialSourceActionIds?.size) return false;
+    var id = String(template.id || template.sourceActionId || "").trim();
+    return Boolean(id && specialSourceActionIds.has(id));
   }
 
   function pushFeatureTextParts(parts, source) {
@@ -925,6 +1314,69 @@
     return [].concat(toFeatureList(source?.specialHandTags), toFeatureList(source?.["特殊手札"]));
   }
 
+  function pushFeatureTechniqueEvidenceParts(parts, source) {
+    if (!source || typeof source !== "object") return;
+    [
+      "id",
+      "characterId",
+      "profileId",
+      "name",
+      "displayName",
+      "technique",
+      "techniqueName",
+      "techniqueText",
+      "techniqueDescription",
+      "domainProfile",
+      "notes",
+      "externalResource"
+    ].forEach(function pushField(field) {
+      if (source[field]) parts.push(source[field]);
+    });
+    if (source.domainScript) {
+      parts.push(source.domainScript.id, source.domainScript.domainName, source.domainScript.effectSummary);
+    }
+    [
+      "traits",
+      "innateTraits",
+      "advancedTechniques",
+      "loadout",
+      "flags",
+      "selectedMechanisms",
+      "selectedToolTags"
+    ].forEach(function pushList(field) {
+      parts.push(...toFeatureList(source[field]));
+    });
+    var selectedLibrary = source.selectedLibrary || {};
+    parts.push(...toFeatureList(selectedLibrary.techniques));
+    parts.push(...toFeatureList(selectedLibrary.domains));
+    parts.push(...toFeatureList(selectedLibrary.advanced));
+    parts.push(...toFeatureList(selectedLibrary.resources));
+  }
+
+  function hasFeatureConstructionTechniqueEvidence(text) {
+    var value = String(text || "");
+    return /构筑术式|真球|液态金属|昆虫铠甲|三重疾苦|禅院真依|真依|yorozu|construction\s+sorcery/i.test(value) ||
+      /(^|[\s、，,;；|/／])万($|[\s、，,;；|/／])/i.test(value);
+  }
+
+  function hasFeatureBloodTechniqueEvidence(text) {
+    return /赤血操术|穿血|血刃|赤鳞跃动|超新星|苅祓|百敛|胀相|脹相|加茂宪纪|加茂憲紀|blood\s+manipulation/i.test(String(text || ""));
+  }
+
+  function sanitizeFeatureSpecialHandTags(tags, evidenceText) {
+    var normalized = uniqueFeatureList(tags);
+    return normalized.filter(function keepTag(tag) {
+      if (tag === "construction") return hasFeatureConstructionTechniqueEvidence(evidenceText);
+      if (tag === "blood_manipulation") return hasFeatureBloodTechniqueEvidence(evidenceText);
+      if (tag === "ten_shadows") return /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(String(evidenceText || ""));
+      if (tag === "projection_sorcery") return /投射术式|投射咒法|二十四帧|帧率|直哉|直毘人|projection\s+sorcery/i.test(String(evidenceText || ""));
+      if (tag === "star_rage") return /星之怒|虚拟质量|凰轮|黑洞|九十九由基|star\s+rage/i.test(String(evidenceText || ""));
+      if (tag === "limitless") return /无下限|五条|六眼|苍|赫|茈|limitless|infinity/i.test(String(evidenceText || ""));
+      if (tag === "shrine") return /御厨子|伏魔御厨子|宿傩|捌|解|斩击|shrine|cleave|dismantle/i.test(String(evidenceText || ""));
+      return true;
+    });
+  }
+
   function getActorFeatureSnapshot(actor, battle) {
     var appState = getOptionalDependency("state");
     var actorId = actor?.profileId || actor?.characterId || actor?.id || "";
@@ -948,6 +1400,14 @@
     pushFeatureTextParts(parts, profile);
     pushFeatureTextParts(parts, handProfile);
     pushFeatureTextParts(parts, customCard);
+    var techniqueEvidenceParts = [];
+    pushFeatureTechniqueEvidenceParts(techniqueEvidenceParts, actor);
+    pushFeatureTechniqueEvidenceParts(techniqueEvidenceParts, actor?.profile);
+    pushFeatureTechniqueEvidenceParts(techniqueEvidenceParts, actor?.characterCardProfile);
+    pushFeatureTechniqueEvidenceParts(techniqueEvidenceParts, profile);
+    pushFeatureTechniqueEvidenceParts(techniqueEvidenceParts, handProfile);
+    pushFeatureTechniqueEvidenceParts(techniqueEvidenceParts, customCard);
+    var techniqueEvidenceText = uniqueFeatureList(techniqueEvidenceParts).join(" ");
     var specialHandTags = uniqueFeatureList([]
       .concat(toFeatureList(actor?.specialHandTags), toFeatureList(actor?.["特殊手札"]))
       .concat(toFeatureList(actor?.profile?.specialHandTags), toFeatureList(actor?.profile?.["特殊手札"]))
@@ -962,6 +1422,8 @@
       .concat(getExplicitFeatureHandTags(profile))
       .concat(getExplicitFeatureHandTags(handProfile))
       .concat(getExplicitFeatureHandTags(customCard)));
+    specialHandTags = sanitizeFeatureSpecialHandTags(specialHandTags, techniqueEvidenceText);
+    explicitSpecialHandTags = sanitizeFeatureSpecialHandTags(explicitSpecialHandTags, techniqueEvidenceText);
     parts.push(...specialHandTags);
     var ids = uniqueFeatureList([
       actorId,
@@ -1031,27 +1493,13 @@
   }
 
   function getFeatureCardSpecialHandTags(card) {
-    var family = getFeatureCardFamily(card);
     return uniqueFeatureList([]
       .concat(toFeatureList(card?.specialHandTags))
-      .concat(toFeatureList(card?.["特殊手札"]))
-      .concat(toFeatureList(family))
-      .concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]))
-      .concat(toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[family])));
+      .concat(toFeatureList(card?.["特殊手札"])));
   }
 
-  function getFeatureCardArchetypeRequirements(card) {
-    var family = getFeatureCardFamily(card);
-    var directSpecialHandTags = [].concat(toFeatureList(card?.specialHandTags), toFeatureList(card?.["特殊手札"]));
-    var legacyRequirements = directSpecialHandTags.length
-      ? []
-      : [].concat(
-        toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[card?.techniqueId]),
-        toFeatureList(FEATURE_TECHNIQUE_ARCHETYPE_REQUIREMENTS[family])
-      );
-    return uniqueFeatureList([]
-      .concat(toFeatureList(card?.exclusiveToArchetypes))
-      .concat(legacyRequirements));
+  function getFeatureCardArchetypeRequirements() {
+    return [];
   }
 
   function isFeatureAliasMatch(snapshot, alias) {
@@ -1064,43 +1512,37 @@
   }
 
   function doesFeatureCardMatchActor(card, snapshot) {
-    if (!snapshot?.normalizedText) return false;
-    var directCardSpecialHandTags = [].concat(toFeatureList(card?.specialHandTags), toFeatureList(card?.["特殊手札"]));
-    if (directCardSpecialHandTags.length) {
-      var explicitActorSpecialHandTags = toFeatureList(snapshot.explicitSpecialHandTags);
-      return directCardSpecialHandTags.some(function hasExplicitSpecialHandTag(tag) {
-        var normalized = normalizeFeatureText(tag);
-        return normalized && explicitActorSpecialHandTags.some(function hasActorTag(actorTag) {
-          return normalizeFeatureText(actorTag) === normalized;
-        });
-      });
-    }
-    var specialHandTags = getFeatureCardSpecialHandTags(card);
-    if (specialHandTags.some(function hasDirectSpecialHandTag(tag) {
-      var normalized = normalizeFeatureText(tag);
-      return normalized && (
-        toFeatureList(snapshot.specialHandTags).some(function hasExplicitTag(actorTag) { return normalizeFeatureText(actorTag) === normalized; }) ||
-        snapshot.ids.some(function hasDirectId(id) { return normalizeFeatureText(id) === normalized; }) ||
-        snapshot.normalizedText.includes(normalized)
-      );
-    })) return true;
-    if (snapshot.hasInnateTechnique === false) return false;
-    var family = getFeatureCardFamily(card);
-    var requiredArchetypes = getFeatureCardArchetypeRequirements(card);
-    if (requiredArchetypes.length && !requiredArchetypes.some(function hasRequiredArchetype(archetype) {
-      return snapshot.ids.some(function hasDirectId(id) {
-        return normalizeFeatureText(id) === normalizeFeatureText(archetype);
-      }) || snapshot.normalizedText.includes(normalizeFeatureText(archetype));
-    })) return false;
-    if (snapshot.ids.some(function hasDirectTechnique(id) { return normalizeFeatureText(id) === normalizeFeatureText(card?.techniqueId || family); })) return true;
-    return getFeatureCardAliases(card).some(function hasAlias(alias) {
-      return isFeatureAliasMatch(snapshot, alias);
+    var cardSpecialHandTags = getFeatureCardSpecialHandTags(card);
+    if (!cardSpecialHandTags.length) return false;
+    var actorSpecialHandTags = uniqueFeatureList(toFeatureList(snapshot?.explicitSpecialHandTags));
+    if (!actorSpecialHandTags.length) return false;
+    var actorTagSet = new Set(actorSpecialHandTags.map(normalizeFeatureTag).filter(Boolean));
+    return cardSpecialHandTags.some(function hasStrictSpecialHandTag(tag) {
+      var normalized = normalizeFeatureTag(tag);
+      return normalized && actorTagSet.has(normalized);
     });
   }
 
   function mapFeatureCardType(intent) {
     var key = String(intent || "").toLowerCase();
-    if (["technique", "defense", "resource", "support", "summon", "domain", "rule"].includes(key)) return key;
+    if ([
+      "technique",
+      "defense",
+      "resource",
+      "support",
+      "summon",
+      "domain",
+      "rule",
+      "basic",
+      "special",
+      "rule_trial",
+      "rule_defense",
+      "domain_maintenance",
+      "domain_response",
+      "curse_tool",
+      "jackpot",
+      "healing"
+    ].includes(key)) return key;
     if (key === "defense") return "defense";
     if (key === "resource") return "resource";
     if (key === "support") return "support";
@@ -1198,7 +1640,6 @@
     var domainLoadDelta = toFeatureNumber(stats.domainLoadDelta ?? card?.baseDomainLoadDelta ?? card?.domainLoadDelta, 0);
     var baseDomainPressure = toFeatureNumber(stats.baseDomainPressure ?? card?.baseDomainPressure, 0);
     var specialHandTags = getFeatureCardSpecialHandTags(card);
-    var archetypeRequirements = getFeatureCardArchetypeRequirements(card);
     var tags = uniqueFeatureList([
       "特色手札",
       "术式",
@@ -1213,6 +1654,11 @@
     if (card?.soulRelated || soulDamage > 0) tags.push("灵魂");
     if (card?.summonRelated) tags.push("式神");
     if (card?.antiDomainRelated) tags.push("领域应对");
+    var summonSpec = card?.summonSpec ? { ...card.summonSpec } : undefined;
+    if (summonSpec?.unitCardId && !summonSpec.unitName) {
+      var unitCard = getDuelSpecialCardByCardId(summonSpec.unitCardId);
+      summonSpec.unitName = unitCard?.name || card?.unitName || displayName;
+    }
     var action = {
       id: sourceActionId,
       sourceActionId: sourceActionId,
@@ -1232,8 +1678,9 @@
       tags: tags,
       specialHandTags: specialHandTags,
       "特殊手札": specialHandTags,
-      exclusiveToArchetypes: archetypeRequirements,
+      exclusiveToArchetypes: [],
       exclusiveToCharacters: uniqueFeatureList([].concat(toFeatureList(card?.exclusiveToCharacters))),
+      exclusiveToVariants: uniqueFeatureList([].concat(toFeatureList(card?.exclusiveToVariants))),
       requiresCe: true,
       requiresInnateTechnique: true,
       requirements: {
@@ -1248,6 +1695,12 @@
       baseBlock: Math.max(0, baseBlock),
       baseStabilityDamage: controlValue > 0 ? Math.max(1, Math.round(controlValue)) : 0,
       baseCeDamage: soulDamage > 0 ? Math.max(1, Math.round(soulDamage)) : 0,
+      baseShield: Math.max(0, toFeatureNumber(card?.baseShield, 0)),
+      baseDefensePressure: Math.max(0, toFeatureNumber(card?.baseDefensePressure, 0)),
+      baseEvidencePressure: Math.max(0, toFeatureNumber(card?.baseEvidencePressure, 0)),
+      baseStabilityRestore: Math.max(0, toFeatureNumber(card?.baseStabilityRestore, 0)),
+      baseCeRestore: Math.max(0, toFeatureNumber(card?.baseCeRestore, 0)),
+      baseHpRestore: Math.max(0, toFeatureNumber(card?.baseHpRestore, 0)),
       baseDomainLoadDelta: domainLoadDelta,
       baseDomainPressure: Math.max(0, baseDomainPressure),
       durationRounds: Math.max(0, toFeatureNumber(stats.durationRounds ?? card?.durationRounds, 0)),
@@ -1261,15 +1714,82 @@
       rarity: card?.rarity || card?.suggestedRarity || "uncommon",
       weight: Number(card?.weight || (card?.cardIntent === "finisher" ? 4.5 : 5.25)),
       selectionWeight: Number(card?.selectionWeight || card?.weight || (card?.cardIntent === "finisher" ? 5.1 : 5.8)),
-      characterHints: getFeatureCardAliases(card),
+      characterHints: [],
       effectSummary: card?.effectSummary || card?.shortEffect || card?.effectDraft || "",
-      summonSpec: card?.summonSpec ? { ...card.summonSpec } : undefined,
+      costType: card?.costType || "",
+      ceCostMode: card?.ceCostMode || "",
+      mechanicId: card?.mechanicId || "",
+      summonSpec: summonSpec,
       mechanismSpec: card?.mechanismSpec ? { ...card.mechanismSpec } : undefined,
       resourceSpec: card?.resourceSpec ? { ...card.resourceSpec } : undefined,
+      serviceReceiptRules: card?.serviceReceiptRules ? { ...card.serviceReceiptRules } : undefined,
+      massiveObjectRules: card?.massiveObjectRules ? { ...card.massiveObjectRules } : undefined,
+      objectRules: card?.objectRules ? { ...card.objectRules } : undefined,
+      unitStats: card?.unitStats ? { ...card.unitStats } : undefined,
+      blockIgnoreRatio: Math.max(0, Math.min(0.9, Number(card?.blockIgnoreRatio || 0))),
+      starRageEffect: card?.starRageEffect,
+      starRageMassCost: card?.starRageMassCost,
+      starRageSummonMassCost: card?.starRageSummonMassCost,
+      starRageRecallMassCost: card?.starRageRecallMassCost,
+      starRageRecallMassGain: card?.starRageRecallMassGain,
+      starRageMassGain: card?.starRageMassGain,
+      starRageOutgoingScale: card?.starRageOutgoingScale,
+      starRageIncomingScale: card?.starRageIncomingScale,
+      starRageIncomingReductionCap: card?.starRageIncomingReductionCap,
+      starRageDamageReductionCap: card?.starRageDamageReductionCap,
+      starRageConsumeAllMass: card?.starRageConsumeAllMass,
+      starRageBlackHoleBaseDamagePerMass: card?.starRageBlackHoleBaseDamagePerMass,
+      starRageBlackHoleBlockIgnorePerMass: card?.starRageBlackHoleBlockIgnorePerMass,
+      starRageBlackHoleBlockIgnoreOffset: card?.starRageBlackHoleBlockIgnoreOffset,
+      starRageBlackHoleSelfHpCostBaseRatio: card?.starRageBlackHoleSelfHpCostBaseRatio,
+      starRageBlackHoleSelfHpCostPerMassRatio: card?.starRageBlackHoleSelfHpCostPerMassRatio,
+      starRageCeControlDamageScale: card?.starRageCeControlDamageScale,
+      starRageCeControlDamageScaleLimit: card?.starRageCeControlDamageScaleLimit,
+      starRageCeControlMaxMultiplier: card?.starRageCeControlMaxMultiplier,
+      bloodCeCostRatio: card?.bloodCeCostRatio,
+      bloodHpCostRatio: card?.bloodHpCostRatio,
+      bloodCeCostReduction: card?.bloodCeCostReduction,
+      bloodCeControlDamageScale: card?.bloodCeControlDamageScale,
+      bloodCeToBaseDamageScale: card?.bloodCeToBaseDamageScale,
+      bloodHpToBaseDamageScale: card?.bloodHpToBaseDamageScale,
+      bloodHpCostContributesDamage: card?.bloodHpCostContributesDamage,
+      bloodOriginalBaseDamageScale: card?.bloodOriginalBaseDamageScale,
+      bloodBoostDamageScale: card?.bloodBoostDamageScale,
+      starRageGarudaUnit: card?.starRageGarudaUnit ? { ...card.starRageGarudaUnit } : undefined,
+      projectionSorcery: card?.projectionSorcery ? { ...card.projectionSorcery } : undefined,
+      specialResolution: card?.specialResolution ? { ...card.specialResolution } : undefined,
+      mahoragaProxySpec: card?.mahoragaProxySpec ? { ...card.mahoragaProxySpec } : undefined,
       status: card?.status || "CANDIDATE_RUNTIME_IMPORT"
     };
     if (card?.cardIntent === "finisher") action.risk = action.risk === "high" ? "critical" : "high";
     return action;
+  }
+
+  function getFeatureCardRuntimeNumber(card, stats, statKey, fieldKey) {
+    return toFeatureNumber(stats?.[statKey] ?? card?.[fieldKey], 0);
+  }
+
+  function getFeatureCardSemanticDedupeKey(card) {
+    var stats = card?.balancedRuntimeStats || card?.originalCandidateRuntimeStats || {};
+    var displayName = card?.name || card?.cardName || card?.sourceActionId || card?.cardId || "";
+    var normalizedName = normalizeFeatureText(displayName);
+    if (!normalizedName) return "";
+    return [
+      normalizedName,
+      mapFeatureCardType(card?.cardType || card?.cardIntent),
+      getFeatureCardRuntimeNumber(card, stats, "baseDamage", "baseDamage"),
+      getFeatureCardRuntimeNumber(card, stats, "baseBlock", "baseBlock"),
+      getFeatureCardRuntimeNumber(card, stats, "baseCeCost", "baseCeCost"),
+      getFeatureCardRuntimeNumber(card, stats, "controlValue", "baseStabilityDamage"),
+      getFeatureCardRuntimeNumber(card, stats, "soulDamage", "baseCeDamage"),
+      getFeatureCardRuntimeNumber(card, stats, "domainLoadDelta", "baseDomainLoadDelta"),
+      getFeatureCardRuntimeNumber(card, stats, "domainPressure", "baseDomainPressure"),
+      getFeatureCardRuntimeNumber(card, stats, "durationRounds", "durationRounds"),
+      card?.damageType || "",
+      card?.scalingProfile || "",
+      card?.accuracyProfile || "",
+      normalizeFeatureText(card?.effectSummary || card?.shortEffect || card?.effectDraft || card?.longEffect || "")
+    ].join("|");
   }
 
   function buildTechniqueFeatureHandActions(actor, opponent, duelState) {
@@ -1282,8 +1802,10 @@
       var family = getFeatureCardFamily(card);
       if (!family || !doesFeatureCardMatchActor(card, snapshot)) return;
       var sourceActionId = card.sourceActionId || card.draftCardId || card.cardId || "";
-      if (!sourceActionId || seen.has(sourceActionId)) return;
-      seen.add(sourceActionId);
+      var semanticKey = getFeatureCardSemanticDedupeKey(card);
+      if (!sourceActionId || seen.has("id:" + sourceActionId) || (semanticKey && seen.has("semantic:" + semanticKey))) return;
+      seen.add("id:" + sourceActionId);
+      if (semanticKey) seen.add("semantic:" + semanticKey);
       matched.push(buildTechniqueFeatureHandAction(card, actor, snapshot));
     });
     return matched;
@@ -1442,11 +1964,846 @@
     }];
   }
 
+  function hasBloodManipulationAccess(actor, battle, snapshot) {
+    var activeSnapshot = snapshot || getActorFeatureSnapshot(actor, battle);
+    return /blood_manipulation|赤血操术|穿血|血刃|百敛|超新星|赤鳞跃动|胀相|脹相|加茂宪纪|加茂憲紀/i.test(activeSnapshot?.text || "");
+  }
+
+  function isBloodManipulationAction(action) {
+    var text = [
+      action?.id,
+      action?.sourceActionId,
+      action?.label,
+      action?.name,
+      action?.description,
+      action?.effectSummary,
+      action?.cardType,
+      action?.scalingProfile
+    ].concat(
+      toFeatureList(action?.tags),
+      toFeatureList(action?.specialHandTags)
+    ).join(" ");
+    return /blood_manipulation|赤血操术|穿血|血刃|百敛|超新星|赤鳞跃动|胀相|脹相|加茂宪纪|加茂憲紀/i.test(text);
+  }
+
+  function buildBloodManipulationCoreActions(actor, duelState) {
+    var battle = getBattle(duelState);
+    var snapshot = getActorFeatureSnapshot(actor, battle);
+    if (!hasBloodManipulationAccess(actor, battle, snapshot)) return [];
+    return [{
+      id: "blood_ce_to_hp",
+      sourceActionId: "blood_ce_to_hp",
+      label: "咒力化血",
+      name: "咒力化血",
+      description: "消耗固定比例咒力，按实际消耗咒力转化为体势；体势可超过上限，并为本回合穿系数蓄势。",
+      cardType: "resource",
+      type: "blood_manipulation_conversion",
+      normalHandOnly: true,
+      guaranteedPerTurn: true,
+      retainedPermanent: true,
+      tags: ["赤血操术", "blood_manipulation", "咒力化血", "resource"],
+      specialHandTags: ["blood_manipulation"],
+      exclusiveToCharacters: snapshot.ids || [],
+      apCost: 1,
+      baseCeCost: 0,
+      baseDamage: 0,
+      baseBlock: 0,
+      damageType: "none",
+      scalingProfile: "blood_conversion",
+      bloodConversion: "ce_to_hp",
+      bloodCeCostRatio: 0.26,
+      bloodCeToHpEfficiency: 0.82,
+      accuracyProfile: "none",
+      evasionAllowed: false,
+      risk: "medium",
+      rarity: "special",
+      weight: 99,
+      selectionWeight: 999,
+      effects: { weightDeltas: { resource: 0.8, sustain: 0.35 } },
+      effectSummary: "消耗26%咒力，按实际消耗咒力的82%回复体势；体势可超过上限。"
+    }, {
+      id: "blood_hp_to_ce",
+      sourceActionId: "blood_hp_to_ce",
+      label: "血铸咒力",
+      name: "血铸咒力",
+      description: "消耗固定比例当前体势，按实际消耗体势转化为咒力；咒力可超过上限，并为本回合血系数蓄势。",
+      cardType: "resource",
+      type: "blood_manipulation_conversion",
+      normalHandOnly: true,
+      guaranteedPerTurn: true,
+      retainedPermanent: true,
+      tags: ["赤血操术", "blood_manipulation", "血铸咒力", "resource"],
+      specialHandTags: ["blood_manipulation"],
+      exclusiveToCharacters: snapshot.ids || [],
+      apCost: 1,
+      baseCeCost: 0,
+      baseDamage: 0,
+      baseBlock: 0,
+      damageType: "none",
+      scalingProfile: "blood_conversion",
+      bloodConversion: "hp_to_ce",
+      bloodHpCostRatio: 0.12,
+      bloodHpToCeEfficiency: 0.96,
+      selfHpCostNonlethal: true,
+      accuracyProfile: "none",
+      evasionAllowed: false,
+      risk: "medium",
+      rarity: "special",
+      weight: 99,
+      selectionWeight: 999,
+      effects: { selfHpCostNonlethal: true, weightDeltas: { resource: 0.8, attack: 0.3 } },
+      effectSummary: "消耗12%当前体势，按实际消耗体势的96%回复咒力；咒力可超过上限。"
+    }];
+  }
+
+  function getBloodManipulationRoundState(battle, side) {
+    if (!battle || !side) return { pierce: 0, blood: 0, round: 0 };
+    battle.bloodManipulationState ||= {};
+    var round = getDuelActionTurnNumber(battle);
+    var state = battle.bloodManipulationState[side];
+    if (!state || Number(state.round || 0) !== round) {
+      state = { round: round, pierce: 0, blood: 0 };
+      battle.bloodManipulationState[side] = state;
+    }
+    return state;
+  }
+
+  function resetBloodManipulationRoundState(battle, side) {
+    if (!battle || !side) return;
+    battle.bloodManipulationState ||= {};
+    battle.bloodManipulationState[side] = { round: getDuelActionTurnNumber(battle), pierce: 0, blood: 0 };
+    clearDuelSpecialCounterEntries(battle, side, "blood_manipulation");
+  }
+
+  function setDuelSpecialCounterEntries(battle, side, namespace, entries) {
+    if (!battle || !side || !namespace) return;
+    battle.duelSpecialCounterState ||= {};
+    battle.duelSpecialCounterState[side] ||= {};
+    var visibleEntries = (Array.isArray(entries) ? entries : []).filter(function filterCounterEntry(entry) {
+      return entry && entry.label && Number.isFinite(Number(entry.value)) && Math.abs(Number(entry.value)) > 0.0001;
+    });
+    if (!visibleEntries.length) {
+      clearDuelSpecialCounterEntries(battle, side, namespace);
+      return;
+    }
+    battle.duelSpecialCounterState[side][namespace] = {
+      namespace: namespace,
+      round: getDuelActionTurnNumber(battle),
+      entries: visibleEntries.map(function mapCounterEntry(entry) {
+        return {
+          id: entry.id || entry.label,
+          label: entry.label,
+          value: Number(entry.value),
+          format: entry.format || "percent"
+        };
+      })
+    };
+  }
+
+  function clearDuelSpecialCounterEntries(battle, side, namespace) {
+    if (!battle?.duelSpecialCounterState?.[side] || !namespace) return;
+    delete battle.duelSpecialCounterState[side][namespace];
+  }
+
+  function getBloodManipulationRuntimeConfig(action, actor, battle, overrides) {
+    if (!action || !actor) return null;
+    var isBlood = isBloodManipulationAction(action);
+    if (!isBlood) return null;
+    if (!action.bloodConversion && !hasBloodManipulationAccess(actor, battle)) return null;
+    var maxCe = Math.max(0, Number(actor.maxCe || 0));
+    var maxHp = Math.max(0, Number(actor.maxHp || 0));
+    var currentCe = Math.max(0, Number(actor.ce || 0));
+    var currentHp = Math.max(0, Number(actor.hp || 0));
+    var ceCostBase = Math.max(maxCe, currentCe);
+    var ceRatio = Number(action.bloodCeCostRatio ?? (action.bloodConversion === "hp_to_ce" ? 0 : 0.08));
+    var hpRatio = Number(action.bloodHpCostRatio ?? (action.bloodConversion === "ce_to_hp" ? 0 : 0.055));
+    var ceReduction = Math.max(0, Number(action.bloodCeCostReduction ?? 0));
+    var ceCost = ceCostBase > 0 && ceRatio > 0 ? Math.max(1, Math.round(ceCostBase * ceRatio - ceReduction)) : 0;
+    var hpCost = currentHp > 0 && hpRatio > 0 ? Math.max(1, Number((currentHp * hpRatio).toFixed(1))) : 0;
+    if (overrides && Number.isFinite(Number(overrides.actualCeCost))) ceCost = Math.max(0, Number(overrides.actualCeCost));
+    if (overrides && Number.isFinite(Number(overrides.actualHpCost))) hpCost = Math.max(0, Number(overrides.actualHpCost));
+    var hpCostForDamage = action.bloodHpCostContributesDamage === false ? 0 : hpCost;
+    var pierceGain = maxCe > 0 ? Math.min(0.28, (ceCost / maxCe) * 0.68) : 0;
+    var bloodGain = maxHp > 0 ? Math.min(0.45, (hpCostForDamage / maxHp) * 1.25) : 0;
+    var state = getBloodManipulationRoundState(battle, actor.side || "");
+    var bloodPierceRatio = Math.min(0.35, Number(state.pierce || 0) + pierceGain);
+    var bloodBoostRatio = Math.min(0.65, Number(state.blood || 0) + bloodGain);
+    var ceToBaseDamageScale = Math.max(0, Number(action.bloodCeToBaseDamageScale ?? 0.56));
+    var hpToBaseDamageScale = Math.max(0, Number(action.bloodHpToBaseDamageScale ?? 1.3));
+    var originalBaseDamageScale = Math.max(0, Number(action.bloodOriginalBaseDamageScale ?? 0.55));
+    var bloodBoostDamageScale = Math.max(0, Number(action.bloodBoostDamageScale ?? 1.35));
+    var baseFromCost = Math.max(0, ceCost * ceToBaseDamageScale + hpCostForDamage * hpToBaseDamageScale);
+    var originalBase = Math.max(0, Number(action.baseDamage || 0));
+    var dynamicBaseDamage = Math.max(1, baseFromCost + originalBase * originalBaseDamageScale) * (1 + bloodBoostRatio * bloodBoostDamageScale);
+    return {
+      active: true,
+      ceCost: ceCost,
+      hpCost: hpCost,
+      hpCostForDamage: Number(hpCostForDamage.toFixed(1)),
+      ceCostBase: Number(ceCostBase.toFixed(1)),
+      hpCostBase: Number(currentHp.toFixed(1)),
+      temporaryCeOverCap: Math.max(0, Number((currentCe - maxCe).toFixed(1))),
+      temporaryHpOverCap: Math.max(0, Number((currentHp - maxHp).toFixed(1))),
+      bloodCeToBaseDamageScale: Number(ceToBaseDamageScale.toFixed(4)),
+      bloodHpToBaseDamageScale: Number(hpToBaseDamageScale.toFixed(4)),
+      pierceGain: Number(pierceGain.toFixed(4)),
+      bloodGain: Number(bloodGain.toFixed(4)),
+      bloodPierceRatio: Number(bloodPierceRatio.toFixed(4)),
+      bloodBoostRatio: Number(bloodBoostRatio.toFixed(4)),
+      dynamicBaseDamage: action.bloodConversion ? 0 : Number(dynamicBaseDamage.toFixed(1)),
+      blockIgnoreRatio: Number(Math.min(0.35, bloodPierceRatio).toFixed(4))
+    };
+  }
+
+  function getBloodManipulationRuntimeAction(action, actor, battle, overrides) {
+    var runtime = getBloodManipulationRuntimeConfig(action, actor, battle, overrides);
+    if (!runtime?.active) return action;
+    return {
+      ...action,
+      baseCeCost: runtime.ceCost,
+      costCe: runtime.ceCost,
+      ceCost: runtime.ceCost,
+      baseDamage: runtime.dynamicBaseDamage,
+      bloodCeControlDamageScale: Number(action.bloodCeControlDamageScale ?? 0.32),
+      bloodRuntime: runtime,
+      bloodPierceRatio: runtime.bloodPierceRatio,
+      bloodBoostRatio: runtime.bloodBoostRatio,
+      blockIgnoreRatio: runtime.blockIgnoreRatio,
+      effects: {
+        ...(action.effects || {}),
+        selfHpCostRatio: 0,
+        selfHpCostFlat: runtime.hpCost,
+        selfHpCostNonlethal: action.selfHpCostNonlethal !== false
+      }
+    };
+  }
+
+  function applyBloodManipulationConversion(action, actor, costCe, hpCost) {
+    if (!action?.bloodConversion || !actor) return null;
+    var beforeHp = Number(actor.hp || 0);
+    var beforeCe = Number(actor.ce || 0);
+    if (action.bloodConversion === "ce_to_hp") {
+      var hpGain = Number((Number(costCe || 0) * Number(action.bloodCeToHpEfficiency || 0.82)).toFixed(1));
+      actor.hp = Number((Number(actor.hp || 0) + hpGain).toFixed(1));
+      actor.temporaryHpOverCap = Math.max(0, Number((Number(actor.hp || 0) - Number(actor.maxHp || 0)).toFixed(1)));
+      if (!actor.temporaryHpOverCap) delete actor.temporaryHpOverCap;
+      return { type: "ce_to_hp", hpGain: hpGain, ceGain: 0, ceSpent: Number(costCe || 0), hpSpent: 0, beforeHp: beforeHp, beforeCe: beforeCe, afterHp: actor.hp, afterCe: actor.ce, allowOverCap: true };
+    }
+    if (action.bloodConversion === "hp_to_ce") {
+      var ceGain = Number((Number(hpCost || 0) * Number(action.bloodHpToCeEfficiency || 0.76)).toFixed(1));
+      actor.ce = Number((Number(actor.ce || 0) + ceGain).toFixed(1));
+      actor.temporaryCeOverCap = Math.max(0, Number((Number(actor.ce || 0) - Number(actor.maxCe || 0)).toFixed(1)));
+      if (!actor.temporaryCeOverCap) delete actor.temporaryCeOverCap;
+      return { type: "hp_to_ce", hpGain: 0, ceGain: ceGain, ceSpent: 0, hpSpent: Number(hpCost || 0), beforeHp: beforeHp, beforeCe: beforeCe, afterHp: actor.hp, afterCe: actor.ce, allowOverCap: true };
+    }
+    return null;
+  }
+
+  function syncBloodManipulationTemporaryOverCap(actor) {
+    if (!actor) return;
+    var hpOverCap = Math.max(0, Number((Number(actor.hp || 0) - Number(actor.maxHp || 0)).toFixed(1)));
+    var ceOverCap = Math.max(0, Number((Number(actor.ce || 0) - Number(actor.maxCe || 0)).toFixed(1)));
+    if (hpOverCap > 0) actor.temporaryHpOverCap = hpOverCap;
+    else delete actor.temporaryHpOverCap;
+    if (ceOverCap > 0) actor.temporaryCeOverCap = ceOverCap;
+    else delete actor.temporaryCeOverCap;
+  }
+
+  function recordBloodManipulationConversionChange(battle, side, actor, conversion) {
+    if (!battle || !actor || !conversion?.type) return;
+    var sideLabel = getDuelResourceSideLabel(side);
+    if (conversion.type === "ce_to_hp") {
+      recordDuelResourceChange(battle, {
+        side: side,
+        title: "咒力化血",
+        detail: sideLabel + actor.name + " 将咒力转化为体势，咒力 " + formatSignedDuelDelta(-Number(conversion.ceSpent || 0)) + "，体势 +" + Number(conversion.hpGain || 0).toFixed(1) + "；当前 " + Number(conversion.afterHp || 0).toFixed(1) + " / " + Number(actor.maxHp || 0).toFixed(1) + "。",
+        type: "resource",
+        delta: { ce: -Number(conversion.ceSpent || 0), hp: Number(conversion.hpGain || 0), bloodConversion: "ce_to_hp", allowOverCap: true }
+      });
+      return;
+    }
+    if (conversion.type === "hp_to_ce") {
+      recordDuelResourceChange(battle, {
+        side: side,
+        title: "血铸咒力",
+        detail: sideLabel + actor.name + " 将体势转化为咒力，体势 " + formatSignedDuelDelta(-Number(conversion.hpSpent || 0)) + "，咒力 +" + Number(conversion.ceGain || 0).toFixed(1) + "；当前 " + Number(conversion.afterCe || 0).toFixed(1) + " / " + Number(actor.maxCe || 0).toFixed(1) + "。",
+        type: "resource",
+        delta: { hp: -Number(conversion.hpSpent || 0), ce: Number(conversion.ceGain || 0), bloodConversion: "hp_to_ce", allowOverCap: true }
+      });
+    }
+  }
+
+  function addBloodManipulationRoundSpend(battle, side, runtime, costCe, hpCost) {
+    if (!runtime?.active || !battle || !side) return null;
+    var state = getBloodManipulationRoundState(battle, side);
+    var ceScale = runtime.ceCost > 0 ? Number(costCe || 0) / runtime.ceCost : 0;
+    var hpScale = runtime.hpCost > 0 ? Number(hpCost || 0) / runtime.hpCost : 0;
+    state.pierce = Number(Math.min(0.35, Number(state.pierce || 0) + runtime.pierceGain * ceScale).toFixed(4));
+    state.blood = Number(Math.min(0.65, Number(state.blood || 0) + runtime.bloodGain * hpScale).toFixed(4));
+    setDuelSpecialCounterEntries(battle, side, "blood_manipulation", [
+      { id: "blood_pierce", label: "穿", value: state.pierce, format: "percent" },
+      { id: "blood_boost", label: "血", value: state.blood, format: "percent" }
+    ]);
+    return { pierce: state.pierce, blood: state.blood };
+  }
+
+  function isStarRageAction(action) {
+    var text = collectDuelActionSearchText(action);
+    return text.indexOf("star_rage") !== -1 || text.indexOf("星之怒") !== -1 || Boolean(action?.starRageEffect);
+  }
+
+  function hasStarRageAccess(actor, battle) {
+    if (!actor) return false;
+    var profile = getDuelProfileForSide(battle, actor.side || "") || actor.characterCardProfile || {};
+    var tags = uniqueFeatureList([]
+      .concat(toFeatureList(actor.specialHandTags))
+      .concat(toFeatureList(actor.specialhandTags))
+      .concat(toFeatureList(actor["特殊手札"]))
+      .concat(toFeatureList(actor.techniqueFamilies))
+      .concat(toFeatureList(actor.traits))
+      .concat(toFeatureList(actor.innateTraits))
+      .concat(toFeatureList(profile.specialHandTags))
+      .concat(toFeatureList(profile.specialhandTags))
+      .concat(toFeatureList(profile["特殊手札"]))
+      .concat(toFeatureList(profile.techniqueFamilies))
+      .concat(toFeatureList(profile.traits))
+      .concat(toFeatureList(profile.innateTraits)));
+    return tags.some(function hasTag(tag) {
+      return String(tag || "").trim().toLowerCase() === "star_rage" || String(tag || "").includes("星之怒");
+    });
+  }
+
+  function getStarRageMassState(battle, side) {
+    if (!battle || !side) return { mass: 1, round: 0, base: 1, autoProgress: 0 };
+    battle.starRageState ||= {};
+    var starRageRound = getDuelActionTurnNumber(battle);
+    var round = starRageRound;
+    var state = battle.starRageState[side];
+    if (!state) {
+      state = { round: round, mass: 1, base: 1, autoProgress: 0 };
+      battle.starRageState[side] = state;
+    } else if (Number(state.round || 0) !== round) {
+      var delta = Math.max(0, round - Number(state.round || 0));
+      var autoProgress = Math.max(0, Number(state.autoProgress || 0)) + delta;
+      var autoGain = Math.floor(autoProgress / 2);
+      var garudaUpkeep = findStarRageGarudaUnit(battle, side) ? delta : 0;
+      var massAfterUpkeep = Math.max(0, Math.max(0, Number(state.mass || 0)) - garudaUpkeep);
+      state.round = round;
+      state.autoProgress = autoProgress % 2;
+      state.mass = Math.min(7, massAfterUpkeep + autoGain);
+    } else if (state.autoProgress === undefined) {
+      state.autoProgress = 0;
+    }
+    setDuelSpecialCounterEntries(battle, side, "star_rage", [
+      { id: "star_rage_virtual_mass", label: "虚拟质量", value: state.mass, format: "number" }
+    ]);
+    return state;
+  }
+
+  function updateStarRageMassCounter(battle, side, state) {
+    if (!battle || !side || !state) return;
+    setDuelSpecialCounterEntries(battle, side, "star_rage", [
+      { id: "star_rage_virtual_mass", label: "虚拟质量", value: state.mass, format: "number" }
+    ]);
+  }
+
+  function grantStarRageSingleCardTurnBonus(battle, side, state) {
+    if (!battle || !side || !state) return 0;
+    var round = getDuelActionTurnNumber(battle);
+    if (Number(state.singleCardBonusRound || 0) === round) return 0;
+    state.singleCardBonusRound = round;
+    var before = Number(state.mass || 0);
+    state.mass = Math.min(7, before + 1);
+    return Number(Math.max(0, state.mass - before).toFixed(1));
+  }
+
+  function getStarRageActionAvailability(action, actor, battle) {
+    if (!isStarRageAction(action)) return { available: true, reason: "" };
+    if (!hasStarRageAccess(actor, battle)) return { available: false, reason: "需要星之怒特殊手札" };
+    var state = getStarRageMassState(battle, actor?.side || "");
+    var mass = Number(state.mass || 0);
+    var isGarudaRecall = action.starRageEffect === "garuda" && Boolean(findStarRageGarudaUnit(battle, actor?.side || ""));
+    if (action.starRageEffect === "black_hole" && mass < 5) return { available: false, reason: "黑洞终局需要虚拟质量至少 5" };
+    var selectedForSide = battle?.selectedHandActions?.[actor?.side || ""] || [];
+    var selectedIds = selectedForSide.map(function mapSelected(entry) { return entry?.actionId || entry?.id || entry?.action?.id || ""; });
+    if (action.starRageEffect === "black_hole" && selectedForSide.length > 0 && !(selectedForSide.length === 1 && selectedIds.includes(action.id))) {
+      return { available: false, reason: "黑洞终局本回合不能与其他手札并用" };
+    }
+    var required = Math.max(0, Number(
+      isGarudaRecall
+        ? (action.requirements?.minRecallVirtualMass ?? action.starRageRecallMassCost ?? 0)
+        : (action.requirements?.minVirtualMass ?? action.starRageSummonMassCost ?? action.starRageMassCost ?? 0)
+    ));
+    if (required > 0 && mass < required) return { available: false, reason: "虚拟质量不足" };
+    return { available: true, reason: "" };
+  }
+
+  function getStarRageRuntimeAction(action, actor, battle) {
+    if (!isStarRageAction(action) || !hasStarRageAccess(actor, battle)) return action;
+    var state = getStarRageMassState(battle, actor?.side || "");
+    var mass = Math.max(0, Number(state.mass || 0));
+    var isGarudaRecall = action.starRageEffect === "garuda" && Boolean(findStarRageGarudaUnit(battle, actor?.side || ""));
+    var runtime = {
+      active: true,
+      massBefore: mass,
+      massCost: Math.max(0, Number(
+        isGarudaRecall
+          ? (action.starRageRecallMassCost ?? 0)
+          : (action.starRageSummonMassCost ?? action.starRageMassCost ?? 0)
+      )),
+      massGain: Math.max(0, Number(
+        isGarudaRecall
+          ? (action.starRageRecallMassGain ?? action.starRageMassGain ?? 0)
+          : (action.starRageMassGain ?? 0)
+      )),
+      garudaRecall: isGarudaRecall,
+      consumeAllMass: Boolean(action.starRageConsumeAllMass),
+      blackHoleN: action.starRageEffect === "black_hole" ? mass : 0
+    };
+    var next = {
+      ...action,
+      starRageRuntime: runtime,
+      starRageCeControlDamageScale: Number(action.starRageCeControlDamageScale ?? 0.26),
+      starRageCeControlDamageScaleLimit: Number(action.starRageCeControlDamageScaleLimit ?? 1),
+      starRageCeControlMaxMultiplier: Number(action.starRageCeControlMaxMultiplier ?? 1.55),
+      effects: { ...(action.effects || {}) }
+    };
+    if (action.starRageEffect === "black_hole") {
+      var damagePerMass = Math.max(0, Number(action.starRageBlackHoleBaseDamagePerMass ?? 7));
+      var ignorePerMass = Math.max(0, Number(action.starRageBlackHoleBlockIgnorePerMass ?? 0.1));
+      var ignoreOffset = Math.max(0, Number(action.starRageBlackHoleBlockIgnoreOffset ?? 0.2));
+      var selfCostBase = Math.max(0, Number(action.starRageBlackHoleSelfHpCostBaseRatio ?? 0.1));
+      var selfCostPerMass = Math.max(0, Number(action.starRageBlackHoleSelfHpCostPerMassRatio ?? 0.1));
+      next.baseDamage = Math.max(0, damagePerMass * runtime.blackHoleN);
+      next.blockIgnoreRatio = Number(Math.max(0, runtime.blackHoleN * ignorePerMass - ignoreOffset).toFixed(4));
+      next.effects.selfHpCostRatio = Number((selfCostBase + runtime.blackHoleN * selfCostPerMass).toFixed(4));
+      next.effects.selfHpCostNonlethal = action.selfHpCostNonlethal !== false;
+    }
+    return next;
+  }
+
+  function findStarRageGarudaUnit(battle, side) {
+    return getDuelBattlefieldUnits(battle).find(function findGaruda(unit) {
+      return unit?.active !== false && unit.ownerSide === side && (unit.starRageGaruda || unit.name === "凰轮" || unit.cardId === "star_rage_garuda_unit");
+    }) || null;
+  }
+
+  function summonStarRageGaruda(battle, side, action) {
+    var round = Number(battle?.round || 0) + 1;
+    var spec = action?.starRageGarudaUnit || {};
+    var maxHp = Math.max(1, Number(spec.maxHp ?? 150));
+    var baseDamage = Math.max(0, Number(spec.baseDamage ?? 100));
+    var baseBlock = Math.max(0, Number(spec.baseBlock ?? 50));
+    var damageReductionRatio = Number(clamp(Number(spec.damageReductionRatio ?? 0.5), 0, 0.95).toFixed(4));
+    var blockIgnoreRatio = Number(clamp(Number(spec.blockIgnoreRatio ?? 0), 0, 0.9).toFixed(4));
+    battle.starRageGarudaSeq = Math.max(0, Number(battle.starRageGarudaSeq || 0)) + 1;
+    var unit = {
+      id: ["star_rage_garuda_unit", side || "neutral", round, battle.starRageGarudaSeq].join("_"),
+      cardId: spec.cardId || "star_rage_garuda_unit",
+      sourceActionId: action?.id || action?.sourceActionId || "star_rage_garuda_unit",
+      name: spec.name || "凰轮",
+      label: spec.label || spec.name || "凰轮",
+      side: side,
+      ownerSide: side,
+      controllerSide: side,
+      control: spec.control || "player_controlled",
+      placement: spec.placement || "shikigami_zone",
+      tags: Array.isArray(spec.tags) && spec.tags.length ? spec.tags.slice() : ["星之怒", "凰轮", "式神", "star_rage", "shikigami"],
+      unitStats: { maxHp: maxHp, currentHp: maxHp, baseDamage: baseDamage, baseBlock: baseBlock, damageReductionRatio: damageReductionRatio, blockIgnoreRatio: blockIgnoreRatio, damageType: spec.damageType || "shikigami_melee", accuracyProfile: spec.accuracyProfile || "melee" },
+      hp: maxHp,
+      maxHp: maxHp,
+      baseDamage: baseDamage,
+      baseBlock: baseBlock,
+      damageReductionRatio: damageReductionRatio,
+      blockIgnoreRatio: blockIgnoreRatio,
+      damageType: spec.damageType || "shikigami_melee",
+      guardRules: spec.guardRules || { protectOwner: true, interceptsOpponentAttacks: true, priority: 24 },
+      targetingRules: spec.targetingRules || {},
+      maintenanceCeCost: Math.max(0, Number(spec.maintenanceCeCost ?? 1)),
+      active: true,
+      starRageGaruda: true,
+      spawnedBy: action?.id || action?.sourceActionId || "",
+      spawnedRound: round,
+      durationRounds: 0,
+      expiresAfterRound: 0
+    };
+    getDuelBattlefieldUnits(battle).push(unit);
+    battle.summonLog ||= [];
+    battle.summonLog.unshift({ round: round, actorSide: side, actionId: action?.id || "", cardId: action?.cardId || "", unitCardId: unit.cardId, unitId: unit.id, unitName: unit.name, control: unit.control, reason: "star-rage-garuda-summon" });
+    return { unit: unit, recalled: false };
+  }
+
+  function recallStarRageGaruda(battle, side, actor, action) {
+    var unit = findStarRageGarudaUnit(battle, side);
+    if (!unit) return null;
+    unit.active = false;
+    unit.recalledRound = Number(battle?.round || 0) + 1;
+    battle.summonLog ||= [];
+    battle.summonLog.unshift({ round: unit.recalledRound, actorSide: side, actionId: action?.id || "", unitId: unit.id, unitName: unit.name, reason: "star-rage-garuda-recall" });
+    return { unit: unit, recalled: true };
+  }
+
+  function applyStarRageResolution(action, actor, battle, actorContext) {
+    var runtime = action?.starRageRuntime;
+    if (!runtime?.active || !battle || !actor) return null;
+    var side = actor.side || "";
+    var state = getStarRageMassState(battle, side);
+    var beforeMass = Number(state.mass || 0);
+    var consumed = runtime.consumeAllMass ? beforeMass : Math.min(beforeMass, Number(runtime.massCost || 0));
+    state.mass = Math.max(0, beforeMass - consumed);
+    var garuda = null;
+    if (action.starRageEffect === "mass_attack") actorContext.outgoingScale *= Number(action.starRageOutgoingScale || 1.18);
+    if (action.starRageEffect === "mass_defense") {
+      actorContext.incomingHpScale *= Number(action.starRageIncomingScale || 0.8);
+      actorContext.incomingHpReductionCap += Math.max(0, Number(action.starRageIncomingReductionCap || action.starRageDamageReductionCap || 100));
+    }
+    if (action.starRageEffect === "garuda") {
+      var existing = findStarRageGarudaUnit(battle, side);
+      if (existing) {
+        garuda = recallStarRageGaruda(battle, side, actor, action);
+        actorContext.incomingHpScale *= 0.8;
+      } else {
+        garuda = summonStarRageGaruda(battle, side, action);
+      }
+    }
+    state.mass = Math.min(7, state.mass + Number(runtime.massGain || 0));
+    var singleCardBonus = Number(action.selectedCount || 0) === 1 && !runtime.consumeAllMass && action.starRageEffect !== "garuda"
+      ? grantStarRageSingleCardTurnBonus(battle, side, state)
+      : 0;
+    updateStarRageMassCounter(battle, side, state);
+    return {
+      massBefore: beforeMass,
+      massAfter: state.mass,
+      consumed: consumed,
+      gained: Number(runtime.massGain || 0),
+      singleCardBonus: singleCardBonus,
+      garuda: garuda ? { recalled: Boolean(garuda.recalled), unitId: garuda.unit?.id || "", unitName: garuda.unit?.name || "凰轮" } : undefined
+    };
+  }
+
+  function isProjectionSorceryAction(action) {
+    var text = collectDuelActionSearchText(action);
+    return text.indexOf("projection_sorcery") !== -1 || text.indexOf("投射术式") !== -1 || text.indexOf("投射咒法") !== -1 || Boolean(action?.projectionSorcery);
+  }
+
+  function hasProjectionSorceryAccess(actor, battle) {
+    if (!actor) return false;
+    var profile = getDuelProfileForSide(battle, actor.side || "") || actor.characterCardProfile || {};
+    var tags = uniqueFeatureList([])
+      .concat(toFeatureList(profile.specialHandTags))
+      .concat(toFeatureList(profile["特殊手札"]))
+      .concat(toFeatureList(profile.techniqueFamilies))
+      .concat(toFeatureList(profile.traits));
+    return tags.some(function hasTag(tag) {
+      var value = String(tag || "").trim().toLowerCase();
+      return value === "projection_sorcery" || value.includes("投射术式") || value.includes("投射咒法");
+    });
+  }
+
+  function getProjectionSpec(action) {
+    return action?.projectionSorcery || {};
+  }
+
+  function getProjectionFrameState(battle, side) {
+    if (!battle || !side) return { frame: 10, min: 0, base: 10, max: 24, round: 0, turnDamage: 0 };
+    battle.projectionSorceryState ||= {};
+    var round = getDuelActionTurnNumber(battle);
+    var state = battle.projectionSorceryState[side];
+    if (!state) {
+      state = { frame: 10, min: 0, base: 10, max: 24, round: round, turnDamage: 0 };
+      battle.projectionSorceryState[side] = state;
+    }
+    state.round = round;
+    state.min = Math.max(0, Number(state.min ?? 0));
+    state.base = Math.max(0, Number(state.base ?? 10));
+    state.max = Math.max(state.base, Number(state.max ?? 24));
+    state.frame = Math.max(state.min, Math.min(state.max, Number(state.frame ?? state.base)));
+    updateProjectionFrameCounter(battle, side, state);
+    return state;
+  }
+
+  function updateProjectionFrameCounter(battle, side, state) {
+    if (!battle || !side || !state) return;
+    setDuelSpecialCounterEntries(battle, side, "projection_sorcery", [
+      { id: "projection_frame_rate", label: "帧率", value: state.frame, format: "number" }
+    ]);
+  }
+
+  function upsertProjectionOutOfFrameStatus(actor, scale, rounds) {
+    if (!actor) return;
+    actor.statusEffects ||= [];
+    actor.statusEffects = actor.statusEffects.filter(function keepStatus(effect) {
+      return effect?.id !== "projectionOutOfFrameMoment";
+    });
+    actor.statusEffects.push({
+      id: "projectionOutOfFrameMoment",
+      label: "出框时刻",
+      category: "异常状态",
+      statusType: "abnormal",
+      rounds: Math.max(1, Number(rounds || 1)),
+      value: Number(scale || 1.5),
+      source: "projection_sorcery"
+    });
+  }
+
+  function clampProjectionFrameForLock(state, round) {
+    var locked = Number(state.lockoutUntilRound || 0) >= Number(round || 0);
+    var maxFrame = locked ? Math.max(0, Number(state.max || 24) - 1) : Number(state.max || 24);
+    state.frame = Math.max(Number(state.min || 0), Math.min(maxFrame, Number(state.frame || 0)));
+    return state.frame;
+  }
+
+  function addProjectionFrames(battle, side, amount) {
+    if (!battle || !side) return null;
+    var state = getProjectionFrameState(battle, side);
+    var round = getDuelActionTurnNumber(battle);
+    state.frame = Number((Number(state.frame || 0) + Number(amount || 0)).toFixed(3));
+    clampProjectionFrameForLock(state, round);
+    updateProjectionFrameCounter(battle, side, state);
+    return { frame: state.frame, delta: Number(amount || 0), lockoutUntilRound: state.lockoutUntilRound || 0 };
+  }
+
+  function getProjectionActionId(action) {
+    return String(action?.id || action?.actionId || action?.sourceActionId || action?.cardId || "");
+  }
+
+  function getProjectionHandSealForAction(battle, side, action) {
+    var id = getProjectionActionId(action);
+    if (!battle || !side || !id) return null;
+    var seal = battle.projectionSorcerySeals?.[side]?.[id];
+    if (!seal) return null;
+    if (Number(seal.expiresRound || 0) && Number(seal.expiresRound || 0) < getDuelActionTurnNumber(battle)) return null;
+    return seal;
+  }
+
+  function applyProjectionRandomHandSeal(battle, sourceSide, targetSide) {
+    if (!battle || !targetSide) return null;
+    var handCards = (battle.handState?.[targetSide]?.cards || []).filter(function keepSealTarget(card) {
+      var id = getProjectionActionId(card?.action || card);
+      return id && !getProjectionHandSealForAction(battle, targetSide, card?.action || card);
+    });
+    if (!handCards.length) return null;
+    var round = getDuelActionTurnNumber(battle);
+    var sequence = Math.max(0, Number(battle.projectionSealSequence || 0)) + 1;
+    battle.projectionSealSequence = sequence;
+    var seed = hashDuelSeed([battle.seed || "projection", round, sourceSide, targetSide, sequence].join(":"));
+    var picked = handCards[Math.abs(seed) % handCards.length];
+    var action = picked?.action || picked;
+    var id = getProjectionActionId(action);
+    var seal = {
+      actionId: id,
+      label: action?.label || action?.name || id,
+      sourceSide: sourceSide,
+      round: round,
+      expiresRound: round,
+      message: "本手牌被对方效果封锁"
+    };
+    battle.projectionSorcerySeals ||= {};
+    battle.projectionSorcerySeals[targetSide] ||= {};
+    battle.projectionSorcerySeals[targetSide][id] = seal;
+    picked.projectionSeal = { ...seal };
+    return seal;
+  }
+
+  function isProjectionAttackAction(action) {
+    var type = String(action?.cardType || action?.type || "").toLowerCase();
+    return Number(action?.baseDamage || 0) > 0 || ["attack", "technique", "strike"].includes(type);
+  }
+
+  function getSelectedProjectionActions(battle, side) {
+    return (battle?.selectedHandActions?.[side] || []).map(function unwrap(entry) {
+      return entry?.action || entry;
+    }).filter(Boolean);
+  }
+
+  function getProjectionActionAvailability(action, actor, battle) {
+    var seal = getProjectionHandSealForAction(battle, actor?.side || "", action);
+    if (seal) return { available: false, reason: seal.message || "本手牌被对方效果封锁" };
+    if (!isProjectionSorceryAction(action)) return { available: true, reason: "" };
+    if (!hasProjectionSorceryAccess(actor, battle)) return { available: false, reason: "需要投射术式特殊手札" };
+    var side = actor?.side || "";
+    var state = getProjectionFrameState(battle, side);
+    var spec = getProjectionSpec(action);
+    var selected = getSelectedProjectionActions(battle, side);
+    var selectedHasSelfBind = selected.some(function hasSelfBind(entry) { return getProjectionSpec(entry).effect === "self_bind"; });
+    var selectedHasAttack = selected.some(isProjectionAttackAction);
+    if (spec.effect === "self_bind" && selectedHasAttack) return { available: false, reason: "自缚帧本回合不能与攻击牌并用" };
+    if (spec.effect !== "self_bind" && isProjectionAttackAction(action) && selectedHasSelfBind) return { available: false, reason: "自缚帧已限制本回合攻击牌" };
+    var minFrame = Math.max(0, Number(spec.minFrame ?? action.requirements?.minFrame ?? 0));
+    if (minFrame > 0 && Number(state.frame || 0) < minFrame) return { available: false, reason: "帧率不足" };
+    if (spec.requiresAnotherCard && selected.length < 1) return { available: false, reason: "过帧驱动需要本回合一起打出另一张牌" };
+    return { available: true, reason: "" };
+  }
+
+  function getProjectionRuntimeAction(action, actor, battle) {
+    if (!isProjectionSorceryAction(action) || !hasProjectionSorceryAccess(actor, battle)) return action;
+    var state = getProjectionFrameState(battle, actor?.side || "");
+    var selected = getSelectedProjectionActions(battle, actor?.side || "");
+    var spec = getProjectionSpec(action);
+    var selectedCount = Number(action.selectedCount || 0);
+    if (!selectedCount) {
+      selectedCount = selected.length ? Math.max(1, selected.some(function sameSelected(entry) { return getProjectionActionId(entry) === getProjectionActionId(action); }) ? selected.length : selected.length + 1) : 1;
+    }
+    var next = {
+      ...action,
+      projectionRuntime: {
+        active: true,
+        frameBefore: Number(state.frame || 0),
+        selectedCount: selectedCount,
+        effect: spec.effect || ""
+      },
+      effects: { ...(action.effects || {}) }
+    };
+    if (spec.uniqueOnlyBaseDamageBonus && selectedCount === 1) {
+      next.baseDamage = Math.max(0, Number(next.baseDamage || 0) + Number(spec.uniqueOnlyBaseDamageBonus || 0));
+    }
+    if (spec.nonUniqueBaseDamageBonus && selectedCount > 1) {
+      next.baseDamage = Math.max(0, Number(next.baseDamage || 0) + Number(spec.nonUniqueBaseDamageBonus || 0));
+    }
+    if (spec.blockIgnoreRatio != null) next.blockIgnoreRatio = Math.max(0, Math.min(0.9, Number(spec.blockIgnoreRatio || 0)));
+    return next;
+  }
+
+  function triggerProjectionOutOfFrameIfReady(action, actor, opponent, battle, actorContext) {
+    if (!hasProjectionSorceryAccess(actor, battle)) return null;
+    var state = getProjectionFrameState(battle, actor?.side || "");
+    var round = getDuelActionTurnNumber(battle);
+    if (Number(state.frame || 0) < Number(state.max || 24)) return null;
+    if (Number(state.lockoutUntilRound || 0) >= round) {
+      clampProjectionFrameForLock(state, round);
+      updateProjectionFrameCounter(battle, actor.side || "", state);
+      return null;
+    }
+    var spec = getProjectionSpec(action);
+    var scale = Math.max(0, Number(spec.outOfFrameDamageScale ?? 1.5));
+    actorContext.outgoingScale *= scale;
+    var seal = applyProjectionRandomHandSeal(battle, actor.side || "", opponent?.side || "");
+    upsertProjectionOutOfFrameStatus(actor, scale, 1);
+    state.frame = Number(spec.outOfFrameResetFrame ?? 10);
+    state.lockoutUntilRound = round + Math.max(0, Number(spec.outOfFrameLockRounds ?? 2));
+    state.lastOutOfFrameRound = round;
+    updateProjectionFrameCounter(battle, actor.side || "", state);
+    return { triggered: true, damageScale: scale, statusLabel: "出框时刻", frameAfter: state.frame, lockoutUntilRound: state.lockoutUntilRound, sealed: seal || undefined };
+  }
+
+  function applyProjectionImmediateEffects(action, actor, battle, actorContext) {
+    if (!action?.projectionRuntime?.active || !battle || !actor) return null;
+    var side = actor.side || "";
+    var spec = getProjectionSpec(action);
+    var result = { effect: spec.effect || "", frameBefore: getProjectionFrameState(battle, side).frame };
+    if (Number(spec.frameCost || 0)) result.frameCost = addProjectionFrames(battle, side, -Math.max(0, Number(spec.frameCost))).delta;
+    if (Number(spec.frameGain || 0)) result.frameGain = addProjectionFrames(battle, side, Math.max(0, Number(spec.frameGain))).delta;
+    if (Number(spec.damageScale || 0)) {
+      actorContext.outgoingScale *= Math.max(0, Number(spec.damageScale));
+      result.damageScale = Number(spec.damageScale);
+    }
+    if (spec.effect === "self_bind") {
+      actorContext.incomingHpScale *= Math.max(0, Number(spec.incomingHpScale ?? 0.65));
+      actorContext.incomingHpReductionCap += Math.max(0, Number(spec.incomingHpReductionCap ?? 150));
+      actor.statusEffects ||= [];
+      actor.statusEffects.push({
+        id: "projectionSelfBindFrame",
+        label: "自缚帧",
+        rounds: 1,
+        value: 1,
+        frameGainPerDamage: Number(spec.frameGainPerDamage ?? 100),
+        maxFrameGain: Number(spec.maxFrameGainOnDamage ?? 3),
+        gainedFrame: 0
+      });
+    }
+    if (spec.effect === "frame_shield") {
+      actor.statusEffects ||= [];
+      actor.statusEffects.push({
+        id: "projectionFrameShield",
+        label: "帧盾",
+        rounds: Math.max(1, Number(spec.shieldRounds ?? 2)),
+        value: Math.max(0, Number(actor.maxHp || 0) * Number(spec.shieldMaxHpRatio ?? 0.15)),
+        reflectTrueDamageRatio: Number(spec.reflectTrueDamageRatio ?? 0.1)
+      });
+      result.shield = Number((Math.max(0, Number(actor.maxHp || 0) * Number(spec.shieldMaxHpRatio ?? 0.15))).toFixed(1));
+    }
+    if (spec.effect === "overdrive") {
+      var state = getProjectionFrameState(battle, side);
+      state.overdriveRound = getDuelActionTurnNumber(battle);
+      state.overdriveDamageThreshold = Number(spec.extraFrameIfTurnDamageOver ?? 200);
+      state.overdriveFrameGain = Number(spec.extraFrameGain ?? 1);
+    }
+    result.frameAfter = getProjectionFrameState(battle, side).frame;
+    return result;
+  }
+
+  function recordProjectionTurnDamage(battle, side, amount) {
+    if (!battle || !side || Number(amount || 0) <= 0) return;
+    var state = getProjectionFrameState(battle, side);
+    state.turnDamageRound = getDuelActionTurnNumber(battle);
+    state.turnDamage = Number((Number(state.turnDamage || 0) + Number(amount || 0)).toFixed(1));
+  }
+
+  function settleProjectionTurnFrameGain(actor, battle) {
+    if (!hasProjectionSorceryAccess(actor, battle)) return null;
+    var side = actor.side || "";
+    var state = getProjectionFrameState(battle, side);
+    var round = getDuelActionTurnNumber(battle);
+    if (Number(state.settledRound || 0) === round) return null;
+    var damage = Number(state.turnDamageRound || 0) === round ? Math.max(0, Number(state.turnDamage || 0)) : 0;
+    var delta = damage <= 0 ? -1 : (damage <= 100 ? 2 : (damage <= 300 ? 3 : (damage <= 600 ? 6 : 8)));
+    if (Number(state.overdriveRound || 0) === round && damage > Number(state.overdriveDamageThreshold || 200)) {
+      delta += Number(state.overdriveFrameGain || 1);
+    }
+    var before = Number(state.frame || 0);
+    addProjectionFrames(battle, side, delta);
+    if (Number(state.frame || 0) >= Number(state.max || 24) && Number(state.lockoutUntilRound || 0) < round) {
+      upsertProjectionOutOfFrameStatus(actor, 1.5, 2);
+    }
+    state.settledRound = round;
+    state.turnDamage = 0;
+    state.turnDamageRound = 0;
+    state.overdriveRound = 0;
+    updateProjectionFrameCounter(battle, side, state);
+    return { frameBefore: before, frameAfter: state.frame, damage: damage, delta: delta, lockoutUntilRound: state.lockoutUntilRound || 0 };
+  }
+
+  function applyProjectionDamageTakenFrameGain(target, battle, appliedDamage) {
+    var resource = target?.resource;
+    var side = resource?.side || target?.side || "";
+    if (!battle || !resource || !side || Number(appliedDamage || 0) <= 0) return null;
+    var status = (resource.statusEffects || []).find(function findStatus(effect) {
+      return effect?.id === "projectionSelfBindFrame";
+    });
+    if (!status) return null;
+    var already = Math.max(0, Number(status.gainedFrame || 0));
+    var maxGain = Math.max(0, Number(status.maxFrameGain ?? 3));
+    var unit = Math.max(1, Number(status.frameGainPerDamage ?? 100));
+    var gain = Math.min(maxGain - already, Math.floor(Number(appliedDamage || 0) / unit));
+    if (gain <= 0) return null;
+    status.gainedFrame = already + gain;
+    return addProjectionFrames(battle, side, gain);
+  }
+
+  function applyProjectionFrameShieldReflect(defender, attacker, battle, appliedDamage) {
+    if (!battle || !defender || !attacker || Number(appliedDamage || 0) <= 0) return null;
+    var status = (defender.statusEffects || []).find(function findShield(effect) {
+      return effect?.id === "projectionFrameShield" && Number(effect.reflectTrueDamageRatio || 0) > 0;
+    });
+    if (!status) return null;
+    var reflected = Math.max(0, Math.round(Number(appliedDamage || 0) * Number(status.reflectTrueDamageRatio || 0)));
+    if (!reflected) return null;
+    var beforeHp = Number(attacker.hp || 0);
+    attacker.hp = Number((beforeHp - reflected).toFixed(1));
+    recordProjectionTurnDamage(battle, defender.side || "", reflected);
+    return { reflected: reflected, beforeHp: beforeHp, afterHp: Number(attacker.hp || 0), source: "projection_frame_shield" };
+  }
+
   function buildDuelActionPool(actor, opponent, duelState) {
     var battle = getBattle(duelState);
+    var specialSourceActionIds = getTechniqueFeatureHandSourceActionIds();
+    var baseActionTemplates = mergeDuelDomainControlActionTemplates(getDuelActionTemplateIndex().templates).filter(function removeSpecialShadowedTemplate(template) {
+      return !isActionTemplateShadowedBySpecialHand(template, specialSourceActionIds);
+    });
     var templates = [
-      ...getDuelActionTemplateIndex().templates,
+      ...baseActionTemplates,
       ...buildCustomDuelSpecialActions(actor),
+      ...buildBloodManipulationCoreActions(actor, battle),
       ...buildReverseCursedTechniqueActions(actor, opponent, battle),
       ...buildTechniqueFeatureHandActions(actor, opponent, battle),
       ...buildDuelDomainSpecificActions(actor, opponent, battle)
@@ -1460,8 +2817,12 @@
       templates.push(action);
       existingIds.add(id);
     });
-    // 手动注入魔虚罗调幅仪式（伏黑惠专属，不经过卡片模板）
-    if (!existingIds.has("mahoraga_tuning_ritual")) {
+    // 旧版本会在这里手动补一张魔虚罗调幅仪式；现在以 duel-special-card.json 为唯一来源，避免同名重复发放。
+    var hasMahoragaTuningRitual = templates.some(isMahoragaTuningRitualAction) ||
+      existingIds.has("mahoraga_tuning_ritual") ||
+      existingIds.has("ten_shadows_mahoraga_tuning_ritual") ||
+      existingIds.has("card_ten_shadows_mahoraga_tuning_ritual");
+    if (!hasMahoragaTuningRitual) {
       templates.push({
         id: "mahoraga_tuning_ritual",
         sourceActionId: "mahoraga_tuning_ritual",
@@ -1472,7 +2833,7 @@
         normalHandOnly: true,
         tags: ["十影", "魔虚罗", "调幅仪式", "召唤", "式神", "仪式"],
         specialHandTags: ["ten_shadows"],
-        exclusiveToArchetypes: ["ten_shadows"],
+        exclusiveToArchetypes: [],
         requiresCe: true,
         requirements: { domainActive: "any" },
         apCost: 2,
@@ -1495,14 +2856,15 @@
     return templates.filter(function filterIdentityScopedAction(template) {
       return isDuelActionAllowedByActorIdentity(template, actor, battle);
     }).map(function mapTemplate(template) {
-      if (template.domainSpecific && template.available !== undefined) return template;
-      var availability = getDuelActionAvailability(template, actor, opponent, battle);
+      var runtimeTemplate = getProjectionRuntimeAction(getStarRageRuntimeAction(getBloodManipulationRuntimeAction(template, actor, battle), actor, battle), actor, battle);
+      if (runtimeTemplate.domainSpecific && runtimeTemplate.available !== undefined) return runtimeTemplate;
+      var availability = getDuelActionAvailability(runtimeTemplate, actor, opponent, battle);
       return {
-        ...template,
+        ...runtimeTemplate,
         costCe: availability.costCe,
         available: availability.available,
         unavailableReason: availability.reason,
-        riskLabel: getDuelActionRiskLabel(template, actor, opponent)
+        riskLabel: getDuelActionRiskLabel(runtimeTemplate, actor, opponent)
       };
     });
   }
@@ -1524,6 +2886,42 @@
     });
   }
 
+  function buildCardTemplateRuntimeEffects(card) {
+    var effects = { ...(card?.effects || {}) };
+    [
+      "outgoingScale",
+      "damageScale",
+      "incomingHpScale",
+      "incomingCeScale",
+      "sureHitScale",
+      "domainPressureScale",
+      "manualAttackScale",
+      "domainLoadScale",
+      "selfHpCostRatio",
+      "selfHpCostFlat",
+      "evasionBonus"
+    ].forEach(function copyRuntimeNumber(key) {
+      if (card?.[key] === undefined) return;
+      var value = Number(card[key]);
+      if (Number.isFinite(value)) effects[key] = value;
+    });
+    if (card?.selfHpCostNonlethal !== undefined) {
+      effects.selfHpCostNonlethal = card.selfHpCostNonlethal !== false;
+    }
+    if (card?.blockToIncomingScale !== undefined) {
+      effects.blockToIncomingScale = Boolean(card.blockToIncomingScale);
+    }
+    if (card?.consumeOutgoingScaleOnDamage !== undefined) {
+      effects.consumeOutgoingScaleOnDamage = card.consumeOutgoingScaleOnDamage !== false;
+    }
+    if (Array.isArray(card?.delayedSelfStatuses)) {
+      effects.delayedSelfStatuses = card.delayedSelfStatuses.map(function cloneDelayedStatus(status) {
+        return { ...(status || {}) };
+      });
+    }
+    return effects;
+  }
+
   function buildDuelCardTemplateHandAction(card) {
     if (!card?.sourceActionId || card.playableInHandBeta === false || card.futureTemplate) return null;
     return {
@@ -1543,6 +2941,7 @@
       baseCeCost: Number(card.baseCeCost || card.ceCost || card.costCe || 0),
       baseDamage: Number(card.baseDamage || 0),
       baseBlock: Number(card.baseBlock || 0),
+      blockIgnoreRatio: Math.max(0, Math.min(0.9, Number(card.blockIgnoreRatio || 0))),
       baseDomainLoadDelta: Number(card.baseDomainLoadDelta || 0),
       durationRounds: Number(card.durationRounds || 0),
       damageType: card.damageType || "none",
@@ -1550,12 +2949,46 @@
       accuracyProfile: card.accuracyProfile || "none",
       evasionAllowed: card.evasionAllowed,
       hitRateModifier: Number(card.hitRateModifier || 0),
-      effects: { ...(card.effects || {}) },
+      effects: buildCardTemplateRuntimeEffects(card),
       risk: card.risk || "medium",
       rarity: card.rarity || "common",
       weight: Number(card.weight || 1),
       selectionWeight: Number(card.selectionWeight || card.weight || 1),
       effectSummary: card.effectSummary || "",
+      exclusiveHandSelection: Boolean(card.exclusiveHandSelection),
+      selectionLockReason: card.selectionLockReason || "",
+      consumeOutgoingScaleOnDamage: card.consumeOutgoingScaleOnDamage,
+      blockToIncomingScale: Boolean(card.blockToIncomingScale),
+      bloodCeCostRatio: card.bloodCeCostRatio,
+      bloodHpCostRatio: card.bloodHpCostRatio,
+      bloodCeCostReduction: card.bloodCeCostReduction,
+      bloodCeControlDamageScale: card.bloodCeControlDamageScale,
+      bloodCeToBaseDamageScale: card.bloodCeToBaseDamageScale,
+      bloodHpToBaseDamageScale: card.bloodHpToBaseDamageScale,
+      bloodHpCostContributesDamage: card.bloodHpCostContributesDamage,
+      bloodOriginalBaseDamageScale: card.bloodOriginalBaseDamageScale,
+      bloodBoostDamageScale: card.bloodBoostDamageScale,
+      starRageEffect: card.starRageEffect,
+      starRageMassCost: card.starRageMassCost,
+      starRageSummonMassCost: card.starRageSummonMassCost,
+      starRageRecallMassCost: card.starRageRecallMassCost,
+      starRageRecallMassGain: card.starRageRecallMassGain,
+      starRageMassGain: card.starRageMassGain,
+      starRageOutgoingScale: card.starRageOutgoingScale,
+      starRageIncomingScale: card.starRageIncomingScale,
+      starRageIncomingReductionCap: card.starRageIncomingReductionCap,
+      starRageDamageReductionCap: card.starRageDamageReductionCap,
+      starRageConsumeAllMass: card.starRageConsumeAllMass,
+      starRageBlackHoleBaseDamagePerMass: card.starRageBlackHoleBaseDamagePerMass,
+      starRageBlackHoleBlockIgnorePerMass: card.starRageBlackHoleBlockIgnorePerMass,
+      starRageBlackHoleBlockIgnoreOffset: card.starRageBlackHoleBlockIgnoreOffset,
+      starRageBlackHoleSelfHpCostBaseRatio: card.starRageBlackHoleSelfHpCostBaseRatio,
+      starRageBlackHoleSelfHpCostPerMassRatio: card.starRageBlackHoleSelfHpCostPerMassRatio,
+      starRageCeControlDamageScale: card.starRageCeControlDamageScale,
+      starRageCeControlDamageScaleLimit: card.starRageCeControlDamageScaleLimit,
+      starRageCeControlMaxMultiplier: card.starRageCeControlMaxMultiplier,
+      starRageGarudaUnit: card.starRageGarudaUnit ? { ...card.starRageGarudaUnit } : undefined,
+      projectionSorcery: card.projectionSorcery ? { ...card.projectionSorcery } : undefined,
       summonSpec: card.summonSpec ? { ...card.summonSpec } : undefined,
       mechanismSpec: card.mechanismSpec ? { ...card.mechanismSpec } : undefined,
       resourceSpec: card.resourceSpec ? { ...card.resourceSpec } : undefined,
@@ -1738,16 +3171,44 @@
 
   function createEmptyDuelActionContext() {
     return {
+      turn: 0,
       outgoingScale: 1,
       incomingHpScale: 1,
+      incomingHpReductionCap: 0,
       incomingCeScale: 1,
       sureHitScale: 1,
       domainPressureScale: 1,
       manualAttackScale: 1,
       domainLoadScale: 1,
+      evasionBonus: 0,
+      consumeOutgoingScaleOnDamage: true,
       weightDeltas: {},
       actionLabels: []
     };
+  }
+
+  function normalizeDuelActionContextForTurn(battle, side) {
+    var turn = getDuelActionTurnNumber(battle);
+    var context = battle?.actionContext?.[side];
+    if (!context || Number(context.turn || 0) !== turn) {
+      context = createEmptyDuelActionContext();
+      context.turn = turn;
+      battle.actionContext[side] = context;
+      return context;
+    }
+    context.outgoingScale = Number(context.outgoingScale || 1);
+    context.incomingHpScale = Number(context.incomingHpScale || 1);
+    context.incomingHpReductionCap = Math.max(0, Number(context.incomingHpReductionCap || 0));
+    context.incomingCeScale = Number(context.incomingCeScale || 1);
+    context.sureHitScale = Number(context.sureHitScale || 1);
+    context.domainPressureScale = Number(context.domainPressureScale || 1);
+    context.manualAttackScale = Number(context.manualAttackScale || 1);
+    context.domainLoadScale = Number(context.domainLoadScale || 1);
+    context.evasionBonus = Number(context.evasionBonus || 0);
+    context.consumeOutgoingScaleOnDamage = context.consumeOutgoingScaleOnDamage !== false;
+    context.weightDeltas ||= {};
+    context.actionLabels ||= [];
+    return context;
   }
 
   function ensureDuelActionContext(battle) {
@@ -1760,12 +3221,20 @@
     }
     battle.actionContext.left ||= createEmptyDuelActionContext();
     battle.actionContext.right ||= createEmptyDuelActionContext();
+    normalizeDuelActionContextForTurn(battle, "left");
+    normalizeDuelActionContextForTurn(battle, "right");
     return battle.actionContext;
   }
 
   function getDuelActionContext(battle, side) {
     var context = battle?.actionContext?.[side];
     return context || createEmptyDuelActionContext();
+  }
+
+  function getDuelBlockIncomingHpScale(action, numericPreview, effects) {
+    var block = Math.max(0, Number(numericPreview?.finalBlock || 0));
+    if (!block || !action?.blockToIncomingScale && !effects?.blockToIncomingScale) return 1;
+    return Number(clamp(1 - block / 140, 0.25, 0.95).toFixed(4));
   }
 
   function addDuelActionWeightDeltas(context, deltas) {
@@ -1849,7 +3318,40 @@
     var helper = global.JJKDuelCardTemplate?.calculateDuelCardFinalPreview;
     if (typeof helper !== "function") return null;
     try {
-      return helper(action, actor || {});
+      var battle = getBattle();
+      var runtimeAction = getProjectionRuntimeAction(getStarRageRuntimeAction(getBloodManipulationRuntimeAction(action, actor || {}, battle), actor || {}, battle), actor || {}, battle);
+      var preview = helper(runtimeAction, actor || {});
+      if (runtimeAction?.bloodRuntime) {
+        preview = {
+          ...(preview || {}),
+          bloodRuntime: runtimeAction.bloodRuntime,
+          base: {
+            ...(preview?.base || {}),
+            baseDamage: runtimeAction.baseDamage
+          }
+        };
+      }
+      if (runtimeAction?.starRageRuntime) {
+        preview = {
+          ...(preview || {}),
+          starRageRuntime: runtimeAction.starRageRuntime,
+          base: {
+            ...(preview?.base || {}),
+            baseDamage: runtimeAction.baseDamage
+          }
+        };
+      }
+      if (runtimeAction?.projectionRuntime) {
+        preview = {
+          ...(preview || {}),
+          projectionRuntime: runtimeAction.projectionRuntime,
+          base: {
+            ...(preview?.base || {}),
+            baseDamage: runtimeAction.baseDamage
+          }
+        };
+      }
+      return preview;
     } catch (error) {
       return null;
     }
@@ -1886,17 +3388,9 @@
   }
 
   function getDuelHitRateFromMartialDiff(diff) {
-    var rounded = Math.round(Number(diff || 0));
-    if (rounded >= 4) return 0.96;
-    if (rounded === 3) return 0.92;
-    if (rounded === 2) return 0.86;
-    if (rounded === 1) return 0.78;
-    if (rounded === 0) return 0.68;
-    if (rounded === -1) return 0.55;
-    if (rounded === -2) return 0.4;
-    if (rounded === -3) return 0.25;
-    if (rounded === -4) return 0.12;
-    return 0.05;
+    var value = Number(diff || 0);
+    var compressed = Math.sign(value) * Math.sqrt(Math.abs(value)) * 0.055;
+    return clamp(0.66 + compressed, 0.42, 0.86);
   }
 
   function normalizeRate(value, fallback) {
@@ -1935,11 +3429,11 @@
   function getDuelAccuracyProfileConfig(profile) {
     var key = String(profile || "none");
     var configs = {
-      melee: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
-      weapon: { hitBonus: 0, min: 0.05, max: 0.96, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
-      execution_sword: { hitBonus: 0.12, min: 0.05, max: 0.95, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
-      technique_projectile: { hitBonus: 0.08, min: 0.08, max: 0.95, damageScaleOnMiss: 0.12, ceScaleOnMiss: 0.2, stabilityScaleOnMiss: 0.2 },
-      technique_area: { hitBonus: 0.23, min: 0.18, max: 0.95, damageScaleOnMiss: 0.38, ceScaleOnMiss: 0.45, stabilityScaleOnMiss: 0.45 }
+      melee: { hitBonus: 0, min: 0.25, max: 0.9, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
+      weapon: { hitBonus: 0.02, min: 0.25, max: 0.92, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
+      execution_sword: { hitBonus: 0.12, min: 0.28, max: 0.95, damageScaleOnMiss: 0, ceScaleOnMiss: 0, stabilityScaleOnMiss: 0 },
+      technique_projectile: { hitBonus: 0.08, min: 0.3, max: 0.94, damageScaleOnMiss: 0.18, ceScaleOnMiss: 0.25, stabilityScaleOnMiss: 0.25 },
+      technique_area: { hitBonus: 0.23, min: 0.42, max: 0.95, damageScaleOnMiss: 0.45, ceScaleOnMiss: 0.5, stabilityScaleOnMiss: 0.5 }
     };
     return configs[key] || null;
   }
@@ -1979,6 +3473,8 @@
     var hitRate;
     var roll;
     var onMiss = action?.onMiss || {};
+    var defenderContext;
+    var evasionBonus;
     if (!config || !action || !actor || !opponent || !battle) {
       return { checked: false, evaded: false, profile: profile || "none", hitRate: 1, roll: 0 };
     }
@@ -1987,12 +3483,15 @@
     }
     attackerMartial = getDuelMartialScoreForEvasion(actor);
     defenderMartial = getDuelMartialScoreForEvasion(opponent);
+    defenderContext = getDuelActionContext(battle, opponent.side);
+    evasionBonus = Math.max(0, Number(defenderContext.evasionBonus || 0));
     diff = attackerMartial - defenderMartial;
     baseRate = normalizeRate(action.baseHitRate ?? action.accuracyBaseRate, getDuelHitRateFromMartialDiff(diff));
     hitRate = clamp(
       baseRate +
       Number(config.hitBonus || 0) +
-      normalizeRate(action.hitRateModifier ?? action.accuracyModifier ?? action.effects?.hitRateModifier, 0),
+      normalizeRate(action.hitRateModifier ?? action.accuracyModifier ?? action.effects?.hitRateModifier, 0) -
+      evasionBonus,
       Number(config.min || 0.05),
       Number(config.max || 0.96)
     );
@@ -2006,6 +3505,7 @@
       attackerMartial: Number(attackerMartial.toFixed(2)),
       defenderMartial: Number(defenderMartial.toFixed(2)),
       martialDiff: Number(diff.toFixed(2)),
+      defenderEvasionBonus: Number(evasionBonus.toFixed(4)),
       damageScaleOnMiss: normalizeRate(onMiss.damageScale, config.damageScaleOnMiss),
       ceScaleOnMiss: normalizeRate(onMiss.ceDamageScale, config.ceScaleOnMiss),
       stabilityScaleOnMiss: normalizeRate(onMiss.stabilityScale, config.stabilityScaleOnMiss),
@@ -2034,7 +3534,7 @@
     var cards = Array.isArray(index?.cards) ? index.cards : [];
     return cards.find(function findCard(card) {
       return card?.cardId === cardId || card?.sourceActionId === cardId;
-    }) || null;
+    }) || getDuelSpecialCardByCardId(cardId);
   }
 
   function buildDuelGeneratedHandAction(card, sourceAction, round) {
@@ -2315,6 +3815,7 @@
     var baseDamage = Math.max(0, Number(unit?.baseDamage || unit?.unitStats?.baseDamage || 0));
     if (!baseDamage || !opponent) return null;
     var profile = unit?.attackProfile || unit?.unitStats?.attackProfile || {};
+    var blockIgnoreRatio = Math.max(0, Math.min(0.9, Number(unit?.blockIgnoreRatio ?? unit?.unitStats?.blockIgnoreRatio ?? profile.blockIgnoreRatio ?? 0)));
     var damage = Math.round(baseDamage * Math.max(0, Number(profile.damageScale || 1)));
     if (Number(profile.curseDamageMultiplier || 0) > 1 && isDuelCurseTarget(opponent)) {
       damage = Math.round(damage * Number(profile.curseDamageMultiplier));
@@ -2329,11 +3830,12 @@
       damageType: unit.damageType || unit.unitStats?.damageType || "shikigami",
       accuracyProfile: profile.accuracyProfile || "melee",
       baseDamage: baseDamage,
+      blockIgnoreRatio: blockIgnoreRatio,
       effects: {},
       targetPlan: unit.targetingRules || {}
     };
     var target = resolveDuelDamageTarget(action, actor, opponent, battle, { damage: evaded ? 0 : damage, summonUnitAttack: true });
-    var application = evaded ? null : applyDuelHpDamageToTarget(target, damage, battle);
+    var application = evaded ? null : applyDuelHpDamageToTarget(target, damage, battle, { blockIgnoreRatio: blockIgnoreRatio });
     var stabilityShock = evaded || target?.type === "unit" ? 0 : Math.min(0.08, Number((damage / 650).toFixed(4)));
     if (stabilityShock > 0) {
       opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
@@ -2350,6 +3852,7 @@
       roll: Number(roll.toFixed(4)),
       attackerMartial: Number(hit.attackerMartial.toFixed(2)),
       defenderMartial: Number(hit.defenderMartial.toFixed(2)),
+      blockIgnoreRatio: blockIgnoreRatio ? Number(blockIgnoreRatio.toFixed(4)) : undefined,
       target: target ? { type: target.type, id: target.id || "", name: target.name || "", intercepted: Boolean(target.intercepted), selectionMode: target.selectionMode || "" } : undefined,
       damageApplication: application || undefined,
       stabilityShock: Number(stabilityShock.toFixed(4)),
@@ -2767,12 +4270,18 @@
     return { type: "character", resource: opponent, id: opponent?.id || opponent?.side || defenderSide, name: opponent?.name || opponent?.label || defenderSide, side: defenderSide, explicit: false, intercepted: false, selectionMode: targetPlan.selectionMode || "opponent_character" };
   }
 
-  function applyDuelHpDamageToTarget(target, amount, battle) {
+  function applyDuelHpDamageToTarget(target, amount, battle, options) {
     var damage = Math.max(0, Number(amount || 0));
     if (!target || damage <= 0) return { applied: 0, overkill: 0, defeated: false, targetType: target?.type || "" };
     if (target.type === "unit") {
       var beforeHp = getDuelUnitHp(target.unit);
-      var appliedToUnit = Math.min(beforeHp, damage);
+      var unitBlock = Math.max(0, Number(target.unit?.baseBlock ?? target.unit?.unitStats?.baseBlock ?? 0) || 0);
+      var blockIgnoreRatio = Math.max(0, Math.min(0.9, Number(options?.blockIgnoreRatio || 0)));
+      var effectiveBlock = Math.max(0, unitBlock * (1 - blockIgnoreRatio));
+      var unitDamageReductionRatio = Math.max(0, Math.min(0.9, Number(target.unit?.damageReductionRatio ?? target.unit?.unitStats?.damageReductionRatio ?? 0)));
+      var effectiveDamage = Math.max(0, damage - effectiveBlock);
+      if (unitDamageReductionRatio > 0) effectiveDamage *= (1 - unitDamageReductionRatio);
+      var appliedToUnit = Math.min(beforeHp, effectiveDamage);
       var afterHp = Math.max(0, beforeHp - appliedToUnit);
       setDuelUnitHp(target.unit, afterHp);
       var result = {
@@ -2780,9 +4289,13 @@
         targetId: target.id || "",
         targetName: target.name || "",
         applied: Number(appliedToUnit.toFixed(1)),
+        blocked: Number(Math.min(damage, effectiveBlock).toFixed(1)),
+        reduced: unitDamageReductionRatio ? Number(Math.max(0, damage - effectiveBlock - effectiveDamage).toFixed(1)) : undefined,
+        blockIgnored: Number(Math.max(0, unitBlock - effectiveBlock).toFixed(1)),
+        blockIgnoreRatio: blockIgnoreRatio ? Number(blockIgnoreRatio.toFixed(4)) : undefined,
         beforeHp: Number(beforeHp.toFixed(1)),
         afterHp: Number(afterHp.toFixed(1)),
-        overkill: Number(Math.max(0, damage - appliedToUnit).toFixed(1)),
+        overkill: Number(Math.max(0, effectiveDamage - appliedToUnit).toFixed(1)),
         defeated: beforeHp > 0 && afterHp <= 0
       };
       // 若魔虚罗单位被击败，触发召唤者体势归零
@@ -2792,12 +4305,22 @@
       return result;
     }
     var beforeCharacterHp = Number(target.resource?.hp || 0);
+    var shieldAbsorbed = 0;
+    var shieldStatus = (target.resource?.statusEffects || []).find(function findProjectionShield(effect) {
+      return effect?.id === "projectionFrameShield" && Number(effect.value || 0) > 0;
+    });
+    if (shieldStatus) {
+      shieldAbsorbed = Math.min(damage, Math.max(0, Number(shieldStatus.value || 0)));
+      shieldStatus.value = Number(Math.max(0, Number(shieldStatus.value || 0) - shieldAbsorbed).toFixed(1));
+      damage = Math.max(0, damage - shieldAbsorbed);
+    }
     target.resource.hp = beforeCharacterHp - damage;
     return {
       targetType: "character",
       targetId: target.id || "",
       targetName: target.name || "",
       applied: Number(damage.toFixed(1)),
+      shieldAbsorbed: shieldAbsorbed ? Number(shieldAbsorbed.toFixed(1)) : undefined,
       beforeHp: Number(beforeCharacterHp.toFixed(1)),
       afterHp: Number(Number(target.resource.hp || 0).toFixed(1)),
       overkill: 0,
@@ -2852,6 +4375,7 @@
     if (action.id === "online_pass_turn" || action.id === "duel_pass_turn" || action.type === "pass") {
       var passUpkeepResult = applyDuelSummonUpkeep(actor, battle);
       var passSummonAssistResult = applyDuelSummonAssist(actor, opponent, battle);
+      var passProjectionSettlement = settleProjectionTurnFrameGain(actor, battle);
       var passResult = {
         costCe: 0,
         actorCe: passUpkeepResult ? -passUpkeepResult.paid.reduce(function sumCost(total, entry) { return total + Number(entry.costCe || 0); }, 0) : 0,
@@ -2867,6 +4391,7 @@
         blackFlashTriggered: false,
         blackFlashLabel: "",
         mechanicsApplied: [],
+        projectionSorcery: passProjectionSettlement ? { settlement: passProjectionSettlement } : undefined,
         summonUpkeep: passUpkeepResult || undefined,
         summonAssist: passSummonAssistResult || undefined,
         passTurn: true
@@ -2874,6 +4399,7 @@
       appendDuelActionLog(action, actor, opponent, passResult, battle);
       return passResult;
     }
+    action = getProjectionRuntimeAction(getStarRageRuntimeAction(getBloodManipulationRuntimeAction(action, actor, battle), actor, battle), actor, battle);
     var side = actor.side;
     var opponentSide = opponent.side;
     var mechanicsApplied = collectDuelMechanicsForAction(action);
@@ -2894,9 +4420,24 @@
     };
     var summonUpkeepResult = applyDuelSummonUpkeep(actor, battle);
     var numericPreview = calculateActionNumericPreview(action, actor);
+    var bloodRuntime = action.bloodRuntime || numericPreview?.bloodRuntime || null;
+    var starRageRuntime = action.starRageRuntime || numericPreview?.starRageRuntime || null;
     var blackFlashWindow = null;
     var costCe = Math.min(actor.ce, Number(action.costCe ?? getDuelActionCost(action, actor)));
     actor.ce -= costCe;
+    var hpCost = applyDuelActionHpCost(action, actor);
+    var bloodConversionResult = applyBloodManipulationConversion(action, actor, costCe, hpCost);
+    if (bloodRuntime?.active && !action.bloodConversion) {
+      action = getProjectionRuntimeAction(getStarRageRuntimeAction(getBloodManipulationRuntimeAction(action, actor, battle, {
+        actualCeCost: costCe,
+        actualHpCost: hpCost
+      }), actor, battle), actor, battle);
+      effects = mergeDuelMechanicEffects(action.effects || {}, mechanicsApplied);
+      numericPreview = calculateActionNumericPreview(action, actor);
+      bloodRuntime = action.bloodRuntime || numericPreview?.bloodRuntime || bloodRuntime;
+      starRageRuntime = action.starRageRuntime || numericPreview?.starRageRuntime || starRageRuntime;
+    }
+    var bloodRoundState = addBloodManipulationRoundSpend(battle, side, bloodRuntime, costCe, hpCost);
     actor.stability = Number(clamp(Number(actor.stability || 0) + Number(effects.stabilityDelta || 0), 0, 1).toFixed(4));
 
     if (effects.activateDomain && actor.domain?.threshold > 0) {
@@ -2933,11 +4474,28 @@
     (effects.selfStatuses || []).forEach(function addSelfStatus(status) {
       if (status?.id) actor.statusEffects.push({ ...status });
     });
+    (effects.delayedSelfStatuses || []).forEach(function addDelayedSelfStatus(status) {
+      if (!status?.id) return;
+      var delayedStatus = { ...status };
+      var delayTurns = Math.max(0, Number(delayedStatus.triggerDelayTurns || 0));
+      if (!delayedStatus.triggerRound && delayTurns > 0) {
+        delayedStatus.triggerRound = getDuelActionTurnNumber(battle) + delayTurns;
+      }
+      delete delayedStatus.triggerDelayTurns;
+      actor.statusEffects.push(delayedStatus);
+    });
     var pendingOpponentStatuses = Array.isArray(effects.opponentStatuses) ? effects.opponentStatuses : [];
     if (Number(effects.lowStabilityHpRecoil || 0) && Number(actor.stability || 0) < 0.38) actor.hp -= Number(effects.lowStabilityHpRecoil);
-    var directDamage = Math.max(0, Math.round(Number(numericPreview?.finalDamage || 0) * (action.risk === "high" || action.risk === "critical" ? 0.58 : 0.45)));
+    var damageSettlementRatio = action?.projectionRuntime?.active
+      ? Number(action.projectionRuntime.damageSettlementRatio || action.projectionDamageSettlementRatio || 0.72)
+      : (action.risk === "high" || action.risk === "critical" ? 0.58 : 0.45);
+    var directDamage = Math.max(0, Math.round(Number(numericPreview?.finalDamage || 0) * damageSettlementRatio));
+    var directDamageBeforeScale = directDamage;
+    var projectionFrameDamageForSettlement = directDamageBeforeScale;
+    var damageScaleSummary = null;
     var directHealing = Math.max(0, Math.round(Number(numericPreview?.finalHealing || 0)));
     var actualHealing = 0;
+    var healingBlockedByDefeat = false;
     var stabilityShock = Math.max(0, Number(numericPreview?.base?.baseStabilityDamage || 0) / 100);
     var hutianBlackFlashResult = null;
     var evasionResult = null;
@@ -2952,6 +4510,12 @@
     var mahoragaProxyResult = null;
     var mahoragaAdaptation = null;
     var specialResolutionResult = null;
+    var starRageResult = null;
+    var projectionOutOfFrameResult = triggerProjectionOutOfFrameIfReady(action, actor, opponent, battle, actorContext);
+    var projectionResult = applyProjectionImmediateEffects(action, actor, battle, actorContext);
+    var projectionSettlement = null;
+    var projectionReflect = null;
+    var starRageSingleCardBonus = null;
     var instantKillOnHit = Boolean(action.instantKillOnHit || effects.instantKillOnHit);
     if (effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, { previewOnly: true });
@@ -2969,6 +4533,39 @@
     }
     specialResolutionResult = applyRecontractUnfinishedTenShadowsResolution(action, actor, opponent, battle, directDamage);
     if (specialResolutionResult) directDamage = specialResolutionResult.damageAfter;
+    directDamageBeforeScale = directDamage;
+    if (directDamage > 0) {
+      var pendingOutgoingScale = Math.max(0, Number(actorContext.outgoingScale || 1));
+      var activeStatusOutgoingScale = Math.max(0, Number(getActiveDuelOutgoingStatusScale(actor, battle) || 1));
+      var effectDamageScale = Math.max(0, Number(effects.damageScale || 1));
+      var defenderIncomingHpScale = Math.max(0, Number(opponentContext.incomingHpScale || 1));
+      var defenderIncomingHpReductionCap = Math.max(0, Number(opponentContext.incomingHpReductionCap || 0));
+      var damageWithoutDefenderScale = directDamage * pendingOutgoingScale * activeStatusOutgoingScale * effectDamageScale;
+      projectionFrameDamageForSettlement = Math.max(0, Math.round(Number.isFinite(damageWithoutDefenderScale) ? damageWithoutDefenderScale : directDamageBeforeScale));
+      var totalDamageScale = pendingOutgoingScale * activeStatusOutgoingScale * effectDamageScale * defenderIncomingHpScale;
+      damageScaleSummary = {
+        pendingOutgoingScale: Number(pendingOutgoingScale.toFixed(4)),
+        activeStatusOutgoingScale: Number(activeStatusOutgoingScale.toFixed(4)),
+        effectDamageScale: Number(effectDamageScale.toFixed(4)),
+        defenderIncomingHpScale: Number(defenderIncomingHpScale.toFixed(4)),
+        defenderIncomingHpReductionCap: defenderIncomingHpReductionCap || undefined,
+        total: Number(totalDamageScale.toFixed(4))
+      };
+      if (Number.isFinite(totalDamageScale) && totalDamageScale !== 1) {
+        if (defenderIncomingHpReductionCap > 0 && defenderIncomingHpScale < 1 && Number.isFinite(damageWithoutDefenderScale)) {
+          var uncappedDefenderScaledDamage = damageWithoutDefenderScale * defenderIncomingHpScale;
+          var preventedByDefenderScale = Math.max(0, damageWithoutDefenderScale - uncappedDefenderScaledDamage);
+          var cappedPrevention = Math.min(preventedByDefenderScale, defenderIncomingHpReductionCap);
+          directDamage = Math.max(0, Math.round(damageWithoutDefenderScale - cappedPrevention));
+          opponentContext.incomingHpReductionCap = Math.max(0, defenderIncomingHpReductionCap - cappedPrevention);
+          damageScaleSummary.cappedIncomingHpReduction = Number(cappedPrevention.toFixed(1));
+          damageScaleSummary.uncappedIncomingHpReduction = Number(preventedByDefenderScale.toFixed(1));
+          damageScaleSummary.remainingIncomingHpReductionCap = Number(opponentContext.incomingHpReductionCap.toFixed(1));
+        } else {
+          directDamage = Math.max(0, Math.round(directDamage * totalDamageScale));
+        }
+      }
+    }
     evasionResult = specialResolutionResult?.treatedAsSureHit
       ? { checked: true, evaded: false, profile: "special_resolution_sure_hit", hitRate: 1, roll: 0 }
       : resolveDuelActionEvasion(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
@@ -2990,6 +4587,9 @@
       instantKillOnHit = false;
       if (hutianBlackFlashResult) hutianBlackFlashResult.evaded = true;
     }
+    if (!evasionResult?.evaded && hasProjectionSorceryAccess(actor, battle) && projectionFrameDamageForSettlement > 0) {
+      recordProjectionTurnDamage(battle, side, projectionFrameDamageForSettlement);
+    }
     damageTarget = resolveDuelDamageTarget(action, actor, opponent, battle, { damage: directDamage, stabilityShock: stabilityShock, instantKillOnHit: instantKillOnHit });
     if (!evasionResult?.evaded && damageTarget?.type !== "unit") {
       mahoragaAdaptation = applyMahoragaAdaptation(action, opponent, battle, directDamage, stabilityShock);
@@ -3000,17 +4600,22 @@
     }
     if (!evasionResult?.evaded && instantKillOnHit) {
       directDamage = Math.max(directDamage, Math.ceil(damageTarget?.type === "unit" ? getDuelUnitHp(damageTarget.unit) : Number(opponent.hp || 0)));
-      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle);
+      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle, { blockIgnoreRatio: bloodRuntime?.blockIgnoreRatio || action.blockIgnoreRatio || 0 });
     } else if (!evasionResult?.evaded && effects.hutianBlackFlash) {
       hutianBlackFlashResult = applyHutianBlackFlashEffect(effects, actor, opponent, {
         skipOpponentDamage: damageTarget?.type === "unit",
         skipOpponentStatus: damageTarget?.type === "unit"
       });
       directDamage = hutianBlackFlashResult.directDamage;
-      if (damageTarget?.type === "unit") damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle);
+      if (damageTarget?.type === "unit") damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle, { blockIgnoreRatio: bloodRuntime?.blockIgnoreRatio || action.blockIgnoreRatio || 0 });
     } else if (!effects.hutianBlackFlash && directDamage > 0) {
-      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle);
+      damageApplication = applyDuelHpDamageToTarget(damageTarget, directDamage, battle, { blockIgnoreRatio: bloodRuntime?.blockIgnoreRatio || action.blockIgnoreRatio || 0 });
     }
+    if (damageApplication?.applied > 0 && damageTarget?.type === "character") {
+      applyProjectionDamageTakenFrameGain(damageTarget, battle, damageApplication.applied);
+      projectionReflect = applyProjectionFrameShieldReflect(damageTarget.resource, actor, battle, damageApplication.applied);
+    }
+    if (!evasionResult?.evaded && directDamage > 0 && bloodRuntime?.active) resetBloodManipulationRoundState(battle, side);
     if (!evasionResult?.evaded && blackFlashStatus && damageTarget?.type !== "unit") opponent.statusEffects.push(blackFlashStatus);
     if (!evasionResult?.evaded && damageTarget?.type !== "unit") {
       pendingOpponentStatuses.forEach(function addOpponentStatus(status) {
@@ -3021,10 +4626,15 @@
       opponent.stability = Number(clamp(Number(opponent.stability || 0) - stabilityShock, 0, 1).toFixed(4));
     }
     if (directHealing > 0 && Number(actor.maxHp || 0) > 0) {
-      var beforeHealHp = Number(actor.hp || 0);
-      actor.hp = Number(clamp(beforeHealHp + directHealing, 0, Number(actor.maxHp || beforeHealHp + directHealing)).toFixed(1));
-      actualHealing = Math.max(0, Number((Number(actor.hp || 0) - beforeHealHp).toFixed(1)));
+      if (isDuelResourceDefeated(actor, battle)) {
+        healingBlockedByDefeat = true;
+      } else {
+        var beforeHealHp = Number(actor.hp || 0);
+        actor.hp = Number(clamp(beforeHealHp + directHealing, 0, getDuelActionTemporaryResourceCap(actor, "hp", "maxHp", "temporaryHpOverCap")).toFixed(1));
+        actualHealing = Math.max(0, Number((Number(actor.hp || 0) - beforeHealHp).toFixed(1)));
+      }
     }
+    starRageResult = applyStarRageResolution(action, actor, battle, actorContext);
     if (isMahoragaTuningRitualAction(action)) {
       // 魔虚罗调幅仪式：召唤未调幅魔虚罗独立单位，锁定召唤者体势为1
       if (!battle.mahoragaProxy || !battle.mahoragaProxy[side]?.active) {
@@ -3043,17 +4653,20 @@
           placement: "battlefield",
           tags: ["魔虚罗", "狂暴", "适应"],
           unitStats: {
-            maxHp: 300,
-            currentHp: 300,
+            maxHp: 500,
+            currentHp: 500,
             baseDamage: 200,
+            baseBlock: 100,
             mahoragaTurnEndHpRegen: 80,
             damageType: "melee",
             accuracyProfile: "melee",
             evasionAllowed: false
           },
-          hp: 300,
-          maxHp: 300,
+          hp: 500,
+          currentHp: 500,
+          maxHp: 500,
           baseDamage: 200,
+          baseBlock: 100,
           mahoragaTurnEndHpRegen: 80,
           damageType: "melee",
           accuracyProfile: "melee",
@@ -3109,24 +4722,46 @@
     summonAssistResult = applyDuelSummonAssist(actor, opponent, battle);
     protectMahoragaSummoners(battle);
 
-    actorContext.outgoingScale *= Number(effects.outgoingScale || 1);
-    actorContext.incomingHpScale *= Number(effects.incomingHpScale || 1);
+    var contextOutgoingScaleBeforeUpdate = Math.max(0, Number(actorContext.outgoingScale || 1));
+    var effectOutgoingScale = Math.max(0, Number(effects.outgoingScale || 1));
+    var blockIncomingHpScale = getDuelBlockIncomingHpScale(action, numericPreview, effects);
+    if (directDamageBeforeScale > 0 && contextOutgoingScaleBeforeUpdate !== 1 && actorContext.consumeOutgoingScaleOnDamage !== false) {
+      actorContext.outgoingScale = 1;
+      actorContext.consumeOutgoingScaleOnDamage = true;
+    }
+    if (effectOutgoingScale !== 1) actorContext.outgoingScale *= effectOutgoingScale;
+    if (effects.consumeOutgoingScaleOnDamage === false) actorContext.consumeOutgoingScaleOnDamage = false;
+    actorContext.incomingHpScale *= Number(effects.incomingHpScale || 1) * blockIncomingHpScale;
+    if (bloodRuntime?.active && Number(effects.incomingHpReductionCapFromBloodHpCostMultiplier || 0) > 0) {
+      actorContext.incomingHpReductionCap += Math.max(0, Number((hpCost * Number(effects.incomingHpReductionCapFromBloodHpCostMultiplier || 0)).toFixed(1)));
+    }
     actorContext.incomingCeScale *= Number(effects.incomingCeScale || 1);
     actorContext.sureHitScale *= Number(effects.sureHitScale || 1);
     actorContext.domainPressureScale *= Number(effects.domainPressureScale || 1);
     actorContext.manualAttackScale *= Number(effects.manualAttackScale || 1);
     actorContext.domainLoadScale *= Number(effects.domainLoadScale || 1);
+    actorContext.evasionBonus += Number(effects.evasionBonus || 0);
     actorContext.actionLabels.push(action.label);
     addDuelActionWeightDeltas(actorContext, effects.weightDeltas);
     addDuelActionWeightDeltas(opponentContext, effects.opponentWeightDeltas);
     var domainSpecificResult = action.domainSpecific
       ? applyDuelDomainSpecificAction(action, actor, opponent, battle)
       : null;
+    if (action.selectedLast || action.projectionSettleTurn) {
+      projectionSettlement = settleProjectionTurnFrameGain(actor, battle);
+    }
     clampDuelResource(actor);
     clampDuelResource(opponent);
+    if (bloodConversionResult?.allowOverCap) {
+      actor.hp = bloodConversionResult.afterHp;
+      actor.ce = bloodConversionResult.afterCe;
+      syncBloodManipulationTemporaryOverCap(actor);
+      recordBloodManipulationConversionChange(battle, side, actor, bloodConversionResult);
+    }
 
     var result = {
       costCe: costCe,
+      hpCost: hpCost,
       actorCe: Number((actor.ce - before.actorCe).toFixed(1)),
       actorHp: Number((actor.hp - before.actorHp).toFixed(1)),
       actorStability: Number((actor.stability - before.actorStability).toFixed(4)),
@@ -3137,8 +4772,12 @@
       domainActivated: !before.actorDomainActive && Boolean(actor.domain?.active),
       domainReleased: before.actorDomainActive && !actor.domain?.active,
       directDamage: directDamage,
+      directDamageBeforeScale: directDamageBeforeScale,
+      damageScale: damageScaleSummary || undefined,
+      blockIncomingHpScale: blockIncomingHpScale !== 1 ? blockIncomingHpScale : undefined,
       directHealing: directHealing,
       actorHealing: actualHealing,
+      healingBlockedByDefeat: healingBlockedByDefeat || undefined,
       instantKillOnHit: Boolean(!evasionResult?.evaded && (action.instantKillOnHit || effects.instantKillOnHit)),
       evasion: evasionResult?.checked ? evasionResult : undefined,
       blackFlashTriggered: Boolean(!evasionResult?.evaded && (blackFlashWindow || effects.hutianBlackFlash)),
@@ -3156,6 +4795,24 @@
         selectionMode: damageTarget.selectionMode || ""
       } : undefined,
       damageApplication: damageApplication || undefined,
+      bloodManipulation: bloodRuntime ? {
+        ceCostRatio: Number(action.bloodCeCostRatio || 0),
+        hpCostRatio: Number(action.bloodHpCostRatio || 0),
+        bloodPierceRatio: bloodRuntime.bloodPierceRatio,
+        bloodBoostRatio: bloodRuntime.bloodBoostRatio,
+        blockIgnoreRatio: bloodRuntime.blockIgnoreRatio,
+        roundState: bloodRoundState || undefined,
+        conversion: bloodConversionResult || undefined,
+        clearedAfterDamage: Boolean(!evasionResult?.evaded && directDamage > 0)
+      } : undefined,
+      starRage: starRageRuntime ? starRageResult || { massBefore: starRageRuntime.massBefore } : (starRageSingleCardBonus || undefined),
+      projectionSorcery: projectionResult || projectionOutOfFrameResult || projectionSettlement || projectionReflect ? {
+        runtime: action.projectionRuntime || undefined,
+        immediate: projectionResult || undefined,
+        outOfFrame: projectionOutOfFrameResult || undefined,
+        settlement: projectionSettlement || undefined,
+        reflect: projectionReflect || undefined
+      } : undefined,
       guardIntercepted: Boolean(damageTarget?.intercepted),
       summon: summonResult ? {
         unitId: summonResult.unit?.id || "",

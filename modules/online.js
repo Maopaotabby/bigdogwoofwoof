@@ -1,8 +1,9 @@
-const APP_BUILD_VERSION = "20260430-online-pass-turn-v1";
+const APP_BUILD_VERSION = "V3.1.1-full-audit-20260508";
 const ONLINE_RULES_PATH = "./data/online-room-rules-v0.1-candidate.json";
 const ONLINE_PROTOCOL = "jjk_online_battle_v1";
 const ROOM_STORAGE_PREFIX = "jjk-online-battle-v1:";
 const PLAYER_ID_STORAGE_KEY = "jjk-online-battle-player-id-v1";
+const SPECTATOR_ID_STORAGE_KEY = "jjk-online-battle-spectator-id-v1";
 const ACTIVE_ROOM_STORAGE_KEY = "jjk-online-battle-active-room-v1";
 const BACKEND_MODE_STORAGE_KEY = "jjk-online-battle-backend-mode-v1";
 const CUSTOM_ENDPOINT_STORAGE_KEY = "jjk-online-battle-custom-endpoint-v1";
@@ -11,6 +12,7 @@ const ONLINE_HELP_SEEN_STORAGE_KEY = "jjk-online-battle-help-seen-v1";
 const ROOM_ID_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REMOTE_OPERATION_TIMEOUT_MS = 35000;
 const ONLINE_DEBUG_LIMIT = 60;
+const MAX_ONLINE_SPECTATORS = 12;
 const PHASES = Object.freeze(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const LOCAL_DEFAULT_ENDPOINT = "https://jjk-online-battle.maopaotabby-jjk-life.workers.dev";
 const PASS_TURN_ACTION_ID = "online_pass_turn";
@@ -29,6 +31,7 @@ const memoryRooms = new Map();
 let cachedRules = null;
 let pollStop = null;
 let removalNoticeShown = false;
+let lastPollRenderKey = "";
 const debugEvents = [];
 let uiState = {
   roomId: "",
@@ -193,6 +196,15 @@ function getOrCreatePlayerId() {
   return id;
 }
 
+function getOrCreateSpectatorId() {
+  const store = storage("session") || storage("local");
+  const existing = store?.getItem?.(SPECTATOR_ID_STORAGE_KEY);
+  if (existing) return existing;
+  const id = `spectator_${generateRoomId(10).toLowerCase()}_${nowMs().toString(36)}`;
+  store?.setItem?.(SPECTATOR_ID_STORAGE_KEY, id);
+  return id;
+}
+
 function getBackendSettings(options = {}) {
   const store = storage("local");
   const storedMode = store?.getItem?.(BACKEND_MODE_STORAGE_KEY);
@@ -255,10 +267,11 @@ function getOnlineHelpText() {
     "1. 房主选择角色后点击“创建新房间”，把房间码或邀请链接发给对手。",
     "2. 对手输入房间码或打开邀请链接，选择角色后加入房间。",
     "3. 双方都点击“锁定角色”后进入对战阶段。",
-    "4. 在联机手札区选择手札后点击“锁定行动”；如果本回合咒力归零或没有可用手札，也可以直接锁定待机来跳过本回合。",
-    "5. 双方都锁定后，服务器会短暂停留显示锁定状态，然后由本地规则引擎同步结算 HP、CE、AP 和战斗记录。",
-    "6. 如果行动选错，可以在双方结算前点击“取消锁定”重新选择。",
-    "7. 对局结束或需要重开时，可以使用“再来一把”或“回到准备阶段”。"
+    "4. 在手札区选择手札后点击“锁定行动”；如果本回合咒力归零或没有可用手札，也可以直接锁定待机来跳过本回合。",
+    "5. 特殊手札会按当前状态实时结算，例如星之怒的虚拟质量、赤血操术的穿/血、投射术式的帧率；锁定前可以先看卡面消耗和状态栏计数。",
+    "6. 双方都锁定后，服务器会短暂停留显示锁定状态，然后由本地规则引擎同步结算 HP、CE、领域、特殊计数、式神区和战斗记录。",
+    "7. 如果行动选错，可以在双方结算前点击“取消锁定”重新选择。",
+    "8. 对局结束或需要重开时，可以使用“再来一把”或“回到准备阶段”。"
   ].join("\n");
 }
 
@@ -284,6 +297,8 @@ function createEmptyPlayer(side) {
     role: side === "left" ? "owner" : "guest",
     characterId: "",
     characterSnapshot: null,
+    allyCharacterId: "",
+    allyCharacterSnapshot: null,
     characterLocked: false,
     actionLocked: false
   };
@@ -295,6 +310,16 @@ function makeSpectator(options = {}) {
     displayName: String(options.displayName || "观战者").slice(0, 40),
     connected: true,
     lastSeenAt: nowMs(),
+    role: "spectator"
+  };
+}
+
+function normalizeSpectatorSnapshot(value = {}) {
+  return {
+    playerId: String(value.playerId || "").slice(0, 120),
+    displayName: String(value.displayName || "观战者").slice(0, 40),
+    connected: Boolean(value.connected ?? true),
+    lastSeenAt: Number(value.lastSeenAt) || nowMs(),
     role: "spectator"
   };
 }
@@ -346,7 +371,7 @@ function syncCharacterSelects() {
   const options = cards.length
     ? cards.map((card) => `<option value="${escapeHtml(card.characterId || card.id)}">${escapeHtml(characterOptionLabel(card))}</option>`).join("")
     : `<option value="">暂无可用角色</option>`;
-  [$("#onlineCreateCharacterSelect"), $("#onlineJoinCharacterSelect")].forEach((select, index) => {
+  [$("#onlineCreateCharacterSelect"), $("#onlineJoinCharacterSelect"), $("#onlineCreateAllyCharacterSelect"), $("#onlineJoinAllyCharacterSelect")].forEach((select, index) => {
     if (!select) return;
     const current = select.value || cards[index]?.characterId || cards[index]?.id || cards[0]?.characterId || cards[0]?.id || "";
     if (select.dataset.optionSignature !== options) {
@@ -359,6 +384,7 @@ function syncCharacterSelects() {
 
 function makePlayer(side, options = {}) {
   const card = getCharacterById(options.characterId);
+  const allyCard = getCharacterById(options.allyCharacterId);
   return {
     ...createEmptyPlayer(side),
     playerId: options.playerId || getOrCreatePlayerId(),
@@ -366,7 +392,9 @@ function makePlayer(side, options = {}) {
     connected: true,
     lastSeenAt: nowMs(),
     characterId: String(options.characterId || card?.characterId || card?.id || "").slice(0, 120),
-    characterSnapshot: sanitizeCharacterSnapshot(card)
+    characterSnapshot: sanitizeCharacterSnapshot(card),
+    allyCharacterId: String(options.allyCharacterId || allyCard?.characterId || allyCard?.id || "").slice(0, 120),
+    allyCharacterSnapshot: sanitizeCharacterSnapshot(allyCard)
   };
 }
 
@@ -374,11 +402,21 @@ function normalizeRoom(room) {
   if (!room || typeof room !== "object") return null;
   room.protocol = ONLINE_PROTOCOL;
   room.phase = normalizePhase(room.phase);
+  room.mode = room.mode === "2v2" || room.teamMode === "2v2_tag" ? "2v2" : "1v1";
+  room.teamMode = room.mode === "2v2" ? "2v2_tag" : "1v1";
   room.players = {
     left: { ...createEmptyPlayer("left"), ...(room.players?.left || {}) },
     right: { ...createEmptyPlayer("right"), ...(room.players?.right || {}) }
   };
-  room.spectators = Array.isArray(room.spectators) ? room.spectators.slice(0, 1).map((item) => ({ ...makeSpectator(), ...item, role: "spectator" })) : [];
+  if (room.mode !== "2v2") {
+    for (const side of ["left", "right"]) {
+      room.players[side].allyCharacterId = "";
+      room.players[side].allyCharacterSnapshot = null;
+    }
+  }
+  room.spectators = Array.isArray(room.spectators)
+    ? room.spectators.slice(0, MAX_ONLINE_SPECTATORS).map(normalizeSpectatorSnapshot).filter((item) => item.playerId)
+    : [];
   room.readyState = {
     leftCharacterLocked: Boolean(room.readyState?.leftCharacterLocked || room.players.left.characterLocked),
     rightCharacterLocked: Boolean(room.readyState?.rightCharacterLocked || room.players.right.characterLocked)
@@ -416,8 +454,21 @@ function hasBothPlayers(room) {
   return Boolean(room?.players?.left?.playerId && room?.players?.right?.playerId);
 }
 
+function playerHasRequiredCharacters(room, side) {
+  const player = room?.players?.[side];
+  if (!player?.characterId) return false;
+  if (room?.mode === "2v2" && !player.allyCharacterId) return false;
+  return true;
+}
+
 function hasBothLockedCharacters(room) {
-  return Boolean(hasBothPlayers(room) && room.readyState?.leftCharacterLocked && room.readyState?.rightCharacterLocked);
+  return Boolean(
+    hasBothPlayers(room) &&
+    playerHasRequiredCharacters(room, "left") &&
+    playerHasRequiredCharacters(room, "right") &&
+    room.readyState?.leftCharacterLocked &&
+    room.readyState?.rightCharacterLocked
+  );
 }
 
 function hasBothLockedActions(room) {
@@ -440,20 +491,38 @@ function applyPhaseTransition(room) {
 }
 
 function createBattleSeedState(room) {
+  const leftTeam = [
+    { slot: "main", characterId: room.players.left.characterId, characterSnapshot: room.players.left.characterSnapshot },
+    { slot: "ally", characterId: room.players.left.allyCharacterId, characterSnapshot: room.players.left.allyCharacterSnapshot }
+  ].filter((entry) => entry.characterId);
+  const rightTeam = [
+    { slot: "main", characterId: room.players.right.characterId, characterSnapshot: room.players.right.characterSnapshot },
+    { slot: "ally", characterId: room.players.right.allyCharacterId, characterSnapshot: room.players.right.allyCharacterSnapshot }
+  ].filter((entry) => entry.characterId);
   return {
     schema: "jjk-online-battle-state-v1",
     battleId: `online_${room.roomId}_${nowMs().toString(36)}`,
     battleSeed: `online-${room.roomId}-${nowMs().toString(36)}`,
     round: room.round,
+    mode: room.mode || "1v1",
+    teamMode: room.teamMode || "1v1",
     players: {
       left: {
         characterId: room.players.left.characterId,
-        characterSnapshot: room.players.left.characterSnapshot
+        characterSnapshot: room.players.left.characterSnapshot,
+        allyCharacterId: room.players.left.allyCharacterId,
+        allyCharacterSnapshot: room.players.left.allyCharacterSnapshot
       },
       right: {
         characterId: room.players.right.characterId,
-        characterSnapshot: room.players.right.characterSnapshot
+        characterSnapshot: room.players.right.characterSnapshot,
+        allyCharacterId: room.players.right.allyCharacterId,
+        allyCharacterSnapshot: room.players.right.allyCharacterSnapshot
       }
+    },
+    teams: {
+      left: leftTeam,
+      right: rightTeam
     }
   };
 }
@@ -470,6 +539,8 @@ function clearPlayerBattleSelection(player) {
   if (!player) return;
   player.characterId = "";
   player.characterSnapshot = null;
+  player.allyCharacterId = "";
+  player.allyCharacterSnapshot = null;
   player.characterLocked = false;
   player.actionLocked = false;
 }
@@ -566,6 +637,8 @@ function createRoomObject(options = {}) {
     revision: 1,
     ownerPlayerId: left.playerId,
     players: { left, right: createEmptyPlayer("right") },
+    mode: options.mode === "2v2" ? "2v2" : "1v1",
+    teamMode: options.mode === "2v2" ? "2v2_tag" : "1v1",
     readyState: { leftCharacterLocked: false, rightCharacterLocked: false },
     round: 1,
     turnState: { turnId: "turn_1", phase: "selecting", actions: { left: [], right: [] }, locks: { left: false, right: false } },
@@ -582,15 +655,24 @@ function joinRoom(roomId, options = {}) {
   const playerId = options.playerId || getOrCreatePlayerId();
   const existingSide = getPlayerSide(room, playerId);
   if (existingSide) {
-    room.players[existingSide].connected = true;
-    room.players[existingSide].lastSeenAt = nowMs();
-    appendLog(room, "player_reconnected", `${existingSide === "left" ? "左方" : "右方"}玩家已重新连接。`, { side: existingSide, playerId });
-    const saved = writeLocalRoom(room);
-    remember(saved.roomId, playerId, existingSide, settings);
-    return Promise.resolve(snapshot(saved, existingSide));
+    if (existingSide === "spectator") {
+      room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== playerId);
+    } else {
+      room.players[existingSide].connected = true;
+      room.players[existingSide].lastSeenAt = nowMs();
+      appendLog(room, "player_reconnected", `${existingSide === "left" ? "左方" : "右方"}玩家已重新连接。`, { side: existingSide, playerId });
+      const saved = writeLocalRoom(room);
+      remember(saved.roomId, playerId, existingSide, settings);
+      return Promise.resolve(snapshot(saved, existingSide));
+    }
   }
   if (room.players.right.playerId) return Promise.reject(new Error("房间已满。"));
   room.players.right = makePlayer("right", { ...options, playerId });
+  if (room.mode === "2v2" && !room.players.right.allyCharacterId && options.allyCharacterId) {
+    const ally = getCharacterById(options.allyCharacterId);
+    room.players.right.allyCharacterId = String(options.allyCharacterId || ally?.characterId || ally?.id || "").slice(0, 120);
+    room.players.right.allyCharacterSnapshot = sanitizeCharacterSnapshot(ally);
+  }
   appendLog(room, "player_joined", "加入者已进入房间。", { side: "right", playerId });
   const saved = writeLocalRoom(room);
   remember(saved.roomId, playerId, "right", settings);
@@ -599,13 +681,16 @@ function joinRoom(roomId, options = {}) {
 
 function watchRoom(roomId, options = {}) {
   const settings = getBackendSettings(options);
-  const playerId = options.playerId || getOrCreatePlayerId();
-  if (shouldUseRemote(settings)) return remoteOperation("watchRoom", { roomId, payload: { spectator: makeSpectator({ ...options, playerId }) } }, settings);
+  const playerId = options.playerId || getOrCreateSpectatorId();
+  const payload = { spectator: makeSpectator({ ...options, playerId }), forceSpectator: Boolean(options.forceSpectator) };
+  if (shouldUseRemote(settings)) return remoteOperation("watchRoom", { roomId, payload }, { ...settings, playerId });
   const room = readLocalRoom(roomId);
   if (!room) return Promise.reject(new Error("房间不存在。"));
   const existingSide = getPlayerSide(room, playerId);
-  if (existingSide && existingSide !== "spectator") return Promise.resolve(snapshot(room, existingSide));
-  room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== playerId).slice(0, 0);
+  if (existingSide && existingSide !== "spectator") return Promise.reject(new Error("当前身份已经是选手，请用新的观战入口进入观战。"));
+  room.spectators = (room.spectators || [])
+    .filter((spectator) => spectator.playerId !== playerId)
+    .slice(-(MAX_ONLINE_SPECTATORS - 1));
   room.spectators.push(makeSpectator({ ...options, playerId }));
   appendLog(room, "spectator_joined", "观战者已进入房间。", { playerId });
   const saved = writeLocalRoom(room);
@@ -635,13 +720,19 @@ function lockCharacter(roomId, side, options = {}) {
     const currentCharacterId = side === "right"
       ? $("#onlineJoinCharacterSelect")?.value
       : $("#onlineCreateCharacterSelect")?.value;
+    const currentAllyCharacterId = side === "right"
+      ? $("#onlineJoinAllyCharacterSelect")?.value
+      : $("#onlineCreateAllyCharacterSelect")?.value;
     const characterId = options.characterId || currentCharacterId || "";
+    const allyCharacterId = options.allyCharacterId || currentAllyCharacterId || "";
     return remoteOperation("lockCharacter", {
       roomId,
       side,
       payload: {
         characterId,
-        characterSnapshot: sanitizeCharacterSnapshot(getCharacterById(characterId))
+        characterSnapshot: sanitizeCharacterSnapshot(getCharacterById(characterId)),
+        allyCharacterId,
+        allyCharacterSnapshot: sanitizeCharacterSnapshot(getCharacterById(allyCharacterId))
       }
     }, settings);
   }
@@ -649,6 +740,13 @@ function lockCharacter(roomId, side, options = {}) {
   const actorSide = authorizeSide(room, side, options);
   if (room.phase !== "preparing") throw new Error("当前不是准备阶段。");
   if (!room.players[actorSide].characterId) throw new Error("请先选择角色。");
+  const allyCharacterId = options.allyCharacterId || (actorSide === "right" ? $("#onlineJoinAllyCharacterSelect")?.value : $("#onlineCreateAllyCharacterSelect")?.value) || room.players[actorSide].allyCharacterId || "";
+  if (room.mode === "2v2") {
+    const allyCard = getCharacterById(allyCharacterId);
+    if (!allyCard) throw new Error("2V2 模式需要先选择队友角色。");
+    room.players[actorSide].allyCharacterId = allyCard.characterId || allyCard.id;
+    room.players[actorSide].allyCharacterSnapshot = sanitizeCharacterSnapshot(allyCard);
+  }
   room.readyState[`${actorSide}CharacterLocked`] = true;
   room.players[actorSide].characterLocked = true;
   appendLog(room, "character_locked", `${actorSide === "left" ? "左方" : "右方"}已锁定角色。`, { side: actorSide });
@@ -808,16 +906,59 @@ function authorizeSide(room, side, options = {}) {
   return actual;
 }
 
+function normalizeStringArray(value, limit = 20) {
+  return (Array.isArray(value) ? value : [])
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
+function normalizeVisualSettingsSnapshot(value = {}) {
+  if (!value || typeof value !== "object") return null;
+  const cardSkin = ["classic", "v224", "custom", "champion-kashimo"].includes(value.cardSkin) ? value.cardSkin : "";
+  const theme = value.theme === "dark" ? "dark" : value.theme === "original" ? "original" : "";
+  const customSkin = value.customSkin && typeof value.customSkin === "object" ? redactSecrets(value.customSkin) : null;
+  const compactCards = Boolean(value.compactCards);
+  if (!cardSkin && !theme && !customSkin && !compactCards) return null;
+  return { cardSkin, theme, compactCards, customSkin };
+}
+
 function normalizeActions(actions = []) {
-  return (Array.isArray(actions) ? actions : []).slice(0, 8).map((action, index) => ({
-    actionId: String(action?.actionId || action?.id || action?.sourceActionId || `action_${index + 1}`).slice(0, 120),
-    displayName: String(action?.displayName || action?.label || action?.name || action?.actionId || `手札 ${index + 1}`).slice(0, 80),
-    cardType: String(action?.cardType || action?.type || "").slice(0, 40),
-    apCost: Number(action?.apCost || 0),
-    ceCost: Number(action?.ceCost || action?.baseCeCost || 0),
-    action: redactSecrets(action?.action || action?.actionSnapshot || null),
-    source: "player_locked_action"
-  }));
+  return (Array.isArray(actions) ? actions : []).slice(0, 8).map((entry, index) => {
+    const action = entry?.action || entry?.actionSnapshot || entry || {};
+    const visualSettings = normalizeVisualSettingsSnapshot(entry?.visualSettings || action?.visualSettings || {});
+    return {
+      actionId: String(entry?.actionId || entry?.id || action?.id || action?.sourceActionId || `action_${index + 1}`).slice(0, 120),
+      displayName: String(entry?.displayName || entry?.label || action?.label || action?.name || entry?.actionId || `手札 ${index + 1}`).slice(0, 80),
+      cardType: String(entry?.cardType || action?.cardType || action?.type || "").slice(0, 40),
+      apCost: Number(entry?.apCost ?? action?.apCost ?? 0),
+      ceCost: Number(entry?.ceCost ?? action?.ceCost ?? action?.baseCeCost ?? 0),
+      selectedRound: Number(entry?.selectedRound || action?.selectedRound || 0),
+      skinCategory: String(entry?.skinCategory || entry?.cardSkinCategory || action?.skinCategory || action?.cardSkinCategory || "").slice(0, 40),
+      cardSkinCategory: String(entry?.cardSkinCategory || entry?.skinCategory || action?.cardSkinCategory || action?.skinCategory || "").slice(0, 40),
+      cardSkin: String(entry?.cardSkin || entry?.visualCardSkin || action?.cardSkin || action?.visualCardSkin || visualSettings?.cardSkin || "").slice(0, 40),
+      visualCardSkin: String(entry?.visualCardSkin || entry?.cardSkin || action?.visualCardSkin || action?.cardSkin || visualSettings?.cardSkin || "").slice(0, 40),
+      visualSettings,
+      tags: normalizeStringArray(entry?.tags || action?.tags),
+      uiTags: normalizeStringArray(entry?.uiTags || action?.uiTags),
+      specialHandTags: normalizeStringArray(entry?.specialHandTags || action?.specialHandTags),
+      domainHand: Boolean(entry?.domainHand || action?.domainHand),
+      domainSpecific: Boolean(entry?.domainSpecific || action?.domainSpecific),
+      specialHandCard: Boolean(entry?.specialHandCard || action?.specialHandCard),
+      techniqueFeatureHand: Boolean(entry?.techniqueFeatureHand || action?.techniqueFeatureHand),
+      action: redactSecrets(action),
+      source: "player_locked_action"
+    };
+  });
+  syncOnlineTeamModeControls();
+}
+
+function syncOnlineTeamModeControls() {
+  const is2v2 = $("#onlineCreateModeSelect")?.value === "2v2" || uiState.currentRoomMode === "2v2";
+  [$("#onlineCreateAllyCharacterSelect"), $("#onlineJoinAllyCharacterSelect")].forEach((select) => {
+    const field = select?.closest?.(".field");
+    if (field) field.hidden = !is2v2;
+  });
 }
 
 function createPassTurnAction() {
@@ -1114,8 +1255,12 @@ function startPolling(roomId, side) {
   };
   const tick = () => {
     if (stopped || !roomId) return;
-    getRoomState(roomId, { side, viewerSide: side }).then(render).catch(showError);
-    timer = globalThis.setTimeout(tick, DEFAULT_RULES.sync.pollIntervalMs);
+    getRoomState(roomId, { side, viewerSide: side })
+      .then((room) => renderPolledRoom(room, side))
+      .catch(showError)
+      .finally(() => {
+        if (!stopped) timer = globalThis.setTimeout(tick, DEFAULT_RULES.sync.pollIntervalMs);
+      });
   };
   tick();
 }
@@ -1124,6 +1269,39 @@ function stopPolling() {
   if (typeof pollStop === "function") pollStop();
   else if (pollStop) globalThis.clearTimeout(pollStop);
   pollStop = null;
+  lastPollRenderKey = "";
+}
+
+function buildOnlineRoomRenderKey(room = {}, side = "") {
+  return [
+    room.roomId,
+    room.revision,
+    room.phase,
+    room.round,
+    room.viewerSide || side,
+    room.updatedAt || room.lastUpdatedAt,
+    room.players?.left?.characterId,
+    room.players?.right?.characterId,
+    room.players?.left?.characterLocked ? "L1" : "L0",
+    room.players?.right?.characterLocked ? "R1" : "R0",
+    room.players?.left?.connected ? "LC1" : "LC0",
+    room.players?.right?.connected ? "RC1" : "RC0",
+    room.turnState?.turnId,
+    room.turnState?.phase,
+    room.turnState?.locks?.left ? "TL1" : "TL0",
+    room.turnState?.locks?.right ? "TR1" : "TR0",
+    room.battleState?.battleSeed
+  ].join("|");
+}
+
+function renderPolledRoom(room = {}, side = "") {
+  const key = buildOnlineRoomRenderKey(room, side);
+  if (key && key === lastPollRenderKey) {
+    setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
+    return;
+  }
+  lastPollRenderKey = key;
+  render(room);
 }
 
 function getRoomState(roomId, options = {}) {
@@ -1156,13 +1334,17 @@ function playerLabel(room, side, viewerSide) {
 function characterLabel(player) {
   if (!player?.characterId) return "角色：未选择";
   const name = player.characterSnapshot?.displayName || getCharacterById(player.characterId)?.displayName || getCharacterById(player.characterId)?.name || player.characterId;
-  return `角色：${name}${player.characterLocked ? "（已锁定）" : "（未锁定）"}`;
+  const allyName = player.allyCharacterSnapshot?.displayName || getCharacterById(player.allyCharacterId)?.displayName || getCharacterById(player.allyCharacterId)?.name || player.allyCharacterId;
+  const teamText = player.allyCharacterId ? ` / 队友：${allyName}` : "";
+  return `角色：${name}${teamText}${player.characterLocked ? "（已锁定）" : "（未锁定）"}`;
 }
 
 function nextHint(room, side) {
   if (!room?.roomId) return "下一步：创建房间，或输入房间码加入。";
+  if (side === "spectator") return "观战模式：等待双方锁定行动后同步实际卡面。";
   if (room.phase === "preparing") {
     if (!hasBothPlayers(room)) return "等待对方加入；房主可以先选择并锁定角色。";
+    if (room.mode === "2v2" && !room.players[side]?.allyCharacterId) return "2V2 模式需要主角色和队友角色都已选择。";
     if (!room.players[side]?.characterLocked) return "请选择角色并锁定。";
     return "等待对方锁定角色。";
   }
@@ -1179,6 +1361,8 @@ function nextHint(room, side) {
 function render(room = {}) {
   syncCharacterSelects();
   const side = room.viewerSide || uiState.side || getPlayerSide(room, uiState.playerId) || "";
+  uiState.currentRoomMode = room?.mode || uiState.currentRoomMode || "";
+  syncOnlineTeamModeControls();
   if (handleRemovedFromRoom(room)) return;
   const opponent = side ? otherSide(side) : "right";
   const onlinePageActive = isOnlinePageActive();
@@ -1196,10 +1380,11 @@ function render(room = {}) {
       else maybeEnterBattleView(room, side);
     }
   }
-  setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${room.roomId}` : "未加入房间。");
+  const modeLabel = room.mode === "2v2" ? "2V2" : "1V1";
+  setText("#onlineSyncStatus", room.roomId ? `${phaseLabel(room.phase)} · ${modeLabel} · ${room.roomId}` : "未加入房间。");
   setText("#onlineRoomCode", room.roomId || "未创建");
   setText("#onlineCurrentRoomCode", room.roomId || "未创建");
-  setText("#onlinePlayerSide", side === "left" ? "左方房主" : side === "right" ? "右方加入者" : "未加入");
+  setText("#onlinePlayerSide", side === "left" ? "左方房主" : side === "right" ? "右方加入者" : side === "spectator" ? "观战者" : "未加入");
   setText("#onlinePhaseLabel", room.roomId ? phaseLabel(room.phase) : "未开始");
   setText("#onlineOpponentStatus", room.players?.[opponent]?.playerId ? (room.players[opponent].connected ? "已加入" : "离线") : "未加入");
   setText("#onlineTurnLabel", room.round ? `第 ${room.round} 回合` : "未开始");
@@ -1213,6 +1398,7 @@ function render(room = {}) {
   setText("#onlineRightResourceLabel", resourceLabel(room, "right"));
   setText("#onlineNextStepHint", nextHint(room, side || "left"));
   setValue("#onlineInviteLink", room.roomId ? buildInviteLink(room.roomId) : "");
+  syncOnlineCollapsiblePanels(room);
   updateButtons(room, side);
   renderBackendControls();
   renderDebugLog();
@@ -1309,8 +1495,8 @@ function isOnlinePageActive() {
 
 function resourceLabel(room, side) {
   const resource = getOnlineResourceForDisplay(room, side);
-  if (!resource) return "HP / CE / AP：等待战斗";
-  return `HP ${Math.round(Number(resource.hp || 0))} / CE ${Math.round(Number(resource.ce || 0))} / AP ${resource.ap?.current ?? resource.ap ?? "-"}`;
+  if (!resource) return "HP / CE：等待战斗";
+  return `HP ${Math.round(Number(resource.hp || 0))} / CE ${Math.round(Number(resource.ce || 0))}`;
 }
 
 function getOnlineResourceForDisplay(room, side) {
@@ -1324,11 +1510,13 @@ function getOnlineResourceForDisplay(room, side) {
 function updateButtons(room, side) {
   const hasRoom = Boolean(room?.roomId);
   const spectatorMode = side === "spectator";
+  const playerMode = side === "left" || side === "right";
   const isOwner = side === "left" || room?.ownerPlayerId === uiState.playerId;
   const bothLocked = hasBothLockedCharacters(room);
+  const spectatorFull = hasRoom && (room.spectators || []).length >= MAX_ONLINE_SPECTATORS;
   setDisabled("#onlineCopyRoomCodeBtn", !hasRoom);
   setDisabled("#onlineCopyInviteBtn", !hasRoom);
-  setDisabled("#onlineWatchRoomBtn", spectatorMode || (hasRoom && (room.spectators || []).length >= 1));
+  setDisabled("#onlineWatchRoomBtn", spectatorMode || playerMode || spectatorFull);
   setDisabled("#onlineLockCharacterBtn", spectatorMode || bothLocked || !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterId || room.players?.[side]?.characterLocked);
   setDisabled("#onlineUnlockCharacterBtn", spectatorMode || !hasRoom || room.phase !== "preparing" || !room.players?.[side]?.characterLocked);
   setDisabled("#onlineLockTurnBtn", spectatorMode || !hasRoom || room.phase !== "turn_selecting" || room.turnState?.locks?.[side]);
@@ -1340,6 +1528,21 @@ function updateButtons(room, side) {
   setDisabled("#onlineLeaveRoomBtn", !hasRoom);
   setText("#onlineLockTurnBtn", room.phase === "turn_selecting" ? "锁定行动" : "等待对战阶段");
   setText("#onlineResolveTurnBtn", room.phase === "turn_resolving" ? "结算中" : "双方锁定后自动结算");
+}
+
+function syncOnlineCollapsiblePanels(room = {}) {
+  const battleStarted = Boolean(room?.roomId && ["turn_selecting", "turn_resolving", "reviewing", "ended"].includes(room.phase));
+  ["#onlineSyncSettingsDetails", "#onlineRoomSetupDetails"].forEach((selector) => {
+    const node = $(selector);
+    if (!node) return;
+    if (battleStarted && node.dataset.autoCollapsed !== "battle") {
+      node.open = false;
+      node.dataset.autoCollapsed = "battle";
+    } else if (!battleStarted && node.dataset.autoCollapsed === "battle") {
+      node.open = true;
+      node.dataset.autoCollapsed = "prepare";
+    }
+  });
 }
 
 async function renderBackendControls() {
@@ -1363,9 +1566,80 @@ async function renderBackendControls() {
     : "当前未使用官方服务器。");
 }
 
+function uniqueOnlineList(...sources) {
+  return Array.from(new Set(sources.flatMap((source) => Array.isArray(source) ? source : [source])
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)));
+}
+
+function uniqueOnlineObjects(...sources) {
+  const seen = new Set();
+  return sources.flatMap((source) => Array.isArray(source) ? source : [])
+    .filter((item) => item && typeof item === "object")
+    .filter((item) => {
+      const id = String(item.id || item.actionId || item.name || item.label || JSON.stringify(item)).slice(0, 160);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+}
+
+function composeOnlineTeamCharacter(room, side) {
+  if (room?.mode !== "2v2") return null;
+  const player = room.players?.[side];
+  const primary = player?.characterSnapshot || getCharacterById(player?.characterId);
+  const ally = player?.allyCharacterSnapshot || getCharacterById(player?.allyCharacterId);
+  if (!primary || !ally) return null;
+  const teamId = `online_team_${normalizeRoomId(room.roomId)}_${side}`;
+  const primaryName = primary.displayName || primary.name || "主将";
+  const allyName = ally.displayName || ally.name || "队友";
+  const specialHandTags = uniqueOnlineList(primary.specialHandTags, primary["特殊手札"], ally.specialHandTags, ally["特殊手札"]);
+  return sanitizeCharacterSnapshot({
+    ...primary,
+    characterId: teamId,
+    id: teamId,
+    displayName: `${primaryName} / ${allyName}`,
+    name: `${primaryName} / ${allyName}`,
+    customDuel: true,
+    source: "online-2v2-team",
+    onlineTeamMode: "2v2",
+    teamMembers: [sanitizeCharacterSnapshot(primary), sanitizeCharacterSnapshot(ally)],
+    baseStats: { ...(primary.baseStats || {}), ...(ally.baseStats || {}) },
+    hp: Math.max(Number(primary.hp || 0), Number(ally.hp || 0), 1),
+    mp: Math.max(Number(primary.mp || 0), Number(ally.mp || 0), 1),
+    techniqueText: uniqueOnlineList(primary.techniqueText || primary.techniqueName, ally.techniqueText || ally.techniqueName).join(" / "),
+    techniqueName: uniqueOnlineList(primary.techniqueName || primary.techniqueText, ally.techniqueName || ally.techniqueText).join(" / "),
+    domainProfile: uniqueOnlineList(primary.domainProfile, ally.domainProfile).join(" / ") || "无",
+    loadout: uniqueOnlineList(primary.loadout, ally.loadout),
+    innateTraits: uniqueOnlineList(primary.innateTraits, primary.traits, ally.innateTraits, ally.traits, "2V2队伍"),
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    customHandCards: uniqueOnlineObjects(primary.customHandCards, primary.specialHandCards, primary.specialHands, ally.customHandCards, ally.specialHandCards, ally.specialHands),
+    notes: `2V2 队伍：${primaryName} 与 ${allyName}。`
+  });
+}
+
+function ensureOnlineTeamCharacters(room) {
+  if (room?.mode !== "2v2") return {};
+  const leftCard = composeOnlineTeamCharacter(room, "left");
+  const rightCard = composeOnlineTeamCharacter(room, "right");
+  const cards = [leftCard, rightCard].filter(Boolean);
+  if (cards.length && globalThis.JJKDuelRuntime?.importLoginCardCharacters) {
+    globalThis.JJKDuelRuntime.importLoginCardCharacters(cards, {
+      source: "online-2v2",
+      ownerId: `room_${room.roomId || ""}`
+    });
+  }
+  return {
+    left: leftCard?.characterId || "",
+    right: rightCard?.characterId || ""
+  };
+}
+
 function enterBattleView(room, side) {
-  const left = room.players.left.characterId;
-  const right = room.players.right.characterId;
+  const teamIds = ensureOnlineTeamCharacters(room);
+  const left = teamIds.left || room.players.left.characterId;
+  const right = teamIds.right || room.players.right.characterId;
   const leftSelect = $("#duelLeftSelect");
   const rightSelect = $("#duelRightSelect");
   if (leftSelect && [...leftSelect.options].some((option) => option.value === left)) leftSelect.value = left;
@@ -1465,21 +1739,38 @@ function bindUi() {
   });
   $("#onlineTestBackendBtn")?.addEventListener("click", () => testConnection().then((message) => setText("#onlineSyncStatus", message)).catch(showError));
   $("#onlineOfficialTestBtn")?.addEventListener("click", () => testConnection({ backendMode: "official_endpoint" }).then((message) => setText("#onlineOfficialStatus", message)).catch((error) => setText("#onlineOfficialStatus", error.message)));
-  $("#onlineCreateRoomBtn")?.addEventListener("click", () => createRoom({ ...getBackendSettings(), characterId: $("#onlineCreateCharacterSelect")?.value }).then((room) => {
+  $("#onlineCreateRoomBtn")?.addEventListener("click", () => createRoom({
+    ...getBackendSettings(),
+    characterId: $("#onlineCreateCharacterSelect")?.value,
+    allyCharacterId: $("#onlineCreateAllyCharacterSelect")?.value,
+    mode: $("#onlineCreateModeSelect")?.value === "2v2" ? "2v2" : "1v1"
+  }).then((room) => {
     render(room);
     startPolling(room.roomId, "left");
   }).catch(showError));
-  $("#onlineJoinRoomBtn")?.addEventListener("click", () => joinRoom($("#onlineJoinRoomCodeInput")?.value, { ...getBackendSettings(), characterId: $("#onlineJoinCharacterSelect")?.value }).then((room) => {
+  $("#onlineJoinRoomBtn")?.addEventListener("click", () => joinRoom($("#onlineJoinRoomCodeInput")?.value, {
+    ...getBackendSettings(),
+    characterId: $("#onlineJoinCharacterSelect")?.value,
+    allyCharacterId: $("#onlineJoinAllyCharacterSelect")?.value
+  }).then((room) => {
     render(room);
     startPolling(room.roomId, "right");
   }).catch(showError));
-  $("#onlineWatchRoomBtn")?.addEventListener("click", () => watchRoom(uiState.roomId || $("#onlineJoinRoomCodeInput")?.value, { ...getBackendSettings(), playerId: uiState.playerId }).then((room) => {
-    render(room);
-    startPolling(room.roomId, "spectator");
-  }).catch(showError));
+  $("#onlineWatchRoomBtn")?.addEventListener("click", () => {
+    const roomId = normalizeRoomId(uiState.roomId || $("#onlineJoinRoomCodeInput")?.value || "");
+    if (!roomId) {
+      showError(new Error("请先输入房间码，或通过邀请链接进入后再观战。"));
+      return;
+    }
+    watchRoom(roomId, { ...getBackendSettings(), playerId: getOrCreateSpectatorId(), forceSpectator: true }).then((room) => {
+      render(room);
+      startPolling(room.roomId, "spectator");
+    }).catch(showError);
+  });
   $("#onlineCreateCharacterSelect")?.addEventListener("change", () => {
     if (uiState.roomId && uiState.side === "left") selectCharacter(uiState.roomId, "left", $("#onlineCreateCharacterSelect")?.value, { playerId: uiState.playerId }).then(render).catch(showError);
   });
+  $("#onlineCreateModeSelect")?.addEventListener("change", syncOnlineTeamModeControls);
   $("#onlineJoinCharacterSelect")?.addEventListener("change", () => {
     if (uiState.roomId && uiState.side === "right") selectCharacter(uiState.roomId, "right", $("#onlineJoinCharacterSelect")?.value, { playerId: uiState.playerId }).then(render).catch(showError);
   });

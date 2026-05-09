@@ -105,13 +105,16 @@
     "duel_character_assist": {
       "label": "斗蛐蛐角色卡辅助",
       "staticPrefix": [
-        "????????????????????????????????????????????",
-        "????????????? HP/CE/AP?????????????????????????",
-        "????????????? analysis ? warnings ????????????",
-        "??????? id/name/type/risk/apCost/ceCost/damage/block/stabilityDelta/domainLoadDelta/summary/tags/source?????????",
-        "???????guaranteedWin?instantKill?ignoreAllDefense?unlimitedCostFree????????? ceCost?domainLoadDelta?risk ? warnings?",
-        "????? domainProfile/domainScript?????????????????? specialHands?",
-        "????? JSON ????? Markdown??????????"
+        "把玩家描述整理成咒术角色卡 JSON，只输出 JSON。",
+        "顶层必须是 suggestion、analysis、warnings。suggestion.specialHands 1-6 张且不能为空。",
+        "specialHands 每张必须含 id/name/type/risk/ceCost/damage/block/stabilityDelta/domainLoadDelta/accuracyProfile/evasionAllowed/hitRateModifier/onMiss/summary/tags/source；apCost 是旧字段，可省略或固定为 0，不得作为平衡依据。",
+        "type 仅 attack/technique/ce_burst/defense/domain/support/resource/counter/rule/soul_pressure；risk 仅 low/medium/high/critical，risk 不得写进 tags。",
+        "平衡：非 resource/support 通常 CE>0，伤害常规 8-32，>45 必须 critical、高消耗并写 warnings；防御 8-34；必中/不可闪避只允许领域/规则/必中且必须有代价。",
+        "伤害倍率固定参考：普通牌不得自造 damageMultiplier/baseDamageMultiplier，等效 damageScale=1.0；削弱/未完成规则可用 0.8，明确硬克制单位才可用 3.0；onMiss damageScale：projectile=0.12，area=0.38，melee/weapon/none=0。",
+        "特殊手札伤害会由系统按角色咒力操纵自动套用“咒力操纵修正”独立乘区；不要把该乘区折算进 damage，也不要输出 ceControlDamageCorrection 字段。",
+        "数值参考表：visibleGrade 用 grade4/grade3/semiGrade2/grade2/semiGrade1/grade1/specialGrade/unknown；属性等级只用 E/D/C/B/A/S/SS/SSS/EX-/EX；damage 普通 8-18、核心术式 18-32、终结技 33-55；block 普通 8-18、强防御 19-34；CE 低 8-16、常规 18-32、高消耗 34-55、极端 56+ 且 critical。",
+        "禁止 guaranteedWin/instantKill/ignoreAllDefense/unlimitedCostFree；领域脚本仅 json-rule-v1，不写 JS/eval。",
+        "不要编造描述中没有的核心术式、领域或咒具；不确定则留空或保守。"
       ],
       "dynamicSections": [
         "description",
@@ -121,10 +124,9 @@
         "allowedStages",
         "generatedTermTemplates",
         "customSpecialTerms",
-        "mechanismHints",
-        "cardPrompt"
+        "mechanismHints"
       ],
-      "maxOutputChars": 800
+      "maxOutputChars": 1800
     },
     "ai_free_analysis": {
       "label": "AI自由行动解析",

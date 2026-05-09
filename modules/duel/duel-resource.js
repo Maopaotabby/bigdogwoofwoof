@@ -261,6 +261,26 @@
     return typeof getBattle === "function" ? getBattle() : null;
   }
 
+  function getBattlefieldUnitHp(unit) {
+    var hp = Number(unit?.hp ?? unit?.currentHp ?? unit?.unitStats?.currentHp ?? unit?.unitStats?.maxHp ?? 0);
+    return Number.isFinite(hp) ? Math.max(0, hp) : 0;
+  }
+
+  function isMahoragaProxyProtectingSide(battle, side) {
+    var proxy = battle?.mahoragaProxy?.[side];
+    if (!proxy?.active) return false;
+    if (!proxy.unitId) return true;
+    return (Array.isArray(battle?.battlefieldUnits) ? battle.battlefieldUnits : []).some(function findProxyUnit(unit) {
+      return unit?.id === proxy.unitId && unit.active !== false && unit.defeated !== true && getBattlefieldUnitHp(unit) > 0;
+    });
+  }
+
+  function isDuelResourceDefeated(resource, battle, side) {
+    if (!resource) return true;
+    if (Number(resource.hp || 0) > 0) return false;
+    return !isMahoragaProxyProtectingSide(battle, side || resource.side || "");
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -501,10 +521,28 @@
     return null;
   }
 
+  function getDuelTemporaryResourceCap(resource, key, maxKey) {
+    var max = Math.max(0, Number(resource?.[maxKey] || 0));
+    var extra = Math.max(0, Number(resource?.[key] || 0));
+    return max + extra;
+  }
+
+  function syncDuelTemporaryResourceCap(resource, valueKey, maxKey, capKey) {
+    var max = Math.max(0, Number(resource?.[maxKey] || 0));
+    var value = Math.max(0, Number(resource?.[valueKey] || 0));
+    if (value > max) {
+      resource[capKey] = Number((value - max).toFixed(1));
+    } else {
+      delete resource[capKey];
+    }
+  }
+
   function clampDuelResource(resource) {
     if (!resource) return;
-    resource.hp = Number(clamp(resource.hp, 0, resource.maxHp).toFixed(1));
-    resource.ce = Number(clamp(resource.ce, 0, resource.maxCe).toFixed(1));
+    resource.hp = Number(clamp(resource.hp, 0, getDuelTemporaryResourceCap(resource, "temporaryHpOverCap", "maxHp")).toFixed(1));
+    resource.ce = Number(clamp(resource.ce, 0, getDuelTemporaryResourceCap(resource, "temporaryCeOverCap", "maxCe")).toFixed(1));
+    syncDuelTemporaryResourceCap(resource, "hp", "maxHp", "temporaryHpOverCap");
+    syncDuelTemporaryResourceCap(resource, "ce", "maxCe", "temporaryCeOverCap");
     if (resource.domain && resource.domain.threshold > 0) {
       resource.domain.load = Number(Math.max(0, resource.domain.load || 0).toFixed(1));
       resource.domain.meltdownRisk = Number(clamp(resource.domain.load / resource.domain.threshold, 0, 1.5).toFixed(4));
@@ -517,37 +555,60 @@
   function applyDuelRoundResourceRegen(actor, battle, side) {
     var rules;
     var before;
+    var beforeHp;
     var regenBlocked;
     var jackpotState;
     var regenPenalty = 0;
+    var regenBonus = 0;
     var blockedConfig;
     var regenScale;
     var amount;
     var jackpotHeal;
+    var actualJackpotHeal = 0;
     var actual;
 
     if (typeof battle === "undefined") battle = getCurrentDuelBattle();
     if (typeof side === "undefined") side = actor && actor.side;
     if (!actor || !battle) return 0;
+    if (isDuelResourceDefeated(actor, battle, side)) {
+      clampDuelResource(actor);
+      return 0;
+    }
 
     rules = getDuelResourceRulesSafe();
     before = Number(actor.ce || 0);
+    beforeHp = Number(actor.hp || 0);
     regenBlocked = getDuelStatusEffectValue(actor, "ceRegenBlocked");
     jackpotState = getDuelStatusEffectValue(actor, "jackpotStateCandidate");
     (actor.statusEffects || []).forEach(function (effect) {
       var value;
+      var triggerRound;
+      triggerRound = Number(effect.triggerRound || 0);
+      if (triggerRound && triggerRound > Number(battle.round || 0)) return;
       if (effect.id !== "ceRegenInterference") return;
       value = Number(effect.value || 0);
       if (value > regenPenalty) regenPenalty = value;
     });
+    (actor.statusEffects || []).forEach(function (effect) {
+      var value;
+      var triggerRound;
+      triggerRound = Number(effect.triggerRound || 0);
+      if (triggerRound && triggerRound > Number(battle.round || 0)) return;
+      if (effect.id !== "ceRegenBoost") return;
+      value = Number(effect.value ?? effect.regenScaleBonus ?? 0);
+      if (value > regenBonus) regenBonus = value;
+    });
     blockedConfig = rules.statusEffects && rules.statusEffects.ceRegenBlocked || {};
     regenScale = regenBlocked > 0
       ? Number(blockedConfig.regenScale != null ? blockedConfig.regenScale : 0)
-      : clamp(1 - regenPenalty + jackpotState * 1.35, 0.25, 2.8);
+      : clamp(1 - regenPenalty + regenBonus + jackpotState * 1.35, 0.25, 2.8);
     amount = Number((actor.ceRegen * regenScale).toFixed(1));
-    actor.ce = Math.min(actor.maxCe, before + amount);
+    actor.ce = Math.min(getDuelTemporaryResourceCap(actor, "temporaryCeOverCap", "maxCe"), before + amount);
     jackpotHeal = jackpotState > 0 ? Number((actor.maxHp * 0.045 * jackpotState).toFixed(1)) : 0;
-    if (jackpotHeal > 0) actor.hp = Math.min(actor.maxHp, Number(actor.hp || 0) + jackpotHeal);
+    if (jackpotHeal > 0 && !isDuelResourceDefeated(actor, battle, side)) {
+      actor.hp = Math.min(getDuelTemporaryResourceCap(actor, "temporaryHpOverCap", "maxHp"), Number(actor.hp || 0) + jackpotHeal);
+      actualJackpotHeal = Math.max(0, Number((Number(actor.hp || 0) - beforeHp).toFixed(1)));
+    }
     actor.statusEffects = (actor.statusEffects || [])
       .filter(function resolveStrictDomainPendingDamage(effect) {
         var damage;
@@ -593,18 +654,18 @@
       recordDuelResourceChange(battle, {
         side: side,
         title: "咒力回流",
-        detail: getDuelResourceSideLabel(side) + actor.name + " 回流 " + formatNumber(actual) + " 咒力；当前 " + formatNumber(actor.ce) + " / " + formatNumber(actor.maxCe) + "。",
+        detail: getDuelResourceSideLabel(side) + actor.name + " 回流 " + formatNumber(actual) + " 咒力" + (regenBonus > 0 ? "（咒力流淌 +" + formatNumber(regenBonus * 100) + "%）" : "") + "；当前 " + formatNumber(actor.ce) + " / " + formatNumber(actor.maxCe) + "。",
         type: "resource",
-        delta: { ce: actual }
+        delta: { ce: actual, regenBoost: regenBonus > 0 ? Number(regenBonus.toFixed(4)) : undefined }
       });
     }
-    if (jackpotHeal > 0) {
+    if (actualJackpotHeal > 0) {
       recordDuelResourceChange(battle, {
         side: side,
         title: "jackpot 回流",
-        detail: getDuelResourceSideLabel(side) + actor.name + " 的 jackpot 状态候选扩大回流，体势恢复 " + formatNumber(jackpotHeal) + "，咒力回流倍率 " + formatNumber(regenScale) + "。",
+        detail: getDuelResourceSideLabel(side) + actor.name + " 的 jackpot 状态候选扩大回流，体势恢复 " + formatNumber(actualJackpotHeal) + "，咒力回流倍率 " + formatNumber(regenScale) + "。",
         type: "subphase",
-        delta: { hp: jackpotHeal, jackpotRegenScale: Number(regenScale.toFixed(2)) }
+        delta: { hp: actualJackpotHeal, jackpotRegenScale: Number(regenScale.toFixed(2)) }
       });
     }
     return actual;

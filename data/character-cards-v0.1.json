@@ -31,7 +31,7 @@
       "domainProfile": "顶级领域：无量空处",
       "officialGrade": "特级",
       "powerTier": "canonCeiling",
-      "notes": "六眼锁定咒力操纵与效率 SSS；强度核心不是咒力总量 EX。",
+      "notes": "六眼独立于无下限，运行时使咒力操纵提升一阶；强度核心不是咒力总量 EX。",
       "domainScript": {
         "id": "gojo-unlimited-void",
         "language": "json-rule-v1",
@@ -75,6 +75,9 @@
         "limitless"
       ],
       "specialHandTags": [
+        "limitless"
+      ],
+      "specialhandTags": [
         "limitless"
       ]
     },
@@ -145,6 +148,9 @@
       ],
       "specialHandTags": [
         "shrine"
+      ],
+      "specialhandTags": [
+        "shrine"
       ]
     },
     {
@@ -171,7 +177,8 @@
       "powerTier": "postCanonException",
       "notes": "68年后虎杖；半人半咒灵、不老/咒物沉淀、随意黑闪。EX锚点主要体现在咒力操纵与悟性，不把咒力总量写成 EX。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "takaba_fumihiko_culling",
@@ -194,6 +201,9 @@
         "comedian"
       ],
       "specialHandTags": [
+        "comedian"
+      ],
+      "specialhandTags": [
         "comedian"
       ]
     },
@@ -222,7 +232,8 @@
       "powerTier": "topTierPhysical",
       "notes": "完整咒具构筑可越级击杀；零咒力让领域必中自动攻击无效。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "toji_fushiguro_shibuya_revenant",
@@ -246,7 +257,8 @@
       "powerTier": "topTierPhysical",
       "notes": "意识不清且只持游云仍能进入陀艮领域并击杀目标，是领域非自动胜利的校准锚点。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "maki_zenin_culling",
@@ -270,7 +282,8 @@
       "powerTier": "topTierPhysical",
       "notes": "领域必中自动攻击无效；释魂刀需要灵魂感知才能完全兑现。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "yuta_okkotsu_volume0_true_rika",
@@ -296,6 +309,9 @@
       ],
       "specialHandTags": [
         "copy"
+      ],
+      "specialhandTags": [
+        "copy"
       ]
     },
     {
@@ -319,6 +335,9 @@
       ],
       "specialHandTags": [
         "curse_spirit_manipulation"
+      ],
+      "specialhandTags": [
+        "curse_spirit_manipulation"
       ]
     },
     {
@@ -335,20 +354,31 @@
       },
       "domainProfile": "无领域",
       "innateTraits": [
-        "电荷咒力"
+        "电荷咒力",
+        "弥虚葛笼"
       ],
       "techniquePower": "SSS",
       "officialGrade": "特级古代术师",
       "visibleGrade": "specialGrade",
       "powerTier": "topTier",
-      "notes": "400年前最强且不会领域；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。",
+      "notes": "400年前最强且不会领域；掌握弥虚葛笼作为反领域手段；电荷咒力/雷电属性本身是输出与必中式放电强度来源，证明领域不是强者硬性门槛。",
       "????": [
         "mythical_beast_amber",
-        "kashimo_mythical_beast"
+        "kashimo_mythical_beast",
+        "hollow_wicker_basket"
       ],
       "specialHandTags": [
         "mythical_beast_amber",
-        "kashimo_mythical_beast"
+        "kashimo_mythical_beast",
+        "hollow_wicker_basket"
+      ],
+      "特殊手札": [
+        "hollow_wicker_basket"
+      ],
+      "specialhandTags": [
+        "mythical_beast_amber",
+        "kashimo_mythical_beast",
+        "hollow_wicker_basket"
       ]
     },
     {
@@ -410,7 +440,14 @@
         "domainCompletion": "conditional"
       },
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [
+        "idle_death_gamble",
+        "hakari_jackpot_owner"
+      ],
+      "specialhandTags": [
+        "idle_death_gamble",
+        "hakari_jackpot_owner"
+      ]
     },
     {
       "characterId": "uraume_shinjuku",
@@ -432,6 +469,9 @@
         "ice_formation"
       ],
       "specialHandTags": [
+        "ice_formation"
+      ],
+      "specialhandTags": [
         "ice_formation"
       ]
     },
@@ -456,6 +496,9 @@
       ],
       "specialHandTags": [
         "embodied_killing_intent_light"
+      ],
+      "specialhandTags": [
+        "embodied_killing_intent_light"
       ]
     },
     {
@@ -478,6 +521,9 @@
         "chaos_and_harmony"
       ],
       "specialHandTags": [
+        "chaos_and_harmony"
+      ],
+      "specialhandTags": [
         "chaos_and_harmony"
       ]
     },
@@ -507,6 +553,9 @@
       ],
       "specialHandTags": [
         "copy"
+      ],
+      "specialhandTags": [
+        "copy"
       ]
     },
     {
@@ -528,6 +577,9 @@
         "chaos_and_harmony"
       ],
       "specialHandTags": [
+        "chaos_and_harmony"
+      ],
+      "specialhandTags": [
         "chaos_and_harmony"
       ]
     },
@@ -555,6 +607,9 @@
         "copy"
       ],
       "specialHandTags": [
+        "copy"
+      ],
+      "specialhandTags": [
         "copy"
       ]
     },
@@ -621,6 +676,9 @@
         "disaster_flames"
       ],
       "specialHandTags": [
+        "disaster_flames"
+      ],
+      "specialhandTags": [
         "disaster_flames"
       ]
     },
@@ -691,6 +749,9 @@
       ],
       "specialHandTags": [
         "idle_transfiguration"
+      ],
+      "specialhandTags": [
+        "idle_transfiguration"
       ]
     },
     {
@@ -756,6 +817,9 @@
         "disaster_plants"
       ],
       "specialHandTags": [
+        "disaster_plants"
+      ],
+      "specialhandTags": [
         "disaster_plants"
       ]
     },
@@ -824,6 +888,9 @@
       ],
       "specialHandTags": [
         "disaster_tides"
+      ],
+      "specialhandTags": [
+        "disaster_tides"
       ]
     },
     {
@@ -890,6 +957,9 @@
       ],
       "specialHandTags": [
         "projection_sorcery"
+      ],
+      "specialhandTags": [
+        "projection_sorcery"
       ]
     },
     {
@@ -952,7 +1022,8 @@
         "source": "v2.3-domain-remake"
       },
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "choso_shibuya_culling",
@@ -979,6 +1050,9 @@
         "blood_manipulation"
       ],
       "specialHandTags": [
+        "blood_manipulation"
+      ],
+      "specialhandTags": [
         "blood_manipulation"
       ]
     },
@@ -1058,6 +1132,13 @@
         "anti_gravity_system",
         "ganesha_obstacle_removal",
         "ganesh_obstacle_removal"
+      ],
+      "specialhandTags": [
+        "body_hopping",
+        "curse_spirit_manipulation",
+        "anti_gravity_system",
+        "ganesha_obstacle_removal",
+        "ganesh_obstacle_removal"
       ]
     },
     {
@@ -1125,6 +1206,9 @@
       ],
       "specialHandTags": [
         "star_rage"
+      ],
+      "specialhandTags": [
+        "star_rage"
       ]
     },
     {
@@ -1191,6 +1275,9 @@
       ],
       "specialHandTags": [
         "copy"
+      ],
+      "specialhandTags": [
+        "copy"
       ]
     },
     {
@@ -1216,7 +1303,14 @@
       "powerTier": "topTier",
       "notes": "新宿后段的灵魂打击和黑闪连锁锚点；不是68年后EX状态。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [
+        "yuji_soul_melee",
+        "hutian_black_flash"
+      ],
+      "specialhandTags": [
+        "yuji_soul_melee",
+        "hutian_black_flash"
+      ]
     },
     {
       "characterId": "megumi_fushiguro_culling",
@@ -1279,7 +1373,12 @@
         "domainCompletion": "incomplete"
       },
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [
+        "ten_shadows"
+      ],
+      "specialhandTags": [
+        "ten_shadows"
+      ]
     },
     {
       "characterId": "higuruma_hiromi_culling",
@@ -1344,7 +1443,12 @@
         "barrierType": "rule_barrier"
       },
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [
+        "higuruma_trial_owner"
+      ],
+      "specialhandTags": [
+        "higuruma_trial_owner"
+      ]
     },
     {
       "characterId": "yorozu_heian_vessel",
@@ -1410,6 +1514,9 @@
         "construction"
       ],
       "specialHandTags": [
+        "construction"
+      ],
+      "specialhandTags": [
         "construction"
       ]
     },
@@ -1478,6 +1585,9 @@
       ],
       "specialHandTags": [
         "sky_manipulation"
+      ],
+      "specialhandTags": [
+        "sky_manipulation"
       ]
     },
     {
@@ -1545,6 +1655,9 @@
       ],
       "specialHandTags": [
         "granite_blast"
+      ],
+      "specialhandTags": [
+        "granite_blast"
       ]
     },
     {
@@ -1569,7 +1682,8 @@
       "powerTier": "supportHax",
       "notes": "术式消灭和雅各布天梯对受肉/结界/术式体系有高扰动；正面单挑基础不按顶级肉搏处理。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "todo_aoi_shibuya",
@@ -1594,6 +1708,9 @@
         "boogie_woogie"
       ],
       "specialHandTags": [
+        "boogie_woogie"
+      ],
+      "specialhandTags": [
         "boogie_woogie"
       ]
     },
@@ -1621,6 +1738,9 @@
       ],
       "specialHandTags": [
         "ratio_technique"
+      ],
+      "specialhandTags": [
+        "ratio_technique"
       ]
     },
     {
@@ -1644,7 +1764,8 @@
       "powerTier": "grade1Plus",
       "notes": "无生得术式但新阴流和简易领域极稳；适合作为非术式型一级上位锚点。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "mei_mei_shibuya",
@@ -1669,6 +1790,9 @@
         "black_bird_manipulation"
       ],
       "specialHandTags": [
+        "black_bird_manipulation"
+      ],
+      "specialhandTags": [
         "black_bird_manipulation"
       ]
     },
@@ -1697,6 +1821,9 @@
       ],
       "specialHandTags": [
         "straw_doll_technique"
+      ],
+      "specialhandTags": [
+        "straw_doll_technique"
       ]
     },
     {
@@ -1723,6 +1850,9 @@
       ],
       "specialHandTags": [
         "cursed_speech"
+      ],
+      "specialhandTags": [
+        "cursed_speech"
       ]
     },
     {
@@ -1746,7 +1876,8 @@
       "powerTier": "grade2Plus",
       "notes": "咒骸肉体强于普通学生，术式侧不作为主要胜路。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "miguel_volume0",
@@ -1768,7 +1899,8 @@
       "powerTier": "specialGrade",
       "notes": "按用户确认提升为特级战力口径；特级定位来自能与五条长期缠斗的肉体系、体术与黑绳构筑，不等于特级术式输出。",
       "????": [],
-      "specialHandTags": []
+      "specialHandTags": [],
+      "specialhandTags": []
     },
     {
       "characterId": "reggie_star_culling",
@@ -1793,7 +1925,8 @@
       "specialHandTags": [],
       "domainProfile": "无",
       "notes": "再契象以收据/契约再具象化实物或服务；实物可短暂控制，按低到中血量道具式神/战场单位处理。一户建属于高伤害慢速压杀牌。",
-      "????": []
+      "????": [],
+      "specialhandTags": []
     }
   ]
 }

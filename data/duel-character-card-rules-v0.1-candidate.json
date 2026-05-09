@@ -142,7 +142,7 @@
       ]
     },
     "gojo_limitless": {
-      "label": "五条 / 无下限 / 六眼",
+      "label": "五条 / 无下限",
       "profilePatch": {
         "hasCe": true,
         "hasInnateTechnique": true,
@@ -151,7 +151,6 @@
       "allowTags": [
         "五条",
         "无下限",
-        "六眼",
         "苍",
         "赫",
         "无量空处",
@@ -165,7 +164,6 @@
       "weightBoostTags": [
         "五条",
         "无下限",
-        "六眼",
         "苍",
         "赫",
         "无量空处"

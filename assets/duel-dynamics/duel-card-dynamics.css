@@ -1,0 +1,3139 @@
+.duel-visual-settings {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid rgba(47, 111, 104, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.82);
+  box-shadow: var(--shadow-sm);
+}
+
+.duel-visual-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.duel-skin-import-field {
+  min-width: 0;
+}
+
+.duel-skin-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.duel-skin-preview-card {
+  display: grid;
+  gap: 3px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper-strong);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.duel-skin-preview-card strong {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.duel-skin-preview-card span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+#duelVisualSettingsStatus[data-status="warning"] {
+  color: #9a6700;
+}
+
+#duelVisualSettingsStatus[data-status="error"] {
+  color: var(--accent);
+}
+
+.update-modal[hidden] {
+  display: none !important;
+}
+
+.update-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.update-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 18, 16, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.update-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  padding: 20px;
+  border: 1px solid rgba(246, 211, 101, 0.44);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255, 253, 247, 0.98), rgba(242, 239, 231, 0.96)),
+    var(--paper-strong);
+  color: var(--ink);
+  box-shadow: 0 28px 70px rgba(16, 16, 15, 0.34);
+}
+
+.update-modal-head {
+  display: grid;
+  gap: 8px;
+}
+
+.update-modal-head h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.18;
+}
+
+.update-modal-card ul {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding-left: 18px;
+  padding-right: 6px;
+  line-height: 1.55;
+}
+
+.update-modal-card .primary {
+  justify-self: end;
+  align-self: end;
+}
+
+body.update-modal-open {
+  overflow: hidden;
+}
+
+body.duel-theme-dark {
+  --bg: #10100f;
+  --paper: #171613;
+  --paper-strong: #201d18;
+  --ink: #f4efe6;
+  --muted: #b8b0a4;
+  --line: #4a4339;
+  --line-dark: #6a5d4c;
+  --panel: #1b1915;
+  --panel-2: #242119;
+  --accent: #e15b4f;
+  --accent-dark: #a9342e;
+  --accent-2: #2dd4bf;
+  --accent-3: #a9c1ff;
+  --soft: #2a261f;
+  --stamp: #f6d365;
+  --folder: #7b663a;
+  --warn: #f4bc45;
+  --custom: #f6d365;
+  --custom-bg: #2f2610;
+  --custom-line: #927d40;
+  --shadow-sm: 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.24);
+  --shadow-lg: 0 24px 58px rgba(0, 0, 0, 0.38);
+  --focus: 0 0 0 3px rgba(45, 212, 191, 0.24);
+  background: #10100f !important;
+  background-image: none !important;
+}
+
+body.duel-theme-dark::before {
+  display: none !important;
+  background: none !important;
+}
+
+body.duel-theme-dark .topbar,
+body.duel-theme-dark .panel,
+body.duel-theme-dark .global-settings-panel,
+body.duel-theme-dark .duel-visual-settings,
+body.duel-theme-dark .duel-debug-panel,
+body.duel-theme-dark .duel-action-panel,
+body.duel-theme-dark .duel-resource-side,
+body.duel-theme-dark .duel-round-panel,
+body.duel-theme-dark .duel-tactic-panel,
+body.duel-theme-dark .duel-residual-log,
+body.duel-theme-dark .duel-beta-feedback-panel,
+body.duel-theme-dark .duel-battlefield-units,
+body.duel-theme-dark .online-alpha-section,
+body.duel-theme-dark .online-room-card,
+body.duel-theme-dark .jjk-battle-home-card,
+body.duel-theme-dark .jjk-battle-info-grid article,
+body.duel-theme-dark .online-player-grid article {
+  border-color: rgba(246, 211, 101, 0.18);
+  background: rgba(28, 26, 22, 0.92);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+}
+
+body.duel-theme-dark .tab,
+body.duel-theme-dark .jjk-battle-tab,
+body.duel-theme-dark .secondary,
+body.duel-theme-dark .mini {
+  border-color: rgba(246, 211, 101, 0.22);
+  background: rgba(36, 33, 27, 0.92);
+  color: var(--ink);
+}
+
+body.duel-theme-dark .tab.active,
+body.duel-theme-dark .jjk-battle-tab.active,
+body.duel-theme-dark .duel-tactic.active {
+  border-color: rgba(45, 212, 191, 0.46);
+  background: rgba(20, 83, 76, 0.42);
+  color: #f0fdfa;
+}
+
+body.duel-theme-dark .field input,
+body.duel-theme-dark .field select,
+body.duel-theme-dark .field textarea,
+body.duel-theme-dark .wheel-setting-field input,
+body.duel-theme-dark .online-invite-field input {
+  border-color: rgba(246, 211, 101, 0.24);
+  background: #15130f;
+  color: var(--ink);
+}
+
+body.duel-theme-dark .duel-action-choice,
+body.duel-theme-dark .duel-hand-detail,
+body.duel-theme-dark .duel-card-developer-details,
+body.duel-theme-dark .duel-hand-debug,
+body.duel-theme-dark .duel-domain-profile-card {
+  border-color: rgba(246, 211, 101, 0.18);
+  background: rgba(26, 24, 20, 0.92);
+  color: var(--ink);
+}
+
+body.duel-theme-dark .duel-action-subtitle,
+body.duel-theme-dark .duel-action-numeric-brief,
+body.duel-theme-dark .duel-action-choice span:not(.duel-action-title),
+body.duel-theme-dark .duel-action-status,
+body.duel-theme-dark .duel-hand-detail,
+body.duel-theme-dark .duel-skin-preview-card span {
+  color: var(--muted) !important;
+}
+
+body.duel-theme-dark .update-modal-card {
+  background: #181a20;
+  background-image: none;
+  color: var(--ink);
+}
+
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-template,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-template,
+body.duel-card-skin-v224 .duel-hand-card:not(.duel-skin-special):not(.duel-skin-domain):not(.duel-skin-summon):not(.duel-skin-mahoraga):not(.duel-skin-trial),
+body.duel-card-skin-custom .duel-hand-card:not(.duel-skin-special):not(.duel-skin-domain):not(.duel-skin-summon):not(.duel-skin-mahoraga):not(.duel-skin-trial),
+.duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg: linear-gradient(135deg, #fffdf7 0%, #f3eddf 58%, #e8dfc8 100%);
+  --card-skin-border: #c4ab70;
+  --card-skin-accent: #946313;
+  --card-skin-text: #241c18;
+  --card-skin-muted: #655a49;
+  --card-skin-glow: rgba(148, 99, 19, 0.18);
+}
+
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-special,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-special,
+.duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg: linear-gradient(135deg, #251211 0%, #431916 55%, #6c241c 100%);
+  --card-skin-border: #d16a55;
+  --card-skin-accent: #ffd166;
+  --card-skin-text: #fff7e6;
+  --card-skin-muted: #f2c5a5;
+  --card-skin-glow: rgba(225, 91, 79, 0.30);
+}
+
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-domain,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-domain,
+.duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg: linear-gradient(135deg, #171435 0%, #2b1d55 54%, #4a2b86 100%);
+  --card-skin-border: #9f7aea;
+  --card-skin-accent: #f6d365;
+  --card-skin-text: #fbf7ff;
+  --card-skin-muted: #ddceff;
+  --card-skin-glow: rgba(159, 122, 234, 0.32);
+}
+
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-summon,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-summon,
+.duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg: linear-gradient(135deg, #0e2d2a 0%, #153b47 55%, #193f64 100%);
+  --card-skin-border: #2dd4bf;
+  --card-skin-accent: #99f6e4;
+  --card-skin-text: #ecfeff;
+  --card-skin-muted: #b7e8e2;
+  --card-skin-glow: rgba(45, 212, 191, 0.26);
+}
+
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-mahoraga,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-mahoraga,
+.duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg: linear-gradient(135deg, #050505 0%, #15130d 48%, #3e3212 100%);
+  --card-skin-border: #f6d365;
+  --card-skin-accent: #ffe8a3;
+  --card-skin-text: #fff7cc;
+  --card-skin-muted: #e9cf82;
+  --card-skin-glow: rgba(246, 211, 101, 0.38);
+}
+
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-trial,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-trial,
+.duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg: linear-gradient(135deg, #f9f5ee 0%, #e2d7c8 54%, #b9aa96 100%);
+  --card-skin-border: #6b1f1a;
+  --card-skin-accent: #b42318;
+  --card-skin-text: #241c18;
+  --card-skin-muted: #6c5b4f;
+  --card-skin-glow: rgba(180, 35, 24, 0.20);
+}
+
+body.duel-card-skin-custom .duel-hand-card.duel-skin-template,
+body.duel-card-skin-custom .duel-hand-card:not(.duel-skin-special):not(.duel-skin-domain):not(.duel-skin-summon):not(.duel-skin-mahoraga):not(.duel-skin-trial),
+.duel-hand-card.duel-card-skin-custom.duel-skin-template {
+  --card-skin-bg: var(--duel-skin-template-bg, linear-gradient(135deg, #fffdf7, #f3eddf));
+  --card-skin-border: var(--duel-skin-template-border, #c4ab70);
+  --card-skin-accent: var(--duel-skin-template-accent, #946313);
+  --card-skin-text: var(--duel-skin-template-text, #241c18);
+  --card-skin-muted: var(--duel-skin-template-muted, #655a49);
+  --card-skin-glow: var(--duel-skin-template-glow, rgba(148, 99, 19, 0.18));
+}
+
+body.duel-card-skin-custom .duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg: var(--duel-skin-template-bg, linear-gradient(135deg, #fffdf7, #f3eddf));
+  --card-skin-border: var(--duel-skin-template-border, #c4ab70);
+  --card-skin-accent: var(--duel-skin-template-accent, #946313);
+  --card-skin-text: var(--duel-skin-template-text, #241c18);
+  --card-skin-muted: var(--duel-skin-template-muted, #655a49);
+  --card-skin-glow: var(--duel-skin-template-glow, rgba(148, 99, 19, 0.18));
+}
+
+body.duel-card-skin-custom .duel-hand-card.duel-skin-special,
+.duel-hand-card.duel-card-skin-custom.duel-skin-special {
+  --card-skin-bg: var(--duel-skin-special-bg, linear-gradient(135deg, #251211, #431916));
+  --card-skin-border: var(--duel-skin-special-border, #d16a55);
+  --card-skin-accent: var(--duel-skin-special-accent, #ffd166);
+  --card-skin-text: var(--duel-skin-special-text, #fff7e6);
+  --card-skin-muted: var(--duel-skin-special-muted, #f2c5a5);
+  --card-skin-glow: var(--duel-skin-special-glow, rgba(225, 91, 79, 0.30));
+}
+
+body.duel-card-skin-custom .duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg: var(--duel-skin-special-bg, linear-gradient(135deg, #251211, #431916));
+  --card-skin-border: var(--duel-skin-special-border, #d16a55);
+  --card-skin-accent: var(--duel-skin-special-accent, #ffd166);
+  --card-skin-text: var(--duel-skin-special-text, #fff7e6);
+  --card-skin-muted: var(--duel-skin-special-muted, #f2c5a5);
+  --card-skin-glow: var(--duel-skin-special-glow, rgba(225, 91, 79, 0.30));
+}
+
+body.duel-card-skin-custom .duel-hand-card.duel-skin-domain,
+.duel-hand-card.duel-card-skin-custom.duel-skin-domain {
+  --card-skin-bg: var(--duel-skin-domain-bg, linear-gradient(135deg, #171435, #3b236d));
+  --card-skin-border: var(--duel-skin-domain-border, #9f7aea);
+  --card-skin-accent: var(--duel-skin-domain-accent, #f6d365);
+  --card-skin-text: var(--duel-skin-domain-text, #fbf7ff);
+  --card-skin-muted: var(--duel-skin-domain-muted, #ddceff);
+  --card-skin-glow: var(--duel-skin-domain-glow, rgba(159, 122, 234, 0.32));
+}
+
+body.duel-card-skin-custom .duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg: var(--duel-skin-domain-bg, linear-gradient(135deg, #171435, #3b236d));
+  --card-skin-border: var(--duel-skin-domain-border, #9f7aea);
+  --card-skin-accent: var(--duel-skin-domain-accent, #f6d365);
+  --card-skin-text: var(--duel-skin-domain-text, #fbf7ff);
+  --card-skin-muted: var(--duel-skin-domain-muted, #ddceff);
+  --card-skin-glow: var(--duel-skin-domain-glow, rgba(159, 122, 234, 0.32));
+}
+
+body.duel-card-skin-custom .duel-hand-card.duel-skin-summon,
+.duel-hand-card.duel-card-skin-custom.duel-skin-summon {
+  --card-skin-bg: var(--duel-skin-summon-bg, linear-gradient(135deg, #0e2d2a, #153b47));
+  --card-skin-border: var(--duel-skin-summon-border, #2dd4bf);
+  --card-skin-accent: var(--duel-skin-summon-accent, #99f6e4);
+  --card-skin-text: var(--duel-skin-summon-text, #ecfeff);
+  --card-skin-muted: var(--duel-skin-summon-muted, #b7e8e2);
+  --card-skin-glow: var(--duel-skin-summon-glow, rgba(45, 212, 191, 0.26));
+}
+
+body.duel-card-skin-custom .duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg: var(--duel-skin-summon-bg, linear-gradient(135deg, #0e2d2a, #153b47));
+  --card-skin-border: var(--duel-skin-summon-border, #2dd4bf);
+  --card-skin-accent: var(--duel-skin-summon-accent, #99f6e4);
+  --card-skin-text: var(--duel-skin-summon-text, #ecfeff);
+  --card-skin-muted: var(--duel-skin-summon-muted, #b7e8e2);
+  --card-skin-glow: var(--duel-skin-summon-glow, rgba(45, 212, 191, 0.26));
+}
+
+body.duel-card-skin-custom .duel-hand-card.duel-skin-mahoraga,
+.duel-hand-card.duel-card-skin-custom.duel-skin-mahoraga {
+  --card-skin-bg: var(--duel-skin-mahoraga-bg, linear-gradient(135deg, #050505, #3e3212));
+  --card-skin-border: var(--duel-skin-mahoraga-border, #f6d365);
+  --card-skin-accent: var(--duel-skin-mahoraga-accent, #ffe8a3);
+  --card-skin-text: var(--duel-skin-mahoraga-text, #fff7cc);
+  --card-skin-muted: var(--duel-skin-mahoraga-muted, #e9cf82);
+  --card-skin-glow: var(--duel-skin-mahoraga-glow, rgba(246, 211, 101, 0.38));
+}
+
+body.duel-card-skin-custom .duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg: var(--duel-skin-mahoraga-bg, linear-gradient(135deg, #050505, #3e3212));
+  --card-skin-border: var(--duel-skin-mahoraga-border, #f6d365);
+  --card-skin-accent: var(--duel-skin-mahoraga-accent, #ffe8a3);
+  --card-skin-text: var(--duel-skin-mahoraga-text, #fff7cc);
+  --card-skin-muted: var(--duel-skin-mahoraga-muted, #e9cf82);
+  --card-skin-glow: var(--duel-skin-mahoraga-glow, rgba(246, 211, 101, 0.38));
+}
+
+body.duel-card-skin-custom .duel-hand-card.duel-skin-trial,
+.duel-hand-card.duel-card-skin-custom.duel-skin-trial {
+  --card-skin-bg: var(--duel-skin-trial-bg, linear-gradient(135deg, #f9f5ee, #b9aa96));
+  --card-skin-border: var(--duel-skin-trial-border, #6b1f1a);
+  --card-skin-accent: var(--duel-skin-trial-accent, #b42318);
+  --card-skin-text: var(--duel-skin-trial-text, #241c18);
+  --card-skin-muted: var(--duel-skin-trial-muted, #6c5b4f);
+  --card-skin-glow: var(--duel-skin-trial-glow, rgba(180, 35, 24, 0.20));
+}
+
+body.duel-card-skin-custom .duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg: var(--duel-skin-trial-bg, linear-gradient(135deg, #f9f5ee, #b9aa96));
+  --card-skin-border: var(--duel-skin-trial-border, #6b1f1a);
+  --card-skin-accent: var(--duel-skin-trial-accent, #b42318);
+  --card-skin-text: var(--duel-skin-trial-text, #241c18);
+  --card-skin-muted: var(--duel-skin-trial-muted, #6c5b4f);
+  --card-skin-glow: var(--duel-skin-trial-glow, rgba(180, 35, 24, 0.20));
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: var(--card-skin-border);
+  background: var(--card-skin-bg);
+  color: var(--card-skin-text);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-skin-border) 34%, transparent), 0 12px 26px var(--card-skin-glow);
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-choice::before,
+body.duel-card-skin-custom .duel-hand-card .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 38%, rgba(255, 255, 255, 0.18) 48%, transparent 58%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 14px);
+  opacity: 0.52;
+  transform: translateX(-18%);
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-choice > *,
+body.duel-card-skin-custom .duel-hand-card .duel-action-choice > *,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-title,
+body.duel-card-skin-custom .duel-hand-card .duel-action-title,
+.duel-hand-card.duel-card-skin-custom .duel-action-title,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-subtitle,
+body.duel-card-skin-custom .duel-hand-card .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-custom .duel-action-subtitle {
+  color: var(--card-skin-text) !important;
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-choice span:not(.duel-action-title),
+body.duel-card-skin-custom .duel-hand-card .duel-action-choice span:not(.duel-action-title),
+.duel-hand-card.duel-card-skin-custom .duel-action-choice span:not(.duel-action-title),
+body.duel-card-skin-v224 .duel-hand-card .duel-action-effect,
+body.duel-card-skin-custom .duel-hand-card .duel-action-effect,
+.duel-hand-card.duel-card-skin-custom .duel-action-effect,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-tags,
+body.duel-card-skin-custom .duel-hand-card .duel-action-tags,
+.duel-hand-card.duel-card-skin-custom .duel-action-tags,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-numeric-brief,
+body.duel-card-skin-custom .duel-hand-card .duel-action-numeric-brief,
+.duel-hand-card.duel-card-skin-custom .duel-action-numeric-brief {
+  color: var(--card-skin-muted) !important;
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-card-type,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-risk,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-cost,
+body.duel-card-skin-custom .duel-hand-card .duel-action-card-type,
+.duel-hand-card.duel-card-skin-custom .duel-action-card-type,
+body.duel-card-skin-custom .duel-hand-card .duel-action-risk,
+.duel-hand-card.duel-card-skin-custom .duel-action-risk,
+body.duel-card-skin-custom .duel-hand-card .duel-action-cost,
+.duel-hand-card.duel-card-skin-custom .duel-action-cost,
+body.duel-card-skin-v224 .duel-hand-card .duel-summon-preview b,
+body.duel-card-skin-custom .duel-hand-card .duel-summon-preview b,
+.duel-hand-card.duel-card-skin-custom .duel-summon-preview b {
+  border-color: color-mix(in srgb, var(--card-skin-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--card-skin-accent) 16%, transparent);
+  color: var(--card-skin-accent) !important;
+}
+
+body.duel-card-skin-v224 .duel-hand-card.active .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.active .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.active .duel-action-choice {
+  border-color: var(--card-skin-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--card-skin-accent) 32%, transparent), 0 16px 34px var(--card-skin-glow);
+}
+
+.duel-skin-preview-card.duel-skin-template,
+.duel-skin-preview-card.duel-skin-special,
+.duel-skin-preview-card.duel-skin-domain,
+.duel-skin-preview-card.duel-skin-summon,
+.duel-skin-preview-card.duel-skin-mahoraga,
+.duel-skin-preview-card.duel-skin-trial {
+  border-color: var(--card-skin-border);
+  background: var(--card-skin-bg);
+  color: var(--card-skin-text);
+  box-shadow: 0 8px 18px var(--card-skin-glow);
+}
+
+.duel-skin-preview-card.duel-skin-template span,
+.duel-skin-preview-card.duel-skin-special span,
+.duel-skin-preview-card.duel-skin-domain span,
+.duel-skin-preview-card.duel-skin-summon span,
+.duel-skin-preview-card.duel-skin-mahoraga span,
+.duel-skin-preview-card.duel-skin-trial span {
+  color: var(--card-skin-muted);
+}
+
+.duel-hand-card.duel-card-skin-v224.duel-skin-template {
+  --card-skin-bg: linear-gradient(135deg, #fffdf7 0%, #f3eddf 58%, #e8dfc8 100%);
+  --card-skin-border: #c4ab70;
+  --card-skin-accent: #946313;
+  --card-skin-text: #241c18;
+  --card-skin-muted: #655a49;
+  --card-skin-glow: rgba(148, 99, 19, 0.18);
+}
+
+.duel-hand-card.duel-card-skin-v224.duel-skin-special {
+  --card-skin-bg: linear-gradient(135deg, #251211 0%, #431916 55%, #6c241c 100%);
+  --card-skin-border: #d16a55;
+  --card-skin-accent: #ffd166;
+  --card-skin-text: #fff7e6;
+  --card-skin-muted: #f2c5a5;
+  --card-skin-glow: rgba(225, 91, 79, 0.30);
+}
+
+.duel-hand-card.duel-card-skin-v224.duel-skin-domain {
+  --card-skin-bg: linear-gradient(135deg, #171435 0%, #2b1d55 54%, #4a2b86 100%);
+  --card-skin-border: #9f7aea;
+  --card-skin-accent: #f6d365;
+  --card-skin-text: #fbf7ff;
+  --card-skin-muted: #ddceff;
+  --card-skin-glow: rgba(159, 122, 234, 0.32);
+}
+
+.duel-hand-card.duel-card-skin-v224.duel-skin-summon {
+  --card-skin-bg: linear-gradient(135deg, #0e2d2a 0%, #153b47 55%, #193f64 100%);
+  --card-skin-border: #2dd4bf;
+  --card-skin-accent: #99f6e4;
+  --card-skin-text: #ecfeff;
+  --card-skin-muted: #b7e8e2;
+  --card-skin-glow: rgba(45, 212, 191, 0.26);
+}
+
+.duel-hand-card.duel-card-skin-v224.duel-skin-mahoraga {
+  --card-skin-bg: linear-gradient(135deg, #050505 0%, #15130d 48%, #3e3212 100%);
+  --card-skin-border: #f6d365;
+  --card-skin-accent: #ffe8a3;
+  --card-skin-text: #fff7cc;
+  --card-skin-muted: #e9cf82;
+  --card-skin-glow: rgba(246, 211, 101, 0.38);
+}
+
+.duel-hand-card.duel-card-skin-v224.duel-skin-trial {
+  --card-skin-bg: linear-gradient(135deg, #f9f5ee 0%, #e2d7c8 54%, #b9aa96 100%);
+  --card-skin-border: #6b1f1a;
+  --card-skin-accent: #b42318;
+  --card-skin-text: #241c18;
+  --card-skin-muted: #6c5b4f;
+  --card-skin-glow: rgba(180, 35, 24, 0.20);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-template,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-template,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg: linear-gradient(135deg, #fff8fc 0%, #e9ffff 48%, #ffd8ee 100%);
+  --card-skin-border: #f472b6;
+  --card-skin-accent: #0ea5a3;
+  --card-skin-text: #241928;
+  --card-skin-muted: #6d5b72;
+  --card-skin-glow: rgba(244, 114, 182, 0.22);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-special,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-special,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg: linear-gradient(135deg, #1f1527 0%, #ff8ecb 46%, #b8fff3 100%);
+  --card-skin-border: #111827;
+  --card-skin-accent: #fff176;
+  --card-skin-text: #fffafd;
+  --card-skin-muted: #2f2540;
+  --card-skin-glow: rgba(45, 212, 191, 0.32);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-domain,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-domain,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg: linear-gradient(135deg, #111827 0%, #29305f 46%, #ff79bd 100%);
+  --card-skin-border: #8b5cf6;
+  --card-skin-accent: #67e8f9;
+  --card-skin-text: #ffffff;
+  --card-skin-muted: #dce7ff;
+  --card-skin-glow: rgba(139, 92, 246, 0.34);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-summon,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-summon,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg: linear-gradient(135deg, #eafffb 0%, #8df6e7 52%, #ffd2e7 100%);
+  --card-skin-border: #10b9ad;
+  --card-skin-accent: #f43f8f;
+  --card-skin-text: #162326;
+  --card-skin-muted: #496367;
+  --card-skin-glow: rgba(16, 185, 173, 0.26);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-mahoraga,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-mahoraga,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg: linear-gradient(135deg, #0f1117 0%, #f6f1ff 48%, #ffd6ec 100%);
+  --card-skin-border: #111827;
+  --card-skin-accent: #facc15;
+  --card-skin-text: #111827;
+  --card-skin-muted: #4b5563;
+  --card-skin-glow: rgba(250, 204, 21, 0.28);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-trial,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-trial,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg: linear-gradient(135deg, #ffffff 0%, #f9d5e8 44%, #111827 100%);
+  --card-skin-border: #111827;
+  --card-skin-accent: #ff4fa3;
+  --card-skin-text: #141820;
+  --card-skin-muted: #4a5565;
+  --card-skin-glow: rgba(255, 79, 163, 0.22);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224 .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-color: var(--card-skin-border);
+  background: var(--card-skin-bg);
+  color: var(--card-skin-text);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--card-skin-border) 34%, transparent), 0 12px 26px var(--card-skin-glow);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-v224 .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(120deg, transparent 0 30%, rgba(255, 255, 255, 0.42) 45%, transparent 58%),
+    repeating-linear-gradient(90deg, rgba(17, 24, 39, 0.07) 0 1px, transparent 1px 16px);
+  opacity: 0.58;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice > *,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice > *,
+.duel-hand-card.duel-card-skin-v224 .duel-action-choice > *,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-title,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-title,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-v224 .duel-action-title,
+.duel-hand-card.duel-card-skin-v224 .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-custom .duel-action-title,
+.duel-hand-card.duel-card-skin-custom .duel-action-subtitle {
+  color: var(--card-skin-text) !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice span:not(.duel-action-title),
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-effect,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-tags,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-numeric-brief,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice span:not(.duel-action-title),
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-effect,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-tags,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-numeric-brief,
+.duel-hand-card.duel-card-skin-v224 .duel-action-choice span:not(.duel-action-title),
+.duel-hand-card.duel-card-skin-v224 .duel-action-effect,
+.duel-hand-card.duel-card-skin-v224 .duel-action-tags,
+.duel-hand-card.duel-card-skin-v224 .duel-action-numeric-brief,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice span:not(.duel-action-title),
+.duel-hand-card.duel-card-skin-custom .duel-action-effect,
+.duel-hand-card.duel-card-skin-custom .duel-action-tags,
+.duel-hand-card.duel-card-skin-custom .duel-action-numeric-brief {
+  color: var(--card-skin-muted) !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-card-type,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-risk,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-cost,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-summon-preview b,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-card-type,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-risk,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-cost,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-summon-preview b,
+.duel-hand-card.duel-card-skin-v224 .duel-action-card-type,
+.duel-hand-card.duel-card-skin-v224 .duel-action-risk,
+.duel-hand-card.duel-card-skin-v224 .duel-action-cost,
+.duel-hand-card.duel-card-skin-v224 .duel-summon-preview b,
+.duel-hand-card.duel-card-skin-custom .duel-action-card-type,
+.duel-hand-card.duel-card-skin-custom .duel-action-risk,
+.duel-hand-card.duel-card-skin-custom .duel-action-cost,
+.duel-hand-card.duel-card-skin-custom .duel-summon-preview b {
+  border-color: color-mix(in srgb, var(--card-skin-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--card-skin-accent) 16%, transparent);
+  color: var(--card-skin-accent) !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card {
+  border-color: var(--card-skin-border);
+  background: var(--card-skin-bg);
+  color: var(--card-skin-text);
+  box-shadow: 0 8px 18px var(--card-skin-glow);
+}
+
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card span {
+  color: var(--card-skin-muted);
+}
+
+.duel-hand-card.duel-card-skin-classic .duel-action-choice {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.duel-hand-card.duel-card-skin-classic .duel-action-choice::before {
+  display: none;
+}
+
+.duel-action-panel.deal-animation .duel-hand-card.deal-in {
+  animation: duelCardDealIn 520ms cubic-bezier(0.18, 0.84, 0.2, 1) both;
+  animation-delay: calc(var(--deal-index, 0) * 48ms);
+}
+
+.duel-action-panel.deal-animation .duel-hand-card.deal-in .duel-action-choice::before {
+  animation: duelCardDealSweep 760ms ease both;
+  animation-delay: calc(var(--deal-index, 0) * 48ms + 90ms);
+}
+
+.duel-action-panel.play-animation .duel-hand-card.play-out .duel-action-choice {
+  animation: duelCardPlayOut 520ms cubic-bezier(0.2, 0.82, 0.24, 1) both;
+  animation-delay: calc(var(--play-index, 0) * 52ms);
+}
+
+.duel-action-panel.lock-animation .duel-hand-card.lock-out .duel-action-choice {
+  animation: duelCardLockOut 620ms cubic-bezier(0.18, 0.78, 0.2, 1) both;
+  animation-delay: calc(var(--play-index, 0) * 56ms);
+}
+
+.duel-action-panel.play-animation .duel-hand-card.play-out .duel-action-choice::after,
+.duel-action-panel.lock-animation .duel-hand-card.lock-out .duel-action-choice::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.duel-action-panel.play-animation .duel-hand-card.play-out .duel-action-choice::after {
+  background: rgba(255, 255, 255, 0.34);
+  animation: duelCardPlayFlash 520ms ease both;
+  animation-delay: calc(var(--play-index, 0) * 52ms);
+}
+
+.duel-action-panel.lock-animation .duel-hand-card.lock-out .duel-action-choice::after {
+  border: 2px solid color-mix(in srgb, var(--card-skin-accent, var(--accent-2)) 72%, transparent);
+  background: rgba(45, 212, 191, 0.10);
+  animation: duelCardLockSeal 620ms ease both;
+  animation-delay: calc(var(--play-index, 0) * 56ms);
+}
+
+.duel-action-choice {
+  transform: translateY(0);
+}
+
+.duel-action-choice:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.duel-hand-card.active .duel-action-choice {
+  animation: duelCardSelectedPulse 900ms ease both;
+}
+
+.duel-floating-combat-text {
+  animation: duelCombatTextFloat 980ms ease both;
+}
+
+@keyframes duelCardDealIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) rotateX(14deg) scale(0.96);
+    filter: blur(2px);
+  }
+  64% {
+    opacity: 1;
+    transform: translateY(-3px) rotateX(0deg) scale(1.015);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes duelCardDealSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-70%);
+  }
+  46% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0.46;
+    transform: translateX(26%);
+  }
+}
+
+@keyframes duelCardSelectedPulse {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  38% {
+    transform: translateY(-2px) scale(1.012);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes duelCardPlayOut {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  36% {
+    transform: translateY(-8px) scale(1.026) rotateZ(-0.7deg);
+    filter: brightness(1.18);
+  }
+  100% {
+    transform: translateY(-2px) scale(1.008);
+    filter: brightness(1.04);
+  }
+}
+
+@keyframes duelCardPlayFlash {
+  0% {
+    opacity: 0;
+    transform: translateX(-44%);
+  }
+  34% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(34%);
+  }
+}
+
+@keyframes duelCardLockOut {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+  42% {
+    transform: translateY(-5px) scale(1.018);
+    filter: saturate(1.18);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: saturate(1.04);
+  }
+}
+
+@keyframes duelCardLockSeal {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  42% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.42;
+    transform: scale(1);
+  }
+}
+
+@keyframes duelCombatTextFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scale(1.04);
+  }
+}
+
+body.duel-theme-dark .app-shell,
+body.duel-theme-dark .tab-panel,
+body.duel-theme-dark .tabs,
+body.duel-theme-dark .panel,
+body.duel-theme-dark .duel-panel,
+body.duel-theme-dark .duel-selectors,
+body.duel-theme-dark .duel-custom-panel,
+body.duel-theme-dark .duel-custom-mode,
+body.duel-theme-dark .duel-custom-stats,
+body.duel-theme-dark .duel-ai-assist,
+body.duel-theme-dark .duel-import-code-panel,
+body.duel-theme-dark .duel-custom-interface,
+body.duel-theme-dark .duel-special-card-editor,
+body.duel-theme-dark .duel-library-assist,
+body.duel-theme-dark .duel-ai-output,
+body.duel-theme-dark .duel-summary,
+body.duel-theme-dark .duel-match-summary-card,
+body.duel-theme-dark .duel-battle,
+body.duel-theme-dark .duel-battle-empty,
+body.duel-theme-dark .duel-battle-stage,
+body.duel-theme-dark .duel-battle-status,
+body.duel-theme-dark .duel-resource-side,
+body.duel-theme-dark .duel-resource-meta,
+body.duel-theme-dark .duel-domain-load,
+body.duel-theme-dark .duel-status-effects,
+body.duel-theme-dark .duel-round-memo,
+body.duel-theme-dark .duel-replay-meta,
+body.duel-theme-dark .duel-residual-log,
+body.duel-theme-dark .duel-action-toolbar,
+body.duel-theme-dark .duel-selected-hand-summary,
+body.duel-theme-dark .duel-domain-hand-head,
+body.duel-theme-dark .duel-hand-execute-control,
+body.duel-theme-dark .duel-beta-feedback-body,
+body.duel-theme-dark .duel-auto-latest,
+body.duel-theme-dark .duel-auto-empty,
+body.duel-theme-dark .duel-card-detail-section,
+body.duel-theme-dark .duel-log-entry,
+body.duel-theme-dark .duel-custom-item,
+body.duel-theme-dark .duel-skin-preview-card,
+body.duel-theme-dark .jjk-battle-tabs,
+body.duel-theme-dark .jjk-battle-active-surface,
+body.duel-theme-dark .jjk-battle-home-card,
+body.duel-theme-dark .jjk-battle-info-grid article,
+body.duel-theme-dark .online-alpha-section,
+body.duel-theme-dark .online-room-card,
+body.duel-theme-dark .online-player-grid article,
+body.duel-theme-dark .update-modal-card,
+body.duel-theme-dark details,
+body.duel-theme-dark summary {
+  background: #181a20 !important;
+  background-image: none !important;
+  color: var(--ink);
+}
+
+body.duel-theme-dark .panel::before,
+body.duel-theme-dark .panel::after,
+body.duel-theme-dark .duel-battle-stage::before,
+body.duel-theme-dark .duel-battle-stage::after,
+body.duel-theme-dark .duel-battle-empty::before,
+body.duel-theme-dark .duel-battle-empty::after {
+  display: none !important;
+  background: none !important;
+}
+
+body.duel-theme-dark .duel-resource-bar,
+body.duel-theme-dark .duel-score-track,
+body.duel-theme-dark .duel-auto-meter {
+  background: #2a2d35 !important;
+  background-image: none !important;
+}
+
+body.duel-theme-dark .duel-resource-bar i,
+body.duel-theme-dark .duel-score-track span,
+body.duel-theme-dark .duel-auto-meter span {
+  background-image: none !important;
+}
+
+body.duel-theme-dark .duel-resource-row.hp .duel-resource-bar i,
+body.duel-theme-dark .duel-score-track span:last-child {
+  background: #d16048 !important;
+}
+
+body.duel-theme-dark .duel-resource-row.ce .duel-resource-bar i,
+body.duel-theme-dark .duel-score-track span:first-child {
+  background: #2dd4bf !important;
+}
+
+body.duel-theme-dark .duel-resource-row.stability .duel-resource-bar i {
+  background: #7aa2ff !important;
+}
+
+body.duel-theme-dark .duel-domain-load .duel-resource-bar i {
+  background: #b792ff !important;
+}
+
+body.duel-theme-dark .badge,
+body.duel-theme-dark .duel-chip,
+body.duel-theme-dark .duel-log-filter,
+body.duel-theme-dark .duel-selected-order-badge,
+body.duel-theme-dark .duel-action-card-type,
+body.duel-theme-dark .duel-action-risk,
+body.duel-theme-dark .duel-action-cost,
+body.duel-theme-dark .duel-summon-preview,
+body.duel-theme-dark code,
+body.duel-theme-dark pre {
+  border-color: rgba(246, 211, 101, 0.20);
+  background: #20232b !important;
+  background-image: none !important;
+  color: var(--ink);
+}
+
+body.duel-theme-dark .muted,
+body.duel-theme-dark .duel-action-hint,
+body.duel-theme-dark .duel-selected-hand-empty,
+body.duel-theme-dark .duel-action-message,
+body.duel-theme-dark .duel-hand-pool-hint,
+body.duel-theme-dark .jjk-battle-section-head p,
+body.duel-theme-dark .field span,
+body.duel-theme-dark small {
+  color: var(--muted) !important;
+}
+
+body.duel-theme-dark a {
+  color: #8be9dc;
+}
+
+body.duel-theme-dark .primary {
+  border-color: #2dd4bf;
+  background: #12766d !important;
+  background-image: none !important;
+  color: #f0fdfa;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-template,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg: #242118;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-special,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg: #351816;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-domain,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg: #231b48;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-summon,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg: #12363c;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-mahoraga,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg: #17140c;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-trial,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg: #27221d;
+  --card-skin-text: #f4efe6;
+  --card-skin-muted: #c9bfb2;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card .duel-action-choice::before,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card .duel-action-choice::before {
+  background: rgba(255, 255, 255, 0.07);
+  background-image: none !important;
+}
+
+body.duel-theme-dark {
+  --duel-night-surface: #181a20;
+  --duel-night-surface-2: #20232b;
+  --duel-night-surface-3: #252935;
+  --duel-night-text: #f5efe6;
+  --duel-night-muted: #d1c7b8;
+  --duel-night-subtle: #a9b2c3;
+  --duel-night-line: rgba(246, 211, 101, 0.22);
+  --duel-night-line-strong: rgba(45, 212, 191, 0.34);
+  --duel-night-danger: #ff9a88;
+  --duel-night-warn: #ffd166;
+  --duel-night-ok: #7ee7d8;
+}
+
+body.duel-theme-dark :where(.duel-action-warning, .duel-action-message, .duel-hand-lock-message, .duel-mahoraga-banner, .duel-hand-pool-hint, .duel-current-choice span, .duel-log li, .duel-log.empty, .duel-result, .result-accumulated, .duel-tactic, .choice-grid button, .instant-combat-card, .online-spectator-topbar, .duel-spectator-stage, .duel-spectator-hand, .duel-spectator-hand-list, .duel-special-grid, .duel-special-row, .duel-custom-list, .duel-custom-card, .duel-custom-item, .duel-custom-card-export, .duel-ai-status, .duel-ai-error, .duel-import-result, .duel-card-detail-grid, .duel-card-detail-section ul, .duel-domain-profile-panel, .duel-domain-profile-card, .duel-domain-profile-result, .duel-domain-profile-details, .duel-domain-core div, .debug-toggle, .ai-free-toggle, .play-mode-control, .play-mode-control label:has(input:checked), .online-sync-section, .online-room-section, .online-battle-section, .online-prepare-section, .online-player-slot, .online-room-meta, .online-room-log, .online-invite-field, .duel-beta-feedback-note textarea) {
+  border-color: var(--duel-night-line) !important;
+  background: var(--duel-night-surface) !important;
+  background-image: none !important;
+  color: var(--duel-night-text) !important;
+}
+
+body.duel-theme-dark :where(.duel-action-toolbar, .duel-selected-hand-summary, .duel-hand-execute-control, .duel-domain-hand-head, .duel-beta-feedback-panel summary, .duel-beta-feedback-body, .duel-auto-latest, .duel-auto-empty, .duel-residual-log, .duel-round-memo, .duel-replay-meta, .duel-status-effects, .duel-resource-meta, .duel-battle-status, .duel-spectator-top) {
+  border-color: var(--duel-night-line) !important;
+  background: var(--duel-night-surface-2) !important;
+  background-image: none !important;
+  color: var(--duel-night-text) !important;
+}
+
+body.duel-theme-dark :where(input, select, textarea) {
+  border-color: var(--duel-night-line) !important;
+  background: #12151c !important;
+  color: var(--duel-night-text) !important;
+  caret-color: var(--duel-night-ok);
+}
+
+body.duel-theme-dark :where(input, textarea)::placeholder {
+  color: #8792a5 !important;
+}
+
+body.duel-theme-dark :where(option) {
+  background: #161922;
+  color: var(--duel-night-text);
+}
+
+body.duel-theme-dark :where(.duel-action-panel h4, .duel-domain-hand-head strong, .duel-selected-hand-summary strong, .duel-tactic strong, .duel-current-choice strong, .duel-log li span, .duel-result strong, .duel-domain-profile-head h4, .duel-domain-profile-card strong, .duel-domain-core dd, .duel-card-detail-section h5, .duel-card-developer-details dt, .duel-hand-debug dt, .jjk-battle-section-head h3, .online-section-title strong, .field > span, label > span) {
+  color: var(--duel-night-text) !important;
+}
+
+body.duel-theme-dark :where(.duel-domain-profile-card span, .duel-domain-profile-card p, .duel-domain-profile-card em, .duel-domain-core dt, .duel-card-detail-section li, .duel-card-developer-details dd, .duel-hand-debug dd, .duel-log li p, .duel-auto-latest p, .duel-tactic span, .duel-current-choice span, .result-accumulated span, .online-room-meta, .online-room-log, .online-player-slot span, .duel-spectator-hand .duel-action-effect, .duel-spectator-hand .duel-action-subtitle) {
+  color: var(--duel-night-muted) !important;
+}
+
+body.duel-theme-dark :where(.duel-chip, .badge, .duel-action-card-type, .duel-action-rarity, .duel-action-risk, .duel-action-cost, .duel-log-filter, .duel-selected-order-badge, .duel-summon-preview b, .duel-skin-preview-card span, .duel-resource-side .duel-chip, .online-room-code, .online-status-pill) {
+  border-color: var(--duel-night-line) !important;
+  background: var(--duel-night-surface-3) !important;
+  background-image: none !important;
+  color: var(--duel-night-text) !important;
+}
+
+body.duel-theme-dark :where(.duel-action-status.available, .duel-selected-order-badge, .duel-action-status.selected) {
+  color: var(--duel-night-ok) !important;
+}
+
+body.duel-theme-dark :where(.duel-action-status.blocked, .duel-ai-error, #duelVisualSettingsStatus[data-status="error"]) {
+  color: var(--duel-night-danger) !important;
+}
+
+body.duel-theme-dark :where(.duel-action-warning, .duel-chip.warning, #duelVisualSettingsStatus[data-status="warning"]) {
+  border-color: rgba(255, 209, 102, 0.34) !important;
+  color: var(--duel-night-warn) !important;
+}
+
+body.duel-theme-dark :where(.duel-action-choice, .duel-hand-detail, .duel-hand-discard-btn, .duel-card-developer-details, .duel-hand-debug) {
+  border-color: var(--duel-night-line) !important;
+  background: #171a22 !important;
+  background-image: none !important;
+}
+
+body.duel-theme-dark .duel-action-choice:hover:not(:disabled),
+body.duel-theme-dark .duel-action-choice.active,
+body.duel-theme-dark .duel-hand-card.active .duel-action-choice,
+body.duel-theme-dark .duel-tactic:hover:not(:disabled),
+body.duel-theme-dark .choice-grid button:hover {
+  border-color: var(--duel-night-line-strong) !important;
+  background: #1f2830 !important;
+  background-image: none !important;
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.14), var(--shadow-sm) !important;
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-template,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card.duel-skin-template,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg: #242118;
+  --card-skin-border: #bda15d;
+  --card-skin-accent: #ffd166;
+  --card-skin-text: #fff4df;
+  --card-skin-muted: #ded0b6;
+  --card-skin-glow: rgba(0, 0, 0, 0.34);
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-special,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card.duel-skin-special,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg: #351816;
+  --card-skin-border: #ee8a75;
+  --card-skin-accent: #ffd166;
+  --card-skin-text: #fff2e4;
+  --card-skin-muted: #f0c5b4;
+  --card-skin-glow: rgba(0, 0, 0, 0.36);
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-domain,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card.duel-skin-domain,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg: #231b48;
+  --card-skin-border: #b794f4;
+  --card-skin-accent: #f6d365;
+  --card-skin-text: #fbf7ff;
+  --card-skin-muted: #dfd6ff;
+  --card-skin-glow: rgba(0, 0, 0, 0.38);
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-summon,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card.duel-skin-summon,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg: #12363c;
+  --card-skin-border: #5eead4;
+  --card-skin-accent: #99f6e4;
+  --card-skin-text: #efffff;
+  --card-skin-muted: #c4eee8;
+  --card-skin-glow: rgba(0, 0, 0, 0.34);
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-mahoraga,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card.duel-skin-mahoraga,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg: #17140c;
+  --card-skin-border: #f6d365;
+  --card-skin-accent: #ffe8a3;
+  --card-skin-text: #fff7cc;
+  --card-skin-muted: #ead79b;
+  --card-skin-glow: rgba(0, 0, 0, 0.44);
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card.duel-skin-trial,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card.duel-skin-trial,
+body.duel-theme-dark .duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg: #27221d;
+  --card-skin-border: #d7c7ad;
+  --card-skin-accent: #f6d365;
+  --card-skin-text: #f8f0e6;
+  --card-skin-muted: #d6c9ba;
+  --card-skin-glow: rgba(0, 0, 0, 0.34);
+}
+
+body.duel-theme-dark.duel-card-skin-v224 .duel-hand-card .duel-action-choice,
+body.duel-theme-dark.duel-card-skin-custom .duel-hand-card .duel-action-choice,
+body.duel-theme-dark.duel-card-skin-v224 .duel-skin-preview-card,
+body.duel-theme-dark.duel-card-skin-custom .duel-skin-preview-card {
+  background: color-mix(in srgb, var(--card-skin-bg) 82%, #11151b) !important;
+  background-image: none !important;
+}
+
+.duel-action-panel.deal-animation .duel-hand-card.deal-in.deal-variant-2 {
+  animation-name: duelCardDealSlide;
+}
+
+.duel-action-panel.deal-animation .duel-hand-card.deal-in.deal-variant-3 {
+  animation-name: duelCardDealFlip;
+}
+
+.duel-action-panel.deal-animation .duel-hand-card.deal-in.deal-variant-4 {
+  animation-name: duelCardDealSnap;
+}
+
+.duel-action-panel.play-animation .duel-hand-card.play-out.play-variant-2 .duel-action-choice {
+  animation-name: duelCardPlayArc;
+}
+
+.duel-action-panel.play-animation .duel-hand-card.play-out.play-variant-3 .duel-action-choice {
+  animation-name: duelCardPlayBurst;
+}
+
+.duel-action-panel.play-animation .duel-hand-card.play-out.play-variant-4 .duel-action-choice {
+  animation-name: duelCardPlayCut;
+}
+
+.duel-action-panel.lock-animation .duel-hand-card.lock-out.lock-variant-2 .duel-action-choice {
+  animation-name: duelCardLockStamp;
+}
+
+.duel-action-panel.lock-animation .duel-hand-card.lock-out.lock-variant-3 .duel-action-choice {
+  animation-name: duelCardLockBind;
+}
+
+.duel-action-panel.lock-animation .duel-hand-card.lock-out.lock-variant-4 .duel-action-choice {
+  animation-name: duelCardLockHold;
+}
+
+.duel-action-panel.play-animation .duel-hand-card.duel-domain-expand-card.domain-expand-cast .duel-action-choice {
+  animation: duelDomainExpandCast 980ms cubic-bezier(0.16, 0.86, 0.2, 1) both;
+  animation-delay: calc(var(--play-index, 0) * 48ms);
+}
+
+.duel-action-panel.play-animation .duel-hand-card.duel-domain-expand-card.domain-expand-cast .duel-action-choice::after {
+  border: 2px solid color-mix(in srgb, var(--card-skin-accent, #f6d365) 82%, transparent);
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--card-skin-accent, #f6d365) 46%, transparent),
+    0 0 0 0 color-mix(in srgb, var(--card-skin-accent, #f6d365) 36%, transparent);
+  animation: duelDomainExpandBarrier 980ms ease both;
+  animation-delay: calc(var(--play-index, 0) * 48ms);
+}
+
+@keyframes duelCardDealSlide {
+  0% {
+    opacity: 0;
+    transform: translateX(-22px) translateY(10px) rotateZ(-2deg) scale(0.97);
+    filter: blur(1.5px);
+  }
+  62% {
+    opacity: 1;
+    transform: translateX(3px) translateY(-2px) rotateZ(0.4deg) scale(1.012);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes duelCardDealFlip {
+  0% {
+    opacity: 0;
+    transform: perspective(700px) rotateY(-22deg) translateY(14px) scale(0.96);
+    filter: brightness(0.8);
+  }
+  58% {
+    opacity: 1;
+    transform: perspective(700px) rotateY(4deg) translateY(-3px) scale(1.015);
+    filter: brightness(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(700px) rotateY(0) translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes duelCardDealSnap {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.92);
+    filter: saturate(0.8);
+  }
+  48% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.028);
+    filter: saturate(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: saturate(1);
+  }
+}
+
+@keyframes duelCardPlayArc {
+  0% {
+    transform: translateY(0) rotateZ(0) scale(1);
+  }
+  42% {
+    transform: translateY(-11px) rotateZ(1.6deg) scale(1.026);
+    filter: brightness(1.14);
+  }
+  100% {
+    transform: translateY(-1px) rotateZ(0.2deg) scale(1.006);
+    filter: brightness(1.04);
+  }
+}
+
+@keyframes duelCardPlayBurst {
+  0% {
+    transform: scale(1);
+    filter: brightness(1) contrast(1);
+  }
+  36% {
+    transform: scale(1.042);
+    filter: brightness(1.2) contrast(1.08);
+  }
+  100% {
+    transform: scale(1.008);
+    filter: brightness(1.05) contrast(1);
+  }
+}
+
+@keyframes duelCardPlayCut {
+  0% {
+    transform: translateX(0) translateY(0) skewX(0deg);
+  }
+  32% {
+    transform: translateX(5px) translateY(-7px) skewX(-2deg);
+    filter: brightness(1.16);
+  }
+  100% {
+    transform: translateX(0) translateY(-2px) skewX(0deg);
+    filter: brightness(1.04);
+  }
+}
+
+@keyframes duelCardLockStamp {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  28% {
+    transform: translateY(-6px) scale(1.018);
+  }
+  52% {
+    transform: translateY(1px) scale(0.996);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes duelCardLockBind {
+  0% {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+  44% {
+    transform: scale(1.018);
+    filter: saturate(1.22);
+  }
+  100% {
+    transform: scale(1);
+    filter: saturate(1.05);
+  }
+}
+
+@keyframes duelCardLockHold {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-3px);
+  }
+  70% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes duelDomainExpandCast {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  34% {
+    transform: translateY(-10px) scale(1.038);
+    filter: brightness(1.22) saturate(1.2);
+  }
+  72% {
+    transform: translateY(-3px) scale(1.018);
+    filter: brightness(1.12) saturate(1.12);
+  }
+  100% {
+    transform: translateY(0) scale(1.006);
+    filter: brightness(1.05) saturate(1.06);
+  }
+}
+
+@keyframes duelDomainExpandBarrier {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--card-skin-accent, #f6d365) 0%, transparent);
+  }
+  28% {
+    opacity: 0.95;
+    transform: scale(1);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--card-skin-accent, #f6d365) 22%, transparent);
+  }
+  64% {
+    opacity: 0.62;
+    transform: scale(1.035);
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--card-skin-accent, #f6d365) 10%, transparent);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.06);
+    box-shadow: 0 0 0 18px transparent;
+  }
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224.duel-skin-template {
+  --card-skin-bg: #242118;
+  --card-skin-border: #bda15d;
+  --card-skin-accent: #ffd166;
+  --card-skin-text: #fff4df;
+  --card-skin-muted: #ded0b6;
+  --card-skin-glow: rgba(0, 0, 0, 0.34);
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224.duel-skin-special {
+  --card-skin-bg: #351816;
+  --card-skin-border: #ee8a75;
+  --card-skin-accent: #ffd166;
+  --card-skin-text: #fff2e4;
+  --card-skin-muted: #f0c5b4;
+  --card-skin-glow: rgba(0, 0, 0, 0.36);
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224.duel-skin-domain {
+  --card-skin-bg: #231b48;
+  --card-skin-border: #b794f4;
+  --card-skin-accent: #f6d365;
+  --card-skin-text: #fbf7ff;
+  --card-skin-muted: #dfd6ff;
+  --card-skin-glow: rgba(0, 0, 0, 0.38);
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224.duel-skin-summon {
+  --card-skin-bg: #12363c;
+  --card-skin-border: #5eead4;
+  --card-skin-accent: #99f6e4;
+  --card-skin-text: #efffff;
+  --card-skin-muted: #c4eee8;
+  --card-skin-glow: rgba(0, 0, 0, 0.34);
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224.duel-skin-mahoraga {
+  --card-skin-bg: #17140c;
+  --card-skin-border: #f6d365;
+  --card-skin-accent: #ffe8a3;
+  --card-skin-text: #fff7cc;
+  --card-skin-muted: #ead79b;
+  --card-skin-glow: rgba(0, 0, 0, 0.44);
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224.duel-skin-trial {
+  --card-skin-bg: #27221d;
+  --card-skin-border: #d7c7ad;
+  --card-skin-accent: #f6d365;
+  --card-skin-text: #f8f0e6;
+  --card-skin-muted: #d6c9ba;
+  --card-skin-glow: rgba(0, 0, 0, 0.34);
+}
+
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-template,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-template,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg: #242130;
+  --card-skin-border: #ff8bc8;
+  --card-skin-accent: #67e8f9;
+  --card-skin-text: #fff7ff;
+  --card-skin-muted: #f0cfe4;
+  --card-skin-glow: rgba(255, 139, 200, 0.18);
+}
+
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-special,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-special,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg: #301a36;
+  --card-skin-border: #ff79bd;
+  --card-skin-accent: #fff176;
+  --card-skin-text: #fffafd;
+  --card-skin-muted: #f5d7ec;
+  --card-skin-glow: rgba(45, 212, 191, 0.22);
+}
+
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-domain,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-domain,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg: #161b35;
+  --card-skin-border: #a78bfa;
+  --card-skin-accent: #67e8f9;
+  --card-skin-text: #ffffff;
+  --card-skin-muted: #dce7ff;
+  --card-skin-glow: rgba(139, 92, 246, 0.24);
+}
+
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-summon,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-summon,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg: #12353a;
+  --card-skin-border: #5eead4;
+  --card-skin-accent: #ff8bc8;
+  --card-skin-text: #efffff;
+  --card-skin-muted: #c4eee8;
+  --card-skin-glow: rgba(16, 185, 173, 0.18);
+}
+
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-mahoraga,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-mahoraga,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg: #171721;
+  --card-skin-border: #facc15;
+  --card-skin-accent: #ff8bc8;
+  --card-skin-text: #fff8d8;
+  --card-skin-muted: #e7d8b0;
+  --card-skin-glow: rgba(250, 204, 21, 0.22);
+}
+
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-trial,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-trial,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg: #24242a;
+  --card-skin-border: #ff79bd;
+  --card-skin-accent: #67e8f9;
+  --card-skin-text: #fff7ff;
+  --card-skin-muted: #e9c9dd;
+  --card-skin-glow: rgba(255, 79, 163, 0.18);
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224 .duel-action-choice,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-custom .duel-action-choice,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-skin-preview-card {
+  border-color: var(--card-skin-border) !important;
+  background: color-mix(in srgb, var(--card-skin-bg) 88%, #11151b) !important;
+  background-image: none !important;
+  color: var(--card-skin-text) !important;
+  box-shadow: 0 10px 24px var(--card-skin-glow) !important;
+}
+
+body.duel-theme-dark .duel-hand-card.duel-card-skin-v224 .duel-action-choice::before,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-custom .duel-action-choice::before,
+body.duel-theme-dark.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice::before,
+body.duel-theme-dark .duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice::before {
+  background: rgba(255, 255, 255, 0.08) !important;
+  background-image: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-action-panel.deal-animation .duel-hand-card.deal-in,
+  .duel-action-panel.deal-animation .duel-hand-card.deal-in .duel-action-choice::before,
+  .duel-action-panel.play-animation .duel-hand-card.play-out .duel-action-choice,
+  .duel-action-panel.play-animation .duel-hand-card.play-out .duel-action-choice::after,
+  .duel-action-panel.lock-animation .duel-hand-card.lock-out .duel-action-choice,
+  .duel-action-panel.lock-animation .duel-hand-card.lock-out .duel-action-choice::after,
+  .duel-action-panel.play-animation .duel-hand-card.duel-domain-expand-card.domain-expand-cast .duel-action-choice,
+  .duel-action-panel.play-animation .duel-hand-card.duel-domain-expand-card.domain-expand-cast .duel-action-choice::after,
+  .duel-hand-card.active .duel-action-choice,
+  .duel-floating-combat-text {
+    animation: none !important;
+  }
+
+  .duel-action-choice:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .update-modal {
+    padding: 12px;
+  }
+
+  .duel-visual-settings-grid,
+  .duel-skin-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .update-modal-card {
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 16px;
+  }
+}
+
+body {
+  --tech-bg: #e9f2f6;
+  --tech-panel: rgba(255, 255, 255, 0.66);
+  --tech-panel-strong: rgba(255, 255, 255, 0.82);
+  --tech-line: rgba(26, 99, 123, 0.22);
+  --tech-line-strong: rgba(0, 160, 190, 0.48);
+  --tech-ink: #0d1f2a;
+  --tech-muted: #536b78;
+  --tech-accent: #00a8c4;
+  --tech-accent-2: #126b7d;
+  --tech-glow: rgba(0, 168, 196, 0.16);
+  background: var(--tech-bg) !important;
+  color: var(--tech-ink);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(0, 132, 164, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 132, 164, 0.09) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.85;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 5px, rgba(0, 168, 196, 0.08) 5px 6px, transparent 6px 100%),
+    linear-gradient(180deg, transparent 0 5px, rgba(0, 168, 196, 0.06) 5px 6px, transparent 6px 100%);
+  background-size: 160px 160px;
+  opacity: 0.75;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.duel-theme-dark {
+  --bg: #071018;
+  --paper: rgba(9, 18, 27, 0.78);
+  --paper-strong: rgba(13, 27, 39, 0.86);
+  --ink: #e8f7fb;
+  --muted: #94aeba;
+  --line: rgba(93, 213, 235, 0.22);
+  --line-dark: rgba(93, 213, 235, 0.42);
+  --panel: rgba(8, 18, 28, 0.76);
+  --panel-2: rgba(11, 27, 39, 0.82);
+  --accent: #22d3ee;
+  --accent-dark: #0891b2;
+  --accent-2: #8be9ff;
+  --accent-3: #7dd3fc;
+  --soft: rgba(11, 27, 39, 0.82);
+  --stamp: #67e8f9;
+  --warn: #f8d36c;
+  --tech-bg: #071018;
+  --tech-panel: rgba(8, 18, 28, 0.7);
+  --tech-panel-strong: rgba(10, 24, 36, 0.86);
+  --tech-line: rgba(103, 232, 249, 0.19);
+  --tech-line-strong: rgba(103, 232, 249, 0.48);
+  --tech-ink: #e8f7fb;
+  --tech-muted: #95adba;
+  --tech-accent: #22d3ee;
+  --tech-accent-2: #67e8f9;
+  --tech-glow: rgba(34, 211, 238, 0.18);
+  background: #071018 !important;
+  background-image: none !important;
+}
+
+body.duel-theme-dark::before {
+  display: block !important;
+  background:
+    linear-gradient(rgba(103, 232, 249, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 232, 249, 0.075) 1px, transparent 1px) !important;
+  background-size: 30px 30px !important;
+  opacity: 0.72;
+}
+
+body.duel-theme-dark::after {
+  background:
+    linear-gradient(90deg, transparent 0 5px, rgba(103, 232, 249, 0.07) 5px 6px, transparent 6px 100%),
+    linear-gradient(180deg, transparent 0 5px, rgba(103, 232, 249, 0.055) 5px 6px, transparent 6px 100%);
+  background-size: 172px 172px;
+  opacity: 0.7;
+}
+
+.login-card-welcome[hidden],
+.login-card-actions[hidden],
+.global-settings-panel[hidden] {
+  display: none !important;
+}
+
+.app-shell {
+  background: transparent;
+}
+
+.topbar,
+.tabs,
+.panel,
+.global-settings-panel,
+.login-card-panel,
+.login-tutorial-card,
+.duel-visual-settings,
+.login-card-manager,
+.online-alpha-panel,
+.online-alpha-section,
+.duel-custom-panel,
+.duel-debug-panel,
+.duel-resource-side,
+.duel-action-panel,
+.duel-domain-profile-panel,
+.duel-round-panel,
+.duel-tactic-panel,
+.duel-beta-feedback-panel,
+.duel-battlefield-units,
+.duel-residual-log,
+.flow-review-section,
+.instant-combat-card,
+.ai-free-panel,
+.half-custom-panel {
+  border: 1px solid var(--tech-line);
+  background: var(--tech-panel);
+  color: var(--tech-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 12px 32px rgba(10, 32, 44, 0.10);
+  backdrop-filter: blur(14px);
+}
+
+body.duel-theme-dark .topbar,
+body.duel-theme-dark .tabs,
+body.duel-theme-dark .panel,
+body.duel-theme-dark .global-settings-panel,
+body.duel-theme-dark .login-card-panel,
+body.duel-theme-dark .login-tutorial-card,
+body.duel-theme-dark .duel-visual-settings,
+body.duel-theme-dark .login-card-manager,
+body.duel-theme-dark .online-alpha-panel,
+body.duel-theme-dark .online-alpha-section,
+body.duel-theme-dark .duel-custom-panel,
+body.duel-theme-dark .duel-debug-panel,
+body.duel-theme-dark .duel-resource-side,
+body.duel-theme-dark .duel-action-panel,
+body.duel-theme-dark .duel-domain-profile-panel,
+body.duel-theme-dark .duel-round-panel,
+body.duel-theme-dark .duel-tactic-panel,
+body.duel-theme-dark .duel-beta-feedback-panel,
+body.duel-theme-dark .duel-battlefield-units,
+body.duel-theme-dark .duel-residual-log,
+body.duel-theme-dark .flow-review-section,
+body.duel-theme-dark .instant-combat-card,
+body.duel-theme-dark .ai-free-panel,
+body.duel-theme-dark .half-custom-panel {
+  border-color: var(--tech-line);
+  background: var(--tech-panel);
+  color: var(--tech-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 44px rgba(0, 0, 0, 0.34);
+}
+
+.panel::before,
+.login-card-panel::before,
+.login-tutorial-card::before,
+.duel-visual-settings::before,
+.login-card-manager::before,
+.online-alpha-panel::before,
+.duel-action-panel::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: min(180px, 38%);
+  height: 1px;
+  background: var(--tech-line-strong);
+  box-shadow: 18px 0 28px var(--tech-glow);
+}
+
+.panel::after,
+.login-card-panel::after,
+.login-tutorial-card::after,
+.duel-visual-settings::after,
+.login-card-manager::after,
+.online-alpha-panel::after,
+.duel-action-panel::after {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 22px;
+  height: 22px;
+  border-right: 1px solid var(--tech-line-strong);
+  border-bottom: 1px solid var(--tech-line-strong);
+  pointer-events: none;
+}
+
+.topbar {
+  border-bottom-color: var(--tech-line);
+}
+
+.topbar h1::before {
+  border-color: var(--tech-line-strong);
+  background: rgba(0, 168, 196, 0.10);
+  color: var(--tech-accent-2);
+}
+
+body.duel-theme-dark .topbar h1::before {
+  color: var(--tech-accent);
+}
+
+.tab,
+.jjk-battle-tab,
+.jjk-battle-home-card,
+.jjk-battle-info-grid article,
+.online-player-grid article,
+.online-room-card,
+.duel-skin-preview-card,
+.login-card-character-row,
+.login-card-count,
+.duel-tactic,
+.choice-grid button,
+.flow-review-summary span,
+.flow-condition {
+  border-color: var(--tech-line);
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--tech-ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+body.duel-theme-dark .tab,
+body.duel-theme-dark .jjk-battle-tab,
+body.duel-theme-dark .jjk-battle-home-card,
+body.duel-theme-dark .jjk-battle-info-grid article,
+body.duel-theme-dark .online-player-grid article,
+body.duel-theme-dark .online-room-card,
+body.duel-theme-dark .duel-skin-preview-card,
+body.duel-theme-dark .login-card-character-row,
+body.duel-theme-dark .login-card-count,
+body.duel-theme-dark .duel-tactic,
+body.duel-theme-dark .choice-grid button,
+body.duel-theme-dark .flow-review-summary span,
+body.duel-theme-dark .flow-condition {
+  border-color: var(--tech-line);
+  background: rgba(9, 24, 35, 0.72);
+  color: var(--tech-ink);
+}
+
+.tab.active,
+.jjk-battle-tab.active,
+.duel-tactic.active,
+.choice-grid button.selected {
+  border-color: var(--tech-line-strong);
+  background: rgba(0, 168, 196, 0.13);
+  color: var(--tech-ink);
+  box-shadow:
+    inset 0 -2px 0 var(--tech-accent),
+    0 0 0 1px rgba(0, 168, 196, 0.12),
+    0 10px 26px var(--tech-glow);
+}
+
+body.duel-theme-dark .tab.active,
+body.duel-theme-dark .jjk-battle-tab.active,
+body.duel-theme-dark .duel-tactic.active,
+body.duel-theme-dark .choice-grid button.selected {
+  background: rgba(34, 211, 238, 0.13);
+  color: #f0fbff;
+}
+
+.primary,
+.secondary,
+button,
+.feedback-contact {
+  border-radius: 6px;
+}
+
+.primary {
+  border-color: rgba(0, 168, 196, 0.36);
+  background: #008ca3;
+  color: #f8fdff;
+  box-shadow: 0 10px 24px var(--tech-glow);
+}
+
+body.duel-theme-dark .primary {
+  border-color: rgba(103, 232, 249, 0.46);
+  background: #0f8faa;
+  color: #f8fdff;
+}
+
+.secondary,
+body.duel-theme-dark .secondary,
+body.duel-theme-dark .mini {
+  border-color: var(--tech-line);
+  background: rgba(255, 255, 255, 0.46);
+  color: var(--tech-ink);
+  box-shadow: none;
+}
+
+body.duel-theme-dark .secondary,
+body.duel-theme-dark .mini {
+  background: rgba(9, 24, 35, 0.72);
+}
+
+.primary:hover:not(:disabled),
+.secondary:hover:not(:disabled) {
+  border-color: var(--tech-line-strong);
+  background: rgba(0, 168, 196, 0.17);
+  color: var(--tech-ink);
+}
+
+body.duel-theme-dark .primary:hover:not(:disabled),
+body.duel-theme-dark .secondary:hover:not(:disabled) {
+  background: rgba(34, 211, 238, 0.16);
+  color: #f0fbff;
+}
+
+input:not([type="radio"]):not([type="checkbox"]):not([type="range"]),
+select,
+textarea,
+.field input,
+.field select,
+.field textarea,
+.wheel-setting-field input,
+.online-invite-field input {
+  border-color: var(--tech-line);
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--tech-ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+body.duel-theme-dark input:not([type="radio"]):not([type="checkbox"]):not([type="range"]),
+body.duel-theme-dark select,
+body.duel-theme-dark textarea,
+body.duel-theme-dark .field input,
+body.duel-theme-dark .field select,
+body.duel-theme-dark .field textarea,
+body.duel-theme-dark .wheel-setting-field input,
+body.duel-theme-dark .online-invite-field input {
+  border-color: var(--tech-line);
+  background: rgba(5, 15, 24, 0.84);
+  color: var(--tech-ink);
+}
+
+.muted,
+.topbar p,
+.jjk-battle-home-card span,
+.jjk-battle-info-grid span,
+.online-player-grid span,
+.duel-action-status,
+.duel-action-subtitle,
+.duel-action-numeric-brief,
+.duel-action-choice span:not(.duel-action-title),
+.duel-hand-detail {
+  color: var(--tech-muted);
+}
+
+body.duel-theme-dark .muted,
+body.duel-theme-dark .topbar p,
+body.duel-theme-dark .jjk-battle-home-card span,
+body.duel-theme-dark .jjk-battle-info-grid span,
+body.duel-theme-dark .online-player-grid span,
+body.duel-theme-dark .duel-action-status,
+body.duel-theme-dark .duel-action-subtitle,
+body.duel-theme-dark .duel-action-numeric-brief,
+body.duel-theme-dark .duel-action-choice span:not(.duel-action-title),
+body.duel-theme-dark .duel-hand-detail {
+  color: var(--tech-muted) !important;
+}
+
+.login-card-gate,
+.login-tutorial-panel {
+  background: rgba(232, 243, 248, 0.72);
+  backdrop-filter: blur(18px);
+}
+
+body.duel-theme-dark .login-card-gate,
+body.duel-theme-dark .login-tutorial-panel {
+  background: rgba(7, 16, 24, 0.84);
+}
+
+.login-card-gate-bg {
+  background:
+    linear-gradient(rgba(0, 168, 196, 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 168, 196, 0.12) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+body.duel-theme-dark .login-card-gate-bg {
+  background:
+    linear-gradient(rgba(103, 232, 249, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 232, 249, 0.085) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+
+.login-card-panel,
+.login-tutorial-card {
+  width: min(760px, calc(100vw - 28px));
+}
+
+.login-card-panel-copy .badge,
+.login-tutorial-head .badge {
+  border-color: var(--tech-line-strong);
+  background: rgba(0, 168, 196, 0.10);
+  color: var(--tech-accent-2);
+}
+
+body.duel-theme-dark .login-card-panel-copy .badge,
+body.duel-theme-dark .login-tutorial-head .badge {
+  color: var(--tech-accent);
+}
+
+.duel-visual-settings-grid {
+  align-items: end;
+}
+
+.duel-visual-settings select {
+  min-height: 42px;
+}
+
+body.duel-card-skin-classic .duel-skin-preview-card,
+body.duel-card-skin-classic .duel-hand-card .duel-action-choice {
+  --card-skin-bg: rgba(255, 255, 255, 0.56);
+  --card-skin-border: var(--tech-line);
+  --card-skin-accent: var(--tech-accent);
+  --card-skin-text: var(--tech-ink);
+  --card-skin-muted: var(--tech-muted);
+  --card-skin-glow: transparent;
+  border-color: var(--tech-line);
+  background: rgba(255, 255, 255, 0.56) !important;
+  color: var(--tech-ink) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+body.duel-theme-dark.duel-card-skin-classic .duel-skin-preview-card,
+body.duel-theme-dark.duel-card-skin-classic .duel-hand-card .duel-action-choice {
+  --card-skin-bg: rgba(9, 24, 35, 0.72);
+  --card-skin-border: var(--tech-line);
+  --card-skin-accent: var(--tech-accent);
+  --card-skin-text: var(--tech-ink);
+  --card-skin-muted: var(--tech-muted);
+  background: rgba(9, 24, 35, 0.72) !important;
+  color: var(--tech-ink) !important;
+}
+
+body.duel-card-skin-classic .duel-skin-preview-card::before,
+body.duel-card-skin-classic .duel-hand-card .duel-action-choice::before {
+  display: none !important;
+}
+
+body.duel-card-skin-classic .duel-skin-preview-card span,
+body.duel-card-skin-classic .duel-hand-card .duel-action-choice span:not(.duel-action-title),
+body.duel-card-skin-classic .duel-hand-card .duel-action-effect,
+body.duel-card-skin-classic .duel-hand-card .duel-action-tags,
+body.duel-card-skin-classic .duel-hand-card .duel-action-numeric-brief {
+  color: var(--tech-muted) !important;
+}
+
+.duel-action-choice,
+.duel-hand-detail,
+.duel-card-developer-details,
+.duel-hand-debug,
+.duel-domain-profile-card {
+  border-color: var(--tech-line);
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--tech-ink);
+}
+
+body.duel-theme-dark .duel-action-choice,
+body.duel-theme-dark .duel-hand-detail,
+body.duel-theme-dark .duel-card-developer-details,
+body.duel-theme-dark .duel-hand-debug,
+body.duel-theme-dark .duel-domain-profile-card {
+  border-color: var(--tech-line);
+  background: rgba(9, 24, 35, 0.74);
+  color: var(--tech-ink);
+}
+
+/* V2.26 final surface pass: keep the whole app on the same translucent tech system. */
+body :is(
+  .topbar,
+  .app-shell,
+  .tab-panel,
+  .tabs,
+  .panel,
+  .global-settings-panel,
+  .login-card-panel,
+  .login-card-manager,
+  .login-card-welcome,
+  .login-tutorial-card,
+  .duel-visual-settings,
+  .duel-debug-panel,
+  .duel-panel,
+  .duel-selectors,
+  .duel-custom-panel,
+  .duel-custom-mode,
+  .duel-custom-stats,
+  .duel-ai-assist,
+  .duel-import-code-panel,
+  .duel-custom-interface,
+  .duel-special-card-editor,
+  .duel-library-assist,
+  .duel-ai-output,
+  .duel-summary,
+  .duel-match-summary-card,
+  .duel-battle,
+  .duel-battle-empty,
+  .duel-battle-stage,
+  .duel-battle-status,
+  .duel-resource-side,
+  .duel-resource-meta,
+  .duel-domain-load,
+  .duel-status-effects,
+  .duel-round-memo,
+  .duel-replay-meta,
+  .duel-residual-log,
+  .duel-action-toolbar,
+  .duel-selected-hand-summary,
+  .duel-domain-hand-head,
+  .duel-hand-execute-control,
+  .duel-beta-feedback-body,
+  .duel-beta-feedback-panel,
+  .duel-auto-latest,
+  .duel-auto-empty,
+  .duel-card-detail-section,
+  .duel-log-entry,
+  .duel-custom-item,
+  .jjk-battle-tabs,
+  .jjk-battle-active-surface,
+  .jjk-battle-home-card,
+  .jjk-battle-info-grid article,
+  .online-alpha-section,
+  .online-room-card,
+  .online-player-grid article,
+  .update-modal-card,
+  .online-sync-section,
+  .online-room-section,
+  .online-battle-section,
+  .online-prepare-section,
+  .online-player-slot,
+  .online-room-meta,
+  .online-room-log,
+  details,
+  summary
+) {
+  border-color: var(--tech-line) !important;
+  background: rgba(255, 255, 255, 0.68) !important;
+  background-image: none !important;
+  color: var(--tech-ink) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 16px 36px rgba(16, 42, 54, 0.08) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.18);
+  backdrop-filter: blur(16px) saturate(1.18);
+}
+
+body.duel-theme-dark :is(
+  .topbar,
+  .app-shell,
+  .tab-panel,
+  .tabs,
+  .panel,
+  .global-settings-panel,
+  .login-card-panel,
+  .login-card-manager,
+  .login-card-welcome,
+  .login-tutorial-card,
+  .duel-visual-settings,
+  .duel-debug-panel,
+  .duel-panel,
+  .duel-selectors,
+  .duel-custom-panel,
+  .duel-custom-mode,
+  .duel-custom-stats,
+  .duel-ai-assist,
+  .duel-import-code-panel,
+  .duel-custom-interface,
+  .duel-special-card-editor,
+  .duel-library-assist,
+  .duel-ai-output,
+  .duel-summary,
+  .duel-match-summary-card,
+  .duel-battle,
+  .duel-battle-empty,
+  .duel-battle-stage,
+  .duel-battle-status,
+  .duel-resource-side,
+  .duel-resource-meta,
+  .duel-domain-load,
+  .duel-status-effects,
+  .duel-round-memo,
+  .duel-replay-meta,
+  .duel-residual-log,
+  .duel-action-toolbar,
+  .duel-selected-hand-summary,
+  .duel-domain-hand-head,
+  .duel-hand-execute-control,
+  .duel-beta-feedback-body,
+  .duel-beta-feedback-panel,
+  .duel-auto-latest,
+  .duel-auto-empty,
+  .duel-card-detail-section,
+  .duel-log-entry,
+  .duel-custom-item,
+  .jjk-battle-tabs,
+  .jjk-battle-active-surface,
+  .jjk-battle-home-card,
+  .jjk-battle-info-grid article,
+  .online-alpha-section,
+  .online-room-card,
+  .online-player-grid article,
+  .update-modal-card,
+  .online-sync-section,
+  .online-room-section,
+  .online-battle-section,
+  .online-prepare-section,
+  .online-player-slot,
+  .online-room-meta,
+  .online-room-log,
+  details,
+  summary
+) {
+  border-color: var(--tech-line) !important;
+  background: rgba(8, 22, 32, 0.82) !important;
+  background-image: none !important;
+  color: var(--tech-ink) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(103, 232, 249, 0.08),
+    0 16px 38px rgba(0, 0, 0, 0.24) !important;
+}
+
+body :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings)::before,
+body :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings)::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  display: block !important;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  background: none !important;
+}
+
+body :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings) {
+  position: relative;
+}
+
+body :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings)::before {
+  top: 10px;
+  left: 10px;
+  border-top: 1px solid var(--tech-line-strong);
+  border-left: 1px solid var(--tech-line-strong);
+}
+
+body :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings)::after {
+  right: 10px;
+  bottom: 10px;
+  border-right: 1px solid var(--tech-line-strong);
+  border-bottom: 1px solid var(--tech-line-strong);
+}
+
+body :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings) > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.duel-theme-dark :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings)::before,
+body.duel-theme-dark :is(.panel, .duel-battle-stage, .duel-battle-empty, .login-card-panel, .duel-visual-settings)::after {
+  border-color: rgba(103, 232, 249, 0.42);
+}
+
+body.duel-theme-dark :is(.duel-resource-bar, .duel-score-track, .duel-auto-meter) {
+  border-color: var(--tech-line) !important;
+  background: rgba(4, 13, 20, 0.72) !important;
+  background-image: none !important;
+}
+
+body.duel-theme-dark :is(.badge, .duel-chip, .duel-log-filter, .duel-selected-order-badge, .duel-action-card-type, .duel-action-risk, .duel-action-cost, .duel-summon-preview, code, pre) {
+  border-color: var(--tech-line) !important;
+  background: rgba(5, 18, 27, 0.72) !important;
+  background-image: none !important;
+  color: var(--tech-ink) !important;
+}
+
+body.duel-theme-dark :is(.primary) {
+  border-color: rgba(103, 232, 249, 0.46) !important;
+  background: #0f8faa !important;
+  background-image: none !important;
+  color: #f8fdff !important;
+}
+
+body.duel-theme-dark :is(.tab.active, .jjk-battle-tab.active, .duel-tactic.active, .choice-grid button.selected) {
+  border-color: var(--tech-line-strong) !important;
+  background: rgba(34, 211, 238, 0.15) !important;
+  background-image: none !important;
+  color: #f0fbff !important;
+}
+
+body.duel-theme-dark::before,
+body.duel-theme-dark::after,
+body.duel-theme-dark .login-card-gate-bg {
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+@media (max-width: 640px) {
+  .top-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .top-actions > button {
+    width: 100%;
+  }
+
+  .top-actions .play-mode-control,
+  .top-actions .ai-free-toggle {
+    grid-column: 1 / -1;
+  }
+}
+
+/* V3.0 interface rebuild: compact translucent line-tech system. */
+body {
+  --v3-bg: #eef3f7;
+  --v3-surface: rgba(248, 251, 253, 0.86);
+  --v3-surface-strong: rgba(255, 255, 255, 0.94);
+  --v3-surface-soft: rgba(239, 246, 250, 0.76);
+  --v3-line: rgba(58, 91, 111, 0.22);
+  --v3-line-strong: rgba(8, 145, 178, 0.42);
+  --v3-text: #13212c;
+  --v3-muted: #5f7080;
+  --v3-accent: #087f9b;
+  --v3-accent-soft: rgba(8, 127, 155, 0.12);
+  --v3-accent-2: #bd7526;
+  --v3-danger: #c94343;
+  --v3-shadow: 0 18px 48px rgba(24, 42, 56, 0.12);
+  --v3-shadow-soft: 0 10px 28px rgba(24, 42, 56, 0.08);
+  --bg: var(--v3-bg);
+  --paper: var(--v3-surface);
+  --paper-strong: var(--v3-surface-strong);
+  --line: var(--v3-line);
+  --ink: var(--v3-text);
+  --muted: var(--v3-muted);
+  --accent: var(--v3-accent);
+  --accent-2: var(--v3-accent-2);
+  background: var(--v3-bg) !important;
+  color: var(--v3-text) !important;
+}
+
+body.duel-theme-dark {
+  --v3-bg: #061019;
+  --v3-surface: rgba(10, 23, 33, 0.86);
+  --v3-surface-strong: rgba(12, 28, 40, 0.94);
+  --v3-surface-soft: rgba(6, 18, 28, 0.78);
+  --v3-line: rgba(105, 214, 235, 0.24);
+  --v3-line-strong: rgba(105, 214, 235, 0.48);
+  --v3-text: #e9f7fb;
+  --v3-muted: #9eb5c2;
+  --v3-accent: #5dd5eb;
+  --v3-accent-soft: rgba(93, 213, 235, 0.14);
+  --v3-accent-2: #f0b35a;
+  --v3-danger: #ff7676;
+  --v3-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+  --v3-shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.24);
+  --bg: var(--v3-bg);
+  --paper: var(--v3-surface);
+  --paper-strong: var(--v3-surface-strong);
+  --line: var(--v3-line);
+  --ink: var(--v3-text);
+  --muted: var(--v3-muted);
+  --accent: var(--v3-accent);
+  --accent-2: var(--v3-accent-2);
+  background: #061019 !important;
+  background-image: none !important;
+}
+
+body::before,
+body::after {
+  display: none !important;
+}
+
+body .app-shell {
+  background: var(--v3-bg) !important;
+  color: var(--v3-text) !important;
+}
+
+body :is(h1, h2, h3, h4, .brand-title, .duel-action-title, .duel-actor-name, .login-tutorial-title) {
+  color: var(--v3-text) !important;
+  letter-spacing: 0 !important;
+}
+
+body :is(.muted, .subtle, .badge.muted, .duel-action-subtitle, .duel-card-note, .duel-log-meta, .helper-text, small) {
+  color: var(--v3-muted) !important;
+}
+
+body .topbar {
+  width: min(1520px, calc(100% - 24px)) !important;
+  margin: 12px auto 0 !important;
+  padding: 12px 14px !important;
+  display: grid !important;
+  grid-template-columns: minmax(420px, 0.8fr) minmax(520px, 1.2fr) !important;
+  align-items: center !important;
+  gap: 14px !important;
+  border: 1px solid var(--v3-line) !important;
+  border-radius: 8px !important;
+  background: var(--v3-surface-strong) !important;
+  box-shadow: var(--v3-shadow-soft) !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+body .brand {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 4px !important;
+}
+
+body .brand h1,
+body .brand-title {
+  margin: 0 !important;
+  font-size: clamp(1.18rem, 1.45vw, 1.55rem) !important;
+  line-height: 1.15 !important;
+  font-weight: 760 !important;
+  white-space: nowrap !important;
+}
+
+body .brand p {
+  margin: 0 !important;
+  max-width: 76ch !important;
+  color: var(--v3-muted) !important;
+}
+
+body .top-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+body .tabs {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 70 !important;
+  width: min(1520px, calc(100% - 24px)) !important;
+  margin: 12px auto 0 !important;
+  padding: 8px !important;
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  border: 1px solid var(--v3-line) !important;
+  border-radius: 8px !important;
+  background: rgba(248, 251, 253, 0.82) !important;
+  box-shadow: var(--v3-shadow-soft) !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+body.duel-theme-dark .tabs {
+  background: rgba(7, 18, 28, 0.9) !important;
+  background-image: none !important;
+}
+
+body .tab,
+body .jjk-battle-tab,
+body .duel-tactic,
+body .duel-log-filter {
+  min-height: 38px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--v3-muted) !important;
+  box-shadow: none !important;
+}
+
+body :is(.tab.active, .jjk-battle-tab.active, .duel-tactic.active, .duel-log-filter.active, .choice-grid button.selected) {
+  border-color: var(--v3-line-strong) !important;
+  background: var(--v3-accent-soft) !important;
+  color: var(--v3-text) !important;
+}
+
+body main {
+  width: min(1520px, calc(100% - 24px)) !important;
+  margin: 0 auto !important;
+  padding: 18px 0 48px !important;
+}
+
+body :is(
+  .panel,
+  .global-settings-panel,
+  .settings-card,
+  .run-card,
+  .result-card,
+  .history-panel,
+  .duel-visual-settings,
+  .duel-battle-stage,
+  .duel-battle-empty,
+  .duel-panel,
+  .duel-custom-panel,
+  .duel-debug-panel,
+  .duel-resource-side,
+  .duel-action-panel,
+  .duel-round-panel,
+  .duel-tactic-panel,
+  .duel-beta-feedback-panel,
+  .duel-battlefield-units,
+  .duel-residual-log,
+  .duel-actor-card,
+  .duel-summon-panel,
+  .duel-custom-item,
+  .online-alpha-panel,
+  .online-room-card,
+  .online-spectator-panel,
+  .debug-entry-panel,
+  .login-card-panel,
+  .login-card-manager,
+  .login-card-character-row,
+  .login-card-tutorial-form,
+  .login-card-welcome,
+  .login-card-count
+) {
+  border: 1px solid var(--v3-line) !important;
+  border-radius: 8px !important;
+  background: var(--v3-surface) !important;
+  background-image: none !important;
+  color: var(--v3-text) !important;
+  box-shadow: var(--v3-shadow-soft) !important;
+  backdrop-filter: blur(16px) saturate(1.06) !important;
+}
+
+body :is(.panel, .duel-visual-settings, .duel-battle-stage, .duel-battle-empty, .login-card-panel)::before,
+body :is(.panel, .duel-visual-settings, .duel-battle-stage, .duel-battle-empty, .login-card-panel)::after {
+  width: 30px !important;
+  height: 30px !important;
+  opacity: 0.76 !important;
+  border-color: var(--v3-line-strong) !important;
+}
+
+body :is(.panel-heading, .duel-section-head, .duel-round-head, .duel-actor-head, .login-tutorial-head) {
+  border-color: var(--v3-line) !important;
+}
+
+body :is(.duel-visual-settings-grid, .settings-grid, .run-grid, .duel-setup-grid, .duel-battle-layout) {
+  gap: 14px !important;
+}
+
+body :is(input, select, textarea) {
+  border: 1px solid var(--v3-line) !important;
+  border-radius: 8px !important;
+  background: var(--v3-surface-strong) !important;
+  color: var(--v3-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+body.duel-theme-dark :is(input, select, textarea) {
+  background: rgba(5, 16, 25, 0.94) !important;
+  color-scheme: dark !important;
+}
+
+body :is(input, select, textarea):focus {
+  border-color: var(--v3-line-strong) !important;
+  outline: 2px solid var(--v3-accent-soft) !important;
+  outline-offset: 1px !important;
+}
+
+body button,
+body .button,
+body .primary,
+body .secondary,
+body .ghost {
+  min-height: 36px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--v3-line) !important;
+  background: var(--v3-surface-soft) !important;
+  background-image: none !important;
+  color: var(--v3-text) !important;
+  box-shadow: none !important;
+  letter-spacing: 0 !important;
+}
+
+body :is(button, .button, .primary, .secondary, .ghost):hover:not(:disabled) {
+  border-color: var(--v3-line-strong) !important;
+  background: var(--v3-accent-soft) !important;
+  transform: translateY(-1px) !important;
+}
+
+body :is(button.primary, .primary) {
+  border-color: var(--v3-line-strong) !important;
+  background: var(--v3-accent) !important;
+  color: #f8fdff !important;
+}
+
+body :is(button.secondary, .secondary) {
+  background: transparent !important;
+  color: var(--v3-text) !important;
+}
+
+body :is(button:disabled, .button:disabled) {
+  opacity: 0.48 !important;
+  transform: none !important;
+}
+
+body :is(.badge, .duel-chip, .duel-action-cost, .duel-action-risk, .duel-action-card-type, .duel-selected-order-badge, code, pre) {
+  border: 1px solid var(--v3-line) !important;
+  border-radius: 8px !important;
+  background: var(--v3-surface-soft) !important;
+  background-image: none !important;
+  color: var(--v3-text) !important;
+}
+
+body :is(.duel-resource-bar, .duel-score-track, .duel-auto-meter, .progress, .meter) {
+  border: 1px solid var(--v3-line) !important;
+  border-radius: 999px !important;
+  background: var(--v3-surface-soft) !important;
+  background-image: none !important;
+  overflow: hidden !important;
+}
+
+body :is(.duel-resource-fill, .duel-score-fill, .progress-fill, .meter-fill) {
+  background: var(--v3-accent) !important;
+  background-image: none !important;
+}
+
+body .duel-hand-card {
+  border-radius: 8px !important;
+  box-shadow: var(--v3-shadow-soft) !important;
+}
+
+body .duel-action-choice {
+  border-radius: 8px !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+body .duel-hand-card.active {
+  outline: 2px solid var(--v3-accent) !important;
+  outline-offset: 2px !important;
+}
+
+body .duel-visual-settings {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+body .duel-skin-preview-card {
+  border-radius: 8px !important;
+  box-shadow: var(--v3-shadow-soft) !important;
+}
+
+/* Battle hand card skin restore: keep late UI reset rules from flattening card faces. */
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-template .duel-action-choice,
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-special .duel-action-choice,
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-domain .duel-action-choice,
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-summon .duel-action-choice,
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-mahoraga .duel-action-choice,
+body.duel-card-skin-v224 .duel-hand-card.duel-skin-trial .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-template .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-special .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-domain .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-summon .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-mahoraga .duel-action-choice,
+body.duel-card-skin-custom .duel-hand-card.duel-skin-trial .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224.duel-skin-template .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224.duel-skin-special .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224.duel-skin-domain .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224.duel-skin-summon .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224.duel-skin-mahoraga .duel-action-choice,
+.duel-hand-card.duel-card-skin-v224.duel-skin-trial .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.duel-skin-template .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.duel-skin-special .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.duel-skin-domain .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.duel-skin-summon .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.duel-skin-mahoraga .duel-action-choice,
+.duel-hand-card.duel-card-skin-custom.duel-skin-trial .duel-action-choice {
+  border-color: var(--card-skin-border) !important;
+  background: var(--card-skin-bg) !important;
+  background-image: var(--card-skin-bg) !important;
+  color: var(--card-skin-text) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--card-skin-border) 42%, transparent),
+    0 12px 26px var(--card-skin-glow) !important;
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-choice::before,
+body.duel-card-skin-custom .duel-hand-card .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-v224 .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-custom .duel-action-choice::before {
+  display: block !important;
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-title,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-subtitle,
+body.duel-card-skin-custom .duel-hand-card .duel-action-title,
+body.duel-card-skin-custom .duel-hand-card .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-v224 .duel-action-title,
+.duel-hand-card.duel-card-skin-v224 .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-custom .duel-action-title,
+.duel-hand-card.duel-card-skin-custom .duel-action-subtitle {
+  color: var(--card-skin-text) !important;
+}
+
+body.duel-card-skin-v224 .duel-hand-card .duel-action-card-type,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-risk,
+body.duel-card-skin-v224 .duel-hand-card .duel-action-cost,
+body.duel-card-skin-custom .duel-hand-card .duel-action-card-type,
+body.duel-card-skin-custom .duel-hand-card .duel-action-risk,
+body.duel-card-skin-custom .duel-hand-card .duel-action-cost,
+.duel-hand-card.duel-card-skin-v224 .duel-action-card-type,
+.duel-hand-card.duel-card-skin-v224 .duel-action-risk,
+.duel-hand-card.duel-card-skin-v224 .duel-action-cost,
+.duel-hand-card.duel-card-skin-custom .duel-action-card-type,
+.duel-hand-card.duel-card-skin-custom .duel-action-risk,
+.duel-hand-card.duel-card-skin-custom .duel-action-cost {
+  border-color: color-mix(in srgb, var(--card-skin-accent) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--card-skin-accent) 14%, transparent) !important;
+  background-image: none !important;
+  color: var(--card-skin-accent) !important;
+}
+
+body .login-card-gate {
+  background: var(--v3-bg) !important;
+  background-image: none !important;
+}
+
+body .login-card-panel {
+  width: min(760px, calc(100vw - 32px)) !important;
+  padding: 24px !important;
+}
+
+body .login-card-panel-copy {
+  border-color: var(--v3-line) !important;
+}
+
+body .login-card-welcome[hidden] {
+  display: none !important;
+}
+
+body .login-tutorial-panel {
+  position: fixed !important;
+  inset: auto 18px 18px auto !important;
+  z-index: 230 !important;
+  width: min(360px, calc(100vw - 24px)) !important;
+  max-height: calc(100vh - 36px) !important;
+  display: block !important;
+  place-items: initial !important;
+  align-items: initial !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  pointer-events: none !important;
+}
+
+body .login-tutorial-panel[hidden] {
+  display: none !important;
+}
+
+body .login-tutorial-card {
+  width: 100% !important;
+  max-height: min(74vh, 680px) !important;
+  overflow: auto !important;
+  border: 1px solid var(--v3-line-strong) !important;
+  border-radius: 8px !important;
+  background: var(--v3-surface-strong) !important;
+  background-image: none !important;
+  color: var(--v3-text) !important;
+  box-shadow: var(--v3-shadow) !important;
+  pointer-events: auto !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+body .login-tutorial-skip {
+  position: absolute !important;
+  top: -46px !important;
+  right: 0 !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+}
+
+body .login-tutorial-body,
+body .login-tutorial-nav {
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+
+body.login-tutorial-active main {
+  padding-bottom: 210px !important;
+}
+
+body.duel-theme-dark :is(
+  .topbar,
+  .tabs,
+  .panel,
+  .global-settings-panel,
+  .settings-card,
+  .run-card,
+  .result-card,
+  .history-panel,
+  .duel-visual-settings,
+  .duel-battle-stage,
+  .duel-battle-empty,
+  .duel-panel,
+  .duel-custom-panel,
+  .duel-debug-panel,
+  .duel-resource-side,
+  .duel-action-panel,
+  .duel-round-panel,
+  .duel-tactic-panel,
+  .duel-beta-feedback-panel,
+  .duel-battlefield-units,
+  .duel-residual-log,
+  .duel-actor-card,
+  .duel-summon-panel,
+  .duel-custom-item,
+  .online-alpha-panel,
+  .online-room-card,
+  .online-spectator-panel,
+  .debug-entry-panel,
+  .login-card-panel,
+  .login-tutorial-card,
+  .login-card-manager,
+  .login-card-character-row,
+  .login-card-tutorial-form,
+  .login-card-welcome,
+  .login-card-count
+) {
+  background: var(--v3-surface) !important;
+  background-image: none !important;
+  color: var(--v3-text) !important;
+  border-color: var(--v3-line) !important;
+}
+
+body.duel-theme-dark :is(.login-card-gate, .login-card-gate-bg, .login-tutorial-panel) {
+  background-image: none !important;
+}
+
+body.duel-theme-dark :is(.login-card-panel, .login-tutorial-card) {
+  background: var(--v3-surface-strong) !important;
+}
+
+body.duel-theme-dark :is(.muted, .subtle, .duel-action-subtitle, .duel-card-note, .helper-text, small) {
+  color: var(--v3-muted) !important;
+}
+
+body.duel-theme-dark :is(.tab, .jjk-battle-tab, .duel-tactic, .duel-log-filter, button.secondary, .secondary) {
+  color: var(--v3-muted) !important;
+}
+
+body.duel-theme-dark :is(.tab.active, .jjk-battle-tab.active, .duel-tactic.active, .duel-log-filter.active, .choice-grid button.selected) {
+  color: var(--v3-text) !important;
+}
+
+@media (max-width: 1080px) {
+  body .topbar {
+    grid-template-columns: 1fr !important;
+  }
+
+  body .brand h1,
+  body .brand-title {
+    white-space: normal !important;
+  }
+
+  body .top-actions {
+    justify-content: flex-start !important;
+  }
+
+  body :is(.run-grid, .duel-setup-grid, .duel-battle-layout) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 700px) {
+  body .topbar,
+  body .tabs,
+  body main {
+    width: calc(100% - 18px) !important;
+  }
+
+  body .login-tutorial-panel {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    width: auto !important;
+    max-height: 58vh !important;
+  }
+
+  body .login-tutorial-card {
+    max-height: 58vh !important;
+  }
+
+  body .login-tutorial-skip {
+    top: -42px !important;
+  }
+
+  body.login-tutorial-active main {
+    padding-bottom: 50vh !important;
+  }
+}
+
+/* Battle hand card skin restore: final pass after all UI reset rules. */
+body:is(.duel-card-skin-v224, .duel-card-skin-custom, .duel-card-skin-champion-kashimo) .duel-hand-card:is(.duel-skin-template, .duel-skin-special, .duel-skin-domain, .duel-skin-summon, .duel-skin-mahoraga, .duel-skin-trial) .duel-action-choice,
+.duel-hand-card:is(.duel-card-skin-v224, .duel-card-skin-custom, .duel-card-skin-champion-kashimo):is(.duel-skin-template, .duel-skin-special, .duel-skin-domain, .duel-skin-summon, .duel-skin-mahoraga, .duel-skin-trial) .duel-action-choice {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  border-color: var(--card-skin-border) !important;
+  background: var(--card-skin-bg) !important;
+  background-image: var(--card-skin-bg) !important;
+  color: var(--card-skin-text) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--card-skin-border) 42%, transparent),
+    0 12px 26px var(--card-skin-glow) !important;
+}
+
+body:is(.duel-card-skin-v224, .duel-card-skin-custom) .duel-hand-card .duel-action-choice::before,
+.duel-hand-card:is(.duel-card-skin-v224, .duel-card-skin-custom) .duel-action-choice::before {
+  background:
+    linear-gradient(115deg, transparent 0 38%, rgba(255, 255, 255, 0.18) 48%, transparent 58%),
+    radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.24) 0 2px, transparent 3px) !important;
+  opacity: 0.48 !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-template,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-template,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-template {
+  --card-skin-bg:
+    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.92) 0 8%, transparent 9%),
+    linear-gradient(138deg, #fff7fe 0%, #c9fff5 45%, #ffd1ec 100%);
+  --card-skin-border: #f45ab1;
+  --card-skin-accent: #059e9a;
+  --card-skin-text: #241827;
+  --card-skin-muted: #66516b;
+  --card-skin-glow: rgba(244, 90, 177, 0.28);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-special,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-special,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-special {
+  --card-skin-bg:
+    radial-gradient(circle at 80% 20%, rgba(199, 255, 246, 0.88) 0 9%, transparent 10%),
+    linear-gradient(138deg, #201429 0%, #ff6fbe 47%, #b9fff3 100%);
+  --card-skin-border: #14101c;
+  --card-skin-accent: #fff06a;
+  --card-skin-text: #fffafd;
+  --card-skin-muted: #ffe2f3;
+  --card-skin-glow: rgba(45, 212, 191, 0.34);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-domain,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-domain,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-domain {
+  --card-skin-bg:
+    radial-gradient(circle at 78% 20%, rgba(255, 121, 189, 0.34) 0 10%, transparent 11%),
+    linear-gradient(138deg, #111827 0%, #283064 48%, #ff79bd 100%);
+  --card-skin-border: #9f7aea;
+  --card-skin-accent: #67e8f9;
+  --card-skin-text: #ffffff;
+  --card-skin-muted: #e5edff;
+  --card-skin-glow: rgba(139, 92, 246, 0.34);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-summon,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-summon,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-summon {
+  --card-skin-bg:
+    radial-gradient(circle at 80% 22%, rgba(255, 255, 255, 0.9) 0 8%, transparent 9%),
+    linear-gradient(138deg, #edfffb 0%, #8ff7e9 52%, #ffd2e7 100%);
+  --card-skin-border: #10b9ad;
+  --card-skin-accent: #f43f8f;
+  --card-skin-text: #142629;
+  --card-skin-muted: #476368;
+  --card-skin-glow: rgba(16, 185, 173, 0.26);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-mahoraga,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-mahoraga,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-mahoraga {
+  --card-skin-bg:
+    radial-gradient(circle at 82% 18%, rgba(250, 204, 21, 0.4) 0 9%, transparent 10%),
+    linear-gradient(138deg, #101119 0%, #f7f2ff 50%, #ffd6ec 100%);
+  --card-skin-border: #111827;
+  --card-skin-accent: #facc15;
+  --card-skin-text: #111827;
+  --card-skin-muted: #4b5563;
+  --card-skin-glow: rgba(250, 204, 21, 0.28);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card.duel-skin-trial,
+.duel-hand-card.duel-card-skin-champion-kashimo.duel-skin-trial,
+body.duel-card-skin-champion-kashimo .duel-skin-preview-card.duel-skin-trial {
+  --card-skin-bg:
+    radial-gradient(circle at 80% 20%, rgba(199, 255, 246, 0.5) 0 9%, transparent 10%),
+    linear-gradient(138deg, #ffffff 0%, #f9d5e8 46%, #111827 100%);
+  --card-skin-border: #111827;
+  --card-skin-accent: #ff4fa3;
+  --card-skin-text: #141820;
+  --card-skin-muted: #4a5565;
+  --card-skin-glow: rgba(255, 79, 163, 0.22);
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice::before,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  display: block !important;
+  background:
+    linear-gradient(104deg, transparent 0 18%, rgba(255, 255, 255, 0.5) 18% 20%, transparent 20% 100%),
+    linear-gradient(150deg, transparent 0 62%, rgba(255, 105, 180, 0.34) 62% 70%, transparent 70% 100%),
+    radial-gradient(circle at 12% 20%, #ffffff 0 2px, transparent 3px),
+    radial-gradient(circle at 17% 70%, #ff79bd 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 64%, #9df7ee 0 2px, transparent 3px) !important;
+  opacity: 0.76 !important;
+  transform: none !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-choice::after,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-choice::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 0 !important;
+  width: 58px !important;
+  height: 58px !important;
+  border: 2px solid rgba(20, 16, 28, 0.82) !important;
+  border-radius: 50% 50% 46% 46% !important;
+  pointer-events: none !important;
+  background-color: #c9fff5 !important;
+  background-image: url("../images/kashimo-avatar.jpg") !important;
+  background-repeat: no-repeat !important;
+  background-size: 136% auto !important;
+  background-position: 50% 24% !important;
+  box-shadow:
+    -14px 8px 0 -10px #ff79bd,
+    10px -8px 0 -9px #ffffff,
+    0 0 0 4px rgba(255, 121, 189, 0.14) !important;
+  opacity: 0.9 !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-title,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-subtitle,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-title,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-subtitle {
+  color: var(--card-skin-text) !important;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.42), -1px 0 0 rgba(255, 121, 189, 0.2) !important;
+}
+
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-card-type,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-risk,
+body.duel-card-skin-champion-kashimo .duel-hand-card .duel-action-cost,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-card-type,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-risk,
+.duel-hand-card.duel-card-skin-champion-kashimo .duel-action-cost {
+  border-color: rgba(20, 16, 28, 0.22) !important;
+  background: color-mix(in srgb, var(--card-skin-accent) 18%, white) !important;
+  background-image: none !important;
+  color: #152027 !important;
+}

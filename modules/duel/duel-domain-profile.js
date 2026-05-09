@@ -784,8 +784,9 @@
     if (!damage && !nextRoundDamage && !ceDamage && !stabilityDelta && !effects.skipOpponentNextCard && !effects.grantExecutionSword && !effects.forceTrialHands) {
       damage = Math.max(0, normalizeDomainScriptNumber(effects.placeholderDamage, fallback.damage ?? 10));
     }
-    if (damage) opponent.hp = Number(clampValue(Number(opponent.hp || 0) - damage, 0, Number(opponent.maxHp || opponent.hp || 0)).toFixed(2));
-    if (ceDamage) opponent.ce = Number(clampValue(Number(opponent.ce || 0) - ceDamage, 0, Number(opponent.maxCe || opponent.ce || 0)).toFixed(2));
+    if (damage) opponent.hp = Number((Number(opponent.hp || 0) - damage).toFixed(2));
+    if (ceDamage) opponent.ce = Number((Number(opponent.ce || 0) - ceDamage).toFixed(2));
+    if (damage || ceDamage) requireDependency("clampDuelResource")(opponent);
     if (stabilityDelta) opponent.stability = Number(clampValue(Number(opponent.stability || 0) + stabilityDelta / 100, 0, 1).toFixed(4));
     if (nextRoundDamage) {
       addOrRefreshDuelStatusEffect(opponent, {

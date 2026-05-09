@@ -3,17 +3,170 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>咒术转盘V2.22  观战开启与平衡性调整</title>
+    <title>V3.1 泳者们，欢迎回来！</title>
     <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="./styles.css?v=20260503-v2.2-ai-route-cleanup">
+    <script>
+      (() => {
+        const githubPagesHost = "maopaotabby.github.io";
+        const tencentOrigin = "http://119.91.224.223";
+        if (location.hostname !== githubPagesHost) return;
+        document.title = "怀旧服";
+        const redirectKey = "jjk-github-pages-cn-redirect-checked";
+        const redirectToTencent = () => {
+          const target = new URL(tencentOrigin);
+          target.pathname = location.pathname.replace(/^\/bigdogwoofwoof\/?/, "/") || "/";
+          target.search = location.search;
+          target.hash = location.hash;
+          location.replace(target.toString());
+        };
+        if (sessionStorage.getItem(redirectKey) === "cn") {
+          redirectToTencent();
+          return;
+        }
+        if (sessionStorage.getItem(redirectKey) === "checked") return;
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 1800);
+        fetch("https://ipapi.co/json/", { signal: controller.signal, cache: "no-store" })
+          .then((response) => response.ok ? response.json() : null)
+          .then((data) => {
+            const country = String(data?.country_code || data?.country || "").toUpperCase();
+            sessionStorage.setItem(redirectKey, country === "CN" ? "cn" : "checked");
+            if (country === "CN") redirectToTencent();
+          })
+          .catch(() => {
+            sessionStorage.setItem(redirectKey, "checked");
+          })
+          .finally(() => window.clearTimeout(timeout));
+      })();
+    </script>
+    <link rel="stylesheet" href="./assets/duel-dynamics/duel-card-dynamics.css?v=V3.1.8-github-pages-router-20260509">
+    <link rel="stylesheet" href="./styles.css?v=V3.1.8-github-pages-router-20260509">
   </head>
   <body>
+    <div id="v224UpdateModal" class="update-modal" role="dialog" aria-modal="true" aria-labelledby="v224UpdateModalTitle" hidden>
+      <div class="update-modal-backdrop" data-v224-update-close></div>
+      <section class="update-modal-card">
+        <div class="update-modal-head">
+          <span class="badge">V3.1.5</span>
+          <h2 id="v224UpdateModalTitle">战斗逻辑快速公告</h2>
+        </div>
+        <ul>
+          <li>单人对战新增电脑难度选择：简单会使用低束宽并保留轻微失误，普通保持稳定规划，困难使用更宽的 Beam Search。</li>
+          <li>新手教程已同步当前版本：补充公告等待、AI 手动输入数据、特殊手札状态栏、星之怒、赤血操术、投射术式、登录卡角色面板修改和联机锁定流程。</li>
+          <li>非管理员使用 AI 自定义角色卡解析时，固定走服务器代理与 doubao-seed-2-0-mini 默认模型，不再读取浏览器残留的自定义 Key。</li>
+          <li>AI 自定义角色卡解析的重复请求锁改为短窗口：失败后可直接重试，默认高频限制放宽到每分钟 3 次。</li>
+          <li>赤血操术「咒力化血」的超上限体势现在会在出牌结算、回合回流、领域伤害和 jackpot 恢复后持续保留，不再被后续资源刷新压回上限；扣血转伤害系数调为 0.9，「赤鳞跃动」扣血只用于防御上限，不再转化为伤害或血系数。</li>
+          <li>公告现在会在运行时开始加载时立即显示，不再等待所有角色、手札和 AI 配置数据加载完成。</li>
+          <li>星之怒、投射术式、赤血操术的特殊手札按当前资源实时结算；凰轮、黑洞终局、帧率和赤血扣血转伤害已同步。</li>
+          <li>赤鳞跃动改为支援牌：消耗当前血量 10%，本回合受 HP 伤害减少 60%，减伤上限为实际扣血的 3 倍，并提升本回合伤害 10%。</li>
+        </ul>
+        <button id="v224UpdateModalClose" class="primary" type="button">知道了</button>
+      </section>
+    </div>
+    <script>
+      (() => {
+        const buildVersion = "V3.1.8-github-pages-router-20260509";
+        const storageKey = "jjk-v224-update-modal-seen";
+        const modal = document.getElementById("v224UpdateModal");
+        const close = () => {
+          if (!modal) return;
+          modal.hidden = true;
+          document.body?.classList.remove("update-modal-open");
+          try {
+            window.sessionStorage.setItem(storageKey, buildVersion);
+          } catch {
+            // Session storage can be disabled.
+          }
+          document.dispatchEvent(new CustomEvent("jjk-update-notice-ready", {
+            detail: { buildVersion, ready: true, seen: true, visible: false, early: true }
+          }));
+        };
+        window.JJKUpdateNotice = {
+          show: () => {
+            if (!modal) return false;
+            try {
+              if (window.sessionStorage.getItem(storageKey) === buildVersion) {
+                document.dispatchEvent(new CustomEvent("jjk-update-notice-ready", {
+                  detail: { buildVersion, ready: true, seen: true, visible: false, early: true }
+                }));
+                return false;
+              }
+            } catch {
+              // Continue and show the notice.
+            }
+            modal.hidden = false;
+            document.body?.classList.add("update-modal-open");
+            document.dispatchEvent(new CustomEvent("jjk-update-notice-ready", {
+              detail: { buildVersion, ready: true, seen: false, visible: true, early: true }
+            }));
+            return true;
+          },
+          close,
+          isReady: () => true,
+          isSeen: () => {
+            try {
+              return window.sessionStorage.getItem(storageKey) === buildVersion;
+            } catch {
+              return false;
+            }
+          },
+          buildVersion
+        };
+        modal?.querySelector("[data-v224-update-close]")?.addEventListener("click", close);
+        document.getElementById("v224UpdateModalClose")?.addEventListener("click", close);
+        window.JJKUpdateNotice.show();
+      })();
+    </script>
+    <section id="loginCardGate" class="login-card-gate" aria-label="登录卡入口">
+      <div class="login-card-gate-bg" aria-hidden="true"></div>
+      <div class="login-card-panel">
+        <div class="login-card-panel-copy">
+          <span class="badge">PNG 登录卡</span>
+          <h2>咒术转盘登录</h2>
+          <p>使用 PNG 登录卡读取昵称与自定义角色。未登录时仍可游玩基础内容，但 AI 相关功能会锁定。</p>
+        </div>
+        <div id="loginCardGateActions" class="login-card-actions">
+          <button id="loginCardUseBtn" class="primary" type="button">使用登录卡登录</button>
+          <button id="loginCardTutorialBtn" class="secondary" type="button">我没有登录卡，进入新手教学。</button>
+          <button id="loginCardGuestBtn" class="secondary" type="button">教学？登录？无所谓的！忘了吧！</button>
+        </div>
+        <div id="loginCardWelcome" class="login-card-welcome" hidden>
+          <h2 id="loginCardWelcomeTitle"></h2>
+          <p id="loginCardWelcomeMeta"></p>
+          <div class="action-row compact">
+            <button id="loginCardEnterBtn" class="primary" type="button">进入网站</button>
+            <button id="loginCardSwitchBtn" class="secondary" type="button">更换登录卡</button>
+          </div>
+        </div>
+        <p id="loginCardStatus" class="muted">请选择登录方式。</p>
+        <input id="loginCardFileInput" type="file" accept="image/png,.png" hidden>
+      </div>
+    </section>
+
+    <section id="loginTutorialPanel" class="login-tutorial-panel" aria-label="新手教学" hidden>
+      <div class="login-tutorial-card">
+        <div class="login-tutorial-head">
+          <span id="loginTutorialStep" class="badge">1/3</span>
+          <h2 id="loginTutorialTitle">转盘使用指导</h2>
+          <div class="login-tutorial-actions" aria-label="教学操作">
+            <button id="loginTutorialSkipBtn" class="secondary login-tutorial-skip" type="button">跳过当前教学</button>
+            <button id="loginTutorialCollapseBtn" class="secondary login-tutorial-collapse" type="button" aria-expanded="true">收起教学</button>
+          </div>
+        </div>
+        <div id="loginTutorialBody" class="login-tutorial-body"></div>
+        <div class="action-row compact login-tutorial-nav">
+          <button id="loginTutorialPrevBtn" class="secondary" type="button">上一段</button>
+          <button id="loginTutorialNextBtn" class="primary" type="button">下一段</button>
+        </div>
+      </div>
+    </section>
+
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <h1>咒术转盘V2.22  观战开启与平衡性调整</h1>
+          <h1>V3.1 泳者们，欢迎回来！</h1>
           <p id="modeHint">一键抽取 · 自动跳转</p>
-          <button id="feedbackContactBtn" class="feedback-contact" type="button">问题反馈 QQ：3429672291</button>
+          <button id="feedbackContactBtn" class="feedback-contact" type="button">问题反馈 QQ：3429672291 对战群：1091813889（仙台结界）划水群：1076755746（京都校区）</button>
         </div>
         <div class="top-actions">
           <fieldset class="play-mode-control" aria-label="游玩模式">
@@ -36,6 +189,7 @@
             <input id="debugToggle" type="checkbox">
             <span>调试模式</span>
           </label>
+          <button id="loginCardReturnBtn" class="secondary login-card-return-btn" type="button">登录卡</button>
           <button id="globalSettingsBtn" class="secondary settings-gear" type="button" aria-expanded="false" aria-controls="globalSettingsPanel">⚙ AI 设置</button>
           <button id="restartBtn" class="secondary" type="button">重启流程</button>
         </div>
@@ -67,9 +221,9 @@
             </label>
             <label class="field" data-ai-custom-setting>
               <span>当前模型</span>
-              <input id="aiModelInput" type="text" value="doubao-seed-2-0-lite-260215" autocomplete="off" list="aiModelPresets">
+              <input id="aiModelInput" type="text" value="doubao-seed-2-0-mini-260215" autocomplete="off" list="aiModelPresets">
               <datalist id="aiModelPresets">
-                <option value="doubao-seed-2-0-lite-260215"></option>
+                <option value="doubao-seed-2-0-mini-260215"></option>
               </datalist>
             </label>
             <label class="field" data-ai-custom-setting>
@@ -80,17 +234,14 @@
               <span>Base URL</span>
               <input id="aiBaseUrlInput" type="url" placeholder="https://ark.cn-beijing.volces.com/api/v3">
             </label>
-            <label class="field" data-ai-custom-setting data-ai-provider-panel="openai_compatible">
-              <span>Path</span>
-              <input id="aiPathInput" type="text" placeholder="/chat/completions">
-            </label>
+            <input id="aiPathInput" type="hidden" value="/chat/completions">
           </div>
           <p id="aiProviderWarning" class="muted">
-            默认模式使用内置 ArkAI 路径；自定义模式才会显示并允许修改访问路径、模型和 Key。
+            默认模式使用服务器代理；自定义模式只需要填写 Base URL、模型和 Key。
           </p>
           <div class="ai-mode-panel" data-ai-mode-panel="custom" hidden>
             <p class="error-text">
-              安全提示：自定义 AI 会把 Key 保存在你的浏览器中。请只填写你信任的 OpenAI-compatible Base URL、Path、Model 和 Key。
+              安全提示：自定义 AI 会把 Key 保存在你的浏览器中。请只填写你信任的 OpenAI-compatible Base URL、Model 和 Key。
             </p>
             <div class="creator-grid">
               <label class="field">
@@ -107,6 +258,16 @@
               <button id="clearAiKeyBtn" class="secondary" type="button">清除 API Key</button>
             </div>
           </div>
+          <div class="ai-admin-panel">
+            <label class="field">
+              <span>管理员模式</span>
+              <input id="aiAdminPasswordInput" type="password" autocomplete="off" placeholder="输入管理员密码写入当前登录卡">
+            </label>
+            <div class="action-row compact">
+              <button id="aiAdminLoginBtn" class="secondary" type="button">管理员登录</button>
+              <span id="aiAdminStatus" class="muted">普通登录卡不含 admin 字段，也会正常使用。</span>
+            </div>
+          </div>
           <div class="ai-provider-meta">
             <span id="aiPromptEstimate">估算 prompt token：待生成；最大输出 token：1800</span>
             <span id="aiCostNotice">关闭模式不消耗 token；默认 / 自定义会调用当前 Provider。</span>
@@ -121,7 +282,7 @@
 
       <nav class="tabs" aria-label="主视图">
         <button class="tab active" data-tab="run" type="button">转盘</button>
-        <button class="tab" data-tab="duel" type="button">咒术回战</button>
+        <button class="tab" data-tab="duel" type="button">咒术对战</button>
         <button class="tab debug-tab" data-tab="tree" type="button">审阅树</button>
         <button class="tab debug-tab" data-tab="graph" type="button">路线图谱</button>
         <button class="tab debug-tab" data-tab="library" type="button">原始转盘库</button>
@@ -245,7 +406,7 @@
           <div class="panel duel-panel" data-jjk-battle-root data-active-battle-page="home" data-battle-mode="none">
             <div class="panel-heading">
               <div>
-                <h2>咒术回战 · 对战</h2>
+                <h2>咒术对战</h2>
                 <p class="muted">单人、联机、自定义、情报和设置页已分离，避免模式状态混在一起。</p>
               </div>
               <div class="panel-actions">
@@ -254,7 +415,7 @@
               </div>
             </div>
 
-            <nav class="jjk-battle-tabs" aria-label="咒术回战模块导航">
+            <nav class="jjk-battle-tabs" aria-label="咒术对战模块导航">
               <button class="jjk-battle-tab active" data-jjk-battle-tab="home" type="button">对战首页</button>
               <button class="jjk-battle-tab" data-jjk-battle-tab="solo" type="button">单人对战</button>
               <button class="jjk-battle-tab" data-jjk-battle-tab="online" type="button">联机模式</button>
@@ -267,7 +428,7 @@
               <div class="jjk-battle-home-grid">
                 <button class="jjk-battle-home-card" data-jjk-battle-open="solo" data-jjk-battle-mode="solo" type="button">
                   <strong>单人对战</strong>
-                  <span>选择我方 / 对方角色，进入手札、AP、领域、trial / jackpot 和日志界面。</span>
+                    <span>选择我方 / 对方角色，进入手札、体势、咒力、领域、trial / jackpot 和日志界面。</span>
                 </button>
                 <button class="jjk-battle-home-card" data-jjk-battle-open="online" data-jjk-battle-mode="online" type="button">
                   <strong>联机模式</strong>
@@ -302,6 +463,14 @@
                 <span>对方角色</span>
                 <select id="duelRightSelect"></select>
               </label>
+              <label class="field">
+                <span>电脑难度</span>
+                <select id="duelCpuDifficultySelect" data-solo-disabled-when-online="true">
+                  <option value="easy">简单：陪练</option>
+                  <option value="normal" selected>普通：稳定</option>
+                  <option value="hard">困难：强规划</option>
+                </select>
+              </label>
             </div>
 
             </section>
@@ -318,11 +487,11 @@
                 </div>
                 <span id="onlineSyncStatus" class="duel-chip">未加入房间。</span>
               </div>
-              <div class="online-alpha-section online-sync-section">
-                <div class="online-section-title">
+              <details id="onlineSyncSettingsDetails" class="online-alpha-section online-sync-section online-collapsible-section">
+                <summary class="online-section-title">
                   <strong>1. 服务器</strong>
                   <span>当前模式：<b id="onlineModeLabel">官方联机服务器</b></span>
-                </div>
+                </summary>
                 <div class="online-official-status">
                   <span id="onlineOfficialStatus">官方联机服务器尚未检测。</span>
                   <button id="onlineOfficialTestBtn" class="mini" type="button">测试官方服务器</button>
@@ -350,50 +519,71 @@
                     </div>
                   </div>
                 </details>
-              </div>
-              <div class="online-alpha-section online-room-section">
-                <div class="online-room-card">
-                  <div class="online-section-title">
-                    <strong>2A. 创建房间</strong>
-                    <span>房主为左方</span>
+              </details>
+              <details id="onlineRoomSetupDetails" class="online-alpha-section online-room-section online-collapsible-section">
+                <summary class="online-section-title">
+                  <strong>2. 房间与邀请</strong>
+                  <span>创建、加入、复制链接和提前观战</span>
+                </summary>
+                <div class="online-room-grid">
+                  <div class="online-room-card">
+                    <div class="online-section-title">
+                      <strong>2A. 创建房间</strong>
+                      <span>房主为左方</span>
+                    </div>
+                    <label class="field">
+                      <span>我的角色</span>
+                      <select id="onlineCreateCharacterSelect"></select>
+                    </label>
+                    <label class="field">
+                      <span>房间模式</span>
+                      <select id="onlineCreateModeSelect">
+                        <option value="1v1">1V1</option>
+                        <option value="2v2">2V2（双角色队伍）</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>队友角色（2V2）</span>
+                      <select id="onlineCreateAllyCharacterSelect"></select>
+                    </label>
+                    <div class="online-alpha-actions">
+                      <button id="onlineCreateRoomBtn" class="secondary" type="button">创建新房间</button>
+                    </div>
+                    <div class="online-room-current">
+                      <span>当前房间码：<strong id="onlineCurrentRoomCode">未创建</strong></span>
+                      <button id="onlineCopyRoomCodeBtn" class="mini" type="button">复制房间码</button>
+                    </div>
+                    <label class="field online-invite-field">
+                      <span>邀请链接</span>
+                      <input id="onlineInviteLink" type="text" readonly value="" placeholder="创建房间后显示完整邀请链接">
+                    </label>
+                    <div class="online-alpha-actions">
+                      <button id="onlineCopyInviteBtn" class="mini" type="button">复制邀请链接</button>
+                    </div>
                   </div>
-                  <label class="field">
-                    <span>我的角色</span>
-                    <select id="onlineCreateCharacterSelect"></select>
-                  </label>
-                  <div class="online-alpha-actions">
-                    <button id="onlineCreateRoomBtn" class="secondary" type="button">创建新房间</button>
-                  </div>
-                  <div class="online-room-current">
-                    <span>当前房间码：<strong id="onlineCurrentRoomCode">未创建</strong></span>
-                    <button id="onlineCopyRoomCodeBtn" class="mini" type="button">复制房间码</button>
-                  </div>
-                  <label class="field online-invite-field">
-                    <span>邀请链接</span>
-                    <input id="onlineInviteLink" type="text" readonly value="" placeholder="创建房间后显示完整邀请链接">
-                  </label>
-                  <div class="online-alpha-actions">
-                    <button id="onlineCopyInviteBtn" class="mini" type="button">复制邀请链接</button>
+                  <div class="online-room-card">
+                    <div class="online-section-title">
+                      <strong>2B. 加入房间</strong>
+                      <span>加入者为右方</span>
+                    </div>
+                    <label class="field">
+                      <span>输入房间码</span>
+                      <input id="onlineJoinRoomCodeInput" type="text" maxlength="12" autocomplete="off" placeholder="例如 ABCD12">
+                    </label>
+                    <label class="field">
+                      <span>我的角色</span>
+                      <select id="onlineJoinCharacterSelect"></select>
+                    </label>
+                    <label class="field">
+                      <span>队友角色（2V2）</span>
+                      <select id="onlineJoinAllyCharacterSelect"></select>
+                    </label>
+                    <div class="online-alpha-actions">
+                      <button id="onlineJoinRoomBtn" class="secondary" type="button">加入房间</button>
+                    </div>
                   </div>
                 </div>
-                <div class="online-room-card">
-                  <div class="online-section-title">
-                    <strong>2B. 加入房间</strong>
-                    <span>加入者为右方</span>
-                  </div>
-                  <label class="field">
-                    <span>输入房间码</span>
-                    <input id="onlineJoinRoomCodeInput" type="text" maxlength="12" autocomplete="off" placeholder="例如 ABCD12">
-                  </label>
-                  <label class="field">
-                    <span>我的角色</span>
-                    <select id="onlineJoinCharacterSelect"></select>
-                  </label>
-                  <div class="online-alpha-actions">
-                    <button id="onlineJoinRoomBtn" class="secondary" type="button">加入房间</button>
-                  </div>
-                </div>
-              </div>
+              </details>
               <div class="online-alpha-section online-prepare-section">
                 <div class="online-section-title">
                   <strong>3. 准备阶段</strong>
@@ -427,13 +617,13 @@
                     <strong>左方</strong>
                     <span id="onlineLeftPlayerLabel">等待玩家</span>
                     <span id="onlineLeftCharacterLabel">角色：等待选择</span>
-                    <span id="onlineLeftResourceLabel">HP / CE / AP：等待战斗</span>
+                    <span id="onlineLeftResourceLabel">HP / CE：等待战斗</span>
                   </article>
                   <article>
                     <strong>右方</strong>
                     <span id="onlineRightPlayerLabel">等待玩家</span>
                     <span id="onlineRightCharacterLabel">角色：等待选择</span>
-                    <span id="onlineRightResourceLabel">HP / CE / AP：等待战斗</span>
+                    <span id="onlineRightResourceLabel">HP / CE：等待战斗</span>
                   </article>
                 </div>
                 <div class="online-alpha-actions online-turn-actions">
@@ -477,12 +667,13 @@
               <section id="customCharacterInterface" class="duel-custom-interface" aria-label="自定义角色接入界面">
                 <div class="debug-entry-head">
                   <strong>自定义角色接入界面</strong>
-                  <span id="duelCustomAccessStatus" class="muted">可从转盘导出 JSON / JJKCP1 编码导入基础数据；特殊手札会自动绑定当前角色。</span>
+                  <span id="duelCustomAccessStatus" class="muted">可从角色卡 JSON（数据） / 转盘导出 JSON（数据） / JJKCP1（战力编码）导入；特殊手札会自动绑定当前角色。</span>
                 </div>
-                <div class="duel-import-code-panel">
+                <details class="duel-import-code-panel duel-collapsible-tool">
+                  <summary>角色 JSON / 转盘导出导入</summary>
                   <label class="field">
-                    <span>转盘导出数据导入</span>
-                    <textarea id="duelWheelImportData" rows="5" placeholder="粘贴结果页导出的 JSON，或包含 JJKCP1 编码的文本"></textarea>
+                    <span>角色卡 / 转盘导出 JSON（数据）导入</span>
+                    <textarea id="duelWheelImportData" rows="5" placeholder="粘贴自定义角色卡 JSON、结果页导出的 JSON，或包含 JJKCP1 编码的文本"></textarea>
                   </label>
                   <label class="field">
                     <span>上传导出文件</span>
@@ -493,8 +684,9 @@
                     <button id="duelWheelImportCurrentBtn" class="secondary" type="button">读取当前转盘结果</button>
                     <span id="duelWheelImportStatus" class="muted">导入后请检查字段，再加入角色池。</span>
                   </div>
-                </div>
-                <div class="duel-special-card-editor">
+                </details>
+                <details class="duel-special-card-editor duel-collapsible-tool">
+                  <summary>自定义特殊手札图形化编辑</summary>
                   <div class="debug-entry-head">
                     <strong>自定义特殊手札</strong>
                     <span id="duelCustomHandStatus" class="muted">数值必须为整数；保存时自动挂上角色特殊手札标签。</span>
@@ -518,11 +710,7 @@
                       </select>
                     </label>
                     <label class="field">
-                      <span>AP 消耗</span>
-                      <input id="duelCustomHandApCost" type="number" step="1" value="1">
-                    </label>
-                    <label class="field">
-                      <span>咒力消耗</span>
+                    <span>CE（咒力）消耗</span>
                       <input id="duelCustomHandCeCost" type="number" step="1" value="10">
                     </label>
                     <label class="field">
@@ -555,7 +743,7 @@
                     <button id="duelCustomHandClearBtn" class="secondary" type="button">清空手札</button>
                   </div>
                   <div id="duelCustomHandList" class="duel-custom-list"></div>
-                </div>
+                </details>
               </section>
               <fieldset class="duel-custom-mode">
                 <legend>自定义方式</legend>
@@ -565,7 +753,7 @@
                 </label>
                 <label>
                   <input type="radio" name="duelCustomMode" value="ai">
-                  <span>AI完整定义</span>
+                  <span>AI（智能）完整定义</span>
                 </label>
               </fieldset>
               <div class="duel-custom-grid">
@@ -597,19 +785,57 @@
               <div class="duel-ai-assist" data-duel-custom-mode-panel="ai">
                 <label class="duel-ai-toggle">
                   <input id="duelAiAssistToggle" type="checkbox">
-                  <span>AI辅助解析</span>
+                  <span>AI（智能）辅助解析</span>
                 </label>
                 <label class="field">
-                  <span>自然语言设定</span>
-                  <textarea id="duelAiDescription" rows="4" placeholder="例：自定义一名特级术师，术式能操纵尸体与僵尸群，领域是封闭式必中，外部资源是可消耗僵尸军团和一把能破坏术式防御的咒具。"></textarea>
+                  <span>自然语言设定（最多800字）</span>
+                  <textarea id="duelAiDescription" rows="4" maxlength="800" placeholder="例：自定义一名特级术师，术式能操纵尸体与僵尸群，领域是封闭式必中，外部资源是可消耗僵尸军团和一把能破坏术式防御的咒具。"></textarea>
                 </label>
                 <div class="action-row">
                   <button id="duelAiAnalyzeBtn" class="secondary" type="button">AI解析并填入</button>
                   <span id="duelAiStatus" class="muted"></span>
                 </div>
+                <div id="duelAiProgress" class="duel-ai-progress" hidden>
+                  <span>烧脑中。</span>
+                  <div><i id="duelAiProgressBar" style="width:0%"></i></div>
+                </div>
                 <pre id="duelAiOutput" class="duel-ai-output" hidden></pre>
+                <details class="duel-manual-data-entry duel-collapsible-tool">
+                  <summary>手动输入数据</summary>
+                  <p class="muted">AI 没按 JSON 返回时，可以把网页控制台里的原始返回或你手动整理的数据粘到这里读取。</p>
+                  <pre id="duelManualDataFormat" class="duel-manual-format">格式要求：
+{
+  "suggestion": {
+    "name": "角色名",
+    "visibleGrade": "grade2 | grade1 | specialGrade | unknown",
+    "techniquePower": "E | D | C | B | A | S | SS | SSS | EX- | EX",
+    "technique": "术式描述",
+    "domainProfile": "领域描述，可留空",
+    "loadout": ["咒具或外部装备"],
+    "innateTraits": ["特质"],
+    "externalResource": "外部资源，可留空",
+    "notes": "补充说明",
+    "baseStats": { "cursedEnergy": "B", "control": "B", "efficiency": "B", "body": "B", "martial": "B", "talent": "B" },
+    "specialHands": [
+      { "id": "card_1", "name": "手札名", "type": "attack | technique | defense | domain | support | resource", "risk": "low | medium | high | critical", "ceCost": 20, "damage": 16, "block": 0, "stabilityDelta": 0, "domainLoadDelta": 0, "summary": "效果说明", "tags": ["自定义"], "source": "manual" }
+    ]
+  },
+  "analysis": "可选解析",
+  "warnings": []
+}
+也可以粘贴 AI 的 Markdown 作战建议，系统会尽量提取成 notes 和临时特殊手札。</pre>
+                  <label class="field">
+                    <span>粘贴 AI 返回 / 手动 JSON</span>
+                    <textarea id="duelManualDataInput" rows="7" placeholder="粘贴 JSON，或粘贴包含作战建议的 AI 原文。"></textarea>
+                  </label>
+                  <div class="action-row compact">
+                    <button id="duelManualDataApplyBtn" class="secondary" type="button">读取手动数据</button>
+                    <span id="duelManualDataStatus" class="muted"></span>
+                  </div>
+                </details>
               </div>
-              <div class="duel-library-assist" data-duel-custom-mode-panel="library">
+              <details class="duel-library-assist duel-collapsible-tool" data-duel-custom-mode-panel="library">
+                <summary>定义库组装面板</summary>
                 <div class="duel-library-grid">
                   <label class="field">
                     <span>术式库</span>
@@ -632,7 +858,7 @@
                   <button id="duelApplyLibraryBtn" class="secondary" type="button">应用选择到角色卡</button>
                   <span id="duelLibraryStatus" class="muted">可直接选择既有术式、领域、咒具、特质和外部资源；加入角色池时也会自动读取这些选择。</span>
                 </div>
-              </div>
+              </details>
               <div class="duel-custom-stats">
                 <label class="field">
                   <span>咒力总量</span>
@@ -714,13 +940,189 @@
                 <article><strong>AI Provider</strong><span>AI 只能叙事、解释和整理反馈，不能决定数值、胜负或卡牌效果。</span></article>
                 <article><strong>联机 Alpha</strong><span>非即时轮询同步；房间服务器只存 room JSON，不做实时 PvP 或反作弊。</span></article>
               </div>
+              <div class="jjk-battle-section-head compact">
+                <h4>特殊逻辑术式一览</h4>
+                <p class="muted">以下术式有独立资源或跨回合规则，手札效果以数据表读取为准。</p>
+              </div>
+              <div class="jjk-battle-info-grid">
+                <article><strong>星之怒</strong><span>核心资源是「虚拟质量」，每回合自动成长，上限 7；打出「虚拟质量」会额外加质量，单手札回合还能再获得奖励质量。质量用于驱动「质量附加」「质量防御」「凰轮」「黑洞终局」：附加消耗质量换本回合增伤，防御消耗质量换有限额减伤；凰轮可召唤到式神区，已在场时再次使用会回收凰轮、虚拟质量 +1 并给本回合减伤；黑洞终局必须质量足够且单独使用，消耗全部质量换高伤害、破防和自损。</span></article>
+                <article><strong>赤血操术</strong><span>核心循环是每回合固定发放「咒力化血」与「血铸咒力」。前者消耗咒力增加血量，后者消耗血量转化咒力，二者都允许临时超过当前上限。赤血攻击牌不再只看固定面板，而是按本牌实际消耗的血量和咒力换算 Base damage；本回合消耗咒力会累积「穿」，消耗血量会累积「血」。出牌时实时读取当前血量、咒力和本回合计数，因此顺序会影响卡面预览与实际伤害；「穿」按比例无视对方 Baseblock，「血」按比例提高自己的 Base damage。每回合伤害结算后清空「穿」与「血」。</span></article>
+                <article><strong>投射术式</strong><span>核心资源是跨回合累积的「帧率」，初始 10、上限 24，不会因回合结束自动归零。攻击牌按本回合造成的打出伤害在回合末增加帧率，没造成伤害会掉帧；部分手札会直接增加或消耗帧率。「二十四帧」「帧内闪击」根据是否为唯一手札改变基础伤害，「破帧刹那」需要高帧率并消耗帧率破防，「自缚帧」「帧盾」提供防御和受击收益，「帧率同步」「过帧驱动」用于加速节奏。帧率达到 24 时触发「出框时刻」：本回合最终伤害 x150%，随机封锁对手 1 张手牌，随后帧率回到 10，并进入 2 回合触发锁定。</span></article>
+              </div>
+              <div class="archive-encyclopedia-entry">
+                <button id="customHandEncyclopediaToggle" class="archive-encyclopedia-open" type="button">打开手札百科</button>
+                <span class="muted">先展开完整百科；需要边编辑边看时，可在百科内切换为小窗。</span>
+              </div>
+              <details id="customHandEncyclopedia" class="archive-encyclopedia">
+                <summary>自定义手札编写指导与百科全书</summary>
+                <div class="archive-encyclopedia-toolbar" data-archive-drag-handle>
+                  <span>完整阅读模式</span>
+                  <span class="muted">切换小窗后可拖动顶部移动，右下角可调整大小。</span>
+                  <button id="customHandEncyclopediaFloatBtn" class="secondary" type="button">悬浮窗阅读</button>
+                </div>
+                <div class="jjk-battle-info-grid">
+                  <article><strong>基础字段</strong><span>手札名称、类型、风险、CE 消耗、伤害、防御、稳定修正、领域负荷和效果说明都会写入角色 JSON。普通手札结算以咒力、角色状态、领域和特殊规则为准。</span></article>
+                  <article><strong>数值建议</strong><span>普通伤害建议 8-32；超过 45 应标记高风险或极高风险，并配高 CE 消耗或负面代价。防御建议 8-34；资源/支援牌可以 0 伤害，但应明确给出稳定、领域或资源收益。</span></article>
+                  <article><strong>命中与闪避</strong><span>近战、咒具、投射、范围和必中类手札走不同命中配置。必中/不可闪避只建议用于领域、规则、处刑或明确代价牌。</span></article>
+                  <article><strong>绑定角色</strong><span>保存角色时系统会自动添加该角色的特殊手札标签、exclusiveToCharacters 和 customCharacterId，避免转盘剧情或其他角色误抽到这组手札。</span></article>
+                  <article><strong>编辑流程</strong><span>先在自定义角色页填写角色面板，再在特殊手札区逐张添加或编辑，最后点击“加入角色池/保存角色”。列表中的“编辑”按钮会把已有手札回填到图形化表单。</span></article>
+                  <article><strong>风险检查</strong><span>避免把领域名本身写成普通手札；日车 trial、秤 jackpot 等规则子阶段牌应由系统子阶段生成，不建议手写成角色常驻手札。</span></article>
+                  <article><strong>攻击牌</strong><span>attack/basic 适合近身、咒具或黑闪窗口；technique/ce_burst 适合术式弹体、范围、规则伤害。高伤害牌必须同时提高 CE、risk 或自损。</span></article>
+                  <article><strong>防御牌</strong><span>block 会进入防御预览；稳定修正为正数可恢复自身稳定，为负数代表失衡代价。纯防御牌 damage 应为 0，并用 summary 写清持续回合。</span></article>
+                  <article><strong>资源牌</strong><span>resource/support 可用 0 伤害驱动咒力、领域负荷、召唤物或特殊计数。不要把“免费无限回蓝”写成常驻收益，应有风险、冷却或消耗。</span></article>
+                  <article><strong>领域牌</strong><span>domain 牌应只描述展开、维持、解除或领域内规则；复杂必中建议写 domainScript，而不是把所有效果塞进普通手札。</span></article>
+                  <article><strong>AI 生成后检查</strong><span>确认 specialHands 至少 1 张；type/risk 为合法枚举；damage/block 是基础值；tags 不要混入 risk；领域脚本不得含 JS、eval 或函数。</span></article>
+                  <article><strong>转盘导入角色</strong><span>转盘结果只作为角色来源。若角色没有明确术式证据，不应自动继承十影、赤血、投射、星之怒等官方专属特殊手札标签。</span></article>
+                </div>
+              </details>
             </section>
 
             <section class="jjk-battle-page" data-jjk-battle-page-panel="settings" hidden>
               <div class="jjk-battle-section-head">
                 <h3>对战设置 / 调试</h3>
-                <p class="muted">AI 设置在右上角全局齿轮内；这里保留对战调试、反馈导出和测试开关。</p>
+                <p class="muted">AI 设置在右上角全局齿轮内；这里调整对战界面、卡牌皮肤、导入皮肤和测试开关。</p>
               </div>
+            <div class="duel-visual-settings">
+              <div class="debug-entry-head">
+                <strong>界面与卡牌外观</strong>
+                <span id="duelVisualSettingsStatus" class="muted">原色 / 黑夜模式、卡牌皮肤和自定义卡面导入都在这里调整。</span>
+              </div>
+              <div class="duel-visual-settings-grid">
+                <label class="field">
+                  <span>界面颜色</span>
+                  <select id="duelUiThemeSelect">
+                    <option value="original">原色模式</option>
+                    <option value="dark">黑夜模式</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>卡牌皮肤</span>
+                  <select id="duelCardSkinSelect">
+                    <option value="v224">V2.24 新版分类卡面</option>
+                    <option value="champion-kashimo">第0届冠军卡面“鹿紫云依”</option>
+                    <option value="classic">经典卡面</option>
+                    <option value="custom">自定义导入卡面</option>
+                  </select>
+                </label>
+                <label class="field duel-skin-import-field">
+                  <span>导入自制皮肤 JSON</span>
+                  <input id="duelSkinImportFile" type="file" accept=".json,application/json">
+                </label>
+                <label class="field checkbox-field duel-compact-card-field">
+                  <span>启用简洁卡面</span>
+                  <input id="duelCompactCardToggle" type="checkbox">
+                </label>
+              </div>
+              <div class="duel-skin-preview-grid" aria-label="卡牌皮肤分类预览">
+                <article class="duel-skin-preview-card duel-skin-template"><strong>模板牌</strong><span>通用手牌</span></article>
+                <article class="duel-skin-preview-card duel-skin-special"><strong>特殊牌</strong><span>术式专属</span></article>
+                <article class="duel-skin-preview-card duel-skin-domain"><strong>领域牌</strong><span>领域 / 反领域</span></article>
+                <article class="duel-skin-preview-card duel-skin-summon"><strong>式神牌</strong><span>召唤 / 单位</span></article>
+                <article class="duel-skin-preview-card duel-skin-mahoraga"><strong>魔虚罗</strong><span>调幅 / 代打</span></article>
+                <article class="duel-skin-preview-card duel-skin-trial"><strong>审判牌</strong><span>Trial / 判决</span></article>
+              </div>
+              <div class="action-row compact">
+                <button id="duelSkinDownloadSpecBtn" class="secondary" type="button">下载皮肤格式要求</button>
+                <button id="duelVisualResetBtn" class="secondary" type="button">恢复默认外观</button>
+              </div>
+            </div>
+            <div id="loginCardManager" class="login-card-manager">
+              <div class="debug-entry-head">
+                <strong>管理卡面角色</strong>
+                <span id="loginCardManagerStatus" class="muted">读取登录卡后，可管理卡面图片和卡内角色列表。</span>
+              </div>
+              <div class="login-card-manager-grid">
+                <label class="field">
+                  <span>读取登录卡 PNG</span>
+                  <input id="loginCardManagerFileInput" type="file" accept="image/png,.png">
+                </label>
+                <label class="field">
+                  <span>更换卡面 PNG</span>
+                  <input id="loginCardFaceInput" type="file" accept="image/png,.png">
+                </label>
+                <label class="field">
+                  <span>拥有者昵称</span>
+                  <input id="loginCardNicknameInput" type="text" maxlength="24" placeholder="登录卡昵称">
+                </label>
+                <div class="login-card-count">
+                  <span>卡内角色</span>
+                  <strong id="loginCardStoredCount">0/15</strong>
+                </div>
+              </div>
+              <div class="action-row compact">
+                <button id="loginCardExportBtn" class="primary" type="button">保存并下载登录卡</button>
+                <button id="loginCardCreateBlankBtn" class="secondary" type="button">使用空白黑卡</button>
+                <button id="loginCardSelectAllBtn" class="secondary" type="button">全选 / 取消</button>
+                <button id="loginCardDeleteSelectedBtn" class="secondary danger" type="button">批量删除</button>
+              </div>
+              <div id="loginCardCharacterList" class="login-card-character-list"></div>
+              <section id="loginCardCharacterEditor" class="login-card-character-editor" hidden>
+                <div class="debug-entry-head">
+                  <strong id="loginCardCharacterEditorTitle">图形化编辑角色</strong>
+                  <span id="loginCardCharacterEditorStatus" class="muted">可直接修改角色面板和特殊手札数值；下方仍保留 JSON 接口。</span>
+                </div>
+                <div class="login-card-manager-grid login-card-editor-basic">
+                  <label class="field">
+                    <span>角色名</span>
+                    <input id="loginCardEditDisplayName" type="text" maxlength="40">
+                  </label>
+                  <label class="field">
+                    <span>显性等级</span>
+                    <input id="loginCardEditVisibleGrade" type="text" maxlength="32" placeholder="grade2 / grade1 / specialGrade">
+                  </label>
+                  <label class="field">
+                    <span>战斗时期</span>
+                    <input id="loginCardEditStage" type="text" maxlength="32" placeholder="custom">
+                  </label>
+                  <label class="field">
+                    <span>术式强度</span>
+                    <input id="loginCardEditTechniquePower" type="text" maxlength="12" placeholder="B / A / S">
+                  </label>
+                </div>
+                <div class="login-card-stat-grid" aria-label="角色基础面板">
+                  <label class="field"><span>咒力总量</span><input data-login-card-stat="cursedEnergy" type="text" maxlength="8"></label>
+                  <label class="field"><span>咒力操纵</span><input data-login-card-stat="control" type="text" maxlength="8"></label>
+                  <label class="field"><span>咒力效率</span><input data-login-card-stat="efficiency" type="text" maxlength="8"></label>
+                  <label class="field"><span>体质</span><input data-login-card-stat="body" type="text" maxlength="8"></label>
+                  <label class="field"><span>体术</span><input data-login-card-stat="martial" type="text" maxlength="8"></label>
+                  <label class="field"><span>悟性</span><input data-login-card-stat="talent" type="text" maxlength="8"></label>
+                </div>
+                <div class="login-card-manager-grid login-card-editor-text">
+                  <label class="field">
+                    <span>术式</span>
+                    <textarea id="loginCardEditTechniqueText" rows="2"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>领域</span>
+                    <textarea id="loginCardEditDomainProfile" rows="2"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>咒具 / 装备</span>
+                    <textarea id="loginCardEditLoadout" rows="2" placeholder="用顿号、逗号或换行分隔"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>特质</span>
+                    <textarea id="loginCardEditTraits" rows="2" placeholder="用顿号、逗号或换行分隔"></textarea>
+                  </label>
+                </div>
+                <div id="loginCardHandEditorList" class="login-card-hand-editor-list"></div>
+                <details class="login-card-json-editor">
+                  <summary>角色 JSON 接口</summary>
+                  <label class="field">
+                    <span>角色 JSON 数据</span>
+                    <textarea id="loginCardEditJson" rows="8" spellcheck="false"></textarea>
+                  </label>
+                  <div class="action-row compact">
+                    <button id="loginCardApplyJsonBtn" class="secondary" type="button">从 JSON 回填图形界面</button>
+                    <button id="loginCardRefreshJsonBtn" class="secondary" type="button">用图形界面刷新 JSON</button>
+                  </div>
+                </details>
+                <div class="action-row compact">
+                  <button id="loginCardSaveCharacterBtn" class="primary" type="button">保存角色修改</button>
+                  <button id="loginCardCancelCharacterEditBtn" class="secondary" type="button">关闭编辑</button>
+                </div>
+              </section>
+            </div>
             <div class="duel-debug-panel debug-only">
               <div class="debug-entry-head">
                 <strong>对战特殊词条</strong>
@@ -955,6 +1357,15 @@
           <div class="panel notes-panel">
             <h2>更新日志</h2>
               <ul>
+          <li>V3.1.5（单人电脑难度）：单人对战页新增电脑难度选择；简单使用低束宽并保留轻微失误，普通保持稳定规划，困难使用更宽 Beam Search，并在战斗信息中显示当前难度。</li>
+          <li>V3.0.10（投射术式体术加成）：投射术式攻击牌改用专用伤害乘区，大幅提高体术水平与身体能力对伤害的影响，咒力操控只作为轻量辅助。</li>
+          <li>V3.0.9（投射术式与星之怒修复）：投射术式改用旧标签 projection_sorcery，新增二十四帧、帧内闪击、破帧刹那、自缚帧、帧盾、帧率同步、过帧驱动七张手札；帧率跨回合累积并接入「出框时刻」。凰轮回收改为质量 +1 和本回合减伤，不再扣自身体势上限；情报档案新增特殊逻辑术式一览。</li>
+          <li>V3.0.8（星之怒重做）：星之怒改为围绕「虚拟质量」运转，拥有每回合成长、质量附加、质量防御、凰轮召回 / 召唤和黑洞终局，计数复用对战状态栏特殊计数 UI。</li>
+          <li>V3.0.7（赤血操术伤害校准）：提高赤血操术的消耗转伤害倍率和「血」系数权重，以胀相血系数为 0 时打出「超新星」约 100 实战伤害为基准重新校准。</li>
+          <li>V3.0.4（赤血操术与状态栏计数）：赤血操术重做为「咒力化血 / 血铸咒力」循环，手札会动态读取本回合血量与咒力消耗，并把本回合累积的「穿」「血」显示到对战状态栏；计数窗口走通用数据结构，后续其他术式可复用。</li>
+          <li>V3.0.2（移动端 / AI 防滥用 / Helper）：界面切到黑白印花集风格，移动端关闭重滤镜和多余动画；联机创建房间与加入房间并排显示；默认 AI 统一走服务端代理，记录每张登录卡 token 与间隔，重复点击复用同一请求，战斗历史超过 20 场会压缩；每张角色卡每日限制 5 次角色生成、5 次人生经历和 5 次战斗总结。</li>
+          <li>V3.0.1（领域手札与鹿紫云一修复）：鹿紫云一角色卡补入“拥有弥须葛笼”，对战中可正常发放弥须葛笼反领域手牌；领域手札区继续收纳领域/反领域牌，但不再把非领域泛响应牌误发进领域区；鹿紫云依卡面头像改为来源图圆形裁切，并清理多余绘制干扰。</li>
+          <li>V2.24（新手牌来袭，大贷款时代开启）：咒术对战新增黑夜模式、新版分类卡牌皮肤、自定义皮肤导入、皮肤格式下载和每回合发牌动态；通用手牌与 AI 辅助自定义角色正式提示同步上线。</li>
           <li>V2.2（AI调用降级）：AI 调用流程回退到历史版本 V2 的直连 / Proxy 调用逻辑，移除后续新增的 IP 围栏、剩余次数、管理员模式和状态查询显示；保留简化后的 ArkAI / 自定义兼容 / 自托管 Proxy 基础设置。</li>
           <li>2.19（日车审判刷新修复）：抗审判牌不再因式神、咒具等目标类型被直接拦截；审判子阶段跨回合刷新时会重新从领域模板发放审判 / 抗审判牌，避免空候选池覆盖手牌。</li>
           <li>2.18（日车领域重写）：日车领域展开后直接清空双方手牌，给日车发审判牌、给对方发抗审判牌；5 张对方审判应对牌统一标记为“抗审判”；判决流程保持不变，但处刑人之剑获取门槛降低。</li>
@@ -966,7 +1377,7 @@
           <li>2.0-hotfix（单人 / 联机待机过回合）：允许未选择手札时执行或锁定 0 咒力待机行动，解决咒力归零或无可用手札时无法过回合的问题；双方锁定后仍由本地规则引擎同步结算。</li>
           <li>2.0-hotfix（联机结算去 AI 裁判）：双方锁定行动后不再请求 AI 裁判，服务器只保留 1 秒锁定反馈并交由本地规则引擎快速进入下一回合；AI 功能保留到对战结束后的“AI生成对战过程”。</li>
           <li>2.0（联机模式开放）：联机模式默认使用官方联机服务器；首次进入联机页会弹出简体中文使用说明，说明创建 / 加入房间、锁定角色、选择手札、锁定行动、自动结算和高级后端网络配置。</li>
-          <li>1.390A（战斗核心合理化）：普通手札改以咒力预算为主，AP 降级为 legacy 显示；实战卡补齐基础数值和角色属性倍率预览，zero CE 卡不扣咒力，领域负荷只属于展开领域的一方，并区分领域崩解与术式烧断；黑闪仍不是主动卡，只作为窗口触发并加强受击反馈。</li>
+          <li>1.390A（战斗核心合理化）：普通手札改以咒力预算为主，早期资源字段降级为历史兼容字段；实战卡补齐基础数值和角色属性倍率预览，zero CE 卡不扣咒力，领域负荷只属于展开领域的一方，并区分领域崩解与术式烧断；黑闪仍不是主动卡，只作为窗口触发并加强受击反馈。</li>
           <li>1.389F（官方联机服务器模式）：联机 Alpha 默认改为官方联机服务器，普通玩家无需填写 Endpoint；本地 mock 保留为开发 / 双标签测试，自定义 Endpoint 收入高级后端设置，邀请链接继续只携带 roomId、不携带任何密钥。</li>
           <li>1.389F（联机面板清晰化）：联机 Alpha 面板拆为同步模式、房间操作、对战状态三个区块；本地 mock 与共享 Endpoint 分开显示，创建 / 加入房间分区，当前房间码与加入输入框分离，邀请链接完整显示 roomId，并根据对手加入、手札选择和双方锁定状态更新按钮文案。</li>
           <li>1.389E（共享联机后端 Alpha）：联机面板新增同步后端选择与共享 Endpoint 设置，可继续用本地 mock 做双标签测试，也可接入自托管 POST Endpoint / Worker 让跨设备玩家读取同一房间状态；邀请链接仍不携带 endpoint、玩家 ID 或任何密钥。</li>
@@ -983,12 +1394,12 @@
           <li>1.387H（战斗终局 hotfix）：咒术回战对战 / 术式手札 Beta 不再用旧 maxRounds 胜率开奖作为正常终局；体势归零、明确特殊规则或技术 safety cap 才会结束战斗，并在反馈导出中记录 endReason 与最终快照。</li>
           <li>1.387G-hotfix（AI自由辅助旋转锁）：修复普通随机抽取旋转中切换 AI自由辅助触发重绘，可能把转盘残留方向误认成选中结果的问题；旋转和结果待确认期间会锁定模式控件，并以抽取开始时的模式快照为准。</li>
           <li>1.387G（手札 Beta 反馈包）：新增 CANDIDATE 反馈导出面板，可导出本场 buildVersion、battleId / seed / replayKey、资源、手札候选、已选手札、领域 / trial / jackpot 状态、日志与 card metadata 摘要；反馈包只用于复现与试玩反馈，不参与战斗结算。</li>
-          <li>1.387F（手札 Beta 试玩 polish）：术式手札区改用「剩余 AP」和「已选择消耗」文案，已选卡片显示「第 N 手」，并增加普通 / trial / jackpot / 领域状态对手札池影响的提示；不改变 AP / CE / action effect。</li>
+          <li>1.387F（手札 Beta 试玩 polish）：术式手札区曾试验资源消耗和已选择消耗文案，已选卡片显示「第 N 手」，并增加普通 / trial / jackpot / 领域状态对手札池影响的提示。</li>
           <li>1.387E（card template drift audit）：建立 action template、hand candidate、card template、card view model 的一致性审计，检查 missing / orphan / duplicate / fallback / CANDIDATE 状态，防止后续 metadata 漂移。</li>
           <li>1.387D（card template prototype）：新增基础 card template metadata 层，为既有 action templates 提供 cardId、cardType、rarity、tags、sourceActionId 等显示字段；card template 不负责战斗结算。</li>
-          <li>1.387C（hand polish）：优化术式手札 UI、已选手札顺序、撤销 / 清空、AP / CE 不足提示、执行顺序日志与行为测试，保持 trial / jackpot / 领域优先级。</li>
-          <li>1.387B（AP 多行动 Beta）：在 5 张手札候选基础上接入 AP 多行动选择，玩家和 CPU 可在 AP / CE 限制内选择 1 到多张手札后统一执行回合。</li>
-          <li>1.387A（术式手札 Beta 框架）：将原三选一手法升级为 5 张 hand candidates，并显示 AP、CE、效果、风险、标签与不可用原因；仍从 existing action pool 生成，不进入完整牌堆、抽牌堆或弃牌堆。</li>
+          <li>1.387C（hand polish）：优化术式手札 UI、已选手札顺序、撤销 / 清空、咒力不足提示、执行顺序日志与行为测试，保持 trial / jackpot / 领域优先级。</li>
+          <li>1.387B（多行动 Beta）：在 5 张手札候选基础上试验多行动选择，玩家和 CPU 可在资源限制内选择 1 到多张手札后统一执行回合。</li>
+          <li>1.387A（术式手札 Beta 框架）：将原三选一手法升级为 5 张 hand candidates，并显示 CE、效果、风险、标签与不可用原因；仍从 existing action pool 生成，不进入完整牌堆、抽牌堆或弃牌堆。</li>
           <li>1.386H（规则子阶段模块迁移）：日车 trial 与秤 jackpot 规则子阶段迁入 `duel-rule-subphase.js`，保持审判 / jackpot 候选优先级与上下文持久化。</li>
           <li>1.386G（领域 Profile 模块迁移）：领域 profile、barrier type、领域负荷和领域展开相关读取迁入 `duel-domain-profile.js`。</li>
           <li>1.386F（领域应对模块迁移）：领域对抗、简易领域防御、弥虚葛笼、零咒力必中规避、域内求生等领域应对逻辑迁入 `duel-domain-response.js`。</li>
@@ -1056,6 +1467,12 @@
       </main>
     </div>
 
-  <script type="module" src="./modules/main.js?v=20260505-v2.21-special-hand-resource-fix2&esm=10"></script>
+  <script type="module" src="./modules/main.js?v=V3.1.8-github-pages-router-20260509&esm=39"></script>
 </body>
 </html>
+
+
+
+
+
+

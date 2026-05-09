@@ -2,7 +2,7 @@
   "use strict";
 
   var namespace = "JJKDuelHand";
-  var version = "1.390A-combat-core-rationalization-pass";
+  var version = "1.395-defeat-action-lock";
   var expectedExports = [
     "getDuelHandRules",
     "initializeDuelHandState",
@@ -57,6 +57,36 @@
   var handCandidateCacheStats = {
     lastInvalidatedAt: ""
   };
+  var domainControlHandActionIds = new Set([
+    "domain_expand",
+    "domain_compress",
+    "domain_force_sustain",
+    "domain_release",
+    "domain_clash",
+    "simple_domain_guard",
+    "hollow_wicker_basket_guard",
+    "falling_blossom_emotion",
+    "zero_ce_domain_bypass",
+    "domain_survival_guard"
+  ]);
+  var domainControlHandTags = new Set([
+    "domain_access",
+    "domain_activation",
+    "domain_maintenance",
+    "domain_response",
+    "simple_domain",
+    "hollow_wicker_basket",
+    "falling_blossom_emotion",
+    "zero_ce_domain_bypass",
+    "领域操控",
+    "领域展开",
+    "领域对抗",
+    "简易领域",
+    "弥虚葛笼",
+    "弥须葛笼",
+    "落花之情",
+    "必中规避"
+  ]);
 
   function hasOwn(source, key) {
     return Object.prototype.hasOwnProperty.call(source, key);
@@ -250,6 +280,14 @@
         domainAccessWeightBonus: 1
       },
       ap: { basePerTurn: 2, maxPerTurn: 3, carryOver: false },
+      cpuDifficulty: {
+        default: "normal",
+        options: {
+          easy: { label: "简单：陪练", beamWidth: 1, scoreNoise: 0.2, mistakeRate: 0.2 },
+          normal: { label: "普通：稳定", beamWidth: 3, scoreNoise: 0, mistakeRate: 0 },
+          hard: { label: "困难：强规划", beamWidth: 5, scoreNoise: 0, mistakeRate: 0 }
+        }
+      },
       cardLikeDisplay: {
         enabled: true,
         showApCost: true,
@@ -292,7 +330,7 @@
   }
 
   var exclusiveHandTagArchetypeRules = [
-    { archetype: "gojo_limitless", tokens: ["gojo_limitless", "gojo", "五条", "六眼", "无下限", "无限", "不可侵", "苍", "赫", "茈", "紫", "虚式", "无限虚式", "无量空处", "limitless", "six_eyes", "infinity", "blue", "red", "hollow_purple", "unlimited_void"] },
+    { archetype: "gojo_limitless", tokens: ["gojo_limitless", "gojo", "五条", "无下限", "无限", "不可侵", "苍", "赫", "茈", "紫", "虚式", "无限虚式", "无量空处", "limitless", "infinity", "blue", "red", "hollow_purple", "unlimited_void"] },
     { archetype: "sukuna_slash", tokens: ["sukuna_slash", "sukuna", "宿傩", "两面宿傩", "御厨子", "伏魔御厨子", "捌", "斩击", "切割", "火箭", "slash", "cleave", "dismantle", "shrine", "malevolent_shrine", "open_domain"] },
     { archetype: "higuruma_trial_owner", tokens: ["higuruma_trial_owner", "日车", "审判", "裁判", "没收", "处刑人之剑", "judgeman", "confiscation", "executioner"] },
     { archetype: "hakari_jackpot_owner", tokens: ["hakari_jackpot_owner", "秤金次", "坐杀博徒", "大中奖", "jackpot", "hakari", "pachinko", "idle_death_gamble"] },
@@ -375,6 +413,8 @@
       source?.officialGrade,
       source?.tier,
       source?.powerTier,
+      source?.technique,
+      source?.techniqueName,
       source?.domainProfile,
       source?.techniqueText,
       source?.externalResource,
@@ -384,14 +424,19 @@
       asList(source?.advancedTechniques),
       asList(source?.loadout),
       asList(source?.flags),
-      asList(source?.traits)
+      asList(source?.traits),
+      asList(source?.techniqueFamilies),
+      asList(source?.archetypes),
+      asList(source?.specialHandTags),
+      asList(source?.["特殊手札"])
     ).join(" ");
     var traits = [];
     if (/零咒力|天与|真希|甚尔/i.test(text)) traits.push("zero_ce", "零咒力", "heavenly_restriction", "天与咒缚", "physical", "体术", "cursed_tool", "咒具");
     if (/咒具|释魂刀|天逆|游云|黑绳|万里锁/i.test(text)) traits.push("cursed_tool", "咒具");
     if (/咒灵之躯|咒灵|灾害/i.test(text)) traits.push("curse", "咒灵");
     if (/领域展开|开放领域|顶级领域|坐杀搏徒|无量空处|伏魔御厨子|自闭圆顿裹|诛伏赐死|真赝相爱|嵌合暗翳庭/i.test(text)) traits.push("domain", "领域");
-    if (/无下限|六眼|五条/i.test(text)) traits.push("limitless", "gojo", "五条", "无下限");
+    if (/无下限|五条/i.test(text)) traits.push("limitless", "gojo", "五条", "无下限");
+    if (/六眼|six[_\s-]?eyes/i.test(text)) traits.push("six_eyes", "六眼");
     if (/宿傩|伏魔御厨子|御厨子|斩击/i.test(text)) traits.push("sukuna", "shrine", "slash", "宿傩", "斩击");
     if (/日车|诛伏赐死|审判|规则类/i.test(text)) traits.push("trial", "judgment", "日车", "审判");
     if (/秤|坐杀搏徒|中奖/i.test(text)) traits.push("jackpot", "hakari", "秤");
@@ -413,14 +458,25 @@
       source?.characterId,
       source?.name,
       source?.displayName,
+      source?.technique,
+      source?.techniqueName,
       source?.domainProfile,
       source?.techniqueText,
       source?.notes
-    ].concat(asList(source?.innateTraits), asList(source?.flags), asList(source?.loadout)).join(" ");
+    ].concat(
+      asList(source?.innateTraits),
+      asList(source?.flags),
+      asList(source?.loadout),
+      asList(source?.traits),
+      asList(source?.techniqueFamilies),
+      asList(source?.archetypes),
+      asList(source?.specialHandTags),
+      asList(source?.["特殊手札"])
+    ).join(" ");
     var archetypes = asList(entry?.rules?.archetypes);
     if (/零咒力|天与|真希|甚尔/i.test(text) && !archetypes.includes("zero_ce_heavenly_restriction")) archetypes.push("zero_ce_heavenly_restriction");
     if (/宿傩|御厨子|伏魔|斩击/i.test(text) && !archetypes.includes("sukuna_slash")) archetypes.push("sukuna_slash");
-    if (/五条|无下限|六眼|无量空处/i.test(text) && !archetypes.includes("gojo_limitless")) archetypes.push("gojo_limitless");
+    if (/五条|无下限|无量空处|gojo|limitless/i.test(text) && !archetypes.includes("gojo_limitless")) archetypes.push("gojo_limitless");
     if (/日车|诛伏赐死|审判/i.test(text) && !archetypes.includes("higuruma_trial_owner")) archetypes.push("higuruma_trial_owner");
     if (/秤|坐杀搏徒|中奖/i.test(text) && !archetypes.includes("hakari_jackpot_owner")) archetypes.push("hakari_jackpot_owner");
     if (/虎杖|虎天帝|itadori|逕庭拳|黑闪|灵魂打击|半人半咒/i.test(text) && !archetypes.includes("yuji_soul_melee")) archetypes.push("yuji_soul_melee");
@@ -440,6 +496,74 @@
 
   function hasGenericSummonEvidence(text) {
     return /式神|召唤|召喚|咒灵操术|咒灵库存|傀儡|外部资源/i.test(String(text || ""));
+  }
+
+  function buildTechniqueEvidenceText(source, customCard) {
+    var selectedLibrary = customCard?.selectedLibrary || source?.selectedLibrary || {};
+    return [
+      source?.id,
+      source?.characterId,
+      source?.name,
+      source?.displayName,
+      source?.technique,
+      source?.techniqueName,
+      source?.techniqueText,
+      source?.techniqueDescription,
+      source?.domainProfile,
+      source?.externalResource,
+      source?.notes,
+      customCard?.id,
+      customCard?.characterId,
+      customCard?.name,
+      customCard?.displayName,
+      customCard?.technique,
+      customCard?.techniqueName,
+      customCard?.techniqueText,
+      customCard?.techniqueDescription,
+      customCard?.domainProfile,
+      customCard?.externalResource
+    ].concat(
+      asList(source?.innateTraits),
+      asList(source?.advancedTechniques),
+      asList(source?.loadout),
+      asList(source?.traits),
+      asList(source?.selectedMechanisms),
+      asList(source?.selectedToolTags),
+      asList(customCard?.innateTraits),
+      asList(customCard?.advancedTechniques),
+      asList(customCard?.loadout),
+      asList(customCard?.traits),
+      asList(customCard?.selectedMechanisms),
+      asList(customCard?.selectedToolTags),
+      asList(selectedLibrary?.techniques),
+      asList(selectedLibrary?.domains),
+      asList(selectedLibrary?.advanced),
+      asList(selectedLibrary?.resources)
+    ).filter(Boolean).join(" ");
+  }
+
+  function hasExplicitConstructionTechniqueEvidence(text) {
+    var value = String(text || "");
+    return /构筑术式|真球|液态金属|昆虫铠甲|三重疾苦|禅院真依|真依|yorozu|construction\s+sorcery/i.test(value) ||
+      /(^|[\s、，,;；|/／])万($|[\s、，,;；|/／])/i.test(value);
+  }
+
+  function hasExplicitBloodTechniqueEvidence(text) {
+    return /赤血操术|穿血|血刃|赤鳞跃动|超新星|苅祓|百敛|胀相|脹相|加茂宪纪|加茂憲紀|blood\s+manipulation/i.test(String(text || ""));
+  }
+
+  function sanitizeTechniqueSpecialHandTags(tags, evidenceText) {
+    var normalized = uniqueList(tags);
+    return normalized.filter(function keepTag(tag) {
+      if (tag === "construction") return hasExplicitConstructionTechniqueEvidence(evidenceText);
+      if (tag === "blood_manipulation") return hasExplicitBloodTechniqueEvidence(evidenceText);
+      if (tag === "ten_shadows") return hasTenShadowsEvidence(evidenceText);
+      if (tag === "projection_sorcery") return /投射术式|投射咒法|二十四帧|帧率|直哉|直毘人|projection\s+sorcery/i.test(String(evidenceText || ""));
+      if (tag === "star_rage") return /星之怒|虚拟质量|凰轮|黑洞|九十九由基|star\s+rage/i.test(String(evidenceText || ""));
+      if (tag === "limitless") return /无下限|五条|六眼|苍|赫|茈|limitless|infinity/i.test(String(evidenceText || ""));
+      if (tag === "shrine") return /御厨子|伏魔御厨子|宿傩|捌|解|斩击|shrine|cleave|dismantle/i.test(String(evidenceText || ""));
+      return true;
+    });
   }
 
   function applyProfilePatch(profile, patch) {
@@ -463,7 +587,10 @@
       customCard?.domainProfile,
       sourceDomainScript?.domainName
     ].filter(Boolean).join(" ");
-    var hasDeclaredDomain = Boolean(sourceDomainScript) || Boolean(sourceDomainText && !/无明确领域|无领域|没有领域|不具备领域|未知|未公开|^无$/i.test(sourceDomainText));
+    var domainFlags = new Set(asList(source?.flags).concat(asList(customCard?.flags)));
+    var antiDomainOnly = /简易领域|simple domain|弥虚葛笼|彌虚葛籠|落花之情|反领域/i.test(sourceDomainText) &&
+      !/领域展开|生得领域|开放领域|顶级领域|顶尖领域|顶格领域|最高级领域|无量空处|伏魔御厨子|坐杀搏徒|真赝相爱|自闭圆顿裹|盖棺铁围山|荡蕴平线|时胞月宫殿|诛伏赐死|三重疾苦|domain expansion/i.test(sourceDomainText);
+    var hasDeclaredDomain = !domainFlags.has("noDomain") && !antiDomainOnly && (Boolean(sourceDomainScript) || Boolean(sourceDomainText && !/无明确领域|无领域|没有领域|不具备领域|未知|未公开|^无$/i.test(sourceDomainText)));
     var entry = getCharacterRuleEntry(source, rules);
     var archetypes = getDuelCharacterArchetypes(source, { rules: rules });
     var traits = uniqueList([]
@@ -483,9 +610,9 @@
       .concat(asList(source?.["特殊手札"]))
       .concat(asList(customCard?.specialHandTags))
       .concat(asList(customCard?.["特殊手札"])));
-    var specialHandTags = uniqueList([]
-      .concat(explicitSpecialHandTags)
-      .concat(archetypes));
+    var techniqueEvidenceText = buildTechniqueEvidenceText(source, customCard);
+    explicitSpecialHandTags = sanitizeTechniqueSpecialHandTags(explicitSpecialHandTags, techniqueEvidenceText);
+    var specialHandTags = uniqueList([].concat(explicitSpecialHandTags));
     var variants = uniqueList([]
       .concat(asList(source?.variants))
       .concat(asList(source?.characterVariants))
@@ -511,7 +638,7 @@
     if (archetypes.includes("ten_shadows") || /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭/i.test(text)) variants.push("ten_shadows_user");
     if (/宿傩|sukuna/i.test(text) && /十影|十种影|魔虚罗|mahoraga|嵌合兽/i.test(text)) variants.push("sukuna_ten_shadows_user");
     if (archetypes.includes("sukuna_slash") || /宿傩|御厨子|伏魔御厨子|shrine|sukuna/i.test(text)) variants.push("sukuna_shrine_user");
-    if (archetypes.includes("gojo_limitless") || /五条|无下限|六眼|limitless|six_eyes/i.test(text)) variants.push("gojo_limitless_user");
+    if (archetypes.includes("gojo_limitless") || /五条|无下限|limitless/i.test(text)) variants.push("gojo_limitless_user");
     var profile = {
       characterId: source?.characterId || source?.profileId || source?.id || entry?.id || "",
       displayName: source?.displayName || source?.name || "",
@@ -525,18 +652,18 @@
       hasCe: !/零咒力|zero_ce/i.test(text),
       ceLimited: /零咒力|zero_ce|咒力受限|ce_limited/i.test(text),
       hasInnateTechnique: !/零咒力|无术式|no_innate_technique/i.test(text),
-      hasDomainAccess: hasDeclaredDomain || /领域展开|开放领域|顶级领域|坐杀搏徒|诛伏赐死|无量空处|伏魔御厨子|自闭圆顿裹|真赝相爱|嵌合暗翳庭|domain/i.test(text),
+      hasDomainAccess: !domainFlags.has("noDomain") && (hasDeclaredDomain || /领域展开|开放领域|顶级领域|坐杀搏徒|诛伏赐死|无量空处|伏魔御厨子|自闭圆顿裹|真赝相爱|嵌合暗翳庭|domain expansion/i.test(text)),
       isZeroCe: /零咒力|zero_ce/i.test(text),
       isCurse: /咒灵|curse_spirit|cursed_spirit|disaster_curse|low_grade_curse/i.test(text),
       isIncarnated: /受肉|incarnated/i.test(text),
       usesCursedTools: /咒具|cursed_tool|释魂刀|天逆|游云|黑绳|万里锁/i.test(text),
-      techniqueFamilies: uniqueList([]
+      techniqueFamilies: sanitizeTechniqueSpecialHandTags(uniqueList([]
         .concat(asList(entry?.rules?.techniqueFamilies))
         .concat(asList(source?.techniqueFamilies))
         .concat(asList(customCard?.techniqueFamilies))
         .concat(traits.filter(function keepFamily(tag) {
         return /^[a-z][a-z0-9_]{2,}$/i.test(String(tag || "")) || ["宿傩", "伏魔御厨子", "五条", "无下限", "六眼", "十种影法术", "赤血操术", "咒灵操术", "无为转变", "十划咒法", "咒言", "不义游戏", "黑鸟操术", "投射咒法", "构筑术式", "刍灵咒法", "星之怒", "冰凝咒法", "坐杀搏徒", "超人", "模仿", "天空术式", "龙髓炮", "反重力机构", "幻兽琥珀"].includes(tag);
-      }))),
+      }))), techniqueEvidenceText),
       ruleId: entry?.id || ""
     };
     archetypes.forEach(function applyArchetypePatch(archetypeId) {
@@ -657,9 +784,13 @@
     var policy = getCharacterRuleAllowDeny(profile, rules);
     var sourceActionId = snapshot.sourceActionId;
     var forceAllowed = policy.forceAllowSourceActionIds.includes(sourceActionId);
-    var specialHandMatched = Boolean(snapshot.specialHandTags.length && includesAny(profile.specialHandTags, snapshot.specialHandTags));
+    var explicitProfileSpecialHandTags = profile.explicitSpecialHandTags || [];
+    var specialHandMatched = Boolean(snapshot.specialHandTags.length && includesAny(explicitProfileSpecialHandTags, snapshot.specialHandTags));
     if (policy.forceDenySourceActionIds.includes(sourceActionId)) {
       return { ok: false, reason: "不符合当前角色特性", profile: profile, snapshot: snapshot };
+    }
+    if (snapshot.specialHandTags.length && !specialHandMatched) {
+      return { ok: false, reason: "需要角色特殊手札标签", profile: profile, snapshot: snapshot };
     }
     var impliedExclusiveArchetypes = getExclusiveArchetypesFromHandTags(snapshot);
     if (!forceAllowed && impliedExclusiveArchetypes.length && !includesAny(profile.archetypes, impliedExclusiveArchetypes) && !specialHandMatched) {
@@ -674,9 +805,6 @@
     }
     if (!forceAllowed && snapshot.exclusiveToArchetypes.length && !includesAny(profile.archetypes, snapshot.exclusiveToArchetypes)) {
       return { ok: false, reason: "需要对应角色原型", profile: profile, snapshot: snapshot };
-    }
-    if (!forceAllowed && snapshot.specialHandTags.length && !specialHandMatched) {
-      return { ok: false, reason: "需要角色特殊手札标签", profile: profile, snapshot: snapshot };
     }
     if (!forceAllowed && snapshot.forbiddenArchetypes.length && includesAny(profile.archetypes, snapshot.forbiddenArchetypes)) {
       return { ok: false, reason: "当前角色原型禁止此卡", profile: profile, snapshot: snapshot };
@@ -779,19 +907,62 @@
     return candidate?.cardType || template?.cardType || inferFallbackCardType(action);
   }
 
+  function normalizeDomainControlToken(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function getDomainControlCandidateIds(candidate) {
+    var action = getActionFromEntry(candidate);
+    return [
+      getActionId(candidate),
+      candidate?.sourceActionId,
+      candidate?.actionId,
+      candidate?.id,
+      candidate?.cardId,
+      action?.sourceActionId,
+      action?.actionId,
+      action?.id,
+      action?.cardId
+    ].flatMap(function expandCardId(value) {
+      var token = normalizeDomainControlToken(value);
+      return token.startsWith("card_") ? [token, token.slice(5)] : [token];
+    }).filter(Boolean);
+  }
+
+  function getDomainControlCandidateTags(candidate) {
+    var action = getActionFromEntry(candidate);
+    return []
+      .concat(asList(candidate?.tags))
+      .concat(asList(action?.tags))
+      .concat(asList(candidate?.specialHandTags), asList(candidate?.["特殊手札"]))
+      .concat(asList(action?.specialHandTags), asList(action?.["特殊手札"]))
+      .map(normalizeDomainControlToken)
+      .filter(Boolean);
+  }
+
+  function isDomainControlHandCandidate(candidate) {
+    var action = getActionFromEntry(candidate);
+    var cardType = normalizeDomainControlToken(getCandidateCardType(candidate) || action?.cardType || action?.type || "");
+    var ids = getDomainControlCandidateIds(candidate);
+    if (ids.some(function hasDomainControlId(id) { return domainControlHandActionIds.has(id); })) return true;
+    if (candidate?.domainHand || action?.domainHand) return true;
+    var hasControlTag = getDomainControlCandidateTags(candidate).some(function hasDomainControlTag(tag) {
+      return domainControlHandTags.has(tag);
+    });
+    if (!hasControlTag) return false;
+    return cardType === "domain_maintenance" ||
+      ids.some(function hasDomainControlPrefix(id) {
+        return /^domain_(expand|compress|force_sustain|release|clash|survival)/.test(id);
+      });
+  }
+
   function isDomainHandCandidate(candidate) {
     var action = getActionFromEntry(candidate);
-    var id = getActionId(candidate);
-    var cardType = String(getCandidateCardType(candidate) || "").toLowerCase();
+    var cardType = normalizeDomainControlToken(getCandidateCardType(candidate) || action?.cardType || action?.type || "");
+    if (["rule_trial", "rule_defense", "jackpot"].includes(cardType)) return false;
+    if (action?.domainSpecific || candidate?.domainSpecific) return true;
     if (action?.techniqueFeatureHand && action?.normalHandOnly && !action?.effects?.activateDomain) return false;
-    var text = [
-      id,
-      cardType,
-      action?.label,
-      action?.description
-    ].concat(asList(candidate?.tags), asList(action?.tags)).join(" ");
-    return cardType.includes("domain") ||
-      /domain|领域|简易领域|弥虚葛笼|落花之情|必中规避|域内求生/i.test(text);
+    return isDomainControlHandCandidate(candidate);
   }
 
   function getActorDomainText(actor) {
@@ -843,14 +1014,38 @@
     return Boolean(actor?.domain?.active || actor?.profile?.domain?.active);
   }
 
+  function isOpponentDomainActiveForHand(opponent) {
+    return Boolean(opponent?.domain?.active || opponent?.profile?.domain?.active);
+  }
+
+  function isDomainMaintenanceHandCandidate(candidate) {
+    var id = getActionId(candidate);
+    return ["domain_compress", "domain_force_sustain", "domain_release"].includes(id);
+  }
+
+  function isDomainResponseHandCandidate(candidate) {
+    var action = getActionFromEntry(candidate);
+    var id = getActionId(candidate);
+    return ["domain_clash", "simple_domain_guard", "hollow_wicker_basket_guard", "falling_blossom_emotion", "zero_ce_domain_bypass", "domain_survival_guard"].includes(id) ||
+      Boolean(action?.requirements?.opponentDomainActive);
+  }
+
   function isPreDomainDomainHandCandidate(candidate) {
     var id = getActionId(candidate);
     return ["domain_expand", "simple_domain_guard", "hollow_wicker_basket_guard"].includes(id);
   }
 
-  function filterDomainCandidatesByPhase(domainCandidates, actor) {
-    if (isDomainActiveForActor(actor)) return domainCandidates || [];
-    return (domainCandidates || []).filter(isPreDomainDomainHandCandidate);
+  function filterDomainCandidatesByPhase(domainCandidates, actor, opponent) {
+    var candidates = domainCandidates || [];
+    if (isDomainActiveForActor(actor)) {
+      var opponentDomainActive = isOpponentDomainActiveForHand(opponent);
+      return candidates.filter(function keepActiveDomainHand(candidate) {
+        if (isDomainMaintenanceHandCandidate(candidate)) return true;
+        if (isDomainResponseHandCandidate(candidate)) return opponentDomainActive;
+        return false;
+      });
+    }
+    return candidates.filter(isPreDomainDomainHandCandidate);
   }
 
   function getActiveTrialSubPhaseForActor(actor, battle) {
@@ -1100,6 +1295,22 @@
     });
   }
 
+  function isMahoragaProxyProtectingHandSide(battle, side) {
+    var proxy = battle?.mahoragaProxy?.[side];
+    if (!proxy?.active) return false;
+    if (!proxy.unitId) return true;
+    return (battle?.battlefieldUnits || []).some(function findProxyUnit(unit) {
+      var hp = Number(unit?.hp ?? unit?.currentHp ?? unit?.unitStats?.currentHp ?? unit?.unitStats?.maxHp ?? 0);
+      return unit?.id === proxy.unitId && unit?.defeated !== true && unit?.active !== false && hp > 0;
+    });
+  }
+
+  function isDuelActorDefeatedForExecution(actor, battle, side) {
+    if (!actor) return true;
+    if (Number(actor.hp || 0) > 0) return false;
+    return !isMahoragaProxyProtectingHandSide(battle, side || actor.side || "");
+  }
+
   function isMaintenanceCardCurrentlyValid(card, battle) {
     var spec = getMaintenanceSpec(card);
     if (!spec?.mandatoryWhileUnitActive) return true;
@@ -1188,6 +1399,72 @@
     updatePersistentHandOverflow(hand, getMaxHandSize(rules));
     invalidateDuelHandCandidateCache(battle);
     return { discarded: true, reason: "", card: removed, side: side, pendingDiscardCount: hand.pendingDiscardCount };
+  }
+
+  function getDuelCpuDiscardKeepScore(candidate, actor, opponent, battle) {
+    var action = getActionFromEntry(candidate);
+    if (!action?.id) return -999;
+    var damage = getCpuDamagePriority(candidate);
+    var block = getCpuBlockPriority(candidate);
+    var type = getCpuActionType(candidate);
+    var text = collectCandidateSearchText(candidate);
+    var score = Number(candidate?.selectionWeight || candidate?.characterWeight || candidate?.weight || 0);
+    score += damage * 0.9 + block * 0.55;
+    if (isPermanentHandCard(candidate)) score += 9999;
+    if (type.includes("domain") || action.effects?.activateDomain) score += 34;
+    if (action.summonSpec || action.mechanismSpec || action.resourceSpec) score += 26;
+    if (action.starRageEffect || action.projectionSorcery || action.bloodConversion) score += 24;
+    if (/star_rage|projection_sorcery|blood_manipulation|星之怒|投射|赤血|虚拟质量|帧率/.test(text)) score += 18;
+    if (action.risk === "critical") score += 8;
+    if (action.risk === "high") score += 4;
+    if (!damage && !block && !type.includes("support") && !type.includes("resource")) score -= 10;
+    return Number(score.toFixed(4));
+  }
+
+  function autoDiscardDuelCpuOverflow(actor, opponent, battle, side, rules) {
+    var hand = getPersistentHandState(battle, side, rules);
+    var maxHandSize = getMaxHandSize(rules);
+    var overflow = updatePersistentHandOverflow(hand, maxHandSize);
+    if (!hand || overflow <= 0) return [];
+    var discardable = (hand.cards || []).map(function mapDiscard(card, index) {
+      return {
+        card: card,
+        index: index,
+        score: getDuelCpuDiscardKeepScore(card, actor, opponent, battle)
+      };
+    }).filter(function keepDiscardable(entry) {
+      return !isPermanentHandCard(entry.card);
+    }).sort(function byLowKeepScore(left, right) {
+      return left.score - right.score;
+    }).slice(0, overflow);
+    var removed = [];
+    discardable.sort(function byIndexDesc(left, right) {
+      return right.index - left.index;
+    }).forEach(function removeEntry(entry) {
+      var card = hand.cards.splice(entry.index, 1)[0];
+      if (card) removed.push(card);
+    });
+    if (!removed.length) return [];
+    var round = getTurnNumber(battle);
+    var summaries = removed.reverse().map(function summarize(card) {
+      return {
+        actionId: getActionId(card),
+        label: card?.label || card?.id || getActionId(card),
+        discardedRound: round,
+        reason: "cpuOverflowAutoDiscard"
+      };
+    });
+    hand.lastDiscarded = summaries;
+    hand.discardPile = (hand.discardPile || []).concat(summaries);
+    updatePersistentHandOverflow(hand, maxHandSize);
+    invalidateDuelHandCandidateCache(battle);
+    battle.cpuOverflowDiscardLog ||= {};
+    battle.cpuOverflowDiscardLog[side] = {
+      round: round,
+      discarded: summaries,
+      pendingDiscardCount: hand.pendingDiscardCount
+    };
+    return summaries;
   }
 
   function getCandidateAction(candidate) {
@@ -1287,6 +1564,12 @@
     });
   }
 
+  function removeDomainCardsFromNormalHand(hand) {
+    hand.cards = (hand.cards || []).filter(function keepNormalPersistentCard(card) {
+      return !isDomainHandCandidate(card);
+    });
+  }
+
   function getRandomHandInjectionsForActor(actor) {
     var characterRules = getDuelCharacterCardRules();
     var profile = buildDuelCharacterCardProfile(actor, { rules: characterRules });
@@ -1299,6 +1582,22 @@
     var profile = buildDuelCharacterCardProfile(actor, { rules: characterRules });
     var entry = getCharacterRuleEntry({ id: profile.characterId, name: profile.displayName }, characterRules);
     return asList(entry?.rules?.fixedHandInjections).concat(asList(entry?.rules?.rules?.fixedHandInjections));
+  }
+
+  function getFixedActionInjectionsFromPool(fullCandidates) {
+    return (fullCandidates || []).filter(function keepGuaranteed(candidate) {
+      var action = candidate?.action || candidate || {};
+      return Boolean(candidate?.guaranteedPerTurn || action.guaranteedPerTurn);
+    }).map(function mapGuaranteed(candidate) {
+      var action = candidate?.action || candidate || {};
+      return {
+        id: getActionId(candidate),
+        sourceActionId: getActionId(candidate),
+        weight: Number(action.selectionWeight || action.weight || 999),
+        retainedPermanent: action.retainedPermanent !== false,
+        handSource: action.handSource || "guaranteed-per-turn"
+      };
+    });
   }
 
   function shouldApplyFixedHandInjection(injection, actor, battle, round) {
@@ -1339,6 +1638,7 @@
       if (!rollRandomHandInjection(injection, actor, battle, round)) return;
       var candidate = byId[id];
       if (!candidate) return;
+      if (isDomainHandCandidate(candidate)) return;
       var card = normalizePersistentHandCard({
         ...(candidate || {}),
         randomHandInjection: true,
@@ -1355,7 +1655,7 @@
   }
 
   function injectFixedHandCards(hand, fullCandidates, actor, battle, rules, round) {
-    var injections = getFixedHandInjectionsForActor(actor);
+    var injections = getFixedHandInjectionsForActor(actor).concat(getFixedActionInjectionsFromPool(fullCandidates));
     if (!injections.length) return [];
     var byId = Object.create(null);
     (fullCandidates || []).forEach(function indexCandidate(candidate) {
@@ -1370,6 +1670,7 @@
       if (!shouldApplyFixedHandInjection(injection, actor, battle, round)) return;
       var candidate = byId[id];
       if (!candidate) return;
+      if (isDomainHandCandidate(candidate)) return;
       var card = normalizePersistentHandCard({
         ...(candidate || {}),
         fixedHandInjection: true,
@@ -1392,6 +1693,7 @@
     var maxHandSize = getMaxHandSize(rules);
     var drawPerTurn = getDrawPerTurn(rules);
     reconcilePersistentHandCards(hand, rankedCandidates, actor, opponent, battle, rules);
+    if (!options?.strictReplaceHand) removeDomainCardsFromNormalHand(hand);
     if (Number(hand.round || 0) === round) {
       if (options?.strictReplaceHand) {
         if (!Array.isArray(hand.preTrialCards)) {
@@ -1799,11 +2101,14 @@
     var parts = [];
     if (effects.outgoingScale && effects.outgoingScale !== 1) parts.push("输出调整");
     if (effects.incomingHpScale && effects.incomingHpScale !== 1) parts.push("承伤调整");
+    if (effects.evasionBonus) parts.push("闪避调整");
+    if (effects.selfHpCostRatio || effects.selfHpCostFlat) parts.push("体势代价");
     if (effects.stabilityDelta) parts.push("稳定度变化");
     if (effects.domainLoadDelta || effects.domainLoadScale) parts.push("领域负荷变化");
     if (effects.opponentDomainLoadDelta) parts.push("干涉对方领域");
     if (effects.activateDomain) parts.push("展开领域");
     if (effects.releaseDomain) parts.push("解除领域");
+    if (action?.exclusiveHandSelection) parts.push("单独使用");
     return parts.join(" / ") || action?.description || "调整本回合咒力节奏";
   }
 
@@ -1853,6 +2158,9 @@
     if (!Number.isFinite(value)) return;
     if (field === "outgoingScale" && value !== 1) preview.riskPreview.push("输出倍率：" + formatScalePercent(value));
     if (field === "incomingHpScale" && value !== 1) preview.statusPreview.push("受到体势伤害：" + formatScalePercent(value));
+    if (field === "evasionBonus" && value !== 0) preview.statusPreview.push("闪避：" + formatSignedPercent(value));
+    if (field === "selfHpCostRatio" && value > 0) preview.resourcePreview.push("体势代价：最大体势 " + formatSignedPercent(value).replace(/^\+/, ""));
+    if (field === "selfHpCostFlat" && value > 0) preview.resourcePreview.push("体势代价 " + formatSignedNumber(value).replace(/^\+/, ""));
     if (field === "stabilityDelta" && value !== 0) preview.statusPreview.push("稳定度：" + formatSignedPercent(value));
     if (field === "domainLoadDelta" && value !== 0) preview.resourcePreview.push("己方领域负荷 " + formatSignedNumber(value));
     if (field === "ceCost" && value > 0) preview.resourcePreview.push("消耗咒力 " + formatSignedNumber(value).replace(/^\+/, ""));
@@ -1873,6 +2181,9 @@
     [
       "outgoingScale",
       "incomingHpScale",
+      "evasionBonus",
+      "selfHpCostRatio",
+      "selfHpCostFlat",
       "stabilityDelta",
       "domainLoadDelta",
       "ceCost",
@@ -1889,6 +2200,7 @@
     });
     if (effects.activateDomain) preview.conditionPreview.push("展开领域");
     if (effects.releaseDomain) preview.conditionPreview.push("解除领域");
+    if (action.exclusiveHandSelection || template?.exclusiveHandSelection) preview.conditionPreview.push("限制：本回合只能选择此手札");
     if (isReadablePreviewText(availabilityMessage) && availabilityMessage !== "可用") preview.conditionPreview.push(availabilityMessage);
     preview.resourcePreview = cleanPreviewLines(preview.resourcePreview);
     preview.statusPreview = cleanPreviewLines(preview.statusPreview);
@@ -1909,7 +2221,7 @@
     ]);
     return {
       schema: "jjk-duel-effect-preview",
-      version: "1.390A-combat-core-rationalization-pass",
+      version: "1.392-public-template-tactics",
       summary: summary,
       lines: resolvedEffectLines,
       resolvedEffectLines: resolvedEffectLines,
@@ -1948,6 +2260,16 @@
   function getActionId(entry) {
     var action = getActionFromEntry(entry);
     return entry?.actionId || entry?.id || action?.id || "";
+  }
+
+  function isExclusiveDuelHandSelection(actionOrEntry) {
+    var action = getActionFromEntry(actionOrEntry);
+    return Boolean(action?.exclusiveHandSelection || action?.exclusiveSelection || action?.selectionMode === "exclusive");
+  }
+
+  function getExclusiveDuelHandSelectionReason(actionOrEntry) {
+    var action = getActionFromEntry(actionOrEntry);
+    return action?.selectionLockReason || "该手札必须单独使用";
   }
 
   function isCandidateSelected(battle, side, actionId) {
@@ -2028,6 +2350,7 @@
     if (action.techniqueFeatureHand || action.featureTechniqueHand || action.specialHandCard) return true;
     if (action.domainSpecific || action.domainRole || effects.activateDomain || effects.releaseDomain) return true;
     if (action.summonSpec || action.mechanismSpec || action.resourceSpec || action.serviceReceiptRules || action.massiveObjectRules) return true;
+    if (action.projectionSorcery || action.starRageEffect || action.bloodConversion || action.bloodRuntime || action.starRageRuntime || action.projectionRuntime) return true;
     if (numericFields.some(function hasNumericField(field) {
       var value = Number(action[field] ?? effects[field]);
       return Number.isFinite(value) && value !== 0;
@@ -2041,10 +2364,30 @@
     return (candidates || []).filter(hasMeaningfulDuelHandValues);
   }
 
+  function getCachedDuelActionPool(actor, opponent, battle) {
+    if (!battle) return callDependency("buildDuelActionPool", [actor, opponent, battle]) || [];
+    var side = actor?.side || "left";
+    var cacheKey = [
+      battle.battleId || battle.onlineRoomId || "battle",
+      side,
+      getTurnNumber(battle),
+      actor?.characterId || actor?.profileId || actor?.id || "",
+      opponent?.characterId || opponent?.profileId || opponent?.id || "",
+      Number(actor?.ce || 0).toFixed(1),
+      Number(actor?.hp || 0).toFixed(1)
+    ].join("|");
+    battle.actionPoolCache ||= {};
+    var cached = battle.actionPoolCache[side];
+    if (cached?.key === cacheKey && Array.isArray(cached.pool)) return cached.pool;
+    var pool = callDependency("buildDuelActionPool", [actor, opponent, battle]) || [];
+    battle.actionPoolCache[side] = { key: cacheKey, pool: pool };
+    return pool;
+  }
+
   function buildDuelHandCandidates(actor, opponent, duelState, options) {
     var battle = getBattle(duelState);
     var side = getActorSide(actor, options);
-    var pool = callDependency("buildDuelActionPool", [actor, opponent, battle]);
+    var pool = getCachedDuelActionPool(actor, opponent, battle);
     var candidates = (pool || []).map(function mapAction(action) {
       return wrapActionAsCandidate(action, actor, opponent, battle, options);
     });
@@ -2066,7 +2409,7 @@
     var rules = getDuelHandRules();
     var choiceCount = getChoiceCount(rules, count);
     var picker = getOptionalFunction("pickDuelActionChoices");
-    var rawPool = callDependency("buildDuelActionPool", [actor, opponent, battle]) || [];
+    var rawPool = getCachedDuelActionPool(actor, opponent, battle);
     var side = actor?.side || "left";
     var strictRuleSubphaseHand = shouldReplaceHandWithRuleSubphaseCards(actor, battle);
     var currentTrialReplacement = getCurrentTrialReplacementHandCards(actor, battle, side, rules);
@@ -2177,7 +2520,7 @@
     fullCandidates = filterMeaningfulDuelHandCandidates(fullCandidates);
     fullCandidates = filterInactiveRuleSubphaseCards(fullCandidates, actor, battle);
     fullCandidates = filterSpentTenShadowsSummons(fullCandidates, battle, side);
-    var domainCandidates = filterDomainCandidatesByPhase(splitNormalAndDomainCandidates(fullCandidates).domain, actor);
+    var domainCandidates = filterDomainCandidatesByPhase(splitNormalAndDomainCandidates(fullCandidates).domain, actor, opponent);
     var ranked = rankDuelHandCandidatesByCharacter(domainCandidates, [], actor, opponent, battle, maxDomainCards, {
       domainHand: true,
       handRules: rules,
@@ -2412,6 +2755,9 @@
     }
     initializeDuelHandState(battle, options?.rules);
     var side = getActorSide(actor, options);
+    if (isDuelActorDefeatedForExecution(actor, battle, side)) {
+      return { ok: false, reason: "体势已归零，无法选择手札" };
+    }
     var candidate = typeof actionOrId === "string" ? findCandidateById(battle, actionOrId) : actionOrId;
     var action = candidate?.action || candidate;
     if (!action?.id) return { ok: false, reason: "手札不存在" };
@@ -2424,6 +2770,13 @@
       return getActionId(entry) === action.id;
     })) {
       return { ok: false, reason: "本回合已选择", action: action };
+    }
+    var exclusiveSelected = selected.find(isExclusiveDuelHandSelection);
+    if (exclusiveSelected) {
+      return { ok: false, reason: getExclusiveDuelHandSelectionReason(exclusiveSelected), action: action };
+    }
+    if (isExclusiveDuelHandSelection(action) && selected.length > 0) {
+      return { ok: false, reason: getExclusiveDuelHandSelectionReason(action), action: action };
     }
     var maxSelections = getMaxSelections(options?.rules);
     if (selected.length >= maxSelections) {
@@ -2551,6 +2904,9 @@
     var side = getActorSide(actor, options);
     var selected = normalizeSelectedForExecution(options?.actions || getDuelSelectedHandActions(battle, side), actor, opponent, battle, options);
     if (!selected.length) return { applied: false, reason: "尚未选择手札", actions: [], results: [] };
+    if (isDuelActorDefeatedForExecution(actor, battle, side)) {
+      return { applied: false, reason: "体势已归零，无法继续行动", side: side, actions: [], results: [] };
+    }
     var preflight = validateDuelSelectedForExecution(actor, opponent, battle, side, selected, options);
     if (!preflight.ok) return preflight;
     selected = preflight.entries;
@@ -2560,10 +2916,16 @@
       var entry = selected[index];
       var action = getActionFromEntry(entry);
       if (!action?.id) continue;
-      var actionForExecution = withDuelHandTargetPlan(withZeroCeCostOverride(action, actor), actor, opponent, battle, entry, options);
+      var actionForExecution = withDuelHandTargetPlan({
+        ...withZeroCeCostOverride(action, actor),
+        selectedCount: selected.length,
+        selectedIndex: index,
+        selectedLast: index === selected.length - 1
+      }, actor, opponent, battle, entry, options);
       var result = callDependency("applyDuelActionEffect", [actionForExecution, actor, opponent, battle]);
       results.push({ applied: Boolean(result), reason: result ? "" : "动作未结算", action: actionForExecution, result: result });
       if (result) appliedActions.push(actionForExecution);
+      if (isDuelActorDefeatedForExecution(actor, battle, side)) break;
     }
     if (appliedActions.length && options?.clearAfter !== false) {
       removeCardsFromPersistentHand(battle, side, appliedActions.map(function mapAction(action) { return action.id; }), options?.rules);
@@ -2608,6 +2970,36 @@
     var totalCeCost = 0;
     var results = [];
     var selectedIds = new Set(entries.map(getActionId).filter(Boolean));
+    var exclusiveEntry = entries.find(isExclusiveDuelHandSelection);
+    var simulatedActor = actor ? {
+      ...actor,
+      hp: Number(actor.hp || 0),
+      ce: Number(actor.ce || 0),
+      maxHp: Number(actor.maxHp || 0),
+      maxCe: Number(actor.maxCe || 0)
+    } : actor;
+    if (isDuelActorDefeatedForExecution(actor, battle, side)) {
+      return {
+        applied: false,
+        ok: false,
+        reason: "体势已归零，无法行动",
+        side: side,
+        actions: entries.map(getActionFromEntry),
+        results: results,
+        totalCeCost: totalCeCost
+      };
+    }
+    if (exclusiveEntry && entries.length > 1) {
+      return {
+        applied: false,
+        ok: false,
+        reason: getExclusiveDuelHandSelectionReason(exclusiveEntry),
+        side: side,
+        actions: entries.map(getActionFromEntry),
+        results: results,
+        totalCeCost: totalCeCost
+      };
+    }
     for (var index = 0; index < entries.length; index += 1) {
       var entry = entries[index];
       var action = getActionFromEntry(entry);
@@ -2622,7 +3014,7 @@
       if (entry.selectedRound && Number(entry.selectedRound) !== getTurnNumber(battle)) {
         return { applied: false, ok: false, reason: "手札回合已过期", side: side, actions: entries.map(getActionFromEntry), results: results, totalCeCost: totalCeCost };
       }
-      var availability = getAvailability(action, actor, opponent, battle);
+      var availability = getAvailability(action, simulatedActor, opponent, battle);
       var ceCost = Number(entry.ceCost ?? availability.costCe ?? getCeCost(action, actor));
       totalCeCost += ceCost;
       if (!availability.available) {
@@ -2636,11 +3028,493 @@
           totalCeCost: totalCeCost
         };
       }
+      if (simulatedActor) {
+        var paidCe = Math.min(Number(simulatedActor.ce || 0), ceCost);
+        simulatedActor.ce = Number((Number(simulatedActor.ce || 0) - paidCe).toFixed(1));
+        var hpCost = Number(action?.effects?.selfHpCostFlat ?? action?.selfHpCostFlat ?? 0);
+        if (hpCost > 0) {
+          var beforeHp = Number(simulatedActor.hp || 0);
+          simulatedActor.hp = Number(Math.max(1, beforeHp - hpCost).toFixed(1));
+          hpCost = Math.max(0, beforeHp - Number(simulatedActor.hp || 0));
+        }
+        if (action?.bloodConversion === "ce_to_hp") {
+          simulatedActor.hp = Number((Number(simulatedActor.hp || 0) + paidCe * Number(action.bloodCeToHpEfficiency || 0.82)).toFixed(1));
+        } else if (action?.bloodConversion === "hp_to_ce") {
+          simulatedActor.ce = Number((Number(simulatedActor.ce || 0) + hpCost * Number(action.bloodHpToCeEfficiency || 0.76)).toFixed(1));
+        }
+      }
     }
-    if (Number(actor.ce || 0) < totalCeCost) {
+    var remainingCe = Number(simulatedActor ? simulatedActor.ce : Number(actor.ce || 0));
+    if (remainingCe < 0) {
       return { applied: false, ok: false, reason: "咒力不足", side: side, actions: entries.map(getActionFromEntry), results: [], totalCeCost: totalCeCost };
     }
     return { ok: true, entries: entries, totalCeCost: totalCeCost };
+  }
+
+  function isOpponentMahoragaProxyActive(battle, opponent) {
+    var side = opponent?.side || "";
+    return Boolean(side && battle?.mahoragaProxy?.[side]?.active);
+  }
+
+  function getCpuDamagePriority(candidate) {
+    var action = getActionFromEntry(candidate);
+    var effects = action?.effects || {};
+    var values = [
+      action?.numericPreview?.finalDamage,
+      action?.baseDamage,
+      action?.hpDamage,
+      effects.hpDamage,
+      effects.directDamage,
+      effects.hutianBlackFlash ? 45 : 0
+    ];
+    return values.reduce(function maxDamage(max, value) {
+      var numeric = Number(value || 0);
+      return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
+    }, 0);
+  }
+
+  function getCpuBlockPriority(candidate) {
+    var action = getActionFromEntry(candidate);
+    var effects = action?.effects || {};
+    return [action?.numericPreview?.finalBlock, action?.baseBlock, effects.block, effects.incomingHpScale ? (1 - Number(effects.incomingHpScale || 1)) * 80 : 0]
+      .reduce(function maxBlock(max, value) {
+        var numeric = Number(value || 0);
+        return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
+      }, 0);
+  }
+
+  function getCpuActionType(candidate) {
+    var action = getActionFromEntry(candidate);
+    return String(action?.cardType || action?.type || "").toLowerCase();
+  }
+
+  function chooseDuelCpuStrategy(actor, opponent, candidates) {
+    var actorHpRatio = Number(actor?.maxHp || 0) > 0 ? Number(actor.hp || 0) / Number(actor.maxHp || 1) : 1;
+    var actorCeRatio = Number(actor?.maxCe || 0) > 0 ? Number(actor.ce || 0) / Number(actor.maxCe || 1) : 1;
+    var opponentHp = Number(opponent?.hp || 0);
+    var possibleDamage = (candidates || []).reduce(function sumDamage(total, candidate) {
+      return total + getCpuDamagePriority(candidate);
+    }, 0);
+    if (opponentHp > 0 && possibleDamage >= opponentHp * 0.92) return "KILL";
+    if (actorHpRatio <= 0.36) return "DEFENSE";
+    if (actorCeRatio <= 0.24) return "VALUE";
+    if (Number(actor?.hp || 0) - Number(opponent?.hp || 0) > 80 && actorCeRatio >= 0.45) return "TEMPO";
+    return "BALANCE";
+  }
+
+  function getDuelCpuStrategyWeights(strategy) {
+    return {
+      KILL: { damage: 1.85, block: 0.08, ceUse: 0.22, conserve: -0.18, domain: 0.4, support: 0.05, risk: 0.05 },
+      TEMPO: { damage: 1.05, block: 0.35, ceUse: 0.22, conserve: -0.05, domain: 0.45, support: 0.3, risk: -0.08 },
+      DEFENSE: { damage: 0.5, block: 1.25, ceUse: 0.16, conserve: 0.08, domain: 0.25, support: 0.45, risk: -0.35 },
+      VALUE: { damage: 0.72, block: 0.42, ceUse: -0.1, conserve: 0.62, domain: 0.15, support: 0.38, risk: -0.28 },
+      BALANCE: { damage: 0.9, block: 0.62, ceUse: 0.14, conserve: 0.16, domain: 0.32, support: 0.28, risk: -0.12 }
+    }[strategy] || { damage: 0.9, block: 0.62, ceUse: 0.14, conserve: 0.16, domain: 0.32, support: 0.28, risk: -0.12 };
+  }
+
+  function normalizeDuelCpuDifficulty(value) {
+    var key = String(value || "").trim().toLowerCase();
+    return ["easy", "normal", "hard"].includes(key) ? key : "normal";
+  }
+
+  function getDuelCpuDifficultyConfig(value, rules) {
+    var defaults = {
+      easy: { id: "easy", label: "简单：陪练", beamWidth: 1, scoreNoise: 0.2, mistakeRate: 0.2, mistakePool: 3 },
+      normal: { id: "normal", label: "普通：稳定", beamWidth: 3, scoreNoise: 0, mistakeRate: 0, mistakePool: 1 },
+      hard: { id: "hard", label: "困难：强规划", beamWidth: 5, scoreNoise: 0, mistakeRate: 0, mistakePool: 1 }
+    };
+    var id = normalizeDuelCpuDifficulty(value || rules?.cpuDifficulty?.default || "normal");
+    var configured = rules?.cpuDifficulty?.options?.[id] || {};
+    return { ...defaults[id], ...configured, id };
+  }
+
+  function getDuelCpuPlanningRandom(battle) {
+    var value = typeof battle?.rng === "function" ? battle.rng() : Math.random();
+    return Math.max(0, Math.min(0.999999, Number(value) || 0));
+  }
+
+  function isDuelCpuSetupAction(candidate) {
+    var action = getActionFromEntry(candidate);
+    var type = getCpuActionType(candidate);
+    var effects = action?.effects || {};
+    return ["support", "resource", "defense", "counter"].some(function match(part) { return type.includes(part); }) ||
+      Number(effects.outgoingScale || effects.damageScale || 0) > 1 ||
+      Number(effects.stabilityDelta || 0) > 0 ||
+      Number(getCpuBlockPriority(candidate) || 0) > 0;
+  }
+
+  function isDuelCpuAttackAction(candidate) {
+    return getCpuDamagePriority(candidate) > 0;
+  }
+
+  function getDuelCpuActorSide(actor) {
+    return actor?.side || "right";
+  }
+
+  function createDuelCpuTempSelectionEntry(candidate, actor, battle) {
+    var action = getActionFromEntry(candidate);
+    var actionId = getActionId(candidate);
+    return {
+      id: actionId,
+      actionId: actionId,
+      label: candidate?.label || action?.label || actionId,
+      action: action,
+      selectedRound: getTurnNumber(battle),
+      side: getDuelCpuActorSide(actor)
+    };
+  }
+
+  function getDuelCpuAvailabilityForSequence(candidate, actor, opponent, battle, sequence) {
+    if (!battle) return getAvailability(getActionFromEntry(candidate), actor, opponent, battle);
+    var side = getDuelCpuActorSide(actor);
+    var previousSelections = battle.selectedHandActions?.[side];
+    battle.selectedHandActions ||= {};
+    battle.selectedHandActions[side] = (sequence || []).map(function mapSequence(item) {
+      return createDuelCpuTempSelectionEntry(item, actor, battle);
+    });
+    try {
+      return getAvailability(getActionFromEntry(candidate), actor, opponent, battle);
+    } finally {
+      if (previousSelections) {
+        battle.selectedHandActions[side] = previousSelections;
+      } else if (battle.selectedHandActions) {
+        delete battle.selectedHandActions[side];
+      }
+    }
+  }
+
+  function isDuelCpuConditionalAvailability(availability) {
+    var reason = String(availability?.reason || "");
+    return /需要本回合一起|需要.*一起|another card|requires another/i.test(reason);
+  }
+
+  function getDuelCpuTechniqueText(candidate) {
+    return collectCandidateSearchText(candidate);
+  }
+
+  function isDuelCpuProjectionAttack(candidate) {
+    var action = getActionFromEntry(candidate);
+    var spec = action?.projectionSorcery || {};
+    var text = getDuelCpuTechniqueText(candidate);
+    return Boolean(action?.projectionRuntime?.active || action?.projectionSorcery || /projection_sorcery|投射|二十四帧|帧内闪击|破帧/.test(text)) && getCpuDamagePriority(candidate) > 0 && spec.effect !== "self_bind";
+  }
+
+  function isDuelCpuProjectionSelfBind(candidate) {
+    var action = getActionFromEntry(candidate);
+    var text = getDuelCpuTechniqueText(candidate);
+    return action?.projectionSorcery?.effect === "self_bind" || /自缚帧|projectionSelfBindFrame/.test(text);
+  }
+
+  function isDuelCpuSequenceCompatible(candidate, sequence) {
+    var action = getActionFromEntry(candidate);
+    var previous = Array.isArray(sequence) ? sequence : [];
+    if (!action?.id) return false;
+    if (isExclusiveDuelHandSelection(action) && previous.length > 0) return false;
+    if (previous.some(isExclusiveDuelHandSelection)) return false;
+    if (action.starRageEffect === "black_hole" && previous.length > 0) return false;
+    if (previous.some(function hasBlackHole(item) { return getActionFromEntry(item)?.starRageEffect === "black_hole"; })) return false;
+    if (isDuelCpuProjectionSelfBind(candidate) && previous.some(isDuelCpuProjectionAttack)) return false;
+    if (isDuelCpuProjectionAttack(candidate) && previous.some(isDuelCpuProjectionSelfBind)) return false;
+    if (action?.projectionSorcery?.requiresAnotherCard && previous.length < 1) return false;
+    return true;
+  }
+
+  function getDuelCpuTechniqueState(actor, battle) {
+    var side = getDuelCpuActorSide(actor);
+    var turn = getTurnNumber(battle);
+    var projection = battle?.projectionSorceryState?.[side] || {};
+    var star = battle?.starRageState?.[side] || {};
+    var blood = battle?.bloodManipulationState?.[side] || {};
+    return {
+      side: side,
+      turn: turn,
+      projectionFrame: Number(projection.frame ?? 10),
+      projectionMax: Number(projection.max ?? 24),
+      starMass: Number(star.mass ?? 1),
+      bloodPierce: Number(blood.pierce || 0),
+      bloodBoost: Number(blood.blood || 0)
+    };
+  }
+
+  function scoreDuelCpuTechniqueSynergy(candidate, actor, opponent, battle, strategy, sequence) {
+    var action = getActionFromEntry(candidate);
+    if (!action?.id) return 0;
+    var previous = Array.isArray(sequence) ? sequence : [];
+    var state = getDuelCpuTechniqueState(actor, battle);
+    var hpRatio = Number(actor?.maxHp || 0) > 0 ? Number(actor.hp || 0) / Number(actor.maxHp || 1) : 1;
+    var ceRatio = Number(actor?.maxCe || 0) > 0 ? Number(actor.ce || 0) / Number(actor.maxCe || 1) : 1;
+    var damage = getCpuDamagePriority(candidate);
+    var block = getCpuBlockPriority(candidate);
+    var score = 0;
+    var type = getCpuActionType(candidate);
+    var spec = action.projectionSorcery || {};
+    if (action.projectionSorcery || /projection_sorcery|投射|帧/.test(getDuelCpuTechniqueText(candidate))) {
+      var frameNeed = Math.max(0, state.projectionMax - state.projectionFrame);
+      if (Number(spec.frameGain || 0) > 0) score += Math.min(26, Number(spec.frameGain || 0) * 5 + frameNeed * 0.7);
+      if (spec.effect === "frame_shield" && (hpRatio < 0.58 || strategy === "DEFENSE")) score += 24 + block * 0.35;
+      if (spec.effect === "over_frame_drive" && previous.length > 0) score += 22;
+      if (spec.effect === "self_bind") score += strategy === "DEFENSE" || hpRatio < 0.5 ? 18 : -18;
+      if (isDuelCpuProjectionAttack(candidate) && previous.some(function hasProjectionSetup(item) {
+        var setup = getActionFromEntry(item)?.projectionSorcery || {};
+        return Number(setup.frameGain || 0) > 0 || setup.effect === "over_frame_drive";
+      })) score += 18;
+      if (Number(spec.frameCost || 0) > 0 && state.projectionFrame - Number(spec.frameCost || 0) < 8 && strategy !== "KILL") score -= 18;
+      if (state.projectionFrame >= state.projectionMax - 1 && damage > 0) score += 34;
+    }
+    if (action.starRageEffect || /star_rage|星之怒|虚拟质量|凰轮|黑洞/.test(getDuelCpuTechniqueText(candidate))) {
+      if (action.starRageEffect === "mass_attack") score += previous.some(isDuelCpuAttackAction) ? -12 : 28;
+      if (action.starRageEffect === "mass_defense") score += hpRatio < 0.55 || strategy === "DEFENSE" ? 30 : 8;
+      if (action.starRageEffect === "garuda") score += state.starMass >= Number(action.starRageSummonMassCost || 0) ? 24 : -20;
+      if (Number(action.starRageMassGain || 0) > 0) score += Math.max(6, 18 - state.starMass * 1.5);
+      if (action.starRageEffect === "black_hole") {
+        score += state.starMass >= 5 ? 50 + state.starMass * 5 : -80;
+        if (hpRatio < 0.42 && strategy !== "KILL") score -= 36;
+      }
+    }
+    if (action.bloodConversion || /blood_manipulation|赤血|咒力化血|血铸咒力|穿血|血刃/.test(getDuelCpuTechniqueText(candidate))) {
+      if (action.bloodConversion === "ce_to_hp") score += hpRatio < 0.65 && ceRatio > 0.22 ? 34 : -8;
+      if (action.bloodConversion === "hp_to_ce") score += ceRatio < 0.42 && hpRatio > 0.52 ? 32 : -24;
+      if (!action.bloodConversion && damage > 0) {
+        score += (state.bloodPierce + state.bloodBoost) * 42;
+        if (previous.some(function hasBloodConversion(item) { return Boolean(getActionFromEntry(item)?.bloodConversion); })) score += 16;
+      }
+      if (Number(action.bloodHpCostRatio || 0) > 0 && hpRatio < 0.36 && strategy !== "KILL") score -= 28;
+    }
+    if (action.summonSpec || type.includes("summon")) score += previous.length === 0 ? 20 : 8;
+    if (action.resourceSpec || type.includes("resource")) score += ceRatio < 0.5 ? 20 : 10;
+    return Number(score.toFixed(4));
+  }
+
+  function scoreDuelCpuAction(candidate, actor, opponent, battle, strategy, usedCe, sequence) {
+    var action = getActionFromEntry(candidate);
+    if (!action?.id) return -9999;
+    var weights = getDuelCpuStrategyWeights(strategy);
+    var type = getCpuActionType(candidate);
+    var damage = getCpuDamagePriority(candidate);
+    var block = getCpuBlockPriority(candidate);
+    var ceCost = Math.max(0, Number(getCeCost(action, actor) || 0));
+    var maxCe = Math.max(1, Number(actor?.maxCe || actor?.ce || 1));
+    var remainingCe = Math.max(0, Number(actor?.ce || 0) - Number(usedCe || 0) - ceCost);
+    var score = 0;
+    score += damage * weights.damage;
+    score += block * weights.block;
+    score += (ceCost / maxCe) * 30 * weights.ceUse;
+    score += (remainingCe / maxCe) * 18 * weights.conserve;
+    if (type.includes("domain") || action.effects?.activateDomain) score += 18 * weights.domain;
+    if (["support", "resource", "defense", "counter"].some(function match(part) { return type.includes(part); })) score += 12 * weights.support;
+    if (action.risk === "critical") score += 18 * weights.risk;
+    if (action.risk === "high") score += 10 * weights.risk;
+    if (Number(opponent?.hp || 0) > 0 && damage >= Number(opponent.hp || 0)) score += strategy === "KILL" ? 180 : 60;
+    if (Number(actor?.hp || 0) < Number(actor?.maxHp || 0) * 0.32 && block > 0) score += 35;
+    if (battle?.domainSubPhase && /trial|rule/.test(type + " " + action.id)) score += 12;
+    if (isExclusiveDuelHandSelection(action) && strategy !== "KILL" && damage < Number(opponent?.hp || 0)) score -= 8;
+    var previous = Array.isArray(sequence) ? sequence : [];
+    var hasSetupBefore = previous.some(isDuelCpuSetupAction);
+    var hasAttackBefore = previous.some(isDuelCpuAttackAction);
+    if (isDuelCpuAttackAction(candidate) && hasSetupBefore) score += strategy === "KILL" ? 10 : 6;
+    if (isDuelCpuSetupAction(candidate) && !hasAttackBefore) score += strategy === "DEFENSE" ? 7 : 3.5;
+    if (isDuelCpuSetupAction(candidate) && hasAttackBefore && strategy !== "DEFENSE") score -= 4;
+    score += scoreDuelCpuTechniqueSynergy(candidate, actor, opponent, battle, strategy, sequence);
+    return Number(score.toFixed(4));
+  }
+
+  function getDuelCpuPlayableCandidates(actor, opponent, battle, ordered) {
+    var used = new Set();
+    return (ordered || []).filter(function keepPlayable(candidate) {
+      var action = getActionFromEntry(candidate);
+      var actionId = getActionId(candidate);
+      if (!action?.id || !actionId || used.has(actionId)) return false;
+      used.add(actionId);
+      var availability = getDuelCpuAvailabilityForSequence(candidate, actor, opponent, battle, []);
+      if (!availability.available && !isDuelCpuConditionalAvailability(availability)) return false;
+      var ceCost = Math.max(0, Number(availability.costCe ?? getCeCost(action, actor)));
+      return Number(actor?.ce || 0) >= ceCost;
+    });
+  }
+
+  function getDuelCpuTargetSelectionCount(strategy, actor, playable, maxSelections) {
+    var count = Math.max(0, Math.min(Number(maxSelections || 1), playable?.length || 0));
+    if (count <= 1) return count;
+    var ceRatio = Number(actor?.maxCe || 0) > 0 ? Number(actor.ce || 0) / Number(actor.maxCe || 1) : 1;
+    if (strategy === "KILL" || strategy === "TEMPO") return Math.min(3, count);
+    if (strategy === "DEFENSE") return Math.min(count, playable.some(function hasBlock(candidate) { return getCpuBlockPriority(candidate) > 0; }) ? 3 : 2);
+    if (strategy === "VALUE") return ceRatio < 0.12 ? 1 : Math.min(2, count);
+    return ceRatio < 0.16 ? Math.min(2, count) : Math.min(3, count);
+  }
+
+  function scoreDuelCpuBeamFinal(beam, targetCount, maxSelections) {
+    var length = Number(beam?.sequence?.length || 0);
+    var target = Math.max(0, Number(targetCount || 0));
+    var score = Number(beam?.score || 0);
+    if (length > 0) score += length * 9;
+    if (target > 0 && length === 0) score -= 120;
+    if (target > 0 && length < target) score -= (target - length) * 28;
+    if (length >= Math.min(target, maxSelections || target)) score += 10;
+    return Number(score.toFixed(4));
+  }
+
+  function buildDuelCpuKillSequence(actor, opponent, battle, ordered, rules) {
+    var maxSelections = getMaxSelections(rules);
+    var hp = Math.max(0, Number(opponent?.hp || 0));
+    if (!hp) return [];
+    var usedCe = 0;
+    var sequence = [];
+    var candidates = (ordered || []).slice().sort(function byDamage(left, right) {
+      return getCpuDamagePriority(right) - getCpuDamagePriority(left);
+    });
+    candidates.some(function addLethal(candidate) {
+      var action = getActionFromEntry(candidate);
+      if (!action?.id || sequence.length >= maxSelections) return true;
+      if (!isDuelCpuAttackAction(candidate)) return false;
+      var availability = getAvailability(action, actor, opponent, battle);
+      var ceCost = Math.max(0, Number(availability.costCe ?? getCeCost(action, actor)));
+      if (!availability.available || Number(actor.ce || 0) < usedCe + ceCost) return false;
+      sequence.push(candidate);
+      usedCe += ceCost;
+      var damage = sequence.reduce(function sum(total, item) { return total + getCpuDamagePriority(item); }, 0);
+      return damage >= hp;
+    });
+    return sequence.reduce(function sum(total, item) { return total + getCpuDamagePriority(item); }, 0) >= hp ? sequence : [];
+  }
+
+  function planDuelCpuHandSequence(actor, opponent, battle, ordered, options) {
+    var rules = options?.rules || getDuelHandRules();
+    var difficulty = getDuelCpuDifficultyConfig(options?.difficulty || battle?.cpuDifficulty || rules.cpuDifficulty?.default || "normal", rules);
+    var maxSelections = getMaxSelections(rules);
+    var width = Math.max(1, Math.min(5, Number(options?.beamWidth || difficulty.beamWidth || rules.cpuBeamWidth || 3)));
+    var strategy = chooseDuelCpuStrategy(actor, opponent, ordered);
+    var playable = getDuelCpuPlayableCandidates(actor, opponent, battle, ordered);
+    var targetSelections = getDuelCpuTargetSelectionCount(strategy, actor, playable, maxSelections);
+    if (!playable.length) {
+      battle.cpuPlannerLog = {
+        difficulty: difficulty.id,
+        difficultyLabel: difficulty.label,
+        strategy: strategy,
+        beamWidth: width,
+        scoreNoise: Number(difficulty.scoreNoise || 0),
+        score: 0,
+        actionIds: [],
+        playableCount: 0,
+        targetSelections: 0,
+        reason: "no-playable-hand-actions",
+        generatedAtRound: Number(battle.round || 0) + 1
+      };
+      return [];
+    }
+    if (strategy === "KILL") {
+      var killSequence = buildDuelCpuKillSequence(actor, opponent, battle, ordered, rules);
+      if (killSequence.length) {
+        battle.cpuPlannerLog = {
+          difficulty: difficulty.id,
+          difficultyLabel: difficulty.label,
+          strategy: "KILL",
+          beamWidth: width,
+          fastPath: "lethal-confirmed",
+          score: killSequence.reduce(function sum(total, item) { return total + getCpuDamagePriority(item); }, 0),
+          actionIds: killSequence.map(getActionId),
+          playableCount: playable.length,
+          targetSelections: Math.min(maxSelections, killSequence.length),
+          generatedAtRound: Number(battle.round || 0) + 1
+        };
+        return killSequence;
+      }
+    }
+    var beams = [{ sequence: [], score: 0, usedCe: 0, usedIds: new Set(), criticalUsed: false }];
+    var steps = Math.max(1, Math.min(maxSelections, ordered.length));
+    for (var step = 0; step < steps; step += 1) {
+      var expanded = [];
+      beams.forEach(function expandBeam(beam) {
+        if (beam.sequence.length > 0) expanded.push({
+          ...beam,
+          score: beam.score - Math.max(0, targetSelections - beam.sequence.length) * 6
+        });
+        ordered.forEach(function addCandidate(candidate) {
+          var action = getActionFromEntry(candidate);
+          var actionId = getActionId(candidate);
+          if (!action?.id || !actionId || beam.usedIds.has(actionId)) return;
+          if (beam.sequence.length >= maxSelections) return;
+          if (beam.criticalUsed || (action.risk === "critical" && beam.sequence.length > 0)) return;
+          if (!isDuelCpuSequenceCompatible(candidate, beam.sequence)) return;
+          var availability = getDuelCpuAvailabilityForSequence(candidate, actor, opponent, battle, beam.sequence);
+          var ceCost = Math.max(0, Number(availability.costCe ?? getCeCost(action, actor)));
+          if (!availability.available || Number(actor.ce || 0) < beam.usedCe + ceCost) return;
+          var score = scoreDuelCpuAction(candidate, actor, opponent, battle, strategy, beam.usedCe, beam.sequence);
+          var nextLength = beam.sequence.length + 1;
+          score += 8;
+          if (nextLength <= targetSelections) score += 16;
+          if (targetSelections >= 3 && nextLength === 3) score += 12;
+          if (strategy !== "VALUE" && nextLength < targetSelections) score += 4;
+          if (difficulty.scoreNoise) {
+            score += Math.abs(score || 1) * (getDuelCpuPlanningRandom(battle) * 2 - 1) * Number(difficulty.scoreNoise || 0);
+          }
+          var nextIds = new Set(beam.usedIds);
+          nextIds.add(actionId);
+          expanded.push({
+            sequence: beam.sequence.concat(candidate),
+            score: beam.score + score - Math.max(0, beam.sequence.length) * 1.5,
+            usedCe: beam.usedCe + ceCost,
+            usedIds: nextIds,
+            criticalUsed: beam.criticalUsed || action.risk === "critical"
+          });
+        });
+      });
+      expanded.sort(function byScore(left, right) {
+        return scoreDuelCpuBeamFinal(right, targetSelections, maxSelections) - scoreDuelCpuBeamFinal(left, targetSelections, maxSelections);
+      });
+      beams = expanded.slice(0, width);
+      if (!beams.length) break;
+    }
+    var mistakeApplied = false;
+    beams = (beams || []).filter(function keepNonEmpty(beam) {
+      return beam?.sequence?.length > 0;
+    }).sort(function byFinalScore(left, right) {
+      return scoreDuelCpuBeamFinal(right, targetSelections, maxSelections) - scoreDuelCpuBeamFinal(left, targetSelections, maxSelections);
+    });
+    var best = beams[0] || { sequence: playable.slice(0, Math.min(targetSelections || 1, maxSelections)), score: 0 };
+    if (difficulty.mistakeRate && beams.length > 1 && getDuelCpuPlanningRandom(battle) < Number(difficulty.mistakeRate || 0)) {
+      var pool = Math.max(2, Math.min(beams.length, Number(difficulty.mistakePool || 2)));
+      var mistakeIndex = Math.max(1, Math.min(pool - 1, 1 + Math.floor(getDuelCpuPlanningRandom(battle) * (pool - 1))));
+      best = beams[mistakeIndex] || best;
+      mistakeApplied = true;
+    }
+    battle.cpuPlannerLog = {
+      difficulty: difficulty.id,
+      difficultyLabel: difficulty.label,
+      strategy: strategy,
+      beamWidth: width,
+      scoreNoise: Number(difficulty.scoreNoise || 0),
+      mistakeApplied: mistakeApplied,
+      score: scoreDuelCpuBeamFinal(best, targetSelections, maxSelections),
+      actionIds: (best.sequence || []).map(getActionId),
+      playableCount: playable.length,
+      targetSelections: targetSelections,
+      selectedCount: Number(best.sequence?.length || 0),
+      generatedAtRound: Number(battle.round || 0) + 1
+    };
+    return best.sequence || [];
+  }
+
+  function selectDuelCpuOrderedCandidates(actor, opponent, battle, side, rules, ordered, maxSelections, focusMahoragaProxy) {
+    var failures = [];
+    (ordered || []).some(function selectCandidate(candidate) {
+      var action = getActionFromEntry(candidate);
+      if (!action?.id) return false;
+      if (getDuelSelectedHandActions(battle, side).length >= maxSelections) return true;
+      if (action.risk === "critical" && getDuelSelectedHandActions(battle, side).length > 0) return false;
+      var selected = selectDuelHandCandidate(candidate, actor, opponent, battle, { side: side, rules: rules });
+      if (!selected.selected) {
+        failures.push({ actionId: getActionId(candidate), reason: selected.reason || "select-failed" });
+        if (selected.reason === "手牌超过上限，请先弃牌") {
+          autoDiscardDuelCpuOverflow(actor, opponent, battle, side, rules);
+          selected = selectDuelHandCandidate(candidate, actor, opponent, battle, { side: side, rules: rules });
+          if (selected.selected) return false;
+          failures.push({ actionId: getActionId(candidate), reason: selected.reason || "select-failed-after-discard" });
+        }
+      }
+      if (!selected.selected && selected.reason === "咒力不足") return !focusMahoragaProxy;
+      return false;
+    });
+    return failures;
   }
 
   function pickDuelCpuHandActions(actor, opponent, duelState, options) {
@@ -2653,6 +3527,7 @@
     var count = getChoiceCount(rules, options?.count);
     var candidates = pickDuelHandCandidates(actor, opponent, battle, count);
     var domainCandidates = pickDuelDomainHandCandidates(actor, opponent, battle, getDomainHandSize(rules));
+    var discardedOverflow = autoDiscardDuelCpuOverflow(actor, opponent, battle, side, rules);
     var firstPick = null;
     var cpuPicker = getOptionalFunction("getDuelCpuAction");
     if (cpuPicker) firstPick = cpuPicker(actor, opponent, battle);
@@ -2662,16 +3537,24 @@
       var actionId = getActionId(candidate);
       if (actionId && !ordered.some(function duplicate(item) { return getActionId(item) === actionId; })) ordered.push(candidate);
     });
+    var focusMahoragaProxy = isOpponentMahoragaProxyActive(battle, opponent);
+    if (focusMahoragaProxy) {
+      ordered = ordered.slice().sort(function byDamage(left, right) {
+        return getCpuDamagePriority(right) - getCpuDamagePriority(left);
+      });
+    }
+    var planned = planDuelCpuHandSequence(actor, opponent, battle, ordered, { ...options, rules: rules });
+    var fallbackOrdered = planned.length ? planned : ordered;
     var maxSelections = getMaxSelections(rules);
-    ordered.some(function selectCandidate(candidate) {
-      var action = getActionFromEntry(candidate);
-      if (!action?.id) return false;
-      if (getDuelSelectedHandActions(battle, side).length >= maxSelections) return true;
-      if (action.risk === "critical" && getDuelSelectedHandActions(battle, side).length > 0) return false;
-      var selected = selectDuelHandCandidate(candidate, actor, opponent, battle, { side: side, rules: rules });
-      if (!selected.selected && selected.reason === "咒力不足") return true;
-      return false;
-    });
+    var failures = selectDuelCpuOrderedCandidates(actor, opponent, battle, side, rules, fallbackOrdered, maxSelections, focusMahoragaProxy);
+    if (getDuelSelectedHandActions(battle, side).length < Math.min(maxSelections, ordered.length)) {
+      failures = failures.concat(selectDuelCpuOrderedCandidates(actor, opponent, battle, side, rules, ordered, maxSelections, focusMahoragaProxy));
+    }
+    if (battle.cpuPlannerLog) {
+      battle.cpuPlannerLog.overflowAutoDiscarded = discardedOverflow;
+      battle.cpuPlannerLog.selectionFailures = failures.slice(0, 8);
+      battle.cpuPlannerLog.finalSelectedCount = getDuelSelectedHandActions(battle, side).length;
+    }
     return getDuelSelectedHandActions(battle, side);
   }
 
@@ -2681,7 +3564,7 @@
     var left = activeBattle.resourceState.p1;
     var right = activeBattle.resourceState.p2;
     if (!getDuelSelectedHandActions(activeBattle, "right").length && options?.autoPickCpu !== false) {
-      pickDuelCpuHandActions(right, left, activeBattle, { side: "right", rules: options?.rules });
+      pickDuelCpuHandActions(right, left, activeBattle, { side: "right", rules: options?.rules, difficulty: options?.difficulty || activeBattle.cpuDifficulty });
     }
     var leftResult = applyDuelSelectedHandActions(left, right, activeBattle, { side: "left", rules: options?.rules });
     var rightResult = applyDuelSelectedHandActions(right, left, activeBattle, { side: "right", rules: options?.rules });
@@ -2701,6 +3584,10 @@
     var battle = getBattle(duelState);
     if (!battle || !actor || !opponent) {
       return { applied: false, reason: "战斗资源缺失" };
+    }
+    var side = getActorSide(actor, options);
+    if (isDuelActorDefeatedForExecution(actor, battle, side)) {
+      return { applied: false, reason: "体势已归零，无法行动" };
     }
     var candidate = typeof actionOrId === "string" ? findCandidateById(battle, actionOrId) : actionOrId;
     var action = candidate?.action || candidate;

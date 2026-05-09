@@ -1,10 +1,11 @@
 import OpenAI from "openai";
 
 const PROTOCOL = "jjk_online_battle_v1";
-const WORKER_BUILD_VERSION = "20260430-online-pass-turn-v1";
+const WORKER_BUILD_VERSION = "V3.1.1-full-audit-20260508";
 const MAX_LOGS = 120;
 const ROOM_TTL_SECONDS = 7200;
 const DEFAULT_AI_TIMEOUT_MS = 30000;
+const MAX_SPECTATORS = 12;
 const PHASES = new Set(["preparing", "battle_starting", "turn_selecting", "turn_resolving", "reviewing", "ended"]);
 const PASS_TURN_ACTION_ID = "online_pass_turn";
 const memoryRooms = new Map();
@@ -26,6 +27,7 @@ function normalizeRoomId(value) {
 }
 
 function normalizeSide(value) {
+  if (value === "spectator") return "spectator";
   return value === "right" ? "right" : "left";
 }
 
@@ -92,8 +94,20 @@ function emptyPlayer(side) {
     lastSeenAt: 0,
     characterId: "",
     characterSnapshot: null,
+    allyCharacterId: "",
+    allyCharacterSnapshot: null,
     characterLocked: false,
     actionLocked: false
+  };
+}
+
+function normalizeSpectator(value = {}) {
+  return {
+    playerId: String(value.playerId || "").slice(0, 120),
+    displayName: String(value.displayName || "观战者").slice(0, 40),
+    connected: Boolean(value.connected ?? true),
+    lastSeenAt: Number(value.lastSeenAt) || nowMs(),
+    role: "spectator"
   };
 }
 
@@ -127,25 +141,69 @@ function hasBothPlayers(room) {
   return hasPlayer(room, "left") && hasPlayer(room, "right");
 }
 
+function playerHasRequiredCharacters(room, side) {
+  const player = room?.players?.[side];
+  if (!player?.characterId) return false;
+  if (room?.mode === "2v2" && !player.allyCharacterId) return false;
+  return true;
+}
+
 function hasBothLockedCharacters(room) {
-  return hasBothPlayers(room) && Boolean(room.players.left.characterId) && Boolean(room.players.right.characterId) &&
-    Boolean(room.players.left.characterLocked) && Boolean(room.players.right.characterLocked);
+  return hasBothPlayers(room) &&
+    playerHasRequiredCharacters(room, "left") &&
+    playerHasRequiredCharacters(room, "right") &&
+    Boolean(room.players.left.characterLocked) &&
+    Boolean(room.players.right.characterLocked);
 }
 
 function hasBothLockedActions(room) {
   return Boolean(room?.turnState?.locks?.left && room?.turnState?.locks?.right);
 }
 
+function normalizeStringArray(value, limit = 20) {
+  return (Array.isArray(value) ? value : [])
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
+function normalizeVisualSettingsSnapshot(value = {}) {
+  if (!value || typeof value !== "object") return null;
+  const cardSkin = ["classic", "v224", "custom", "champion-kashimo"].includes(value.cardSkin) ? value.cardSkin : "";
+  const theme = value.theme === "dark" ? "dark" : value.theme === "original" ? "original" : "";
+  const customSkin = value.customSkin && typeof value.customSkin === "object" ? redactSecrets(value.customSkin) : null;
+  const compactCards = Boolean(value.compactCards);
+  if (!cardSkin && !theme && !customSkin && !compactCards) return null;
+  return { cardSkin, theme, compactCards, customSkin };
+}
+
 function normalizeActions(actions = []) {
-  return (Array.isArray(actions) ? actions : []).slice(0, 8).map((action, index) => ({
-    actionId: String(action?.actionId || action?.id || `action_${index + 1}`).slice(0, 120),
-    displayName: String(action?.displayName || action?.label || action?.name || `手札 ${index + 1}`).slice(0, 80),
-    cardType: String(action?.cardType || action?.type || "").slice(0, 40),
-    apCost: Number(action?.apCost || 0),
-    ceCost: Number(action?.ceCost || action?.baseCeCost || 0),
-    action: redactSecrets(action?.action || action?.actionSnapshot || null),
-    source: "player_locked_action"
-  }));
+  return (Array.isArray(actions) ? actions : []).slice(0, 8).map((entry, index) => {
+    const action = entry?.action || entry?.actionSnapshot || entry || {};
+    const visualSettings = normalizeVisualSettingsSnapshot(entry?.visualSettings || action?.visualSettings || {});
+    return {
+      actionId: String(entry?.actionId || entry?.id || action?.id || action?.sourceActionId || `action_${index + 1}`).slice(0, 120),
+      displayName: String(entry?.displayName || entry?.label || action?.label || action?.name || `手札 ${index + 1}`).slice(0, 80),
+      cardType: String(entry?.cardType || action?.cardType || action?.type || "").slice(0, 40),
+      apCost: Number(entry?.apCost ?? action?.apCost ?? 0),
+      ceCost: Number(entry?.ceCost ?? action?.ceCost ?? action?.baseCeCost ?? 0),
+      selectedRound: Number(entry?.selectedRound || action?.selectedRound || 0),
+      skinCategory: String(entry?.skinCategory || entry?.cardSkinCategory || action?.skinCategory || action?.cardSkinCategory || "").slice(0, 40),
+      cardSkinCategory: String(entry?.cardSkinCategory || entry?.skinCategory || action?.cardSkinCategory || action?.skinCategory || "").slice(0, 40),
+      cardSkin: String(entry?.cardSkin || entry?.visualCardSkin || action?.cardSkin || action?.visualCardSkin || visualSettings?.cardSkin || "").slice(0, 40),
+      visualCardSkin: String(entry?.visualCardSkin || entry?.cardSkin || action?.visualCardSkin || action?.cardSkin || visualSettings?.cardSkin || "").slice(0, 40),
+      visualSettings,
+      tags: normalizeStringArray(entry?.tags || action?.tags),
+      uiTags: normalizeStringArray(entry?.uiTags || action?.uiTags),
+      specialHandTags: normalizeStringArray(entry?.specialHandTags || action?.specialHandTags),
+      domainHand: Boolean(entry?.domainHand || action?.domainHand),
+      domainSpecific: Boolean(entry?.domainSpecific || action?.domainSpecific),
+      specialHandCard: Boolean(entry?.specialHandCard || action?.specialHandCard),
+      techniqueFeatureHand: Boolean(entry?.techniqueFeatureHand || action?.techniqueFeatureHand),
+      action: redactSecrets(action),
+      source: "player_locked_action"
+    };
+  });
 }
 
 function createPassTurnAction() {
@@ -208,14 +266,38 @@ function buildLocalTurnFallback(room, reason = "") {
 }
 
 function createBattleSeedState(room) {
+  const leftTeam = [
+    { slot: "main", characterId: room.players.left.characterId, characterSnapshot: room.players.left.characterSnapshot },
+    { slot: "ally", characterId: room.players.left.allyCharacterId, characterSnapshot: room.players.left.allyCharacterSnapshot }
+  ].filter((entry) => entry.characterId);
+  const rightTeam = [
+    { slot: "main", characterId: room.players.right.characterId, characterSnapshot: room.players.right.characterSnapshot },
+    { slot: "ally", characterId: room.players.right.allyCharacterId, characterSnapshot: room.players.right.allyCharacterSnapshot }
+  ].filter((entry) => entry.characterId);
   return {
     schema: "jjk-online-battle-state-v1",
     battleId: `online_${room.roomId}_${nowMs().toString(36)}`,
     battleSeed: `online-${room.roomId}-${nowMs().toString(36)}`,
     round: room.round,
+    mode: room.mode || "1v1",
+    teamMode: room.teamMode || "1v1",
     players: {
-      left: { characterId: room.players.left.characterId, characterSnapshot: room.players.left.characterSnapshot },
-      right: { characterId: room.players.right.characterId, characterSnapshot: room.players.right.characterSnapshot }
+      left: {
+        characterId: room.players.left.characterId,
+        characterSnapshot: room.players.left.characterSnapshot,
+        allyCharacterId: room.players.left.allyCharacterId,
+        allyCharacterSnapshot: room.players.left.allyCharacterSnapshot
+      },
+      right: {
+        characterId: room.players.right.characterId,
+        characterSnapshot: room.players.right.characterSnapshot,
+        allyCharacterId: room.players.right.allyCharacterId,
+        allyCharacterSnapshot: room.players.right.allyCharacterSnapshot
+      }
+    },
+    teams: {
+      left: leftTeam,
+      right: rightTeam
     }
   };
 }
@@ -227,6 +309,8 @@ function normalizeRoom(room) {
     roomId: normalizeRoomId(room.roomId || room.roomCode),
     roomCode: normalizeRoomId(room.roomCode || room.roomId),
     phase: normalizePhase(room.phase),
+    mode: room.mode === "2v2" || room.teamMode === "2v2_tag" ? "2v2" : "1v1",
+    teamMode: room.mode === "2v2" || room.teamMode === "2v2_tag" ? "2v2_tag" : "1v1",
     createdAt: Number(room.createdAt) || nowMs(),
     updatedAt: Number(room.updatedAt) || nowMs(),
     revision: Math.max(1, Number(room.revision) || 1),
@@ -236,6 +320,7 @@ function normalizeRoom(room) {
       left: { ...emptyPlayer("left"), ...(room.players?.left || {}), side: "left", role: "owner" },
       right: { ...emptyPlayer("right"), ...(room.players?.right || {}), side: "right", role: "guest" }
     },
+    spectators: Array.isArray(room.spectators) ? room.spectators.slice(0, MAX_SPECTATORS).map(normalizeSpectator).filter((item) => item.playerId) : [],
     readyState: {
       leftCharacterLocked: Boolean(room.readyState?.leftCharacterLocked || room.players?.left?.characterLocked),
       rightCharacterLocked: Boolean(room.readyState?.rightCharacterLocked || room.players?.right?.characterLocked)
@@ -265,6 +350,12 @@ function normalizeRoom(room) {
     },
     logs: Array.isArray(room.logs) ? room.logs.slice(-MAX_LOGS) : []
   };
+  if (normalized.mode !== "2v2") {
+    for (const side of ["left", "right"]) {
+      normalized.players[side].allyCharacterId = "";
+      normalized.players[side].allyCharacterSnapshot = null;
+    }
+  }
   normalized.players.left.characterLocked = normalized.readyState.leftCharacterLocked;
   normalized.players.right.characterLocked = normalized.readyState.rightCharacterLocked;
   normalized.players.left.actionLocked = normalized.turnState.locks.left;
@@ -277,11 +368,13 @@ function getPlayerSide(room, playerId) {
   if (!room || !playerId) return "";
   if (room.players.left.playerId === playerId) return "left";
   if (room.players.right.playerId === playerId) return "right";
+  if ((room.spectators || []).some((spectator) => spectator.playerId === playerId)) return "spectator";
   return "";
 }
 
 function authorize(room, playerId, side) {
   const actual = getPlayerSide(room, playerId) || normalizeSide(side);
+  if (actual === "spectator") throw Object.assign(new Error("观战者不能执行对战操作。"), { status: 403 });
   if (!room.players[actual]?.playerId || room.players[actual].playerId !== playerId) {
     throw Object.assign(new Error("当前玩家不在房间内。"), { status: 403 });
   }
@@ -323,6 +416,11 @@ function mergePreservedRoomState(base, current, options = {}) {
         base.players[side] = { ...current.players[side] };
       }
     }
+    const spectators = new Map();
+    for (const spectator of [...(current.spectators || []), ...(base.spectators || [])]) {
+      if (spectator?.playerId) spectators.set(spectator.playerId, normalizeSpectator(spectator));
+    }
+    base.spectators = [...spectators.values()].slice(-MAX_SPECTATORS);
   }
   if (options.preserveCharacterLocks) {
     for (const side of ["left", "right"]) {
@@ -362,7 +460,7 @@ async function writeRoom(env, room, options = {}) {
 function snapshot(room, viewerSide = "") {
   const copy = redactSecrets(normalizeRoom(room));
   copy.viewerSide = viewerSide || "";
-  if (copy.phase === "turn_selecting" && viewerSide && !hasBothLockedActions(copy)) {
+  if (viewerSide !== "spectator" && copy.phase === "turn_selecting" && viewerSide && !hasBothLockedActions(copy)) {
     copy.turnState.actions[otherSide(viewerSide)] = [];
   }
   return copy;
@@ -378,12 +476,16 @@ function buildAiPrompt(room) {
       content: JSON.stringify({
         task: "resolve_online_turn",
         round: room.round,
+        mode: room.mode || "1v1",
+        teamMode: room.teamMode || "1v1",
         left: {
           character: left.characterSnapshot || { characterId: left.characterId },
+          ally: left.allyCharacterSnapshot || (left.allyCharacterId ? { characterId: left.allyCharacterId } : null),
           actions: room.turnState.actions.left
         },
         right: {
           character: right.characterSnapshot || { characterId: right.characterId },
+          ally: right.allyCharacterSnapshot || (right.allyCharacterId ? { characterId: right.allyCharacterId } : null),
           actions: room.turnState.actions.right
         },
         outputFormat: {
@@ -554,6 +656,9 @@ async function handleOperation(env, body) {
 
   if (operation === "getRoom") {
     const side = getPlayerSide(room, playerId) || requestedSide;
+    if (side === "spectator") {
+      return json({ ok: true, room: snapshot(room, "spectator"), side: "spectator", viewerSide: "spectator" });
+    }
     if (side && room.players[side]?.playerId === playerId) {
       return json({ ok: true, room: snapshot(room, side), side });
     }
@@ -563,11 +668,15 @@ async function handleOperation(env, body) {
   if (operation === "joinRoom") {
     const existing = getPlayerSide(room, playerId);
     if (existing) {
-      room.players[existing].connected = true;
-      room.players[existing].lastSeenAt = nowMs();
-      appendLog(room, "player_reconnected", `${existing === "left" ? "左方" : "右方"}玩家已重新连接。`, { side: existing, playerId });
-      const saved = await writeRoom(env, room);
-      return json({ ok: true, room: snapshot(saved, existing), side: existing });
+      if (existing === "spectator") {
+        room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== playerId);
+      } else {
+        room.players[existing].connected = true;
+        room.players[existing].lastSeenAt = nowMs();
+        appendLog(room, "player_reconnected", `${existing === "left" ? "左方" : "右方"}玩家已重新连接。`, { side: existing, playerId });
+        const saved = await writeRoom(env, room);
+        return json({ ok: true, room: snapshot(saved, existing), side: existing });
+      }
     }
     if (room.players.right.playerId) return json({ ok: false, error: "房间已满。" }, 409);
     room.players.right = { ...emptyPlayer("right"), ...(payload.player || {}), side: "right", role: "guest", playerId, connected: true, lastSeenAt: nowMs() };
@@ -575,6 +684,27 @@ async function handleOperation(env, body) {
     appendLog(room, "player_joined", "右方玩家已加入房间。", { side: "right", playerId });
     const saved = await writeRoom(env, room);
     return json({ ok: true, room: snapshot(saved, "right"), side: "right" });
+  }
+
+  if (operation === "watchRoom") {
+    const existing = getPlayerSide(room, playerId);
+    if (existing && existing !== "spectator") {
+      return json({ ok: false, error: "当前身份已经是选手，请使用独立观战入口进入观战。", requestId, debug: roomDebug(room, { operation, existing }) }, 409);
+    }
+    room.spectators = (room.spectators || [])
+      .filter((spectator) => spectator.playerId !== playerId)
+      .slice(-(MAX_SPECTATORS - 1));
+    room.spectators.push(normalizeSpectator({ ...(payload.spectator || {}), playerId, connected: true, lastSeenAt: nowMs() }));
+    appendLog(room, "spectator_joined", "观战者已进入房间。", { playerId });
+    const saved = await writeRoom(env, room, { preservePlayers: true });
+    return json({ ok: true, room: snapshot(saved, "spectator"), side: "spectator", viewerSide: "spectator" });
+  }
+
+  if (operation === "leaveRoom" && getPlayerSide(room, playerId) === "spectator") {
+    room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== playerId);
+    appendLog(room, "spectator_left", "观战者已退出观战。", { playerId });
+    const saved = await writeRoom(env, room, { preservePlayers: true });
+    return json({ ok: true, room: snapshot(saved, "spectator"), side: "spectator" });
   }
 
   let side;
@@ -596,8 +726,17 @@ async function handleOperation(env, body) {
   }
 
   if (operation === "lockCharacter") {
+    const lockedCharacterId = String(payload.characterId || room.players[side].characterId || "").slice(0, 120);
+    const lockedSnapshot = redactSecrets(payload.characterSnapshot || room.players[side].characterSnapshot || null);
+    const lockedAllyCharacterId = String(payload.allyCharacterId || room.players[side].allyCharacterId || "").slice(0, 120);
+    const lockedAllySnapshot = redactSecrets(payload.allyCharacterSnapshot || room.players[side].allyCharacterSnapshot || null);
+    if (lockedCharacterId) room.players[side].characterId = lockedCharacterId;
+    if (lockedSnapshot) room.players[side].characterSnapshot = lockedSnapshot;
+    if (lockedAllyCharacterId) room.players[side].allyCharacterId = lockedAllyCharacterId;
+    if (lockedAllySnapshot) room.players[side].allyCharacterSnapshot = lockedAllySnapshot;
     if (room.phase !== "preparing") return json({ ok: false, error: "当前不是准备阶段。" }, 409);
     if (!room.players[side].characterId) return json({ ok: false, error: "请先选择角色。" }, 409);
+    if (room.mode === "2v2" && !room.players[side].allyCharacterId) return json({ ok: false, error: "2V2 模式需要先选择队友角色。" }, 409);
     room.players[side].characterLocked = true;
     room.readyState[`${side}CharacterLocked`] = true;
     appendLog(room, "character_locked", `${side === "left" ? "左方" : "右方"}已锁定角色。`, { side });
@@ -712,12 +851,17 @@ async function handleOperation(env, body) {
   }
 
   if (operation === "leaveRoom") {
-    room.players[side].connected = false;
-    room.players[side].lastSeenAt = nowMs();
+    if (side === "spectator") {
+      room.spectators = (room.spectators || []).filter((spectator) => spectator.playerId !== playerId);
+      appendLog(room, "spectator_left", "观战者已退出观战。", { playerId });
+    } else {
+      room.players[side].connected = false;
+      room.players[side].lastSeenAt = nowMs();
+    }
     if (side === "left") {
       room.phase = "ended";
       appendLog(room, "room_ended", "房主已离开，房间结束。");
-    } else {
+    } else if (side === "right") {
       appendLog(room, "player_left", "右方玩家已离开房间。");
     }
     const saved = await writeRoom(env, room);

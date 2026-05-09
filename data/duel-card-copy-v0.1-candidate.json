@@ -51,14 +51,14 @@
     },
     {
       "sourceActionId": "residue_reading",
-      "displayName": "残秽读解",
-      "subtitle": "读出咒力留下的方向",
-      "shortEffect": "提高反制判断，换取更清晰的下一步读局。",
-      "longEffect": "降低当下进攻欲望，观察对手咒力流向与行动痕迹，为后续反击提供窗口。",
-      "flavorLine": "看见残秽，就看见对手刚才想藏的动作。",
+      "displayName": "咒力流淌",
+      "subtitle": "顺着咒力流向重新调息",
+      "shortEffect": "下一回合咒力回流提高15%。",
+      "longEffect": "调整自身咒力流向，让下一回合的咒力回流更加顺畅。",
+      "flavorLine": "让咒力先流起来，下一步才有余力。",
       "uiTags": [
-        "侦测",
-        "反制",
+        "咒力",
+        "回流",
         "低风险"
       ],
       "tone": "calm",

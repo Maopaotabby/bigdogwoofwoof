@@ -20,6 +20,7 @@ function computeScores() {
     raw[key] = Number.isFinite(score) ? score : Math.max(0, rankValue(rank));
     rawRanks[key] = rank;
   }
+  applyCombatMechanismRankAdjustments(raw, rawRanks, getActiveCombatMechanisms());
   applyHeavenlyRestrictionScoreEffects(raw, rawRanks);
   const rankCounts = countRawRanks(rawRanks);
   const rawBase = { ...raw };
@@ -77,6 +78,36 @@ function setMinimumScoreRank(raw, rawRanks, field, score, rank) {
   if (Number(raw[field] || 0) < score) {
     raw[field] = score;
     rawRanks[field] = rank;
+  }
+}
+
+function stepCombatRank(rank, delta = 0) {
+  const order = Array.isArray(DUEL_RANKS) && DUEL_RANKS.length
+    ? DUEL_RANKS
+    : ["E-", "E", "D", "C", "B", "A", "S", "SS", "SSS", "EX-", "EX"];
+  const key = parseRank(rank);
+  const index = order.indexOf(key);
+  const step = Number(delta);
+  if (index < 0 || !Number.isFinite(step) || !step) return rank;
+  return order[Math.max(0, Math.min(order.length - 1, index + Math.trunc(step)))];
+}
+
+function applyCombatMechanismRankAdjustments(raw, rawRanks, mechanisms) {
+  for (const mechanism of mechanisms || []) {
+    for (const adjustment of mechanism.rankAdjustments || []) {
+      const field = adjustment.field || {
+        cursedEnergy: "cursedEnergyScore",
+        control: "controlScore",
+        efficiency: "efficiencyScore",
+        body: "bodyScore",
+        martial: "martialScore",
+        talent: "talentScore"
+      }[adjustment.stat];
+      if (!field || rawRanks[field] == null) continue;
+      const nextRank = stepCombatRank(rawRanks[field], Number(adjustment.delta ?? adjustment.deltaRank ?? 0));
+      rawRanks[field] = nextRank;
+      raw[field] = Math.max(0, rankValue(nextRank));
+    }
   }
 }
 
@@ -555,7 +586,16 @@ function getCurrentCombatTexts() {
 
 function getActiveCombatMechanisms() {
   const texts = getCurrentCombatTexts();
+  const sixEyesTexts = [
+    state.flags.specialTalent,
+    ...(state.flags.grantedSpecialTalents || []),
+    ...(state.flags.advancedTechniques || [])
+  ].filter(Boolean).map((item) => String(item));
   return (state.mechanisms?.mechanisms || []).filter((mechanism) => {
+    if (mechanism.id === "sixEyes") {
+      return sixEyesTexts.some((text) => /六眼|six[_\s-]?eyes|sixEyes/i.test(text));
+    }
+    if (texts.some((text) => text === mechanism.id || text.includes(mechanism.id))) return true;
     return (mechanism.match || []).some((keyword) => texts.some((text) => text.includes(keyword)));
   });
 }
@@ -848,6 +888,7 @@ function buildCombatPowerExportCharacter(strength, profile) {
     talent: normalizeDuelRankForImport(strength.rawRanks?.talentScore)
   };
   const stage = mapCombatPeriodToDuelStage(profile.stage?.period);
+  const specialHandTags = buildCombatPowerExportSpecialHandTags(strength);
   return {
     displayName: buildCombatPowerExportName(),
     visibleGrade: profile.visibleGrade || "support",
@@ -855,6 +896,9 @@ function buildCombatPowerExportCharacter(strength, profile) {
     baseStats,
     techniquePower: inferCombatPowerExportTechniquePower(strength, profile),
     techniqueName: buildCombatPowerExportTechniqueName(strength),
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    techniqueFamilies: specialHandTags,
     domainProfile: buildCombatPowerExportDomainProfile(profile),
     innateTraits: buildCombatPowerExportTraits(strength, profile),
     loadout: buildCombatPowerExportLoadout(profile),
@@ -887,6 +931,88 @@ function buildCombatPowerExportTechniqueName(strength) {
     getCurrentTechniqueText() ||
     strength.techniqueSynergy?.displayName ||
     "网站导出术式"
+  );
+}
+
+function normalizeDuelSpecialHandTagsForImport(...sources) {
+  const seen = new Set();
+  return sources.flatMap((source) => Array.isArray(source) ? source : [source])
+    .map((tag) => normalizeCustomDuelText(tag))
+    .filter((tag) => {
+      if (!tag || tag === "无" || seen.has(tag)) return false;
+      seen.add(tag);
+      return true;
+    })
+    .slice(0, 24);
+}
+
+function buildDuelSpecialTagEvidenceText(...sources) {
+  return sources
+    .flatMap((source) => Array.isArray(source) ? source : [source])
+    .map((value) => normalizeCustomDuelText(value))
+    .filter(Boolean)
+    .join(" ");
+}
+
+function hasDuelConstructionTechniqueEvidence(text = "") {
+  const value = String(text || "");
+  return /构筑术式|真球|液态金属|昆虫铠甲|三重疾苦|禅院真依|真依|yorozu|construction\s+sorcery/i.test(value) ||
+    /(^|[\s、，,;；|/／])万($|[\s、，,;；|/／])/i.test(value);
+}
+
+function hasDuelBloodTechniqueEvidence(text = "") {
+  return /赤血操术|穿血|血刃|赤鳞跃动|超新星|苅祓|百敛|胀相|脹相|加茂宪纪|加茂憲紀|blood\s+manipulation/i.test(String(text || ""));
+}
+
+function sanitizeDuelSpecialHandTagsForTechnique(tags = [], evidenceText = "") {
+  const normalized = normalizeDuelSpecialHandTagsForImport(tags);
+  return normalized.filter((tag) => {
+    if (tag === "construction") return hasDuelConstructionTechniqueEvidence(evidenceText);
+    if (tag === "blood_manipulation") return hasDuelBloodTechniqueEvidence(evidenceText);
+    if (tag === "ten_shadows") return /伏黑惠|megumi|十种影法术|十种影|十影|ten[_\s-]?shadows|嵌合暗翳庭|魔虚罗|魔须罗|mahoraga/i.test(String(evidenceText || ""));
+    if (tag === "projection_sorcery") return /投射术式|投射咒法|二十四帧|帧率|直哉|直毘人|projection\s+sorcery/i.test(String(evidenceText || ""));
+    if (tag === "star_rage") return /星之怒|虚拟质量|凰轮|黑洞|九十九由基|star\s+rage/i.test(String(evidenceText || ""));
+    if (tag === "limitless") return /无下限|五条|六眼|苍|赫|茈|limitless|infinity/i.test(String(evidenceText || ""));
+    if (tag === "shrine") return /御厨子|伏魔御厨子|宿傩|捌|解|斩击|shrine|cleave|dismantle/i.test(String(evidenceText || ""));
+    return true;
+  });
+}
+
+function getTechniqueSpecialHandTagsFromProfile(profile) {
+  if (!profile || typeof profile !== "object") return [];
+  return normalizeDuelSpecialHandTagsForImport(
+    profile.specialHandTags,
+    profile["特殊手札"],
+    profile.specialHandTag,
+    profile.specialTag
+  );
+}
+
+function getTechniqueSpecialHandTagsByText(text = "") {
+  const profile = typeof getTechniqueProfileByText === "function" ? getTechniqueProfileByText(text) : null;
+  return getTechniqueSpecialHandTagsFromProfile(profile);
+}
+
+function buildCombatPowerExportSpecialHandTags(strength) {
+  const profile = strength?.techniqueSynergy?.profile ||
+    (typeof getCurrentTechniqueProfile === "function" ? getCurrentTechniqueProfile() : null);
+  const evidenceText = buildDuelSpecialTagEvidenceText(
+    getCurrentTechniqueText(),
+    strength?.techniqueSynergy?.displayName,
+    profile?.displayName,
+    profile?.name,
+    profile?.owner,
+    profile?.representative,
+    profile?.domainName,
+    profile?.sourceNote
+  );
+  return sanitizeDuelSpecialHandTagsForTechnique(
+    normalizeDuelSpecialHandTagsForImport(
+      getTechniqueSpecialHandTagsFromProfile(profile),
+      getTechniqueSpecialHandTagsByText(getCurrentTechniqueText()),
+      getTechniqueSpecialHandTagsByText(strength?.techniqueSynergy?.displayName)
+    ),
+    evidenceText
   );
 }
 
@@ -1059,7 +1185,9 @@ function importWheelExportToCustomDuel() {
   try {
     const payload = parseWheelExportForCustomDuel(raw);
     applyCombatPowerImportToDuelForm(payload, { requireCombatProfile: false, sourceLabel: "转盘导出数据" });
-    updateWheelImportStatus(`已导入：${payload.character?.displayName || "未命名"}；请检查字段后加入角色池。`);
+    const handCount = payload.character?.customHandCards?.length || 0;
+    const tagCount = payload.character?.specialHandTags?.length || 0;
+    updateWheelImportStatus(`已导入：${payload.character?.displayName || "未命名"}；特殊手札 ${handCount} 张，标签 ${tagCount} 个。请检查字段后加入角色池。`);
   } catch (error) {
     updateWheelImportStatus(error?.message || "导入失败。", true);
     window.alert(error?.message || "导入失败。");
@@ -1105,17 +1233,227 @@ function parseWheelExportForCustomDuel(raw) {
   const code = extractCombatPowerCode(raw);
   if (code) return decodeCombatPowerImportCode(code);
   const parsed = JSON.parse(raw);
+  if (parsed?.schema === "jjk-duel-character-card-export" && parsed?.character) {
+    return {
+      character: normalizeCustomDuelCharacterCardImport(parsed.character),
+      sourceSchema: parsed.schema
+    };
+  }
+  if (isCustomDuelCharacterCardPayload(parsed)) {
+    return {
+      character: normalizeCustomDuelCharacterCardImport(parsed),
+      sourceSchema: parsed.schema || "jjk-duel-character-card"
+    };
+  }
+  if (isCustomDuelCharacterCardPayload(parsed?.character)) {
+    return {
+      character: normalizeCustomDuelCharacterCardImport(parsed.character),
+      sourceSchema: parsed.schema || "jjk-duel-character-card"
+    };
+  }
   if (parsed?.character?.encodedCombatProfile || parsed?.character?.baseStats) return { character: normalizeWheelImportCharacter(parsed.character) };
   if (parsed?.schema === "jjk-combat-power-export" && parsed?.character) return { character: normalizeWheelImportCharacter(parsed.character) };
   if (parsed?.strength || parsed?.rawRanks || parsed?.instantCombatProfile) {
     return { character: buildCharacterFromWheelExportObject(parsed) };
   }
-  throw new Error("未识别的转盘导出格式。请粘贴 JJKCP1 编码、战力导出 JSON，或包含 rawRanks/strength 的调试 JSON。");
+  throw new Error("未识别的导入格式。请粘贴自定义角色卡 JSON、JJKCP1 编码、战力导出 JSON，或包含 rawRanks/strength 的调试 JSON。");
+}
+
+function cloneDuelImportValue(value) {
+  if (value == null) return value;
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return null;
+  }
+}
+
+function isCustomDuelCharacterCardPayload(source) {
+  if (!source || typeof source !== "object" || Array.isArray(source)) return false;
+  if (source.schema === "jjk-duel-character-card-export") return true;
+  if (source.customDuel === true) return true;
+  if (Array.isArray(source.customHandCards) || Array.isArray(source.specialHandCards) || Array.isArray(source.specialHands)) return true;
+  if (source.domainScript || source.selectedLibrary || source.selectedMechanisms || source.selectedToolTags) return true;
+  return Boolean((source.characterId || source.displayName || source.name) &&
+    (source.baseStats || source["四轴"]) &&
+    (source.techniqueName || source.techniqueText || source.technique || source.specialHandTags || source["特殊手札"]));
+}
+
+function normalizeDuelImportList(value, max = 12) {
+  const source = Array.isArray(value) ? value : splitCustomDuelList(value || "");
+  const seen = new Set();
+  return source
+    .map(normalizeCustomDuelText)
+    .filter((item) => {
+      if (!item || seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    })
+    .slice(0, max);
+}
+
+function normalizeDuelSelectedLibraryForImport(library = {}) {
+  return {
+    techniques: normalizeDuelImportList(library.techniques),
+    domains: normalizeDuelImportList(library.domains),
+    advanced: normalizeDuelImportList(library.advanced),
+    resources: normalizeDuelImportList(library.resources)
+  };
+}
+
+function normalizeImportedCustomDuelDomainScript(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const copy = cloneDuelImportValue(raw);
+  if (!copy || typeof copy !== "object" || Array.isArray(copy)) return null;
+  const serialized = JSON.stringify(copy);
+  if (/\b(function|eval|new Function|=>|<script)\b/i.test(serialized)) return null;
+  return copy;
+}
+
+function normalizeImportedCustomDuelHandCards(cards = []) {
+  const source = Array.isArray(cards) ? cards : [];
+  const seen = new Set();
+  return source
+    .map((card, index) => {
+      if (!card || typeof card !== "object" || Array.isArray(card)) return null;
+      const copy = cloneDuelImportValue(card) || {};
+      const name = normalizeCustomDuelText(copy.name || copy.label || "").slice(0, 40);
+      if (!name) return null;
+      const idSource = normalizeCustomDuelText(copy.id || copy.sourceActionId || `imported_special_hand_${index + 1}`).toLowerCase();
+      const id = idSource.replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || `imported_special_hand_${index + 1}`;
+      if (seen.has(id)) return null;
+      seen.add(id);
+      const cardType = normalizeCustomDuelText(copy.cardType || copy.type || "technique").toLowerCase() || "technique";
+      const ceCost = Math.max(0, Math.round(Number(copy.baseCeCost ?? copy.ceCost ?? copy.costCe ?? copy.cost?.flatCe ?? 10) || 10));
+      const damage = Math.max(0, Math.round(Number(copy.baseDamage ?? copy.damage ?? 0) || 0));
+      const block = Math.max(0, Math.round(Number(copy.baseBlock ?? copy.block ?? 0) || 0));
+      const specialHandTags = normalizeDuelSpecialHandTagsForImport(copy.specialHandTags, copy["特殊手札"], copy.specialHandTag);
+      const tags = normalizeDuelSpecialHandTagsForImport(copy.tags, "自定义", "特殊手札", specialHandTags);
+      return {
+        ...copy,
+        id,
+        sourceActionId: copy.sourceActionId || id,
+        cardId: copy.cardId || `card_${id}`,
+        label: copy.label || name,
+        name,
+        type: copy.type || cardType,
+        cardType,
+        apCost: Math.max(0, Math.round(Number(copy.apCost ?? copy.ap ?? 1) || 1)),
+        baseCeCost: ceCost,
+        ceCost,
+        costType: copy.costType || "flat",
+        cost: copy.cost && typeof copy.cost === "object" ? copy.cost : { flatCe: ceCost, minCe: ceCost },
+        baseDamage: damage,
+        baseBlock: block,
+        effectSummary: normalizeCustomDuelText(copy.effectSummary || copy.summary || copy.description || `${name}：导入特殊手札。`),
+        specialHandTags,
+        "特殊手札": specialHandTags,
+        tags,
+        rarity: copy.rarity || "special",
+        weight: Number(copy.weight || 1) || 1,
+        source: normalizeCustomDuelText(copy.source || "imported")
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function normalizeCustomDuelCharacterCardImport(character = {}) {
+  const baseStats = character.baseStats || character.stats || {};
+  const techniqueName = normalizeCustomDuelText(character.techniqueName || character.techniqueText || character.technique || "");
+  const domainProfile = normalizeCustomDuelText(character.domainProfile || character.domain || "");
+  const evidenceText = buildDuelSpecialTagEvidenceText(
+    techniqueName,
+    character.techniqueDescription,
+    domainProfile,
+    character.externalResource,
+    character.innateTraits,
+    character.advancedTechniques,
+    character.loadout,
+    character.selectedMechanisms,
+    character.selectedLibrary?.techniques,
+    character.selectedLibrary?.domains,
+    character.selectedLibrary?.advanced,
+    character.selectedLibrary?.resources
+  );
+  const specialHandTags = sanitizeDuelSpecialHandTagsForTechnique(
+    normalizeDuelSpecialHandTagsForImport(
+      character.specialHandTags,
+      character["特殊手札"],
+      character.explicitSpecialHandTags,
+      character.specialHandTag,
+      character.techniqueFamilies,
+      getTechniqueSpecialHandTagsByText(techniqueName)
+    ),
+    evidenceText
+  );
+  const selectedLibrary = normalizeDuelSelectedLibraryForImport(character.selectedLibrary || {});
+  return {
+    ...character,
+    displayName: normalizeCustomDuelText(character.displayName || character.name || character.characterId || "导入自定义角色"),
+    visibleGrade: DUEL_GRADE_OPTIONS.some((item) => item.value === character.visibleGrade) ? character.visibleGrade : "support",
+    stage: getValidDuelStage(character.stage || "custom"),
+    baseStats: {
+      cursedEnergy: normalizeDuelRankForImport(baseStats.cursedEnergy ?? character.cursedEnergy),
+      control: normalizeDuelRankForImport(baseStats.control ?? character.control),
+      efficiency: normalizeDuelRankForImport(baseStats.efficiency ?? character.efficiency),
+      body: normalizeDuelRankForImport(baseStats.body ?? character.body),
+      martial: normalizeDuelRankForImport(baseStats.martial ?? character.martial),
+      talent: normalizeDuelRankForImport(baseStats.talent ?? character.talent)
+    },
+    techniquePower: normalizeDuelRankForImport(character.techniquePower),
+    techniqueName,
+    techniqueText: techniqueName,
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    explicitSpecialHandTags: specialHandTags,
+    techniqueFamilies: sanitizeDuelSpecialHandTagsForTechnique(
+      normalizeDuelSpecialHandTagsForImport(character.techniqueFamilies, specialHandTags),
+      evidenceText
+    ),
+    domainProfile,
+    domainScript: normalizeImportedCustomDuelDomainScript(character.domainScript),
+    innateTraits: normalizeDuelImportList(character.innateTraits || character.traits),
+    loadout: normalizeDuelImportList(character.loadout || character.tools),
+    selectedMechanisms: normalizeDuelImportList(character.selectedMechanisms || character.mechanismTags),
+    selectedToolTags: normalizeDuelImportList(character.selectedToolTags || character.toolTags),
+    selectedLibrary,
+    externalResource: normalizeCustomDuelText(character.externalResource || ""),
+    notes: normalizeCustomDuelText(character.notes || "由角色卡导入"),
+    customHandCards: normalizeImportedCustomDuelHandCards(character.customHandCards || character.specialHandCards || character.specialHands || []),
+    debugManualCombatScore: parseOptionalDuelNumber(character.debugManualCombatScore, 0, 12),
+    debugManualCombatUnit: parseOptionalDuelNumber(character.debugManualCombatUnit, 1, 99999999),
+    encodedCombatProfile: character.encodedCombatProfile || null
+  };
 }
 
 function buildCharacterFromWheelExportObject(source) {
   const strength = source.strength || source;
   const rawRanks = strength.rawRanks || source.rawRanks || {};
+  const techniqueName = normalizeCustomDuelText(source.techniqueName || source.technique || "");
+  const evidenceText = buildDuelSpecialTagEvidenceText(
+    techniqueName,
+    source.techniqueText,
+    source.techniqueDescription,
+    strength.techniqueSynergy?.displayName,
+    strength.techniqueSynergy?.sourceNote,
+    strength.techniqueSynergy?.profile?.displayName,
+    strength.techniqueSynergy?.profile?.name,
+    strength.techniqueSynergy?.profile?.owner,
+    strength.techniqueSynergy?.profile?.representative,
+    strength.techniqueSynergy?.profile?.domainName
+  );
+  const specialHandTags = sanitizeDuelSpecialHandTagsForTechnique(
+    normalizeDuelSpecialHandTagsForImport(
+      source.specialHandTags,
+      source["特殊手札"],
+      source.specialHandTag,
+      strength.techniqueSynergy?.profile?.specialHandTags,
+      strength.techniqueSynergy?.profile?.["特殊手札"],
+      getTechniqueSpecialHandTagsByText(techniqueName)
+    ),
+    evidenceText
+  );
   const character = {
     displayName: normalizeCustomDuelText(source.displayName || source.name || "转盘导入角色"),
     visibleGrade: source.visibleGrade || "support",
@@ -1129,7 +1467,13 @@ function buildCharacterFromWheelExportObject(source) {
       talent: normalizeDuelRankForImport(rawRanks.talentScore || source.talent || source["悟性"])
     },
     techniquePower: normalizeDuelRankForImport(source.techniquePower || "B"),
-    techniqueName: normalizeCustomDuelText(source.techniqueName || source.technique || ""),
+    techniqueName,
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    techniqueFamilies: sanitizeDuelSpecialHandTagsForTechnique(
+      normalizeDuelSpecialHandTagsForImport(source.techniqueFamilies, specialHandTags),
+      evidenceText
+    ),
     domainProfile: normalizeCustomDuelText(source.domainProfile || source.domain || ""),
     innateTraits: mergeDuelLocalList(source.innateTraits || source.traits || []),
     loadout: mergeDuelLocalList(source.loadout || source.tools || []),
@@ -1146,6 +1490,27 @@ function buildCharacterFromWheelExportObject(source) {
 }
 
 function normalizeWheelImportCharacter(character = {}) {
+  const techniqueName = normalizeCustomDuelText(character.techniqueName || character.technique || "");
+  const evidenceText = buildDuelSpecialTagEvidenceText(
+    techniqueName,
+    character.techniqueText,
+    character.techniqueDescription,
+    character.domainProfile,
+    character.externalResource,
+    character.innateTraits,
+    character.advancedTechniques,
+    character.loadout,
+    character.selectedMechanisms
+  );
+  const specialHandTags = sanitizeDuelSpecialHandTagsForTechnique(
+    normalizeDuelSpecialHandTagsForImport(
+      character.specialHandTags,
+      character["特殊手札"],
+      character.specialHandTag,
+      getTechniqueSpecialHandTagsByText(techniqueName)
+    ),
+    evidenceText
+  );
   return {
     ...character,
     displayName: normalizeCustomDuelText(character.displayName || character.name || "转盘导入角色"),
@@ -1160,6 +1525,13 @@ function normalizeWheelImportCharacter(character = {}) {
       talent: normalizeDuelRankForImport(character.baseStats?.talent)
     },
     techniquePower: normalizeDuelRankForImport(character.techniquePower),
+    techniqueName,
+    specialHandTags,
+    "特殊手札": specialHandTags,
+    techniqueFamilies: sanitizeDuelSpecialHandTagsForTechnique(
+      normalizeDuelSpecialHandTagsForImport(character.techniqueFamilies, specialHandTags),
+      evidenceText
+    ),
     innateTraits: mergeDuelLocalList(character.innateTraits || []),
     loadout: mergeDuelLocalList(character.loadout || []),
     externalResource: normalizeCustomDuelText(character.externalResource || ""),
@@ -1172,6 +1544,7 @@ function applyCombatPowerImportToDuelForm(payload, options = {}) {
   if (!character.displayName || (options.requireCombatProfile !== false && !character.encodedCombatProfile?.combatPowerUnit)) {
     throw new Error("战力编码缺少角色战力表。");
   }
+  const selectedLibrary = normalizeDuelSelectedLibraryForImport(character.selectedLibrary || {});
   setDuelCustomMode("library");
   state.customDuelEditId = "";
   if (els.duelCustomName) els.duelCustomName.value = normalizeCustomDuelText(character.displayName);
@@ -1191,14 +1564,20 @@ function applyCombatPowerImportToDuelForm(payload, options = {}) {
   if (els.duelCustomNotes) els.duelCustomNotes.value = normalizeCustomDuelText(character.notes || "由本站战力编码导入");
   if (els.duelCustomCombatScore) els.duelCustomCombatScore.value = character.debugManualCombatScore ?? "";
   if (els.duelCustomCombatUnit) els.duelCustomCombatUnit.value = character.debugManualCombatUnit ?? "";
-  setSelectedDuelDefinitionValues(els.duelCustomTechniqueTags, []);
-  setSelectedDuelDefinitionValues(els.duelCustomDomainTags, []);
-  setSelectedDuelDefinitionValues(els.duelCustomAdvancedTags, []);
-  setSelectedDuelDefinitionValues(els.duelCustomResourceTags, []);
-  setSelectedDuelDefinitionValues(els.duelCustomMechanisms, []);
-  setSelectedDuelDefinitionValues(els.duelCustomToolTags, []);
-  state.pendingCustomDuelHandCards = [];
-  state.pendingCustomDuelDomainScript = null;
+  setSelectedDuelDefinitionValues(els.duelCustomTechniqueTags, selectedLibrary.techniques);
+  setSelectedDuelDefinitionValues(els.duelCustomDomainTags, selectedLibrary.domains);
+  setSelectedDuelDefinitionValues(els.duelCustomAdvancedTags, selectedLibrary.advanced);
+  setSelectedDuelDefinitionValues(els.duelCustomResourceTags, selectedLibrary.resources);
+  setSelectedDuelDefinitionValues(els.duelCustomMechanisms, normalizeDuelImportList(character.selectedMechanisms || []));
+  setSelectedDuelDefinitionValues(els.duelCustomToolTags, normalizeDuelImportList(character.selectedToolTags || []));
+  state.pendingCustomDuelHandCards = normalizeImportedCustomDuelHandCards(character.customHandCards || character.specialHandCards || character.specialHands || []);
+  state.pendingCustomDuelSpecialHandTags = normalizeDuelSpecialHandTagsForImport(
+    character.specialHandTags,
+    character["特殊手札"],
+    character.techniqueFamilies,
+    getTechniqueSpecialHandTagsByText(character.techniqueName)
+  ).filter((tag) => !/^custom_character_/i.test(tag));
+  state.pendingCustomDuelDomainScript = normalizeImportedCustomDuelDomainScript(character.domainScript);
   if (typeof renderPendingCustomDuelHandList === "function") renderPendingCustomDuelHandList();
   syncCustomDuelEditMode();
   state.duelBattle = null;
